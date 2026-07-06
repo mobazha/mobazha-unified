@@ -13,6 +13,36 @@ export {
 
 export { formatGuestStateLabel, guestStateBadgeClass };
 
+/**
+ * Guest fulfillment uses a shared SHIPPED wire state for every contract type.
+ * Keep that backend state out of service/digital customer-facing copy.
+ */
+export function formatGuestOrderStateLabel(
+  state: string,
+  orderKind: GuestOrderKind,
+  t: TranslateFunction
+): string {
+  if (state === 'SHIPPED' || state === 'FULFILLED') {
+    if (orderKind === 'service') return t('order.serviceDelivered');
+    if (orderKind === 'digital') return t('order.digitalDelivered');
+  }
+  return formatGuestStateLabel(state, t);
+}
+
+/** Contract-aware buyer copy for the shared SHIPPED/FULFILLED wire state. */
+export function formatGuestOrderStateDescription(
+  state: string,
+  orderKind: GuestOrderKind,
+  fallback: string | undefined,
+  t: TranslateFunction
+): string | undefined {
+  if (state === 'SHIPPED' || state === 'FULFILLED') {
+    if (orderKind === 'service') return t('guestOrder.stateServiceDeliveredDesc');
+    if (orderKind === 'digital') return t('guestOrder.stateDigitalDeliveredDesc');
+  }
+  return fallback;
+}
+
 export function truncateOrderToken(token: string, head = 14, tail = 10): string {
   if (token.length <= head + tail + 3) return token;
   return `${token.slice(0, head)}…${token.slice(-tail)}`;

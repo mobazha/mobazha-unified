@@ -11,6 +11,7 @@ import {
   orderUsesCancelableBackendSettlement,
   useCurrency,
   getOrderListShippedLabelKey,
+  inferGuestOrderKindFromItems,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import type { TranslateFunction } from '@mobazha/core/i18n/types';
@@ -69,7 +70,7 @@ import {
 import { useFeature } from '@mobazha/core/hooks/useFeature';
 import { GuestOrderDetailDrawer } from '@/components/orders/GuestOrderDetailDrawer';
 import {
-  formatGuestStateLabel,
+  formatGuestOrderStateLabel,
   guestStateBadgeClass,
   isActiveGuestDetailRequest,
   truncateOrderToken,
@@ -293,7 +294,11 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
               : 'bg-info/15 text-info'
         }`}
       >
-        {formatGuestStateLabel(order.state, t)}
+        {formatGuestOrderStateLabel(
+          order.state,
+          inferGuestOrderKindFromItems(order.items) ?? 'unknown',
+          t
+        )}
       </span>
     </button>
   );
@@ -361,7 +366,11 @@ function UnifiedOrderRow({
                 : 'bg-info/15 text-info'
           }`}
         >
-          {formatGuestStateLabel(order.state, t)}
+          {formatGuestOrderStateLabel(
+            order.state,
+            inferGuestOrderKindFromItems(order.items) ?? 'unknown',
+            t
+          )}
         </span>
       </button>
     );
@@ -485,7 +494,11 @@ function AdminOrdersTable({
                 ? formatCurrencyPrice(standardOrder.total, standardOrder.currency || 'USD')
                 : '';
             const statusLabel = guestOrder
-              ? formatGuestStateLabel(guestOrder.state, t)
+              ? formatGuestOrderStateLabel(
+                  guestOrder.state,
+                  inferGuestOrderKindFromItems(guestOrder.items) ?? 'unknown',
+                  t
+                )
               : standardOrder
                 ? t(
                     standardStateLabelKey(
@@ -811,7 +824,16 @@ export function OrdersSalesPanel({
         carrier: guestShipCarrier.trim() || undefined,
         trackingNumber: guestShipTracking.trim() || undefined,
       });
-      toast({ title: t('admin.orders.guestShipSuccess'), variant: 'success' });
+      const kind = guestDetail ? inferGuestOrderKindFromItems(guestDetail.items) : 'unknown';
+      const successKey =
+        kind === 'physical'
+          ? 'admin.orders.guestPhysicalShipSuccess'
+          : kind === 'service'
+            ? 'admin.orders.guestServiceDeliverSuccess'
+            : kind === 'digital'
+              ? 'admin.orders.guestDigitalDeliverSuccess'
+              : 'admin.orders.guestShipSuccess';
+      toast({ title: t(successKey), variant: 'success' });
       await Promise.all([refreshGuestOrderDetail(selectedGuestToken), refreshGuestOrders()]);
     } catch (err) {
       toast({

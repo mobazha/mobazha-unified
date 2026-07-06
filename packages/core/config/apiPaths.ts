@@ -276,8 +276,10 @@ export const NODE_API = {
   FIAT_PROVIDERS_PUBLIC: (peerID: string) => `/fiat/${peerID}/providers`,
   FIAT_PROVIDER_STATUS: (provider: string) => `/fiat/${provider}/status`,
   FIAT_CREATE_PAYMENT: (peerID: string, provider: string) => `/fiat/${peerID}/${provider}/payments`,
-  FIAT_CAPTURE_PAYMENT: (peerID: string, provider: string, sessionID: string) =>
-    `/fiat/${peerID}/${provider}/payments/${sessionID}/capture`,
+  FIAT_CAPTURE_PAYMENT: (peerID: string | undefined, provider: string, sessionID: string) =>
+    peerID
+      ? `/fiat/${peerID}/${provider}/payments/${sessionID}/capture`
+      : `/fiat/${provider}/payments/${sessionID}/capture`,
   FIAT_REFUND_PAYMENT: (provider: string, paymentID: string) =>
     `/fiat/${provider}/payments/${paymentID}/refund`,
   FIAT_PROVIDER_CONFIG: (provider: string) => `/fiat/${provider}/config`,
@@ -336,6 +338,7 @@ export const NODE_API = {
   SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
   // PM-3a: Vendor PGP public key (public endpoint for buyer encryption)
   SETTINGS_PGP_KEY: '/settings/pgp-key',
+  SETTINGS_PGP_KEY_VAULT: '/settings/pgp-key/vault',
 
   // --- Fulfillment (Supply Chain) ---
   FULFILLMENT_PROVIDERS: '/fulfillment/providers',

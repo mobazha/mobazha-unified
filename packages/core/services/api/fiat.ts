@@ -62,7 +62,7 @@ export async function createPayment(
 }
 
 export async function capturePayment(
-  vendorPeerID: string,
+  vendorPeerID: string | undefined,
   provider: string,
   sessionID: string
 ): Promise<FiatPaymentResult> {

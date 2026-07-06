@@ -13,6 +13,7 @@ import {
   initLocale,
 } from '../../i18n/i18n';
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../../i18n/types';
+import { translations } from '../../i18n/locales';
 
 describe('i18n', () => {
   beforeEach(() => {
@@ -75,6 +76,14 @@ describe('i18n', () => {
 
     it('不存在的键应返回键本身', () => {
       expect(getTranslation('nonexistent.key')).toBe('nonexistent.key');
+    });
+
+    it('应为所有支持语言提供匿名订单恢复文案', () => {
+      for (const locale of SUPPORTED_LOCALES) {
+        expect(translations[locale].track?.title, locale).toBeTruthy();
+        expect(translations[locale].track?.placeholder, locale).toBeTruthy();
+        expect(translations[locale].track?.invalid, locale).toBeTruthy();
+      }
     });
   });
 

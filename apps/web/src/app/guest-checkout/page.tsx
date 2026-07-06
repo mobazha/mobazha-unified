@@ -9,6 +9,7 @@ import {
   mustAssetIdFromTokenId,
   buildProductHref,
   sanitizeAcceptedPaymentCoins,
+  routedStoreContextService,
 } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
@@ -47,6 +48,14 @@ import {
   useGuestOrderStatus,
 } from '@mobazha/commerce-kit/checkout/client';
 import { commerceGuestCheckoutPort, commerceGuestOrderStatusPort } from '@/lib/commerce/guestPorts';
+import { buildGuestOrderRecoveryHref, rememberGuestOrder } from '@/lib/guestOrderRecovery';
+import {
+  availableShippingOptions,
+  effectiveShippingPrice,
+  normalizeShippingCountry,
+  physicalShippingIsReady,
+  shippingSelectionMatchesOption,
+} from '@/lib/guestShipping';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -101,12 +110,20 @@ function buildOrderRequest(
     })),
     paymentCoin: coin,
     contactEmail: email || undefined,
+    shippingCountry: addr ? normalizeShippingCountry(addr.country) || undefined : undefined,
     ...(addr !== null && encryptedAddr
       ? { shippingAddress: encryptedAddr }
       : addr !== null
         ? { shippingAddress: buildAddressPayload(addr) }
         : {}),
   };
+}
+
+function normalizeGuestPaymentCoin(tokenOrAssetID: string): string {
+  const normalized = tokenOrAssetID.trim();
+  const lower = normalized.toLowerCase();
+  if (lower.startsWith('crypto:') || lower.startsWith('fiat:')) return normalized;
+  return mustAssetIdFromTokenId(normalized);
 }
 
 function toPaymentInfo(data: CommerceGuestOrderResponse, coin: string): ExternalWalletPaymentInfo {
@@ -119,23 +136,10 @@ function toPaymentInfo(data: CommerceGuestOrderResponse, coin: string): External
   };
 }
 
-function buildGuestOrderUrl(
-  orderToken: string,
-  buyerPortalToken?: string,
-  absolute = false
-): string {
-  const path = `/guest-order/${encodeURIComponent(orderToken)}`;
-  const fragment = buyerPortalToken
-    ? `#buyerPortalToken=${encodeURIComponent(buyerPortalToken)}`
-    : '';
-  if (!absolute || typeof window === 'undefined') return `${path}${fragment}`;
-  return `${window.location.origin}${path}${fragment}`;
-}
-
 export default function GuestCheckoutPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { items, removeItem, updateQuantity, getTotal, getItemCount, clearCart } =
+  const { items, removeItem, updateQuantity, updateShipping, getTotal, getItemCount, clearCart } =
     useGuestCartStore();
   const [step, setStep] = useState<Step>('cart');
   const [addressData, setAddressData] = useState<Address>(EMPTY_ADDRESS);
@@ -161,9 +165,13 @@ export default function GuestCheckoutPage() {
   // PM-3a: fetch vendor PGP public key for client-side address encryption.
   // Only needed for physical goods that require a shipping address.
   const hasPhysicalItems = items.some(i => i.contractType === 'PHYSICAL_GOOD');
-  const { encryptionAvailable, encryptAddress } = useAddressEncryption(
-    isSovereignMode() && hasPhysicalItems ? getGatewayUrl() : ''
-  );
+  const {
+    status: addressEncryptionStatus,
+    encryptionAvailable,
+    isLoading: addressEncryptionLoading,
+    fingerprint: addressEncryptionFingerprint,
+    encryptAddress,
+  } = useAddressEncryption(isSovereignMode() && hasPhysicalItems ? getGatewayUrl() : '');
 
   const acceptedCoins = useMemo(
     () => sanitizeAcceptedPaymentCoins(checkoutWorkflow.state.settings?.availableCoins ?? []),
@@ -190,7 +198,13 @@ export default function GuestCheckoutPage() {
     needsShippingAddress,
     hasDigitalItems,
   } = contractTypeCheckout;
-  const STEPS = needsShippingAddress ? STEPS_WITH_SHIPPING : STEPS_DIGITAL;
+  const hasSingleAcceptedCoin = !coinsLoading && acceptedCoins.length === 1;
+  const checkoutSteps = useMemo<Step[]>(() => {
+    if (!hasSingleAcceptedCoin) {
+      return needsShippingAddress ? STEPS_WITH_SHIPPING : STEPS_DIGITAL;
+    }
+    return needsShippingAddress ? ['cart', 'shipping', 'payment'] : ['cart', 'payment'];
+  }, [hasSingleAcceptedCoin, needsShippingAddress]);
   const supplyBlocksCheckout =
     items.length > 0 &&
     (supplyQuote.loading || (supplyQuote.authoritative && !supplyQuote.canProceed));
@@ -201,11 +215,61 @@ export default function GuestCheckoutPage() {
     setEncryptedAddress(null);
   };
 
+  const addressProtectionRequired = isSovereignMode() && needsShippingAddress;
+  const countryCode = normalizeShippingCountry(addressData.country);
+  const physicalShippingReady = physicalShippingIsReady(items, countryCode, total?.amount ?? 0);
   const canSubmitShipping =
     addressData.name.trim() &&
     addressData.addressLineOne.trim() &&
     addressData.city.trim() &&
-    addressData.country.trim();
+    countryCode &&
+    physicalShippingReady &&
+    (!addressProtectionRequired || encryptionAvailable);
+
+  useEffect(() => {
+    if (!countryCode) return;
+    for (const item of items) {
+      if (item.contractType !== 'PHYSICAL_GOOD' || !item.shippingOptions?.length) continue;
+      const available = availableShippingOptions(item, countryCode, total?.amount ?? 0);
+      const selectedOption = available.find(option => shippingSelectionMatchesOption(item, option));
+      const selectedStillAvailable = Boolean(selectedOption);
+      const selectedPrice = selectedOption
+        ? effectiveShippingPrice(selectedOption, total?.amount ?? 0)
+        : undefined;
+      if (!selectedStillAvailable || selectedPrice !== item.shipping?.price) {
+        const option = selectedOption ?? available[0];
+        updateShipping(
+          item.slug,
+          option
+            ? {
+                name: option.zoneID || option.zoneName,
+                service: option.rateID || option.rateName,
+                price: effectiveShippingPrice(option, total?.amount ?? 0),
+                currency: option.currency,
+                estimatedDelivery: option.estimatedDelivery,
+              }
+            : undefined
+        );
+      }
+    }
+  }, [countryCode, items, total?.amount, updateShipping]);
+
+  const selectedShippingTotal = useMemo(() => {
+    if (!total || !needsShippingAddress) return null;
+    const selected = items.filter(item => item.contractType === 'PHYSICAL_GOOD');
+    if (selected.some(item => item.shippingOptions?.length && !item.shipping)) return null;
+    if (
+      selected.some(item => item.shipping?.currency && item.shipping.currency !== total.currency)
+    ) {
+      return null;
+    }
+    return selected.reduce((sum, item) => {
+      const option = (item.shippingOptions ?? []).find(candidate =>
+        shippingSelectionMatchesOption(item, candidate)
+      );
+      return sum + Number(option ? effectiveShippingPrice(option, total.amount) : 0);
+    }, 0);
+  }, [items, needsShippingAddress, total]);
 
   const submitOrderAbortRef = useRef(false);
 
@@ -220,7 +284,12 @@ export default function GuestCheckoutPage() {
   useEffect(() => {
     if (!pendingOrder || !trackedGuestOrder || trackedGuestOrder.state === 'AWAITING_PAYMENT')
       return;
-    router.push(buildGuestOrderUrl(pendingOrder.orderToken, pendingOrder.buyerPortalToken));
+    router.push(
+      buildGuestOrderRecoveryHref(pendingOrder.orderToken, {
+        storeRouteToken: routedStoreContextService.getStoreRouteToken(),
+        buyerPortalToken: pendingOrder.buyerPortalToken,
+      })
+    );
   }, [pendingOrder, router, trackedGuestOrder]);
 
   const submitGuestOrder = useCallback(
@@ -231,12 +300,18 @@ export default function GuestCheckoutPage() {
       }
       setSubmissionError(null);
       try {
-        // PM-3a: for physical orders, try to encrypt the address client-side
-        // before sending. Falls back to plaintext if PGP is not configured.
+        // Sovereign physical checkout is fail-closed: plaintext delivery
+        // addresses must never leave the buyer's browser.
         let finalEncrypted: string | null = encryptedAddress;
-        if (needsShippingAddress && encryptionAvailable && !finalEncrypted) {
+        if (addressProtectionRequired && !encryptionAvailable) {
+          throw new Error('Seller address protection is not ready. Please try again later.');
+        }
+        if (addressProtectionRequired && !finalEncrypted) {
           finalEncrypted = await encryptAddress(buildAddressPayload(addressData));
-          if (!submitOrderAbortRef.current && finalEncrypted) {
+          if (!finalEncrypted.startsWith('-----BEGIN PGP MESSAGE-----')) {
+            throw new Error('Shipping address encryption failed. No order was created.');
+          }
+          if (!submitOrderAbortRef.current) {
             setEncryptedAddress(finalEncrypted);
           }
         }
@@ -244,7 +319,7 @@ export default function GuestCheckoutPage() {
         const req = buildOrderRequest(
           items,
           needsShippingAddress ? addressData : null,
-          needsShippingAddress ? finalEncrypted : null,
+          addressProtectionRequired ? finalEncrypted : null,
           contactEmail,
           coin
         );
@@ -263,6 +338,16 @@ export default function GuestCheckoutPage() {
             res.buyerPortalToken
           );
         }
+        rememberGuestOrder({
+          orderToken: res.orderToken,
+          state: 'AWAITING_PAYMENT',
+          itemTitles: res.items.map(item => item.listingTitle),
+          paymentAmount: res.paymentAmount,
+          paymentCoin: res.paymentCoin,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          storeRouteToken: routedStoreContextService.getStoreRouteToken() ?? undefined,
+        });
         clearCart();
       } catch (err) {
         if (submitOrderAbortRef.current) return;
@@ -272,6 +357,7 @@ export default function GuestCheckoutPage() {
     [
       items,
       needsShippingAddress,
+      addressProtectionRequired,
       addressData,
       encryptedAddress,
       encryptionAvailable,
@@ -286,13 +372,18 @@ export default function GuestCheckoutPage() {
   );
 
   const handleCoinSelect = (tokenId: string) => {
-    const paymentCoin =
-      tokenId.startsWith('crypto:') || tokenId.startsWith('fiat:')
-        ? tokenId
-        : mustAssetIdFromTokenId(tokenId);
+    const paymentCoin = normalizeGuestPaymentCoin(tokenId);
     setSelectedCoin(paymentCoin);
     setStep('payment');
     void submitGuestOrder(paymentCoin);
+  };
+
+  const continueToPayment = () => {
+    if (hasSingleAcceptedCoin) {
+      handleCoinSelect(acceptedCoins[0]);
+      return;
+    }
+    setStep('coin');
   };
 
   const awaitingOrder =
@@ -304,12 +395,12 @@ export default function GuestCheckoutPage() {
       <main className="py-8">
         <Container size="md">
           <CheckoutProgressBar
-            steps={STEPS}
+            steps={checkoutSteps}
             labels={stepLabels}
             currentStep={step}
             onStepClick={s => {
-              const idx = STEPS.indexOf(s as Step);
-              if (idx < STEPS.indexOf(step)) setStep(s as Step);
+              const idx = checkoutSteps.indexOf(s as Step);
+              if (idx < checkoutSteps.indexOf(step)) setStep(s as Step);
             }}
             className="mb-8"
           />
@@ -399,7 +490,7 @@ export default function GuestCheckoutPage() {
                     />
                   )}
 
-                  {/* For digital-only orders, show a compact email field before
+                  {/* For orders without shipping, show a compact optional email field before
                       proceeding to coin selection (no shipping address needed). */}
                   {!needsShippingAddress && (
                     <div className="space-y-1.5">
@@ -412,9 +503,7 @@ export default function GuestCheckoutPage() {
                         placeholder="your@email.com"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {t('guestCheckout.emailDigitalHint', {
-                          defaultValue: 'Optional. We use this to send order updates.',
-                        })}
+                        {t('guestCheckout.emailContactHint')}
                       </p>
                     </div>
                   )}
@@ -422,7 +511,9 @@ export default function GuestCheckoutPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => setStep(needsShippingAddress ? 'shipping' : 'coin')}
+                    onClick={() =>
+                      needsShippingAddress ? setStep('shipping') : continueToPayment()
+                    }
                     disabled={!canContinueCart || supplyBlocksCheckout}
                   >
                     {needsShippingAddress
@@ -439,7 +530,7 @@ export default function GuestCheckoutPage() {
             <form
               onSubmit={e => {
                 e.preventDefault();
-                if (canSubmitShipping) setStep('coin');
+                if (canSubmitShipping) continueToPayment();
               }}
               className="space-y-6"
             >
@@ -463,32 +554,170 @@ export default function GuestCheckoutPage() {
                           onChange={e => setContactEmail(e.target.value)}
                           placeholder="your@email.com"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          {t('guestCheckout.emailContactHint')}
+                        </p>
                       </div>
                     }
                   />
                 </CardContent>
               </Card>
 
+              {items
+                .filter(item => item.contractType === 'PHYSICAL_GOOD')
+                .map(item => {
+                  const available = availableShippingOptions(item, countryCode, total?.amount ?? 0);
+                  return (
+                    <Card key={`shipping-${item.slug}`}>
+                      <CardContent className="space-y-3 p-4">
+                        <div>
+                          <p className="text-sm font-medium">Shipping method</p>
+                          <p className="text-xs text-muted-foreground">{item.title}</p>
+                        </div>
+                        {available.length ? (
+                          <div className="space-y-2">
+                            {available.map(option => {
+                              const selected = shippingSelectionMatchesOption(item, option);
+                              return (
+                                <label
+                                  key={`${option.zoneID}-${option.rateID}`}
+                                  className="flex cursor-pointer items-center justify-between gap-4 rounded-md border p-3"
+                                >
+                                  <span>
+                                    <span className="block text-sm font-medium">
+                                      {option.rateName}
+                                    </span>
+                                    {option.estimatedDelivery && (
+                                      <span className="block text-xs text-muted-foreground">
+                                        {option.estimatedDelivery}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="flex items-center gap-3">
+                                    <span className="text-sm font-medium">
+                                      {Number(
+                                        effectiveShippingPrice(option, total?.amount ?? 0)
+                                      ) === 0
+                                        ? t('shipping.free')
+                                        : renderPairedPrice(
+                                            Number(
+                                              effectiveShippingPrice(option, total?.amount ?? 0)
+                                            ),
+                                            option.currency,
+                                            option.currency,
+                                            { isMinimalUnit: true }
+                                          )}
+                                    </span>
+                                    <input
+                                      type="radio"
+                                      name={`shipping-${item.slug}`}
+                                      checked={selected}
+                                      onChange={() =>
+                                        updateShipping(item.slug, {
+                                          name: option.zoneID || option.zoneName,
+                                          service: option.rateID || option.rateName,
+                                          price: effectiveShippingPrice(option, total?.amount ?? 0),
+                                          currency: option.currency,
+                                          estimatedDelivery: option.estimatedDelivery,
+                                        })
+                                      }
+                                    />
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        ) : !item.shippingOptions?.length ? (
+                          <p className="text-sm text-destructive">
+                            {t('shipping.noShippingOptionsConfigured')}
+                          </p>
+                        ) : countryCode ? (
+                          <p className="text-sm text-destructive">
+                            {t('product.noShippingOptions')}
+                          </p>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+              {total && selectedShippingTotal !== null && (
+                <Card>
+                  <CardContent className="space-y-2 p-4 text-sm">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>
+                        {renderPairedPrice(total.amount, total.currency, total.currency, {
+                          isMinimalUnit: true,
+                          divisibility: total.divisibility,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Shipping</span>
+                      <span>
+                        {selectedShippingTotal === 0
+                          ? t('shipping.free')
+                          : renderPairedPrice(
+                              selectedShippingTotal,
+                              total.currency,
+                              total.currency,
+                              { isMinimalUnit: true, divisibility: total.divisibility }
+                            )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2 font-semibold">
+                      <span>Total</span>
+                      <span>
+                        {renderPairedPrice(
+                          total.amount + selectedShippingTotal,
+                          total.currency,
+                          total.currency,
+                          { isMinimalUnit: true, divisibility: total.divisibility }
+                        )}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* PM-3a: encryption status indicator */}
-              {isSovereignMode() && (
+              {addressProtectionRequired && (
                 <div
                   className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
-                    encryptionAvailable
+                    addressEncryptionStatus === 'ready'
                       ? 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
-                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                      : addressEncryptionStatus === 'loading'
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                        : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
                   }`}
+                  role={addressEncryptionStatus === 'ready' ? 'status' : 'alert'}
                 >
-                  <span>{encryptionAvailable ? '🔒' : '⚠️'}</span>
                   <span>
-                    {encryptionAvailable
+                    {addressEncryptionStatus === 'ready'
+                      ? '🔒'
+                      : addressEncryptionLoading
+                        ? '…'
+                        : '⚠️'}
+                  </span>
+                  <span>
+                    {addressEncryptionStatus === 'ready'
                       ? t('guestCheckout.addressWillBeEncrypted', {
-                          defaultValue:
-                            "Your address will be encrypted with the seller's PGP key before sending.",
+                          defaultValue: 'Your delivery address is encrypted for this seller.',
                         })
-                      : t('guestCheckout.addressNotEncrypted', {
-                          defaultValue:
-                            'This seller has not configured PGP encryption. Your address will be sent as plaintext.',
-                        })}
+                      : addressEncryptionStatus === 'loading'
+                        ? t('guestCheckout.addressProtectionPreparing', {
+                            defaultValue: 'Preparing secure address protection…',
+                          })
+                        : t('guestCheckout.addressProtectionUnavailable', {
+                            defaultValue:
+                              'This seller cannot securely receive a delivery address yet. Checkout is paused.',
+                          })}
+                    {addressEncryptionStatus === 'ready' && addressEncryptionFingerprint && (
+                      <span className="ml-1 font-mono text-xs opacity-75">
+                        {addressEncryptionFingerprint.slice(-12)}
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -540,7 +769,7 @@ export default function GuestCheckoutPage() {
                 variant="outline"
                 className="w-full"
                 size="lg"
-                onClick={() => setStep('shipping')}
+                onClick={() => setStep(needsShippingAddress ? 'shipping' : 'cart')}
               >
                 {t('guestCheckout.back')}
               </Button>
@@ -569,7 +798,13 @@ export default function GuestCheckoutPage() {
                       onClick={() => {
                         checkoutWorkflow.resetError();
                         setSubmissionError(null);
-                        setStep('coin');
+                        setStep(
+                          hasSingleAcceptedCoin
+                            ? needsShippingAddress
+                              ? 'shipping'
+                              : 'cart'
+                            : 'coin'
+                        );
                       }}
                     >
                       {t('guestCheckout.goBack')}
@@ -619,15 +854,21 @@ export default function GuestCheckoutPage() {
                   )}
 
                   <SaveOrderLinkCard
-                    orderUrl={buildGuestOrderUrl(
-                      awaitingOrder.orderToken,
-                      awaitingOrder.buyerPortalToken,
-                      true
-                    )}
+                    orderUrl={buildGuestOrderRecoveryHref(awaitingOrder.orderToken, {
+                      storeRouteToken: routedStoreContextService.getStoreRouteToken(),
+                      buyerPortalToken: awaitingOrder.buyerPortalToken,
+                      origin: typeof window === 'undefined' ? undefined : window.location.origin,
+                    })}
                     title={t('guestCheckout.saveLinkTitle')}
                     description={t('guestCheckout.saveLinkDescription')}
                     copyLabel={t('guestCheckout.saveLinkCopy')}
                     copiedLabel={t('guestCheckout.saveLinkCopied')}
+                    shareLabel={t('common.share')}
+                    telegramSendLabel={t('guestOrder.telegramSend')}
+                    telegramSendingLabel={t('guestOrder.telegramSending')}
+                    telegramSentLabel={t('guestOrder.telegramSent')}
+                    telegramSendError={t('guestOrder.telegramSendError')}
+                    telegramPrivacyNote={t('guestOrder.telegramPrivacyNote')}
                     testId="guest-checkout-save-link"
                   />
 
@@ -639,7 +880,10 @@ export default function GuestCheckoutPage() {
                     size="lg"
                     onClick={() =>
                       router.push(
-                        buildGuestOrderUrl(awaitingOrder.orderToken, awaitingOrder.buyerPortalToken)
+                        buildGuestOrderRecoveryHref(awaitingOrder.orderToken, {
+                          storeRouteToken: routedStoreContextService.getStoreRouteToken(),
+                          buyerPortalToken: awaitingOrder.buyerPortalToken,
+                        })
                       )
                     }
                   >

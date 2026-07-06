@@ -29,6 +29,7 @@ export interface CommerceGuestOrderRequest {
   items: CommerceGuestOrderItemRequest[];
   paymentCoin: string;
   contactEmail?: string;
+  shippingCountry?: string;
   shippingAddress?:
     | {
         name: string;

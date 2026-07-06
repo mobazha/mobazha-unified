@@ -10,7 +10,8 @@ import type { FiatPaymentSuccessResult } from './StripePaymentForm';
 
 export interface PayPalPaymentFormProps {
   sessionData: PayPalSessionData;
-  vendorPeerID: string;
+  /** Omitted for Deal-backed orders that live in the authenticated buyer runtime. */
+  vendorPeerID?: string;
   amount: number;
   currency?: string;
   onSuccess: (result: FiatPaymentSuccessResult) => void;
@@ -67,7 +68,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
     } finally {
       setIsCapturing(false);
     }
-  }, [sessionData.orderID, vendorPeerID, onSuccess, onError, t]);
+  }, [sessionData.orderID, vendorPeerID, amount, currency, onSuccess, onError, t]);
 
   const handleError = useCallback(
     (err: Record<string, unknown>) => {

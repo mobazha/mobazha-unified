@@ -22,6 +22,7 @@ import {
   getAllZones,
   useCurrency,
   profileApi,
+  isSovereignMode,
 } from '@mobazha/core';
 import type { ShippingProfile, ShippingZone, ShippingLocation } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -292,6 +293,7 @@ export function ShippingSettingsContent() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { localCurrency } = useCurrency();
+  const shippingCurrency = isSovereignMode() ? 'XMR' : localCurrency;
 
   const {
     profiles,
@@ -670,7 +672,7 @@ export function ShippingSettingsContent() {
                                 {t('shipping.orUseTemplate')}
                               </p>
                               <ShippingTemplateSelector
-                                currency={localCurrency}
+                                currency={shippingCurrency}
                                 sellerCountry={sellerCountry}
                                 onSelect={option => {
                                   handleSelectTemplate(option, profile.profileId);
@@ -707,7 +709,7 @@ export function ShippingSettingsContent() {
             <EmptyState
               onSelectProfileTemplate={handleSelectProfileTemplate}
               onCreateProfile={handleCreateProfile}
-              currency={localCurrency}
+              currency={shippingCurrency}
               sellerCountry={sellerCountry}
             />
           )}
@@ -785,7 +787,7 @@ export function ShippingSettingsContent() {
           </DialogHeader>
           <ShippingZoneForm
             zone={editingZone}
-            currency={localCurrency}
+            currency={shippingCurrency}
             onSave={handleSaveZone}
             onCancel={() => {
               setShowZoneForm(false);

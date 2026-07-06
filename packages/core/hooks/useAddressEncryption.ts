@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { NODE_API } from '../config/apiPaths';
 
 export interface AddressEncryptionState {
+  status: 'idle' | 'loading' | 'ready' | 'missing' | 'error';
   /** True when the vendor has a PGP key configured and encryption is ready. */
   encryptionAvailable: boolean;
   /** True while fetching the vendor's public key. */
@@ -28,10 +29,12 @@ export interface AddressEncryptionState {
   /**
    * Encrypts an address object with the vendor's PGP public key.
    * Returns the OpenPGP ASCII-armor ciphertext string.
-   * Returns null if encryptionAvailable is false (caller should fall back
-   * to plaintext with a warning shown to the user).
+   * Throws when encryption is unavailable; sovereign physical checkout must
+   * remain paused rather than sending a plaintext delivery address.
    */
-  encryptAddress: (address: Record<string, unknown>) => Promise<string | null>;
+  fingerprint?: string;
+  error?: string;
+  encryptAddress: (address: Record<string, unknown>) => Promise<string>;
 }
 
 /**
@@ -42,32 +45,52 @@ export interface AddressEncryptionState {
  */
 export function useAddressEncryption(gatewayUrl: string): AddressEncryptionState {
   const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [fingerprint, setFingerprint] = useState<string>();
+  const [status, setStatus] = useState<AddressEncryptionState['status']>('idle');
+  const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!gatewayUrl) {
       setIsLoading(false);
+      setStatus('idle');
       return;
     }
 
     let cancelled = false;
     setIsLoading(true);
+    setStatus('loading');
+    setError(undefined);
+    setPublicKey(null);
+    setFingerprint(undefined);
 
     fetch(`${gatewayUrl}${NODE_API.SETTINGS_PGP_KEY}`)
-      .then(res => {
-        if (!res.ok) {
-          // 404 means no PGP key configured — not an error.
+      .then(async res => {
+        if (res.status === 404) {
+          if (!cancelled) setStatus('missing');
           return null;
         }
-        return res.json();
+        if (!res.ok) throw new Error(`address protection key request failed (${res.status})`);
+        return res.json() as Promise<{
+          data?: { publicKey?: string; fingerprint?: string };
+        }>;
       })
-      .then((data: { data?: { publicKey?: string } } | null) => {
-        if (!cancelled && data?.data?.publicKey) {
-          setPublicKey(data.data.publicKey);
-        }
+      .then(async data => {
+        if (cancelled || !data) return;
+        const key = data.data?.publicKey?.trim();
+        if (!key) throw new Error('seller address protection key is missing');
+        const { readKey } = await import('openpgp');
+        const parsed = await readKey({ armoredKey: key });
+        if (cancelled) return;
+        setPublicKey(key);
+        setFingerprint(data.data?.fingerprint || parsed.getFingerprint().toUpperCase());
+        setStatus('ready');
       })
-      .catch(() => {
-        // Network error or JSON parse failure — treat as no key.
+      .catch(cause => {
+        if (cancelled) return;
+        setPublicKey(null);
+        setStatus('error');
+        setError(cause instanceof Error ? cause.message : 'address protection key unavailable');
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -79,34 +102,24 @@ export function useAddressEncryption(gatewayUrl: string): AddressEncryptionState
   }, [gatewayUrl]);
 
   const encryptAddress = useCallback(
-    async (address: Record<string, unknown>): Promise<string | null> => {
-      if (!publicKey) return null;
-
-      try {
-        // Dynamic import so openpgp is not in the initial bundle.
-        const { createMessage, encrypt, readKey } = await import('openpgp');
-
-        const vendorKey = await readKey({ armoredKey: publicKey });
-        const plaintext = JSON.stringify(address);
-        const message = await createMessage({ text: plaintext });
-
-        const ciphertext = await encrypt({
-          message,
-          encryptionKeys: vendorKey,
-        });
-
-        return ciphertext as string;
-      } catch (err) {
-        console.error('[useAddressEncryption] encryption failed:', err);
-        return null;
+    async (address: Record<string, unknown>): Promise<string> => {
+      if (!publicKey || status !== 'ready') {
+        throw new Error('shipping address encryption is not ready');
       }
+      const { createMessage, encrypt, readKey } = await import('openpgp');
+      const vendorKey = await readKey({ armoredKey: publicKey });
+      const message = await createMessage({ text: JSON.stringify(address) });
+      return (await encrypt({ message, encryptionKeys: vendorKey })) as string;
     },
-    [publicKey]
+    [publicKey, status]
   );
 
   return {
-    encryptionAvailable: publicKey !== null,
+    status,
+    encryptionAvailable: status === 'ready',
     isLoading,
+    fingerprint,
+    error,
     encryptAddress,
   };
 }

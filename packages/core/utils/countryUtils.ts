@@ -358,7 +358,8 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
  * 支持多种格式：ISO 代码、下划线格式名称等
  */
 export function toISOCountryCode(countryIdentifier: string): string {
-  const upperIdentifier = countryIdentifier.toUpperCase();
+  const trimmed = countryIdentifier.trim();
+  const upperIdentifier = trimmed.toUpperCase();
 
   // 已经是 ISO 代码（2位字母）
   if (/^[A-Z]{2}$/.test(upperIdentifier)) {
@@ -366,12 +367,23 @@ export function toISOCountryCode(countryIdentifier: string): string {
   }
 
   // 尝试从映射表获取
-  if (COUNTRY_NAME_TO_ISO[upperIdentifier]) {
-    return COUNTRY_NAME_TO_ISO[upperIdentifier];
+  const normalizedName = upperIdentifier
+    .normalize('NFKD')
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  if (COUNTRY_NAME_TO_ISO[normalizedName]) {
+    return COUNTRY_NAME_TO_ISO[normalizedName];
   }
 
+  // i18n-iso-countries covers ordinary display names such as
+  // "United States" while the explicit mapping above preserves aliases used
+  // by legacy listings.
+  const libraryCode =
+    countries.getAlpha2Code(trimmed, 'en') || countries.getAlpha2Code(trimmed, 'zh');
+  if (libraryCode) return libraryCode.toUpperCase();
+
   // 返回原始值（可能是未知格式）
-  return countryIdentifier;
+  return trimmed;
 }
 
 /**

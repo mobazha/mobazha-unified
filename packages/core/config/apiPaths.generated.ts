@@ -506,6 +506,13 @@ export const NODE_API_PATHS = {
   CHAT_VERIFICATION_REQUEST: '/chat/verification/request',
   CHAT_VERIFICATION_START_SAS: (txnId: string) =>
     `/chat/verification/${encodeURIComponent(txnId)}/start-sas`,
+  COLLATERAL_ACCOUNTS: '/collateral/accounts',
+  COLLATERAL_ACCOUNTS_BY_COLLATERAL_ID: (collateralID: string) =>
+    `/collateral/accounts/${encodeURIComponent(collateralID)}`,
+  COLLATERAL_ACCOUNTS_FUNDING_RECONCILE: (collateralID: string) =>
+    `/collateral/accounts/${encodeURIComponent(collateralID)}/funding/reconcile`,
+  COLLATERAL_ACCOUNTS_FUNDING_TARGET: (collateralID: string) =>
+    `/collateral/accounts/${encodeURIComponent(collateralID)}/funding-target`,
   COLLECTIONS: '/collections',
   COLLECTIONS_BY_COLLECTION_ID: (collectionID: string) =>
     `/collections/${encodeURIComponent(collectionID)}`,
@@ -749,6 +756,7 @@ export const NODE_API_PATHS = {
   SETTINGS_GUEST_CHECKOUT_READINESS: '/settings/guest-checkout/readiness',
   SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
   SETTINGS_PGP_KEY: '/settings/pgp-key',
+  SETTINGS_PGP_KEY_VAULT: '/settings/pgp-key/vault',
   SETTINGS_STOREFRONT: '/settings/storefront',
   SETTINGS_STOREFRONT_BY_PEER_ID: (peerID: string) =>
     `/settings/storefront/${encodeURIComponent(peerID)}`,

@@ -10,7 +10,7 @@ import { paymentSessionToFiatSession } from '../utils/transforms/paymentSessionF
 
 export interface CreateQuotedFiatPaymentSessionParams {
   orderId: string;
-  vendorPeerID: string;
+  vendorPeerID?: string;
   paymentCoin: string;
   paymentSelectionQuoteID: string;
   fiatDescription?: string;

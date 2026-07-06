@@ -25,7 +25,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { formatGuestPaymentAmount } from '@/components/admin/orders/utils';
 import {
-  formatGuestStateLabel,
+  formatGuestOrderStateLabel,
   guestActionHelpText,
   guestStateBadgeClass,
   truncateOrderToken,
@@ -149,7 +149,9 @@ export function GuestOrderDetailDrawer({
 
   const fundedHelpText = isPhysical
     ? t('admin.orders.guestPhysicalShipHelp')
-    : t('admin.orders.guestDigitalDeliverHelp');
+    : orderKind === 'service'
+      ? t('admin.orders.guestServiceDeliverHelp')
+      : t('admin.orders.guestDigitalDeliverHelp');
 
   const fundedActionLabel =
     actionLoading === 'ship'
@@ -284,7 +286,7 @@ export function GuestOrderDetailDrawer({
               <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className={guestStateBadgeClass(detail.state, t)}>
-                    {formatGuestStateLabel(detail.state, t)}
+                    {formatGuestOrderStateLabel(detail.state, orderKind, t)}
                   </Badge>
                   <Badge variant="secondary">{guestOrderKindLabel(orderKind, t)}</Badge>
                 </div>

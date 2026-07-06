@@ -2,16 +2,22 @@
 
 import { useI18n } from '@mobazha/core';
 import type { GuestOrderStatus } from '@mobazha/core/services/api/guestCheckout';
+import type { GuestOrderKind } from './guestOrderDisplay';
 import { formatGuestMilestoneDisplay, guestOrderMilestonesFromStatus } from './guestOrderStages';
 
 interface GuestOrderMilestonesProps {
   order: GuestOrderStatus;
+  orderKind?: GuestOrderKind;
   className?: string;
 }
 
-export function GuestOrderMilestones({ order, className }: GuestOrderMilestonesProps) {
+export function GuestOrderMilestones({
+  order,
+  orderKind = 'unknown',
+  className,
+}: GuestOrderMilestonesProps) {
   const { t } = useI18n();
-  const milestones = guestOrderMilestonesFromStatus(order);
+  const milestones = guestOrderMilestonesFromStatus(order, orderKind);
 
   if (milestones.length === 0) {
     return null;

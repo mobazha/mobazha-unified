@@ -13,7 +13,34 @@ export interface GuestCartItem {
   listingHash: string;
   quantity: number;
   options?: { name: string; value: string }[];
-  shipping?: { name: string; service: string };
+  shipping?: {
+    name: string;
+    service: string;
+    price?: string;
+    currency?: string;
+    estimatedDelivery?: string;
+  };
+  shippingOptions?: Array<{
+    zoneID: string;
+    zoneName: string;
+    regions: string[];
+    rateID: string;
+    rateName: string;
+    price: string;
+    currency: string;
+    estimatedDelivery?: string;
+    condition?: {
+      type: 'weight' | 'price';
+      minValue: number;
+      maxValue: number;
+    };
+    freeShippingThreshold?: {
+      enabled: boolean;
+      minAmount: string;
+    };
+  }>;
+  /** Unit weight used for authoritative shipping-condition previews. */
+  unitWeightGrams?: number;
   title: string;
   price: { amount: number; currency: string; divisibility: number };
   thumbnail: string;
@@ -33,6 +60,7 @@ interface GuestCartState {
   addItem: (item: GuestCartItem) => void;
   removeItem: (slug: string) => void;
   updateQuantity: (slug: string, quantity: number) => void;
+  updateShipping: (slug: string, shipping: GuestCartItem['shipping']) => void;
   clearCart: () => void;
 
   getItemCount: () => number;
@@ -79,6 +107,12 @@ export const useGuestCartStore = create<GuestCartState>()(
           }
           set({
             items: get().items.map(i => (i.slug === slug ? { ...i, quantity } : i)),
+          });
+        },
+
+        updateShipping: (slug, shipping) => {
+          set({
+            items: get().items.map(item => (item.slug === slug ? { ...item, shipping } : item)),
           });
         },
 

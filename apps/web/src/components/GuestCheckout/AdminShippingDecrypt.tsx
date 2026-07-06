@@ -2,9 +2,9 @@
  * PM-3a: Admin-side PGP address decryption component.
  *
  * Renders inside the guest order detail view for the authenticated seller.
- * When an order's shipping address is PGP-encrypted, the admin pastes their
- * private key armored block here and the plaintext is decrypted entirely in
- * the browser — the private key and plaintext never leave the device.
+ * The passphrase-encrypted recovery key is fetched for the authenticated
+ * seller and unlocked in this browser. The passphrase and plaintext never
+ * leave the device. Manual key import remains an advanced recovery path.
  */
 
 'use client';
@@ -13,10 +13,12 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@mobazha/core';
+import { getPGPKeyVault } from '@mobazha/core/services/api/guestCheckout';
 
 interface AdminShippingDecryptProps {
   /** The OpenPGP ASCII-armor ciphertext stored in the database. */
   ciphertext: string;
+  expectedFingerprint?: string;
 }
 
 interface ParsedAddress {
@@ -30,7 +32,10 @@ interface ParsedAddress {
   [key: string]: string | undefined;
 }
 
-export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) {
+export function AdminShippingDecrypt({
+  ciphertext,
+  expectedFingerprint,
+}: AdminShippingDecryptProps) {
   const { t } = useI18n();
   const [privateKeyArmor, setPrivateKeyArmor] = useState('');
   const [passphrase, setPassphrase] = useState('');
@@ -39,23 +44,38 @@ export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) 
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
+  const [showManualImport, setShowManualImport] = useState(false);
 
   const handleDecrypt = async () => {
-    if (!privateKeyArmor.trim()) {
-      setError(
-        t('adminDecrypt.privateKeyRequired', { defaultValue: 'Please paste your private key.' })
-      );
-      return;
-    }
     setIsDecrypting(true);
     setError(null);
 
     try {
       const { readPrivateKey, readMessage, decrypt, decryptKey } = await import('openpgp');
+      let armoredKey = privateKeyArmor.trim();
+      if (!armoredKey) {
+        const vault = await getPGPKeyVault();
+        if (
+          expectedFingerprint &&
+          vault.fingerprint &&
+          vault.fingerprint.toUpperCase() !== expectedFingerprint.toUpperCase()
+        ) {
+          throw new Error(
+            `This order uses key …${expectedFingerprint.slice(-12)}. Import that recovery key below.`
+          );
+        }
+        armoredKey = vault.encryptedPrivateKey?.trim();
+      }
+      if (!armoredKey) {
+        throw new Error('No encrypted recovery key is configured for this store.');
+      }
 
-      let privateKey = await readPrivateKey({ armoredKey: privateKeyArmor });
+      let privateKey = await readPrivateKey({ armoredKey });
 
-      if (passphrase) {
+      if (!privateKey.isDecrypted() && !passphrase) {
+        throw new Error('Enter the recovery passphrase.');
+      }
+      if (!privateKey.isDecrypted()) {
         privateKey = await decryptKey({ privateKey, passphrase });
       }
 
@@ -94,6 +114,7 @@ export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) 
     setDecryptedAddress(null);
     setRawPlaintext(null);
     setError(null);
+    setShowManualImport(false);
   };
 
   const handlePrint = () => {
@@ -113,9 +134,10 @@ export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) 
       : (rawPlaintext ?? '');
     const win = window.open('', '_blank');
     if (win) {
-      win.document.write(
-        `<pre style="font-size:14px;font-family:monospace;padding:24px">${label}</pre>`
-      );
+      const pre = win.document.createElement('pre');
+      pre.style.cssText = 'font-size:14px;font-family:monospace;padding:24px;white-space:pre-wrap';
+      pre.textContent = label;
+      win.document.body.replaceChildren(pre);
       win.document.close();
       win.print();
     }
@@ -173,7 +195,7 @@ export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) 
         <span>
           {t('adminDecrypt.encryptedNotice', {
             defaultValue:
-              'Shipping address is PGP-encrypted. Decrypt with your private key (stays in browser).',
+              'Shipping address is encrypted. Unlock it with your recovery passphrase (in this browser only).',
           })}
         </span>
       </div>
@@ -187,28 +209,37 @@ export function AdminShippingDecrypt({ ciphertext }: AdminShippingDecryptProps) 
           <p className="text-xs text-muted-foreground">
             {t('adminDecrypt.privateKeyHint', {
               defaultValue:
-                'Paste your PGP private key (ASCII armor). The key and plaintext never leave your browser.',
+                'Enter the recovery passphrase you created with address protection. It is never sent to the store.',
             })}
           </p>
-
-          <Textarea
-            rows={6}
-            placeholder="-----BEGIN PGP PRIVATE KEY BLOCK-----"
-            value={privateKeyArmor}
-            onChange={e => setPrivateKeyArmor(e.target.value)}
-            className="font-mono text-xs"
-            spellCheck={false}
-          />
 
           <input
             type="password"
             className="w-full rounded border px-3 py-1.5 text-sm bg-background"
             placeholder={t('adminDecrypt.passphrasePlaceholder', {
-              defaultValue: 'Passphrase (leave blank if none)',
+              defaultValue: 'Recovery passphrase',
             })}
             value={passphrase}
             onChange={e => setPassphrase(e.target.value)}
           />
+
+          <button
+            type="button"
+            className="text-xs text-muted-foreground underline underline-offset-4"
+            onClick={() => setShowManualImport(value => !value)}
+          >
+            {showManualImport ? 'Hide recovery key import' : 'Advanced: import a recovery key'}
+          </button>
+          {showManualImport && (
+            <Textarea
+              rows={6}
+              placeholder="-----BEGIN PGP PRIVATE KEY BLOCK-----"
+              value={privateKeyArmor}
+              onChange={e => setPrivateKeyArmor(e.target.value)}
+              className="font-mono text-xs"
+              spellCheck={false}
+            />
+          )}
 
           {error && <p className="text-xs text-destructive">{error}</p>}
 

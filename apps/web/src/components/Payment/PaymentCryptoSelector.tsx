@@ -83,6 +83,10 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     () => currencyGroups.filter(g => g.category === 'other'),
     [currencyGroups]
   );
+  const hasExchangeUsdtToken = useMemo(
+    () => availableTokens.some(token => token.token.trim().toUpperCase() === 'USDT'),
+    [availableTokens]
+  );
 
   const handleTokenSelect = useCallback(
     (tokenId: string) => {
@@ -242,7 +246,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         </div>
       )}
 
-      {availableTokens.length > 0 && isExchangeUsdtPaymentGuideLocale(locale) && (
+      {hasExchangeUsdtToken && isExchangeUsdtPaymentGuideLocale(locale) && (
         <>
           {selectedTokenId && !selectedFiatProvider && (
             <ExchangeUsdtPaymentTokenHint tokenId={selectedTokenId} />

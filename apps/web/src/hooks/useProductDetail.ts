@@ -697,6 +697,22 @@ export function useProductDetail({
           : typeof rawProduct.cid === 'string'
             ? rawProduct.cid
             : '';
+      const shippingOptions = product.shippingProfile
+        ? getAllShippingZones(product.shippingProfile).flatMap(zone =>
+            (zone.rates ?? []).map(rate => ({
+              zoneID: zone.id,
+              zoneName: zone.name,
+              regions: zone.regions,
+              rateID: rate.id,
+              rateName: rate.name,
+              price: rate.price,
+              currency: rate.currency,
+              estimatedDelivery: rate.estimatedDelivery || undefined,
+              condition: rate.condition,
+              freeShippingThreshold: rate.freeShippingThreshold,
+            }))
+          )
+        : undefined;
 
       addGuestCartItem({
         slug: product.slug,
@@ -708,6 +724,8 @@ export function useProductDetail({
         thumbnail: thumbnail.small || thumbnail.tiny || thumbnail.medium || '',
         vendorPeerID: product.vendorID.peerID,
         contractType: product.metadata.contractType,
+        shippingOptions,
+        unitWeightGrams: selectedSku?.weight || product.item.grams || 0,
       });
 
       if (isModal && onClose) onClose();

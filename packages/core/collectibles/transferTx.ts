@@ -19,6 +19,47 @@ export interface SignCollectibleTransferTxParams {
 }
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+const SYSTEM_PROGRAM_ID = new PublicKey('11111111111111111111111111111111');
+const SYSVAR_INSTRUCTIONS_PROGRAM_ID = new PublicKey('Sysvar1nstructions1111111111111111111111111');
+const METADATA_SEED = new TextEncoder().encode('metadata');
+const EDITION_SEED = new TextEncoder().encode('edition');
+const TOKEN_RECORD_SEED = new TextEncoder().encode('token_record');
+
+function findMetadataPDA(mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [METADATA_SEED, TOKEN_METADATA_PROGRAM_ID.toBytes(), mint.toBytes()],
+    TOKEN_METADATA_PROGRAM_ID
+  )[0];
+}
+
+function findMasterEditionPDA(mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [METADATA_SEED, TOKEN_METADATA_PROGRAM_ID.toBytes(), mint.toBytes(), EDITION_SEED],
+    TOKEN_METADATA_PROGRAM_ID
+  )[0];
+}
+
+function findAssociatedTokenAddress(owner: PublicKey, mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [owner.toBytes(), TOKEN_PROGRAM_ID.toBytes(), mint.toBytes()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  )[0];
+}
+
+function findTokenRecordPDA(mint: PublicKey, tokenAccount: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      METADATA_SEED,
+      TOKEN_METADATA_PROGRAM_ID.toBytes(),
+      mint.toBytes(),
+      TOKEN_RECORD_SEED,
+      tokenAccount.toBytes(),
+    ],
+    TOKEN_METADATA_PROGRAM_ID
+  )[0];
+}
 
 export async function signCollectibleTransferTransaction(
   params: SignCollectibleTransferTxParams
@@ -88,15 +129,43 @@ function validateTransferTransaction(
   if (!instruction || !instruction.programId.equals(TOKEN_METADATA_PROGRAM_ID)) {
     throw new Error('Invalid collectible transfer program');
   }
-  const account = (key: PublicKey) => instruction.keys.find(meta => meta.pubkey.equals(key));
-  const holderAccount = account(wallet);
-  const destinationAccount = account(destination);
-  const mintAccount = account(mint);
+  const sourceToken = findAssociatedTokenAddress(wallet, mint);
+  const destinationToken = findAssociatedTokenAddress(destination, mint);
+  const metadata = findMetadataPDA(mint);
+  const edition = findMasterEditionPDA(mint);
+  const sourceRecord = findTokenRecordPDA(mint, sourceToken);
+  const destinationRecord = findTokenRecordPDA(mint, destinationToken);
+  // Transaction compilation merges privileges for duplicate public keys. The
+  // holder therefore appears signer+writable in all three TransferV1 slots.
+  const expectedAccounts = [
+    { pubkey: sourceToken, isSigner: false, isWritable: true },
+    { pubkey: wallet, isSigner: true, isWritable: true },
+    { pubkey: destinationToken, isSigner: false, isWritable: true },
+    { pubkey: destination, isSigner: false, isWritable: false },
+    { pubkey: mint, isSigner: false, isWritable: false },
+    { pubkey: metadata, isSigner: false, isWritable: true },
+    { pubkey: edition, isSigner: false, isWritable: false },
+    { pubkey: sourceRecord, isSigner: false, isWritable: true },
+    { pubkey: destinationRecord, isSigner: false, isWritable: true },
+    { pubkey: wallet, isSigner: true, isWritable: true },
+    { pubkey: wallet, isSigner: true, isWritable: true },
+    { pubkey: SYSTEM_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_INSTRUCTIONS_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+  ];
+  const accountLayoutMatches =
+    instruction.keys.length === expectedAccounts.length &&
+    expectedAccounts.every((expected, index) => {
+      const actual = instruction.keys[index];
+      return (
+        actual?.pubkey.equals(expected.pubkey) &&
+        actual.isSigner === expected.isSigner &&
+        actual.isWritable === expected.isWritable
+      );
+    });
   if (
-    !holderAccount?.isSigner ||
-    destinationAccount?.isSigner ||
-    !destinationAccount ||
-    !mintAccount ||
+    !accountLayoutMatches ||
     instruction.data.length !== 11 ||
     instruction.data[0] !== 49 ||
     instruction.data[1] !== 0 ||

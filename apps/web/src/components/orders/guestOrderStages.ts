@@ -71,6 +71,7 @@ export interface GuestOrderMilestone {
     | 'admin.orders.guestMilestoneCompleted'
     | 'guestOrder.milestones.funded'
     | 'guestOrder.milestones.shipped'
+    | 'guestOrder.milestones.delivered'
     | 'guestOrder.milestones.completed';
   at?: string;
 }
@@ -114,11 +115,15 @@ export function guestOrderMilestones(
 }
 
 export function guestOrderMilestonesFromStatus(
-  order: Pick<GuestOrderStatus, 'fundedAt' | 'shippedAt' | 'completedAt' | 'state'>
+  order: Pick<GuestOrderStatus, 'fundedAt' | 'shippedAt' | 'completedAt' | 'state'>,
+  orderKind: GuestOrderKind = 'unknown'
 ): GuestOrderMilestone[] {
   return buildGuestOrderMilestones(order, {
     funded: 'guestOrder.milestones.funded',
-    shipped: 'guestOrder.milestones.shipped',
+    shipped:
+      orderKind === 'service' || orderKind === 'digital'
+        ? 'guestOrder.milestones.delivered'
+        : 'guestOrder.milestones.shipped',
     completed: 'guestOrder.milestones.completed',
   });
 }

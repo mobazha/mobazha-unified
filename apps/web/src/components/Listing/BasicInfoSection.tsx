@@ -402,9 +402,7 @@ export function BasicInfoSection({
         {showWeight && (
           <div className={`grid grid-cols-1 sm:grid-cols-2 ${compact ? 'gap-3' : 'gap-4'}`}>
             <div>
-              <label className={`block ${requiredLabelClass} mb-1`}>
-                {t('listing.weight')} <span className="text-destructive">*</span>
-              </label>
+              <label className={`block ${requiredLabelClass} mb-1`}>{t('listing.weight')}</label>
               <div className="flex gap-2">
                 <input
                   type="number"

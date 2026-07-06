@@ -31,13 +31,15 @@ import { RouteChunkErrorFallback } from '@/components/RouteChunkErrorFallback';
 // the official tgWebAppStartParam query value is available synchronously and
 // prevents the marketplace providers from racing against route activation.
 let storeRouteToken: string | null = null;
-let routedStoreBootstrapFailed = false;
+let routedStoreBootstrapFailure: 'missing-route' | 'unavailable' | null = null;
 if (__ROUTED_TMA__) {
   const startParam = resolveTelegramStartParam(
     undefined,
     new URLSearchParams(window.location.search).get('tgWebAppStartParam')
   );
-  storeRouteToken = parseStartParam(startParam).storeRouteToken ?? null;
+  storeRouteToken =
+    parseStartParam(startParam).storeRouteToken ??
+    routedStoreContextService.getStoreRouteToken();
   if (storeRouteToken) {
     routedStoreContextService.setStoreRouteToken(storeRouteToken);
   }
@@ -48,7 +50,7 @@ let bootstrapStorefrontPeerID: string | null = null;
 async function bootstrapRoutedStorefront(): Promise<void> {
   if (!__ROUTED_TMA__) return;
   if (!storeRouteToken) {
-    routedStoreBootstrapFailed = true;
+    routedStoreBootstrapFailure = 'missing-route';
     return;
   }
   try {
@@ -57,7 +59,7 @@ async function bootstrapRoutedStorefront(): Promise<void> {
       cache: 'no-store',
     });
     if (!response.ok) {
-      routedStoreBootstrapFailed = true;
+      routedStoreBootstrapFailure = 'unavailable';
       return;
     }
     const payload = (await response.json()) as { data?: { peerID?: string } };
@@ -67,23 +69,28 @@ async function bootstrapRoutedStorefront(): Promise<void> {
     ) {
       bootstrapStorefrontPeerID = payload.data.peerID;
     } else {
-      routedStoreBootstrapFailed = true;
+      routedStoreBootstrapFailure = 'unavailable';
     }
   } catch {
-    routedStoreBootstrapFailed = true;
+    routedStoreBootstrapFailure = 'unavailable';
   }
 }
 
-function RoutedStoreUnavailable() {
+function RoutedStoreUnavailable({ reason }: { reason: 'missing-route' | 'unavailable' }) {
+  const missingRoute = reason === 'missing-route';
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
+    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
       <div className="max-w-sm">
-        <h1 className="text-xl font-semibold text-foreground">Store unavailable</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {missingRoute ? 'Open a store link' : 'Store unavailable'}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This store link is invalid, expired, or temporarily unavailable.
+          {missingRoute
+            ? 'Return to the chat and open the store-specific link shared by the seller.'
+            : 'This store link is invalid, expired, or temporarily unavailable.'}
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -173,7 +180,13 @@ if (container) {
   const root = createRoot(container);
   void bootstrapRoutedStorefront().finally(() => {
     root.render(
-      <StrictMode>{routedStoreBootstrapFailed ? <RoutedStoreUnavailable /> : <App />}</StrictMode>
+      <StrictMode>
+        {routedStoreBootstrapFailure ? (
+          <RoutedStoreUnavailable reason={routedStoreBootstrapFailure} />
+        ) : (
+          <App />
+        )}
+      </StrictMode>
     );
   });
 }

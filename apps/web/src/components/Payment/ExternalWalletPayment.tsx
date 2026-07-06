@@ -6,10 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VStack, HStack } from '@/components/layouts';
 import { TokenIcon } from './TokenIcon';
-import { useI18n } from '@mobazha/core';
+import { getPaymentCoinDisplayLabel, resolveTokenIdForDisplay, useI18n } from '@mobazha/core';
 import { Copy, Check, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import BigNumber from 'bignumber.js';
-import { getChainById } from './config';
 import { getCurrencyDecimals } from '@mobazha/core/data/currencies';
 
 export interface ExternalWalletPaymentInfo {
@@ -59,14 +58,6 @@ function formatDecimalAmount(rawAmount: string): string {
   const bn = new BigNumber(rawAmount);
   if (!bn.isFinite() || bn.isNaN() || bn.isZero()) return '0';
   return bn.toFixed().replace(/\.?0+$/, '') || '0';
-}
-
-function getReadableCoinName(coin: string): string {
-  const chain = getChainById(coin);
-  if (chain?.name) return chain.name;
-  const upper = coin.toUpperCase();
-  if (upper.startsWith('CRYPTO:')) return '';
-  return upper;
 }
 
 function shortHash(value: string | undefined): string {
@@ -157,7 +148,9 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
     ? formatDecimalAmount(paymentInfo.amount)
     : formatCryptoAmount(paymentInfo.amount, decimals);
 
-  const coinSymbol = tokenId?.toUpperCase() || getReadableCoinName(paymentInfo.coin) || '';
+  const displayCoin = tokenId || paymentInfo.coin;
+  const displayTokenId = resolveTokenIdForDisplay(displayCoin);
+  const coinSymbol = getPaymentCoinDisplayLabel(displayCoin);
   const observedPayments = paymentInfo.observedPayments || [];
   const hasObservedTransfer = observedPayments.length > 0;
 
@@ -202,7 +195,7 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
         <VStack gap="md" align="center">
           {/* Header */}
           <HStack gap="sm" align="center">
-            {tokenId && <TokenIcon token={tokenId} size={28} />}
+            {displayTokenId && <TokenIcon token={displayTokenId} size={28} />}
             <h3 className="text-lg font-semibold text-foreground">
               {t('payment.sendPayment')} {coinSymbol}
             </h3>

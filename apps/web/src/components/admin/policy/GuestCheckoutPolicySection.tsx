@@ -12,9 +12,6 @@ import {
 import {
   getGuestCheckoutSettings,
   updateGuestCheckoutSettings,
-  getPGPPublicKey,
-  updatePGPPublicKey,
-  deletePGPPublicKey,
   type GuestCheckoutSettings,
 } from '@mobazha/core/services/api/guestCheckout';
 import { cn } from '@/lib/utils';
@@ -23,7 +20,6 @@ import { GUEST_CHECKOUT_COINS, type GuestCoinInfo } from '@mobazha/core/config/g
 import { sanitizeAcceptedPaymentCoins, isVisibleAcceptedCurrency } from '@mobazha/core';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { isSovereignMode } from '@mobazha/core/config/env';
-import { Textarea } from '@/components/ui/textarea';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
 interface GuestCheckoutPolicySectionProps {
@@ -46,11 +42,6 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const [pgpKey, setPgpKey] = useState<string>('');
-  const [pgpKeyDraft, setPgpKeyDraft] = useState<string>('');
-  const [pgpSaving, setPgpSaving] = useState(false);
-  const [pgpError, setPgpError] = useState<string | null>(null);
-  const [pgpSuccess, setPgpSuccess] = useState(false);
   const showPGPSection = isSovereignMode();
   /** Hidden GA-gated coins kept on server until explicit save + visibility launch. */
   const preservedHiddenCoinsRef = useRef<string[]>([]);
@@ -81,43 +72,10 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
         if (!cancelled) setError(t('admin.guestCheckout.loadError'));
       });
 
-    if (isSovereignMode()) {
-      getPGPPublicKey()
-        .then(key => {
-          setPgpKey(key);
-          setPgpKeyDraft(key);
-        })
-        .catch(() => {
-          // 404 = not configured yet
-        });
-    }
-
     return () => {
       cancelled = true;
     };
   }, [t]);
-
-  const handleSavePGPKey = useCallback(async () => {
-    setPgpSaving(true);
-    setPgpError(null);
-    setPgpSuccess(false);
-    try {
-      if (pgpKeyDraft.trim()) {
-        await updatePGPPublicKey(pgpKeyDraft.trim());
-        setPgpKey(pgpKeyDraft.trim());
-      } else {
-        await deletePGPPublicKey();
-        setPgpKey('');
-        setPgpKeyDraft('');
-      }
-      setPgpSuccess(true);
-      setTimeout(() => setPgpSuccess(false), 3000);
-    } catch (err) {
-      setPgpError(err instanceof Error ? err.message : 'Failed to update PGP key');
-    } finally {
-      setPgpSaving(false);
-    }
-  }, [pgpKeyDraft]);
 
   const handleToggleEnabled = useCallback(() => {
     if (!settings) return;
@@ -374,65 +332,18 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {t('admin.guestCheckout.pgpKeyDescription', {
                     defaultValue:
-                      'Upload your PGP public key so buyers can encrypt their shipping address before submitting. Your private key stays on your device and is used for decryption in the browser only.',
+                      'Physical-order addresses are encrypted in the buyer’s browser. Create and back up the store recovery key from Store payments.',
                   })}
                 </p>
               </div>
-
-              {pgpKey && (
-                <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                  <span>✅</span>
-                  <span>
-                    {t('admin.guestCheckout.pgpKeyConfigured', {
-                      defaultValue:
-                        'PGP public key is configured. Buyers can encrypt their address.',
-                    })}
-                  </span>
-                </div>
-              )}
-
-              <Textarea
-                rows={6}
-                placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"
-                value={pgpKeyDraft}
-                onChange={e => setPgpKeyDraft(e.target.value)}
-                className="font-mono text-xs"
-                spellCheck={false}
-              />
-
-              {pgpError && <p className="text-xs text-destructive">{pgpError}</p>}
-              {pgpSuccess && (
-                <p className="text-xs text-green-700 dark:text-green-400">
-                  {t('admin.guestCheckout.pgpKeySaved', { defaultValue: 'PGP key updated.' })}
-                </p>
-              )}
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleSavePGPKey}
-                  disabled={pgpSaving}
-                  className={cn(
-                    'rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors',
-                    pgpSaving
-                      ? 'bg-primary/50 cursor-not-allowed'
-                      : 'bg-primary hover:bg-primary/90'
-                  )}
-                >
-                  {pgpKeyDraft.trim()
-                    ? t('admin.guestCheckout.pgpKeySave', { defaultValue: 'Save PGP Key' })
-                    : t('admin.guestCheckout.pgpKeyRemove', { defaultValue: 'Remove PGP Key' })}
-                </button>
-                {pgpKeyDraft !== pgpKey && (
-                  <button
-                    type="button"
-                    onClick={() => setPgpKeyDraft(pgpKey)}
-                    className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t('cancel', { defaultValue: 'Cancel' })}
-                  </button>
-                )}
-              </div>
+              <Link
+                href={getAdminStorePaymentsPath()}
+                className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                {t('admin.guestCheckout.pgpKeySave', {
+                  defaultValue: 'Manage address protection',
+                })}
+              </Link>
             </div>
           )}
         </>

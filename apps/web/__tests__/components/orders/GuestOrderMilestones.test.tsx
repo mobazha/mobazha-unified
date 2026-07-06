@@ -10,6 +10,7 @@ vi.mock('@mobazha/core', () => ({
         'guestOrder.milestonesTitle': 'Order timeline',
         'guestOrder.milestones.funded': 'Payment confirmed',
         'guestOrder.milestones.shipped': 'Shipped',
+        'guestOrder.milestones.delivered': 'Delivered',
         'guestOrder.milestones.timePending': 'Time pending',
       };
       return translations[key] ?? key;
@@ -44,6 +45,12 @@ describe('GuestOrderMilestones', () => {
     expect(screen.getByText('Order timeline')).toBeInTheDocument();
     expect(screen.getByText('Payment confirmed')).toBeInTheDocument();
     expect(screen.getByText('Shipped')).toBeInTheDocument();
+  });
+
+  it('uses delivered milestone language for service orders', () => {
+    render(<GuestOrderMilestones order={shippedOrder} orderKind="service" />);
+    expect(screen.getByText('Delivered')).toBeInTheDocument();
+    expect(screen.queryByText('Shipped')).not.toBeInTheDocument();
   });
 
   it('shows pending label when milestone state exists without timestamps', () => {

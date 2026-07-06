@@ -55,6 +55,9 @@ export function ShippingZoneCard({
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
 
+      if (minPrice === 0 && maxPrice === 0) {
+        return t('shipping.free');
+      }
       if (minPrice === maxPrice) {
         return formatPrice(minPrice, currency, { showSymbol: true, showCode: true });
       }
@@ -126,13 +129,15 @@ export function ShippingZoneCard({
                   {idx > 0 && ' • '}
                   {rate.name ? `${rate.name}: ` : ''}
                   {rate.currency
-                    ? formatPrice(
-                        fromMinimalUnit(rate.price || '0', rate.currency),
-                        rate.currency,
-                        {
-                          showSymbol: true,
-                        }
-                      )
+                    ? Number(rate.price || '0') === 0
+                      ? t('shipping.free')
+                      : formatPrice(
+                          fromMinimalUnit(rate.price || '0', rate.currency),
+                          rate.currency,
+                          {
+                            showSymbol: true,
+                          }
+                        )
                     : '—'}
                 </span>
               ))}

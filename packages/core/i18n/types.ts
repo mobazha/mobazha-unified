@@ -146,6 +146,21 @@ export interface TranslationResource {
     productGroupsDesc?: string;
   };
 
+  track: TranslationSection & {
+    title: string;
+    description: string;
+    recentTitle: string;
+    deviceOnly: string;
+    findTitle: string;
+    placeholder: string;
+    inputLabel: string;
+    submit: string;
+    invalid: string;
+    forget: string;
+    orderFallback: string;
+    lastUpdated: string;
+  };
+
   // 登录页面（可选，fallback 到英文）
   login?: TranslationSection & {
     title?: string;
@@ -2889,6 +2904,7 @@ export interface TranslationResource {
     unnamed: string;
     // 免邮设置
     freeShipping?: string;
+    free?: string;
     enableFreeShipping?: string;
     freeShippingDesc?: string;
     minAmountForFreeShipping?: string;
@@ -3823,6 +3839,7 @@ export interface TranslationResource {
       guestActionsTitle?: string;
       guestDetailLoadFailed?: string;
       guestDigitalDeliverHelp?: string;
+      guestServiceDeliverHelp?: string;
       guestPhysicalShipHelp?: string;
       guestOrderTypeDigital?: string;
       guestOrderTypePhysical?: string;
@@ -3837,6 +3854,9 @@ export interface TranslationResource {
       guestCompleteHelp?: string;
       guestCompleteOrder?: string;
       guestShipSuccess?: string;
+      guestPhysicalShipSuccess?: string;
+      guestDigitalDeliverSuccess?: string;
+      guestServiceDeliverSuccess?: string;
       guestCompleteSuccess?: string;
       guestActionFailed?: string;
       guestActionWaitingPayment?: string;
@@ -4136,6 +4156,8 @@ export interface TranslationResource {
       setupPayments?: string;
       setupPaymentsDesc?: string;
       setupPaymentsDescCryptoOnly?: string;
+      setupMoneroWallet?: string;
+      setupMoneroWalletDesc?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;
@@ -5508,6 +5530,7 @@ export interface TranslationResource {
     shippingInfo?: string;
     fullName?: string;
     emailLabel?: string;
+    emailContactHint?: string;
     address?: string;
     city?: string;
     stateProvince?: string;
@@ -5515,6 +5538,9 @@ export interface TranslationResource {
     country?: string;
     deliveryNotes?: string;
     deliveryNotesPlaceholder?: string;
+    addressWillBeEncrypted?: string;
+    addressProtectionPreparing?: string;
+    addressProtectionUnavailable?: string;
     back?: string;
     continueToPayment?: string;
     choosePayment?: string;
@@ -5581,6 +5607,8 @@ export interface TranslationResource {
     stateProcessingDesc?: string;
     stateShipped?: string;
     stateShippedDesc?: string;
+    stateServiceDeliveredDesc?: string;
+    stateDigitalDeliveredDesc?: string;
     stateCompleted?: string;
     stateCompletedDesc?: string;
     stateExpired?: string;
@@ -5593,6 +5621,11 @@ export interface TranslationResource {
     saveLinkDescription?: string;
     saveLinkCopy?: string;
     saveLinkCopied?: string;
+    telegramSend?: string;
+    telegramSending?: string;
+    telegramSent?: string;
+    telegramSendError?: string;
+    telegramPrivacyNote?: string;
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
     doNotPayAgain?: string;
@@ -5603,6 +5636,7 @@ export interface TranslationResource {
     milestones?: {
       funded?: string;
       shipped?: string;
+      delivered?: string;
       completed?: string;
       timePending?: string;
     };

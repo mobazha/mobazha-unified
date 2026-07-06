@@ -178,6 +178,21 @@ export const fr: PartialTranslationResource = {
     openUserMenu: 'Ouvrir le menu utilisateur',
     productGroupsDesc: 'Organisez les produits en groupes pour votre vitrine.',
   },
+  track: {
+    title: 'Commandes',
+    description: 'Rouvrez une commande récente ou utilisez son lien privé ou son jeton.',
+    recentTitle: 'Commandes récentes',
+    deviceOnly:
+      'Les références sont enregistrées uniquement sur cet appareil. Supprimez-les sur un appareil partagé. Les clés privées de livraison ne sont pas enregistrées.',
+    findTitle: 'Retrouver une autre commande',
+    placeholder: 'Collez le lien ou le jeton de commande',
+    inputLabel: 'Lien ou jeton de commande',
+    submit: 'Voir la commande',
+    invalid: 'Saisissez un lien ou un jeton de commande valide.',
+    forget: 'Oublier la commande sur cet appareil',
+    orderFallback: 'Commande',
+    lastUpdated: 'Mise à jour {{date}}',
+  },
   login: {
     title: 'Mobazha',
     subtitle: 'Place de marché décentralisée',
@@ -6838,7 +6853,9 @@ export const fr: PartialTranslationResource = {
     continueToShipping: "Continuer vers l'expédition",
     shippingInfo: "Informations d'expédition",
     fullName: 'Nom et prénom',
-    emailLabel: 'E-mail (facultatif, pour les mises à jour des commandes)',
+    emailLabel: 'E-mail (facultatif — laissez vide pour rester anonyme)',
+    emailContactHint:
+      "S'il est renseigné, il est communiqué au vendeur pour le contact lié à la commande. Aucun e-mail automatique n'est envoyé.",
     address: 'Adresse',
     city: 'Ville',
     stateProvince: 'État/Province',
@@ -6874,12 +6891,12 @@ export const fr: PartialTranslationResource = {
     anonymousPointDirectPayment:
       'Le paiement va directement au vendeur – il n’y a pas de séquestre ni de protection de l’acheteur.',
     anonymousPointEmailOptional:
-      "L'e-mail est facultatif, mais recommandé pour recevoir les mises à jour des commandes.",
+      "L'e-mail est facultatif ; s'il est renseigné, il est communiqué au vendeur pour le contact. Aucune notification automatique n'est envoyée.",
     anonymousPointSaveLink:
-      'Après avoir passé la commande, enregistrez le lien de commande – c’est le seul moyen de revenir.',
+      'Enregistrez le lien privé de la commande pour la récupération sur un autre appareil et la livraison numérique.',
     saveLinkTitle: 'Enregistrez votre lien de commande',
     saveLinkDescription:
-      "Ajoutez ce lien à vos favoris pour vérifier l’état du paiement, les confirmations et l’expédition. C'est le seul moyen de retrouver cet ordre.",
+      "Enregistrez ou partagez ce lien en privé pour consulter le paiement, les confirmations et la livraison sur un autre appareil. Cet appareil ne conserve qu'une référence récente, pas la clé privée de livraison.",
     saveLinkCopy: 'Copier le lien',
     saveLinkCopied: 'Lien copié',
     digitalSaveLinkTitle: 'Vos téléchargements vivent derrière ce lien',
@@ -6932,6 +6949,12 @@ export const fr: PartialTranslationResource = {
       "Ajoutez cette URL à vos favoris pour vérifier l'état de la commande à tout moment. Toute personne disposant de ce lien peut consulter la commande, alors gardez-la privée.",
     saveLinkCopy: 'Copier le lien',
     saveLinkCopied: 'Lien copié',
+    telegramSend: 'Envoyer le reçu sur Telegram',
+    telegramSending: 'Envoi vers Telegram…',
+    telegramSent: 'Reçu envoyé sur Telegram',
+    telegramSendError: 'Échec de l’envoi — réessayez',
+    telegramPrivacyNote:
+      'Facultatif : Telegram recevra ce lien de commande privé pour vous permettre de le retrouver sur un autre appareil.',
     expiredHelpTitle: 'Le paiement a déjà été envoyé ?',
     expiredHelpBody:
       "Si vous avez financé cette commande avant son expiration, contactez le vendeur avec votre hachage de transaction (TX) ci-dessous. Ils peuvent vérifier et compléter manuellement votre commande. N'envoyez pas de nouveau paiement à l'adresse expirée.",

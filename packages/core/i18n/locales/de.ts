@@ -178,6 +178,22 @@ export const de: PartialTranslationResource = {
     openUserMenu: 'Benutzermenü öffnen',
     productGroupsDesc: 'Organisieren Sie Produkte in Gruppen für Ihre Storefront.',
   },
+  track: {
+    title: 'Bestellungen',
+    description:
+      'Öffnen Sie eine kürzliche Bestellung oder verwenden Sie deren privaten Link oder Token.',
+    recentTitle: 'Letzte Bestellungen',
+    deviceOnly:
+      'Bestellreferenzen werden nur auf diesem Gerät gespeichert. Entfernen Sie sie auf gemeinsam genutzten Geräten. Private Auslieferungsschlüssel werden nicht gespeichert.',
+    findTitle: 'Andere Bestellung finden',
+    placeholder: 'Bestelllink oder Token einfügen',
+    inputLabel: 'Bestelllink oder Token',
+    submit: 'Bestellung anzeigen',
+    invalid: 'Geben Sie einen gültigen Bestelllink oder ein gültiges Token ein.',
+    forget: 'Bestellung von diesem Gerät entfernen',
+    orderFallback: 'Bestellung',
+    lastUpdated: 'Aktualisiert {{date}}',
+  },
   login: {
     title: 'Mobazha',
     subtitle: 'Dezentraler Marktplatz',
@@ -6857,7 +6873,9 @@ export const de: PartialTranslationResource = {
     continueToShipping: 'Weiter zum Versand',
     shippingInfo: 'Versandinformationen',
     fullName: 'Vollständiger Name',
-    emailLabel: 'E-Mail (optional, für Bestellaktualisierungen)',
+    emailLabel: 'E-Mail (optional – leer lassen, um anonym zu bleiben)',
+    emailContactHint:
+      'Falls angegeben, wird sie dem Verkäufer als Bestellkontakt mitgeteilt. Automatische E-Mails werden nicht versendet.',
     address: 'Adresse',
     city: 'Stadt',
     stateProvince: 'Staat/Provinz',
@@ -6893,12 +6911,12 @@ export const de: PartialTranslationResource = {
     anonymousPointDirectPayment:
       'Die Zahlung geht direkt an den Verkäufer – es gibt kein Treuhandkonto oder Käuferschutz.',
     anonymousPointEmailOptional:
-      'E-Mail ist optional, wird aber empfohlen, um Bestellaktualisierungen zu erhalten.',
+      'E-Mail ist optional; falls angegeben, wird sie dem Verkäufer als Kontakt mitgeteilt. Automatische Benachrichtigungen werden nicht versendet.',
     anonymousPointSaveLink:
-      'Nachdem Sie die Bestellung aufgegeben haben, speichern Sie den Bestelllink – es ist der einzige Weg zurück.',
+      'Speichern Sie den privaten Bestelllink für die Wiederherstellung auf einem anderen Gerät und digitale Auslieferungen.',
     saveLinkTitle: 'Speichern Sie Ihren Bestelllink',
     saveLinkDescription:
-      'Setzen Sie ein Lesezeichen für diesen Link, um den Zahlungsstatus, die Bestätigungen und den Versand zu überprüfen. Nur so kann diese Reihenfolge wieder gefunden werden.',
+      'Speichern oder teilen Sie diesen Link privat, um Zahlung, Bestätigungen und Lieferung auf einem anderen Gerät zu sehen. Dieses Gerät speichert nur eine Referenz, nicht den privaten Auslieferungsschlüssel.',
     saveLinkCopy: 'Link kopieren',
     saveLinkCopied: 'Link kopiert',
     digitalSaveLinkTitle: 'Ihre Downloads live hinter diesem Link',
@@ -6953,6 +6971,12 @@ export const de: PartialTranslationResource = {
       'Setzen Sie ein Lesezeichen auf diese URL, um jederzeit den Bestellstatus zu überprüfen. Jeder, der über diesen Link verfügt, kann die Bestellung einsehen. Halten Sie sie daher vertraulich.',
     saveLinkCopy: 'Link kopieren',
     saveLinkCopied: 'Link kopiert',
+    telegramSend: 'Beleg an Telegram senden',
+    telegramSending: 'Wird an Telegram gesendet…',
+    telegramSent: 'Beleg an Telegram gesendet',
+    telegramSendError: 'Senden fehlgeschlagen – erneut versuchen',
+    telegramPrivacyNote:
+      'Optional: Telegram erhält diesen privaten Bestelllink, damit du ihn auf einem anderen Gerät wiederherstellen kannst.',
     expiredHelpTitle: 'Die Zahlung wurde bereits gesendet?',
     expiredHelpBody:
       'Wenn Sie diese Bestellung vor Ablauf bezahlt haben, wenden Sie sich mit Ihrem Transaktions-Hash (TX) unten an den Verkäufer. Sie können Ihre Bestellung manuell überprüfen und abschließen. Senden Sie keine neue Zahlung an die abgelaufene Adresse.',

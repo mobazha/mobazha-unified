@@ -43,7 +43,9 @@ export interface CreateGuestOrderRequest {
   items: CreateGuestOrderItemRequest[];
   paymentCoin: string;
   contactEmail?: string;
-  /** Plaintext address object or PM-3a PGP ciphertext string. */
+  /** ISO 3166-1 alpha-2 destination used to authorize shipping rates. */
+  shippingCountry?: string;
+  /** Plaintext on supported hosted flows, or PGP ciphertext for sovereign physical checkout. */
   shippingAddress?:
     | {
         name: string;
@@ -329,6 +331,7 @@ export interface GuestOrderAdminDetail {
   // addressEncrypted=false means shippingAddress holds a parsed JSON object.
   addressEncrypted: boolean;
   shippingAddressCiphertext?: string;
+  shippingAddressKeyFingerprint?: string;
   shippingAddress?: Record<string, string>;
 }
 
@@ -343,6 +346,16 @@ export function getAdminGuestOrderDetail(token: string): Promise<GuestOrderAdmin
 
 // PM-3a: PGP key management APIs (Sovereign/seller-side).
 
+export interface PGPKeyInfo {
+  publicKey: string;
+  fingerprint: string;
+  keyVersion: number;
+}
+
+export interface PGPKeyVault extends PGPKeyInfo {
+  encryptedPrivateKey: string;
+}
+
 /**
  * Fetches the vendor's PGP public key.
  * Returns an empty string when no key is configured (404 → "").
@@ -356,8 +369,19 @@ export async function getPGPPublicKey(): Promise<string> {
   }
 }
 
-export function updatePGPPublicKey(publicKey: string): Promise<{ publicKey: string }> {
-  return authPut(NODE_API.SETTINGS_PGP_KEY, { publicKey });
+export function getPGPKeyInfo(): Promise<PGPKeyInfo> {
+  return anonymousGet<PGPKeyInfo>(NODE_API.SETTINGS_PGP_KEY);
+}
+
+export function getPGPKeyVault(): Promise<PGPKeyVault> {
+  return authGet<PGPKeyVault>(NODE_API.SETTINGS_PGP_KEY_VAULT);
+}
+
+export function updatePGPPublicKey(
+  publicKey: string,
+  encryptedPrivateKey?: string
+): Promise<PGPKeyInfo> {
+  return authPut(NODE_API.SETTINGS_PGP_KEY, { publicKey, encryptedPrivateKey });
 }
 
 export function deletePGPPublicKey(): Promise<void> {

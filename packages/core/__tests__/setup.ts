@@ -23,6 +23,8 @@ const localStorageMock = {
 const fetchMock = vi.fn();
 
 beforeAll(() => {
+  if (typeof window === 'undefined') return;
+
   // Setup localStorage
   Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,

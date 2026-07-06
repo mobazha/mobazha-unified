@@ -63,6 +63,7 @@ describe('PaymentCryptoSelector', () => {
             { id: 'BSC', kind: 'crypto', flow: 'external-wallet' },
             { id: 'BASE', kind: 'crypto', flow: 'external-wallet' },
             { id: 'ETH', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'XMR', kind: 'crypto', flow: 'external-wallet' },
           ],
         },
       },
@@ -121,5 +122,19 @@ describe('PaymentCryptoSelector', () => {
 
     expect(screen.queryByText('TRX')).not.toBeInTheDocument();
     expect(screen.queryByText('TRON')).not.toBeInTheDocument();
+  });
+
+  it('does not show the exchange USDT guide for an XMR-only checkout', () => {
+    render(
+      <PaymentCryptoSelector
+        acceptedCurrencies={['crypto:monero:mainnet:native']}
+        selectedTokenId=""
+        onSelect={() => {}}
+        showFiatMethods={false}
+      />
+    );
+
+    expect(screen.getAllByText('XMR')).not.toHaveLength(0);
+    expect(screen.queryByTestId('crypto-payment-readiness-guide')).not.toBeInTheDocument();
   });
 });

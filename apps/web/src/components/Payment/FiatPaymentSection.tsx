@@ -15,7 +15,8 @@ import { PayPalPaymentForm } from './PayPalPaymentForm';
 
 export interface FiatPaymentSectionProps {
   providerID: string;
-  vendorPeerID: string;
+  /** Omitted for Deal-backed orders that live in the authenticated buyer runtime. */
+  vendorPeerID?: string;
   orderID: string;
   amount: number;
   currency: string;
@@ -69,7 +70,13 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (createdRef.current || !canCreateSession || !orderID || !providerID || !vendorPeerID) {
+    if (
+      createdRef.current ||
+      !canCreateSession ||
+      !orderID ||
+      !providerID ||
+      (!dealPaymentSessionRequest && !vendorPeerID)
+    ) {
       return;
     }
 
@@ -77,14 +84,14 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
       createdRef.current = true;
       void createQuotedSession({
         orderId: orderID,
-        vendorPeerID,
+        ...(vendorPeerID ? { vendorPeerID } : {}),
         ...dealPaymentSessionRequest,
       });
       return;
     }
 
     createdRef.current = true;
-    createSession(vendorPeerID, providerID as FiatProviderID, {
+    createSession(vendorPeerID!, providerID as FiatProviderID, {
       providerID,
       orderID,
       amount,

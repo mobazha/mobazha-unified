@@ -56,6 +56,7 @@ function readBody(req: IncomingMessage): Promise<string> {
  * - Blocking /runtime-config.js → inline bootstrap + defer dynamic merge (saves one Tor RTT)
  */
 function sovereignHtmlStripPlugin(options: { preserveTelegramSDK?: boolean } = {}): Plugin {
+  const routedStorefront = options.preserveTelegramSDK === true;
   const inlineRuntimeConfig = JSON.stringify({
     schemaVersion: 3,
     authMode: 'standalone',
@@ -64,10 +65,10 @@ function sovereignHtmlStripPlugin(options: { preserveTelegramSDK?: boolean } = {
       allowExternalResources: options.preserveTelegramSDK === true,
     },
     experience: { kind: 'store' },
-    capabilitiesReady: false,
+    capabilitiesReady: routedStorefront,
     features: { guestCheckout: { effective: true, overridable: [] } },
     capabilities: {
-      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      commerce: { storefront: true, storeAdmin: !routedStorefront, checkout: true },
       marketplace: {
         discovery: false,
         operator: false,
@@ -78,8 +79,19 @@ function sovereignHtmlStripPlugin(options: { preserveTelegramSDK?: boolean } = {
         releasePublishing: false,
         attribution: false,
       },
-      sovereign: { isolatedRuntime: true, managedFleet: false },
-      payments: { methods: [] },
+      sovereign: { isolatedRuntime: true, managedFleet: routedStorefront },
+      payments: {
+        methods: routedStorefront
+          ? [
+              {
+                id: 'XMR',
+                kind: 'crypto',
+                flow: 'address-transfer',
+                addressMode: 'subaddress',
+              },
+            ]
+          : [],
+      },
     },
   });
 
@@ -565,6 +577,10 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: [
+        {
+          find: '@mobazha/commerce-kit/styles.css',
+          replacement: path.resolve(__dirname, '../../packages/commerce-kit/styles.css'),
+        },
         {
           find: /^@mobazha\/commerce-kit\/(.+)$/,
           replacement: `${path.resolve(__dirname, '../../packages/commerce-kit/src')}/$1`,

@@ -178,6 +178,21 @@ export const ja: PartialTranslationResource = {
     openUserMenu: 'ユーザーメニューを開く',
     productGroupsDesc: 'ストアフロント用に商品をグループ分けして整理します。',
   },
+  track: {
+    title: '注文',
+    description: '最近の注文を開くか、非公開の注文リンクまたはトークンで注文を探します。',
+    recentTitle: '最近の注文',
+    deviceOnly:
+      '注文参照はこの端末にのみ保存されます。共有端末では削除してください。非公開の配信キーは保存されません。',
+    findTitle: '別の注文を探す',
+    placeholder: '注文リンクまたはトークンを貼り付け',
+    inputLabel: '注文リンクまたはトークン',
+    submit: '注文を表示',
+    invalid: '有効な注文リンクまたはトークンを入力してください。',
+    forget: 'この端末から注文を削除',
+    orderFallback: '注文',
+    lastUpdated: '{{date}} に更新',
+  },
   login: {
     title: 'Mobazha',
     subtitle: '分散型マーケットプレイス',
@@ -6691,7 +6706,9 @@ export const ja: PartialTranslationResource = {
     continueToShipping: '配送に進む',
     shippingInfo: '配送情報',
     fullName: 'フルネーム',
-    emailLabel: '電子メール (オプション、注文更新用)',
+    emailLabel: 'メール（任意。空欄なら匿名）',
+    emailContactHint:
+      '入力したメールは注文の連絡先として販売者と共有されます。自動メール通知は送信されません。',
     address: '住所',
     city: '市',
     stateProvince: '州/県',
@@ -6727,11 +6744,12 @@ export const ja: PartialTranslationResource = {
     anonymousPointDirectPayment:
       '支払いは販売者に直接送られます。エスクローや購入者保護はありません。',
     anonymousPointEmailOptional:
-      '電子メールはオプションですが、注文の最新情報を受け取ることをお勧めします。',
-    anonymousPointSaveLink: '注文後、注文リンクを保存します。これが元に戻す唯一の方法です。',
+      'メールは任意です。入力すると注文の連絡先として販売者と共有されますが、自動通知は送信されません。',
+    anonymousPointSaveLink:
+      '非公開の注文リンクを保存してください。別の端末での復元とデジタル配信に必要です。',
     saveLinkTitle: '注文リンクを保存する',
     saveLinkDescription:
-      'このリンクをブックマークして、支払いステータス、確認、配送を確認してください。これがこの順序を再度見つける唯一の方法です。',
+      '別の端末で支払い・確認・配信を確認するには、このリンクを保存または非公開で共有してください。この端末には最近の注文参照のみが保存され、非公開の配信キーは保存されません。',
     saveLinkCopy: 'リンクをコピー',
     saveLinkCopied: 'リンクがコピーされました',
     digitalSaveLinkTitle: 'ダウンロードはこのリンクの背後にあります',
@@ -6784,6 +6802,12 @@ export const ja: PartialTranslationResource = {
       'この URL をブックマークすると、いつでも注文状況を確認できます。このリンクを知っている人は誰でも注文を閲覧できるため、非公開にしておいてください。',
     saveLinkCopy: 'リンクをコピー',
     saveLinkCopied: 'リンクがコピーされました',
+    telegramSend: '領収書を Telegram に送信',
+    telegramSending: 'Telegram に送信中…',
+    telegramSent: '領収書を Telegram に送信しました',
+    telegramSendError: '送信できませんでした。再試行してください',
+    telegramPrivacyNote:
+      '任意：別の端末で復元できるよう、Telegram にこの非公開注文リンクが送信されます。',
     expiredHelpTitle: '支払いはすでに送金されましたか?',
     expiredHelpBody:
       '有効期限が切れる前にこの注文に資金を提供した場合は、以下のトランザクション ハッシュ (TX) を販売者に連絡してください。手動で注文を確認して完了することができます。有効期限が切れたアドレスに新しい支払いを送らないでください。',

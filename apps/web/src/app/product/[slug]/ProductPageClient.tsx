@@ -15,6 +15,7 @@ import {
   usePaymentMethods,
   getProductPeerIDParam,
   isHosted,
+  routedStoreContextService,
   startCasdoorLogin,
 } from '@mobazha/core';
 import type { Product, AddWishlistParams, ProductSku } from '@mobazha/core';
@@ -52,7 +53,10 @@ export default function ProductPageClient() {
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
 
   const slug = params.slug as string;
-  const peerID = getProductPeerIDParam(searchParams);
+  const peerID =
+    getProductPeerIDParam(searchParams) ??
+    routedStoreContextService.getStoreRoutePeerID() ??
+    undefined;
 
   const { isAuthenticated, profile: currentUserProfile } = useUserStore();
 

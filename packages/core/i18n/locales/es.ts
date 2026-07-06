@@ -178,6 +178,21 @@ export const es: PartialTranslationResource = {
     openUserMenu: 'Abrir menú de usuario',
     productGroupsDesc: 'Organiza los productos en grupos para tu escaparate.',
   },
+  track: {
+    title: 'Pedidos',
+    description: 'Vuelve a abrir un pedido reciente o usa su enlace privado o token.',
+    recentTitle: 'Pedidos recientes',
+    deviceOnly:
+      'Las referencias se guardan solo en este dispositivo. Elimínalas en dispositivos compartidos. Las claves privadas de entrega no se guardan.',
+    findTitle: 'Buscar otro pedido',
+    placeholder: 'Pega el enlace o token del pedido',
+    inputLabel: 'Enlace o token del pedido',
+    submit: 'Ver pedido',
+    invalid: 'Introduce un enlace o token de pedido válido.',
+    forget: 'Eliminar pedido de este dispositivo',
+    orderFallback: 'Pedido',
+    lastUpdated: 'Actualizado {{date}}',
+  },
   login: {
     title: 'Mobazha',
     subtitle: 'Mercado descentralizado',
@@ -6794,7 +6809,9 @@ export const es: PartialTranslationResource = {
     continueToShipping: 'Continuar a Envío',
     shippingInfo: 'Información de envío',
     fullName: 'Nombre completo',
-    emailLabel: 'Correo electrónico (opcional, para actualizaciones de pedidos)',
+    emailLabel: 'Correo electrónico (opcional; déjelo vacío para mantener el anonimato)',
+    emailContactHint:
+      'Si se proporciona, se comparte con el vendedor para contactar sobre el pedido. No se envían correos automáticos.',
     address: 'DIRECCIÓN',
     city: 'Ciudad',
     stateProvince: 'Estado / Provincia',
@@ -6830,12 +6847,12 @@ export const es: PartialTranslationResource = {
     anonymousPointDirectPayment:
       'El pago va directamente al vendedor; no hay depósito en garantía ni protección del comprador.',
     anonymousPointEmailOptional:
-      'El correo electrónico es opcional, pero se recomienda para recibir actualizaciones de pedidos.',
+      'El correo es opcional; si se proporciona, se comparte con el vendedor para contactar. No se envían notificaciones automáticas.',
     anonymousPointSaveLink:
-      'Después de realizar el pedido, guarde el enlace del pedido; es la única forma de regresar.',
+      'Guarde el enlace privado del pedido para recuperarlo en otro dispositivo y recibir entregas digitales.',
     saveLinkTitle: 'Guarde el enlace de su pedido',
     saveLinkDescription:
-      'Marque este enlace para verificar el estado del pago, las confirmaciones y el envío. Es la única manera de encontrar este pedido nuevamente.',
+      'Guarde o comparta este enlace en privado para ver el pago, las confirmaciones y la entrega en otro dispositivo. Este dispositivo solo guarda una referencia reciente, no la clave privada de entrega.',
     saveLinkCopy: 'Copiar enlace',
     saveLinkCopied: 'Enlace copiado',
     digitalSaveLinkTitle: 'Tus descargas se encuentran detrás de este enlace',
@@ -6888,6 +6905,12 @@ export const es: PartialTranslationResource = {
       'Marque esta URL para verificar el estado del pedido en cualquier momento. Cualquiera que tenga este enlace puede ver el pedido, así que manténgalo en privado.',
     saveLinkCopy: 'Copiar enlace',
     saveLinkCopied: 'Enlace copiado',
+    telegramSend: 'Enviar recibo a Telegram',
+    telegramSending: 'Enviando a Telegram…',
+    telegramSent: 'Recibo enviado a Telegram',
+    telegramSendError: 'No se pudo enviar; inténtelo de nuevo',
+    telegramPrivacyNote:
+      'Opcional: Telegram recibirá este enlace privado del pedido para que pueda recuperarlo en otro dispositivo.',
     expiredHelpTitle: '¿Ya envió el pago?',
     expiredHelpBody:
       'Si financió este pedido antes de que expirara, comuníquese con el vendedor con su hash de transacción (TX) a continuación. Pueden verificar y completar manualmente su pedido. No envíe nuevos pagos a la dirección caducada.',

@@ -13,6 +13,40 @@ import { hasGuestTrackingInfo } from './guestOrderStages';
 
 type GuestDigitalDeliveryState = ReturnType<typeof useGuestDigitalDelivery>;
 
+function ShippingAddressBlock({ address }: { address: Record<string, string> }) {
+  const locality = [address.city, address.state].filter(Boolean).join(', ');
+  const localityLine = [locality, address.postalCode].filter(Boolean).join(' ');
+  const known = new Set([
+    'name',
+    'company',
+    'address',
+    'addressLineOne',
+    'addressLineTwo',
+    'city',
+    'state',
+    'postalCode',
+    'country',
+    'addressNotes',
+  ]);
+  const extra = Object.entries(address).filter(([key, value]) => value && !known.has(key));
+  return (
+    <div className="space-y-0.5 rounded-md bg-muted p-3 font-mono text-xs">
+      {address.name && <p>{address.name}</p>}
+      {address.company && <p>{address.company}</p>}
+      {(address.address || address.addressLineOne) && (
+        <p>{address.address || address.addressLineOne}</p>
+      )}
+      {address.addressLineTwo && <p>{address.addressLineTwo}</p>}
+      {localityLine && <p>{localityLine}</p>}
+      {address.country && <p>{address.country}</p>}
+      {address.addressNotes && <p className="text-muted-foreground">{address.addressNotes}</p>}
+      {extra.map(([key, value]) => (
+        <p key={key}>{value}</p>
+      ))}
+    </div>
+  );
+}
+
 interface GuestFulfillmentSectionProps {
   detail: GuestOrderAdminDetail;
   orderKind: GuestOrderKind;
@@ -105,15 +139,12 @@ export function GuestFulfillmentSection({
             {t('admin.orders.shippingAddress')}
           </p>
           {detail.addressEncrypted && detail.shippingAddressCiphertext ? (
-            <AdminShippingDecrypt ciphertext={detail.shippingAddressCiphertext} />
+            <AdminShippingDecrypt
+              ciphertext={detail.shippingAddressCiphertext}
+              expectedFingerprint={detail.shippingAddressKeyFingerprint}
+            />
           ) : detail.shippingAddress ? (
-            <div className="space-y-0.5 rounded-md bg-muted p-3 font-mono text-xs">
-              {Object.entries(detail.shippingAddress)
-                .filter(([, value]) => value)
-                .map(([key, value]) => (
-                  <p key={key}>{value}</p>
-                ))}
-            </div>
+            <ShippingAddressBlock address={detail.shippingAddress} />
           ) : null}
         </div>
       )}

@@ -783,14 +783,19 @@ export default function StandaloneSetupWizard({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
-                  {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
+                  {isSovereignMode()
+                    ? t('admin.onboarding.setupMoneroWallet') || 'Set up Monero wallet'
+                    : t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {fiatVisible
-                    ? t('admin.onboarding.setupPaymentsDesc') ||
-                      'Add crypto wallets, connect Stripe or PayPal'
-                    : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
-                      'Add crypto receiving addresses for your store'}
+                  {isSovereignMode()
+                    ? t('admin.onboarding.setupMoneroWalletDesc') ||
+                      'Create or restore the local XMR wallet for this store'
+                    : fiatVisible
+                      ? t('admin.onboarding.setupPaymentsDesc') ||
+                        'Add crypto wallets, connect Stripe or PayPal'
+                      : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
+                        'Add crypto receiving addresses for your store'}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />

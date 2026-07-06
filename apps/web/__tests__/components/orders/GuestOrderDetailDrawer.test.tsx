@@ -17,8 +17,13 @@ vi.mock('@mobazha/core', async importOriginal => {
           'admin.orders.guestOrderDetail': 'Guest Order Detail',
           'admin.orders.guestActionsTitle': 'Seller actions',
           'admin.orders.guestDigitalDeliverHelp': 'Mark digital delivery when ready.',
+          'admin.orders.guestServiceDeliverHelp': 'Mark the service delivered when complete.',
+          'admin.orders.guestPhysicalShipHelp': 'Add tracking and mark the item shipped.',
           'admin.orders.guestMarkDelivered': 'Mark as delivered',
+          'admin.orders.guestMarkShipped': 'Mark as shipped',
           'admin.orders.guestOrderTypeDigital': 'Digital',
+          'admin.orders.guestOrderTypePhysical': 'Physical',
+          'admin.orders.guestOrderTypeService': 'Service',
           'admin.orders.guestOrderTypeUnknown': 'Type unknown',
           'admin.orders.guestContractTypeMissingHelp':
             'Fulfillment actions stay disabled until order data is repaired.',
@@ -172,6 +177,43 @@ describe('GuestOrderDetailDrawer', () => {
     expect(screen.getByText('Digital')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Mark as delivered' }).length).toBeGreaterThan(0);
     expect(screen.queryByTestId('shipping-decrypt')).not.toBeInTheDocument();
+  });
+
+  it('uses service-specific fulfillment copy for funded service orders', () => {
+    mockUseGuestOrderKind.mockReturnValue({
+      ...digitalGuestOrderKind,
+      orderKind: 'service',
+      digitalDelivery: {
+        ...digitalGuestOrderKind.digitalDelivery,
+        isDigitalOrder: false,
+      },
+    });
+
+    render(<GuestOrderDetailDrawer {...baseProps} detail={digitalFundedDetail} />);
+
+    expect(screen.getByText('Service')).toBeInTheDocument();
+    expect(screen.getAllByText('Mark the service delivered when complete.').length).toBeGreaterThan(
+      0
+    );
+    expect(screen.queryByText('Mark digital delivery when ready.')).not.toBeInTheDocument();
+  });
+
+  it('uses shipping copy and action for funded physical orders', () => {
+    mockUseGuestOrderKind.mockReturnValue({
+      ...digitalGuestOrderKind,
+      orderKind: 'physical',
+      isPhysical: true,
+      digitalDelivery: {
+        ...digitalGuestOrderKind.digitalDelivery,
+        isDigitalOrder: false,
+      },
+    });
+
+    render(<GuestOrderDetailDrawer {...baseProps} detail={digitalFundedDetail} />);
+
+    expect(screen.getByText('Physical')).toBeInTheDocument();
+    expect(screen.getAllByText('Add tracking and mark the item shipped.').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Mark as shipped' }).length).toBeGreaterThan(0);
   });
 
   it('hides fulfillment actions when order kind is unknown', () => {

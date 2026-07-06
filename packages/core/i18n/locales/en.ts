@@ -183,6 +183,22 @@ export const en: TranslationResource = {
     productGroupsDesc: 'Organize products into groups for your storefront.',
   },
 
+  track: {
+    title: 'Orders',
+    description: 'Reopen a recent order or use its private order link or token.',
+    recentTitle: 'Recent orders',
+    deviceOnly:
+      'Order references are saved only on this device. Remove them on shared devices. Private delivery keys are not stored here.',
+    findTitle: 'Find another order',
+    placeholder: 'Paste an order link or token',
+    inputLabel: 'Order link or token',
+    submit: 'View order',
+    invalid: 'Enter a valid order link or token.',
+    forget: 'Forget order on this device',
+    orderFallback: 'Order',
+    lastUpdated: 'Updated {{date}}',
+  },
+
   login: {
     // Page title and subtitle
     title: 'Mobazha',
@@ -367,6 +383,7 @@ export const en: TranslationResource = {
     condition: 'Condition',
     shipping: 'Shipping',
     freeShipping: 'Free Shipping',
+    free: 'Free',
     shippingAtCheckout: 'Shipping calculated at checkout',
     estDelivery: 'Est. delivery',
     returns: 'Returns',
@@ -5029,7 +5046,7 @@ export const en: TranslationResource = {
     condition: 'Condition',
     conditionHelper: 'The overall condition of your listing',
     weight: 'Weight',
-    weightHelper: 'Item weight for shipping calculations',
+    weightHelper: 'Optional for flat or free shipping; required for weight-based rates',
     packageDimensions: {
       label: 'Package Dimensions',
       length: 'Length',
@@ -6253,6 +6270,7 @@ export const en: TranslationResource = {
     unnamed: 'Unnamed',
     // Free shipping
     freeShipping: 'Free Shipping',
+    free: 'Free',
     enableFreeShipping: 'Enable Free Shipping Threshold',
     freeShippingDesc: 'Offer free shipping when order amount reaches minimum threshold',
     minAmountForFreeShipping: 'Minimum Order Amount',
@@ -6497,8 +6515,8 @@ export const en: TranslationResource = {
       regionTitle: 'Location & Currency',
       regionDesc: 'Set your country and preferred display currency',
       preferencesFailed: 'Failed to save preferences',
-      completeTitle: 'Your Store is Ready!',
-      completeDesc: 'Setup is complete. You can now manage your store from the admin panel.',
+      completeTitle: 'Your store profile is ready',
+      completeDesc: 'Set up your Monero wallet next to start accepting XMR orders.',
     },
   },
 
@@ -7269,6 +7287,8 @@ export const en: TranslationResource = {
       guestDetailLoadFailed: 'Unable to load this guest order. Please try again.',
       guestDigitalDeliverHelp:
         'Payment received. Mark as delivered once the buyer can access the digital product.',
+      guestServiceDeliverHelp:
+        'Payment received. Mark as delivered once the agreed service has been provided.',
       guestPhysicalShipHelp:
         'Payment received. Add tracking details (optional), then mark as shipped.',
       guestOrderTypeDigital: 'Digital',
@@ -7285,6 +7305,9 @@ export const en: TranslationResource = {
       guestCompleteHelp: 'Complete this guest order once delivery is confirmed.',
       guestCompleteOrder: 'Complete order',
       guestShipSuccess: 'Marked as shipped / delivered',
+      guestPhysicalShipSuccess: 'Order marked as shipped',
+      guestDigitalDeliverSuccess: 'Digital product marked as delivered',
+      guestServiceDeliverSuccess: 'Service marked as delivered',
       guestCompleteSuccess: 'Guest order completed',
       guestActionFailed: 'Action failed',
       guestActionWaitingPayment: 'Seller actions appear here after the buyer pays.',
@@ -7675,6 +7698,8 @@ export const en: TranslationResource = {
       setupPayments: 'Set up payment methods',
       setupPaymentsDesc: 'Add crypto wallets, connect Stripe or PayPal',
       setupPaymentsDescCryptoOnly: 'Add crypto receiving addresses for your store',
+      setupMoneroWallet: 'Set up Monero wallet',
+      setupMoneroWalletDesc: 'Create or restore the local XMR wallet for this store',
       paymentConfigured: 'Payment method configured',
       storeName: 'Store Name',
       storeNamePlaceholder: 'My Awesome Store',
@@ -9454,6 +9479,8 @@ export const en: TranslationResource = {
     shippingInfo: 'Shipping Information',
     fullName: 'Full Name',
     emailLabel: 'Email (optional — leave blank to stay anonymous)',
+    emailContactHint:
+      'If provided, this is shared with the seller for order contact. Automatic email updates are not sent.',
     address: 'Address',
     city: 'City',
     stateProvince: 'State / Province',
@@ -9461,6 +9488,10 @@ export const en: TranslationResource = {
     country: 'Country',
     deliveryNotes: 'Delivery Notes (optional)',
     deliveryNotesPlaceholder: 'Apartment number, delivery instructions...',
+    addressWillBeEncrypted: 'Your delivery address is encrypted for this seller.',
+    addressProtectionPreparing: 'Preparing secure address protection…',
+    addressProtectionUnavailable:
+      'This seller cannot securely receive a delivery address yet. Checkout is paused.',
     back: 'Back',
     continueToPayment: 'Continue to Payment',
     choosePayment: 'Choose Payment Method',
@@ -9483,18 +9514,19 @@ export const en: TranslationResource = {
     stepCoin: 'Payment Method',
     stepPay: 'Pay',
     anonymousBannerTitle: 'Anonymous checkout mode',
-    anonymousBannerSubtitle: 'No account · No tracking · Direct crypto payment',
+    anonymousBannerSubtitle: 'No account · Minimal data · Direct crypto payment',
     anonymousLearnMore: 'Learn more',
-    anonymousPointNoAccount: 'Zero identity — no account, no login, no tracking',
+    anonymousPointNoAccount:
+      'No account or login — only the minimum order data needed to fulfill this purchase',
     anonymousPointDirectPayment:
       'Peer-to-peer direct payment — funds go straight to the seller, no escrow',
     anonymousPointEmailOptional:
-      'Email is optional — leave blank to stay fully anonymous; enter to receive order notifications',
+      'Email is optional — if provided, it is shared with the seller for order contact; automatic updates are not sent',
     anonymousPointSaveLink:
-      'Save your order link — it is your only receipt, and contains no personal information',
+      'Save your private order link — it is your portable receipt and digital-delivery recovery key',
     saveLinkTitle: 'Save your order link',
     saveLinkDescription:
-      "Bookmark this link to check payment status, confirmations and shipping. It's the only way to find this order again.",
+      'Save or privately share this link to check payment, confirmations and delivery on another device. This device also keeps a recent-order reference, but not the private digital-delivery key.',
     saveLinkCopy: 'Copy link',
     saveLinkCopied: 'Link copied',
     digitalSaveLinkTitle: 'Your downloads live behind this link',
@@ -9533,6 +9565,8 @@ export const en: TranslationResource = {
     stateProcessingDesc: 'The seller is preparing your order for shipment.',
     stateShipped: 'Shipped',
     stateShippedDesc: 'Your order has been shipped!',
+    stateServiceDeliveredDesc: 'The seller marked this service as delivered.',
+    stateDigitalDeliveredDesc: 'Your digital order has been delivered.',
     stateCompleted: 'Completed',
     stateCompletedDesc: 'Your order is complete. Thank you for your purchase!',
     stateExpired: 'Expired',
@@ -9547,6 +9581,12 @@ export const en: TranslationResource = {
       'Bookmark this URL to check order status anytime. Anyone with this link can view the order, so keep it private.',
     saveLinkCopy: 'Copy link',
     saveLinkCopied: 'Link copied',
+    telegramSend: 'Send receipt to Telegram',
+    telegramSending: 'Sending to Telegram…',
+    telegramSent: 'Receipt sent to Telegram',
+    telegramSendError: 'Could not send — try again',
+    telegramPrivacyNote:
+      'Optional: Telegram will receive this private order link so you can recover it on another device.',
     expiredHelpTitle: 'Already sent payment?',
     expiredHelpBody:
       "If you funded this order before it expired, contact the seller with your transaction hash (TX) below. They can manually verify and complete your order. Don't send new payment to the expired address.",
@@ -9559,6 +9599,7 @@ export const en: TranslationResource = {
     milestones: {
       funded: 'Payment confirmed',
       shipped: 'Shipped',
+      delivered: 'Delivered',
       completed: 'Completed',
       timePending: 'Time pending',
     },

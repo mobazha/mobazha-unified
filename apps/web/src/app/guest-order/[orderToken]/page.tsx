@@ -10,6 +10,7 @@ import {
   profileApi,
   useI18n,
   buildProductHref,
+  routedStoreContextService,
   type UserProfile,
 } from '@mobazha/core';
 import { Header } from '@/components';
@@ -39,8 +40,13 @@ import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssets
 import { GuestOrderStageStrip } from '@/components/orders/GuestOrderStageStrip';
 import { GuestOrderMilestones } from '@/components/orders/GuestOrderMilestones';
 import { hasGuestPublicTrackingInfo } from '@/components/orders/guestOrderStages';
+import {
+  formatGuestOrderStateDescription,
+  formatGuestOrderStateLabel,
+} from '@/components/orders/guestOrderDisplay';
 import { useGuestOrderKind } from '@mobazha/core';
 import { cn } from '@/lib/utils';
+import { buildGuestOrderRecoveryHref, rememberGuestOrder } from '@/lib/guestOrderRecovery';
 
 function resolveSellerPeerID(order: GuestOrderStatus): string | undefined {
   if (isFullPeerID(order.sellerPeerID)) return order.sellerPeerID;
@@ -63,12 +69,6 @@ function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
     expiresAt: order.expiresAt,
     orderID: order.orderToken,
   };
-}
-
-function buildGuestOrderUrl(orderToken: string, buyerPortalToken?: string): string {
-  const path = `${window.location.origin}/guest-order/${encodeURIComponent(orderToken)}`;
-  if (!buyerPortalToken) return path;
-  return `${path}#buyerPortalToken=${encodeURIComponent(buyerPortalToken)}`;
 }
 
 function readBuyerPortalTokenFromURL(): { token?: string; shouldCleanURL: boolean } {
@@ -108,6 +108,20 @@ export default function GuestOrderPage() {
   const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
   const { orderKind } = useGuestOrderKind(order ?? null, { buyerPortalToken });
+
+  useEffect(() => {
+    if (!order) return;
+    rememberGuestOrder({
+      orderToken: order.orderToken,
+      state: order.state,
+      itemTitles: order.items.map(item => item.listingTitle),
+      paymentAmount: order.paymentAmount,
+      paymentCoin: order.paymentCoin,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      storeRouteToken: routedStoreContextService.getStoreRouteToken() ?? undefined,
+    });
+  }, [order]);
 
   // Keep the recovery token out of Referer headers even for legacy query-link
   // visits, then strip it from the visible URL after local recovery.
@@ -193,6 +207,13 @@ export default function GuestOrderPage() {
   }
 
   const display = resolveStatusDisplay(order.state, guestStatusCfg);
+  const displayLabel = formatGuestOrderStateLabel(order.state, orderKind, t);
+  const displayDescription = formatGuestOrderStateDescription(
+    order.state,
+    orderKind,
+    display.description,
+    t
+  );
   const coinSymbol = resolveTokenIdForDisplay(order.paymentCoin);
   const priceCur = order.priceCurrency || coinSymbol;
   const resolvedSellerProfile =
@@ -214,7 +235,7 @@ export default function GuestOrderPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-xl mx-auto px-4 pt-8 pb-28 md:pb-8 space-y-6">
         <div className="text-center">
           <h1 className="text-xl font-bold mb-2">{t('guestOrder.title')}</h1>
           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground font-mono">
@@ -247,15 +268,15 @@ export default function GuestOrderPage() {
         <div className={cn('p-4 rounded-lg text-center', display.color)}>
           <div className="flex items-center justify-center gap-2">
             {display.icon && React.createElement(display.icon, { className: 'w-5 h-5' })}
-            <p className="font-semibold text-lg">{display.label}</p>
+            <p className="font-semibold text-lg">{displayLabel}</p>
           </div>
-          {display.description && <p className="text-sm mt-1 opacity-80">{display.description}</p>}
+          {displayDescription && <p className="text-sm mt-1 opacity-80">{displayDescription}</p>}
         </div>
 
         <GuestOrderStageStrip state={order.state} orderKind={orderKind} />
 
         {(order.state === 'FUNDED' || order.state === 'SHIPPED' || order.state === 'COMPLETED') && (
-          <GuestOrderMilestones order={order} />
+          <GuestOrderMilestones order={order} orderKind={orderKind} />
         )}
 
         {order.state === 'EXPIRED' && (
@@ -272,17 +293,26 @@ export default function GuestOrderPage() {
           </div>
         )}
 
-        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PAYMENT_DETECTED') &&
-          typeof window !== 'undefined' && (
-            <SaveOrderLinkCard
-              orderUrl={buildGuestOrderUrl(order.orderToken, buyerPortalToken)}
-              title={t('guestOrder.saveLinkTitle')}
-              description={t('guestOrder.saveLinkDescription')}
-              copyLabel={t('guestOrder.saveLinkCopy')}
-              copiedLabel={t('guestOrder.saveLinkCopied')}
-              testId="guest-order-save-link"
-            />
-          )}
+        {typeof window !== 'undefined' && (
+          <SaveOrderLinkCard
+            orderUrl={buildGuestOrderRecoveryHref(order.orderToken, {
+              storeRouteToken: routedStoreContextService.getStoreRouteToken(),
+              buyerPortalToken,
+              origin: window.location.origin,
+            })}
+            title={t('guestOrder.saveLinkTitle')}
+            description={t('guestOrder.saveLinkDescription')}
+            copyLabel={t('guestOrder.saveLinkCopy')}
+            copiedLabel={t('guestOrder.saveLinkCopied')}
+            shareLabel={t('common.share')}
+            telegramSendLabel={t('guestOrder.telegramSend')}
+            telegramSendingLabel={t('guestOrder.telegramSending')}
+            telegramSentLabel={t('guestOrder.telegramSent')}
+            telegramSendError={t('guestOrder.telegramSendError')}
+            telegramPrivacyNote={t('guestOrder.telegramPrivacyNote')}
+            testId="guest-order-save-link"
+          />
+        )}
 
         {showPaymentInfo && (
           <ExternalWalletPayment paymentInfo={toPaymentInfo(order)} tokenId={coinSymbol} />

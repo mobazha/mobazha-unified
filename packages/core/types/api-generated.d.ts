@@ -6013,6 +6013,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/collateral/accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Open a collateral account
+     * @description Creates or retrieves one tenant- and local-principal-bound collateral requirement. This does not prove funding.
+     */
+    post: operations['collateral-accounts-open'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/collateral/accounts/{collateralID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get collateral account status
+     * @description Returns a safe tenant-local account and funding projection without credentials, evidence, raw rail payload, or idempotency identity.
+     */
+    get: operations['collateral-accounts-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/collateral/accounts/{collateralID}/funding-target': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Prepare a collateral funding target
+     * @description Creates or retrieves a persisted funding target through the configured reviewed rail. The target is not funding proof.
+     */
+    post: operations['collateral-funding-target-prepare'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/collateral/accounts/{collateralID}/funding/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reconcile collateral funding
+     * @description Polls the configured rail and applies only receipt-verified confirmed funding to the Core aggregate.
+     */
+    post: operations['collateral-funding-reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/collections': {
     parameters: {
       query?: never;
@@ -9015,6 +9095,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/settings/pgp-key/vault': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get seller encrypted PGP key backup */
+    get: operations['settings-pgp-key-vault-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/settings/storefront': {
     parameters: {
       query?: never;
@@ -11327,6 +11424,25 @@ export interface components {
       /** Format: int64 */
       maxActivations?: number;
     };
+    Node_CollateralAccountView: {
+      /** Format: date-time */
+      activatedAt?: string;
+      assetID: string;
+      availableAmount: string;
+      collateralID: string;
+      /** Format: date-time */
+      expiresAt: string;
+      fundedAmount: string;
+      funding?: components['schemas']['Node_OperatorFundingStatus'];
+      policyID: string;
+      policyVersion: string;
+      providerID: string;
+      requiredAmount: string;
+      resourceID: string;
+      /** Format: int64 */
+      revision: number;
+      state: string;
+    };
     'Node_Digital-asset-create-license-keyRequest': {
       appId?: string;
       listingSlug: string;
@@ -11386,6 +11502,20 @@ export interface components {
       status: string;
     };
     Node_EnvelopeError: Record<string, never>;
+    Node_FundingInputBody: {
+      idempotencyKey: string;
+      principalDestination: string;
+    };
+    Node_FundingTarget: {
+      amount: string;
+      assetID: string;
+      collateralID: string;
+      destination?: string;
+      /** Format: date-time */
+      expiresAt: string;
+      payload?: unknown;
+      railID: string;
+    };
     Node_HumaNodePingOutputBody: {
       /**
        * @description Static greeting.
@@ -11467,6 +11597,35 @@ export interface components {
       maxActivations: number;
       orderId?: string;
       status: string;
+    };
+    Node_OpenInputBody: {
+      assetID: string;
+      /** Format: date-time */
+      expiresAt: string;
+      idempotencyKey: string;
+      policyID: string;
+      policyVersion: string;
+      providerID: string;
+      requiredAmount: string;
+      resourceID: string;
+    };
+    Node_OperatorFundingStatus: {
+      amount: string;
+      assetID: string;
+      /** Format: int64 */
+      attempts: number;
+      destination?: string;
+      /** Format: date-time */
+      expiresAt: string;
+      fundingReference?: string;
+      lastErrorCode?: string;
+      /** Format: date-time */
+      observedAt?: string;
+      railID: string;
+      railVersion: string;
+      state: string;
+      /** Format: date-time */
+      updatedAt: string;
     };
     Node_SkillRun: {
       acting_persona?: string;
@@ -24792,6 +24951,136 @@ export interface operations {
       };
     };
   };
+  'collateral-accounts-open': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_OpenInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_CollateralAccountView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collateral-accounts-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        collateralID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_CollateralAccountView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collateral-funding-target-prepare': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        collateralID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_FundingInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_FundingTarget'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collateral-funding-reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        collateralID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_CollateralAccountView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'collections-get': {
     parameters: {
       query?: {
@@ -31699,6 +31988,35 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-pgp-key-vault-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
       };
       /** @description Error */
       default: {

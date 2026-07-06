@@ -177,6 +177,21 @@ export const ko: PartialTranslationResource = {
     openUserMenu: '사용자 메뉴 열기',
     productGroupsDesc: '스토어프론트용으로 상품을 그룹으로 정리합니다.',
   },
+  track: {
+    title: '주문',
+    description: '최근 주문을 다시 열거나 비공개 주문 링크 또는 토큰으로 주문을 찾으세요.',
+    recentTitle: '최근 주문',
+    deviceOnly:
+      '주문 참조는 이 기기에만 저장됩니다. 공유 기기에서는 삭제하세요. 비공개 배송 키는 저장되지 않습니다.',
+    findTitle: '다른 주문 찾기',
+    placeholder: '주문 링크 또는 토큰 붙여넣기',
+    inputLabel: '주문 링크 또는 토큰',
+    submit: '주문 보기',
+    invalid: '유효한 주문 링크 또는 토큰을 입력하세요.',
+    forget: '이 기기에서 주문 삭제',
+    orderFallback: '주문',
+    lastUpdated: '{{date}} 업데이트',
+  },
   login: {
     title: 'Mobazha',
     subtitle: '탈중앙화 마켓플레이스',
@@ -6638,7 +6653,9 @@ export const ko: PartialTranslationResource = {
     continueToShipping: '계속 배송',
     shippingInfo: '배송정보',
     fullName: '성명',
-    emailLabel: '이메일(선택사항, 주문 업데이트용)',
+    emailLabel: '이메일(선택 사항, 비워 두면 익명)',
+    emailContactHint:
+      '입력하면 주문 연락처로 판매자에게 공유됩니다. 자동 이메일 알림은 전송되지 않습니다.',
     address: '주소',
     city: '도시',
     stateProvince: '주/도',
@@ -6673,12 +6690,12 @@ export const ko: PartialTranslationResource = {
     anonymousPointDirectPayment:
       '지불금은 판매자에게 직접 전달됩니다. 에스크로나 구매자 보호는 없습니다.',
     anonymousPointEmailOptional:
-      '이메일은 선택 사항이지만 주문 업데이트를 받으려면 이메일을 보내는 것이 좋습니다.',
+      '이메일은 선택 사항입니다. 입력하면 주문 연락처로 판매자에게 공유되며 자동 알림은 전송되지 않습니다.',
     anonymousPointSaveLink:
-      '주문한 후 주문 링크를 저장하세요. 이것이 다시 돌아가는 유일한 방법입니다.',
+      '비공개 주문 링크를 저장하세요. 다른 기기에서 복구하고 디지털 상품을 받는 데 필요합니다.',
     saveLinkTitle: '주문 링크 저장',
     saveLinkDescription:
-      '결제 상태, 확인 및 배송을 확인하려면 이 링크를 즐겨찾기에 추가하세요. 이 주문을 다시 찾을 수 있는 유일한 방법입니다.',
+      '다른 기기에서 결제, 확인 및 배송을 보려면 이 링크를 저장하거나 비공개로 공유하세요. 이 기기에는 최근 주문 참조만 저장되며 비공개 배송 키는 저장되지 않습니다.',
     saveLinkCopy: '링크 복사',
     saveLinkCopied: '링크가 복사되었습니다',
     digitalSaveLinkTitle: '귀하의 다운로드는 이 링크 뒤에 있습니다',
@@ -6730,6 +6747,12 @@ export const ko: PartialTranslationResource = {
       '언제든지 주문 상태를 확인하려면 이 URL을 북마크에 추가하세요. 이 링크가 있는 사람은 누구나 주문을 볼 수 있으므로 비공개로 유지하세요.',
     saveLinkCopy: '링크 복사',
     saveLinkCopied: '링크가 복사되었습니다',
+    telegramSend: '영수증을 Telegram으로 보내기',
+    telegramSending: 'Telegram으로 보내는 중…',
+    telegramSent: '영수증을 Telegram으로 보냈습니다',
+    telegramSendError: '보내지 못했습니다. 다시 시도하세요',
+    telegramPrivacyNote:
+      '선택 사항: 다른 기기에서 복구할 수 있도록 Telegram이 이 비공개 주문 링크를 받습니다.',
     expiredHelpTitle: '이미 지불금을 보냈습니까?',
     expiredHelpBody:
       '만료되기 전에 이 주문에 자금을 조달한 경우 아래 거래 해시(TX)를 사용하여 판매자에게 문의하세요. 그들은 수동으로 주문을 확인하고 완료할 수 있습니다. 만료된 주소로 새 지불금을 보내지 마십시오.',

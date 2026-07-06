@@ -1652,7 +1652,7 @@ export default function PaymentPage() {
                             <FiatPaymentSection
                               key={`${visibleFiatProvider}:${paymentSelectionQuoteID ?? 'legacy'}`}
                               providerID={visibleFiatProvider!}
-                              vendorPeerID={orderDetails.vendor.peerID}
+                              vendorPeerID={paymentVendorPeerID}
                               orderID={orderDetails.orderID}
                               amount={
                                 isDealBacked
