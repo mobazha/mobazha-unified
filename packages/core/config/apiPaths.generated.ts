@@ -24,6 +24,8 @@ export const HOSTING_API_PATHS = {
   ADMIN_DEAL_COMMISSION_ENTRIES: '/platform/v1/admin/deal-commission-entries',
   ADMIN_DEAL_COMMISSION_ENTRIES_REVIEW_ELIGIBILITY: (id: string) =>
     `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/review-eligibility`,
+  ADMIN_DEAL_COMMISSION_ENTRIES_RISK_EVENTS: (id: string) =>
+    `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/risk-events`,
   ADMIN_EXCHANGE_RATES_CONFIG: '/platform/v1/admin/exchange-rates/config',
   ADMIN_EXCHANGE_RATES_HEALTH: '/platform/v1/admin/exchange-rates/health',
   ADMIN_FIAT_PROVIDERS: '/platform/v1/admin/fiat-providers',
@@ -81,6 +83,8 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}/burn-tx`,
   COLLECTIBLES_NFTS_BY_MINT: (mint: string) =>
     `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}`,
+  COLLECTIBLES_NFTS_TRANSFER_TX: (mint: string) =>
+    `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}/transfer-tx`,
   COLLECTIBLES_PRIMARY_SALES: '/platform/v1/collectibles/primary-sales',
   COLLECTIBLES_PRIMARY_SALES_BY_ID: (id: string) =>
     `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}`,
@@ -123,6 +127,7 @@ export const HOSTING_API_PATHS = {
   COLLECTIBLES_SOURCE_DEPOSITS_SHIP: (id: string) =>
     `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/ship`,
   COLLECTIBLES_WALLETS: '/platform/v1/collectibles/wallets',
+  COLLECTIBLES_WALLETS_CHALLENGES: '/platform/v1/collectibles/wallets/challenges',
   COMMUNITY_MARKETPLACES_ADMIN_BANNERS: (platform: string, instanceID: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/admin/banners`,
   COMMUNITY_MARKETPLACES_ADMIN_FEATURED: (platform: string, instanceID: string) =>

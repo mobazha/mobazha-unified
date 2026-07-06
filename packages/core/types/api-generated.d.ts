@@ -280,6 +280,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/admin/deal-commission-entries/{id}/risk-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Inspect immutable automatic risk events for a provisional Deal commission */
+    get: operations['admin-deal-commission-risk-events-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/admin/exchange-rates/config': {
     parameters: {
       query?: never;
@@ -1063,6 +1080,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/collectibles/nfts/{mint}/transfer-tx': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Build an unsigned Metaplex pNFT TransferV1 transaction */
+    post: operations['collectibles-nfts-transfer-tx'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/collectibles/primary-sales': {
     parameters: {
       query?: never;
@@ -1484,6 +1518,23 @@ export interface paths {
     put?: never;
     /** Bind a Solana wallet to the current user for redemption */
     post: operations['collectibles-wallets-bind'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/wallets/challenges': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a Solana wallet ownership challenge */
+    post: operations['collectibles-wallet-challenges-create'];
     delete?: never;
     options?: never;
     head?: never;
@@ -9870,6 +9921,72 @@ export interface components {
     Platform_AccountUnlinkInputBody: {
       provider: string;
     };
+    Platform_AdminDealCommissionQueueEntryResponse: {
+      acceptanceConsistent: boolean;
+      acceptanceStatus: string;
+      buyerPeerID: string;
+      buyerUserID: string;
+      entry: components['schemas']['Platform_DealCommissionEntryResponse'];
+      promoterPeerID: string;
+      promoterUserID: string;
+      /** Format: int64 */
+      reviewHoldRemainingSeconds: number;
+      reviewReady: boolean;
+      riskSummary: components['schemas']['Platform_AdminDealCommissionRiskSummaryResponse'];
+      sellerPeerID: string;
+      tenantID: string;
+    };
+    Platform_AdminDealCommissionQueueResponse: {
+      entries: components['schemas']['Platform_AdminDealCommissionQueueEntryResponse'][] | null;
+      /** Format: date-time */
+      generatedAt: string;
+      /** Format: int64 */
+      limit: number;
+      /** Format: int64 */
+      offset: number;
+      /** Format: int64 */
+      total: number;
+    };
+    Platform_AdminDealCommissionRiskAuditResponse: {
+      entryID: string;
+      events: components['schemas']['Platform_AdminDealCommissionRiskEventResponse'][] | null;
+      orderID: string;
+      payable: boolean;
+      riskSummary: components['schemas']['Platform_AdminDealCommissionRiskSummaryResponse'];
+      status: string;
+      truncated: boolean;
+    };
+    Platform_AdminDealCommissionRiskEventResponse: {
+      applied: boolean;
+      /** Format: date-time */
+      appliedAt: string;
+      id: string;
+      /** @enum {string} */
+      kind: 'refund_observed' | 'dispute_opened' | 'chargeback_observed' | 'risk_evidence_invalid';
+      /** Format: date-time */
+      observedAt: string;
+      previousStatus: string;
+      providerID: string;
+      reasonCode: string;
+      resultStatus: string;
+      /** @enum {string} */
+      source: 'live_event' | 'reconciliation';
+      sourceEventID: string;
+    };
+    Platform_AdminDealCommissionRiskSummaryResponse: {
+      /** Format: date-time */
+      appliedAt?: string;
+      hasRisk: boolean;
+      /** @enum {string} */
+      kind?: 'refund_observed' | 'dispute_opened' | 'chargeback_observed' | 'risk_evidence_invalid';
+      lastEventID?: string;
+      /** Format: date-time */
+      lastReconciliationAttemptedAt?: string;
+      /** Format: date-time */
+      observedAt?: string;
+      providerID?: string;
+      reasonCode?: string;
+    };
     Platform_AdminPatchAIConfigInputBody: {
       /** Format: int64 */
       daily_limit?: number;
@@ -10077,6 +10194,7 @@ export interface components {
     Platform_CollectibleSourceDeposit: {
       buyerPeerID?: string;
       certNumber: string;
+      collateralRequirementStatus: string;
       /** Format: date-time */
       createdAt: string;
       currencyCode?: string;
@@ -10103,6 +10221,7 @@ export interface components {
       hubTitleInvalidationReason?: string;
       hubTitleValidityStatus?: string;
       nftMint?: string;
+      orderOptionalFeatures?: string[] | null;
       photosJSON?: string;
       priceAmount?: string;
       /** Format: date-time */
@@ -10132,6 +10251,20 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
       tenantID: string;
+      userID: string;
+      wallet: string;
+    };
+    Platform_CollectibleWalletChallenge: {
+      challengeID: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      expiresAt: string;
+      message: string;
+      nftMint: string;
+      tenantID: string;
+      /** Format: date-time */
+      usedAt?: string;
       userID: string;
       wallet: string;
     };
@@ -10186,6 +10319,59 @@ export interface components {
        * @enum {string}
        */
       testOrderCheck: 'clear' | 'test_order';
+    };
+    Platform_DealCommissionEligibilityReviewResponse: {
+      autoRelatedAccount: boolean;
+      chargebackObserved: boolean;
+      /** @enum {string} */
+      decision: 'deferred' | 'eligible' | 'disputed' | 'reversed';
+      disputeHistory: boolean;
+      entry: components['schemas']['Platform_DealCommissionEntryResponse'];
+      orderState: string;
+      payable: boolean;
+      providerDisputeHistory: boolean;
+      providerDisputeOpen: boolean;
+      providerDisputeOutcome?: string;
+      reasonCodes: string[] | null;
+      refundObserved: boolean;
+      relatedAccountCheck: string;
+      replayed: boolean;
+      /** @enum {string} */
+      resultStatus: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'settled';
+      reviewID: string;
+      /** Format: date-time */
+      reviewedAt: string;
+      testOrderCheck: string;
+    };
+    Platform_DealCommissionEntryResponse: {
+      acceptanceID: string;
+      attributionClaimID: string;
+      calculationBase: string;
+      commissionBaseAmountAtomic: string;
+      /** Format: int64 */
+      commissionRateBPS: number;
+      currency: string;
+      /** Format: int32 */
+      currencyDivisibility: number;
+      dealLinkID: string;
+      declaredFundingSource: string;
+      /** Format: date-time */
+      eligibilityReviewedAt?: string;
+      id: string;
+      /** @enum {string} */
+      lastEligibilityDecision?: 'deferred' | 'eligible' | 'disputed' | 'reversed';
+      lastEligibilityReasons?: string[] | null;
+      /** Format: date-time */
+      observedAt: string;
+      orderID: string;
+      payable: boolean;
+      programID: string;
+      proposedCommissionAmountAtomic: string;
+      /** Format: date-time */
+      reviewNotBefore: string;
+      settlementMode: string;
+      /** @enum {string} */
+      status: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'settled';
     };
     Platform_DealLinkRequest: {
       deliveryType: string;
@@ -10268,6 +10454,20 @@ export interface components {
     };
     Platform_GmVisibilityBodyBody: {
       isVisible: boolean;
+    };
+    Platform_HolderSyncIssue: {
+      code: string;
+      message: string;
+      nftMint?: string;
+    };
+    Platform_HolderSyncReport: {
+      /** Format: int64 */
+      checkedNFTs: number;
+      issues?: components['schemas']['Platform_HolderSyncIssue'][] | null;
+      missingSnapshots?: string[] | null;
+      tenantID: string;
+      /** Format: int64 */
+      updatedSlots: number;
     };
     Platform_HumaPingAuthOutputBody: {
       /** @example pong */
@@ -10526,6 +10726,7 @@ export interface components {
       circulatingSlotCount: number;
       /** Format: date-time */
       generatedAt: string;
+      holderSync?: components['schemas']['Platform_HolderSyncReport'];
       issues?: components['schemas']['Platform_ReconciliationIssue'][] | null;
       overdueRedemptions?: components['schemas']['Platform_RedemptionSLAAlert'][] | null;
       pendingMints?: components['schemas']['Platform_PendingMintAlert'][] | null;
@@ -10799,6 +11000,17 @@ export interface components {
       /** @description Granted scopes. Always populated; empty array if the token has none. */
       scopes: string[] | null;
     };
+    Platform_TransferTxInputBody: {
+      destination: string;
+      holder: string;
+    };
+    Platform_UnsignedTransferTx: {
+      destination: string;
+      holder: string;
+      message: string;
+      nftMint: string;
+      transaction: string;
+    };
     Platform_UnsignedTx: {
       holder: string;
       message: string;
@@ -10825,7 +11037,13 @@ export interface components {
       name: string;
     };
     Platform_WalletBindInputBody: {
-      nftMint?: string;
+      challengeID: string;
+      nftMint: string;
+      signature: string;
+      wallet: string;
+    };
+    Platform_WalletChallengeInputBody: {
+      nftMint: string;
       wallet: string;
     };
     Node_AdminSessionStatus: {
@@ -11964,7 +12182,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['Platform_AdminDealCommissionQueueResponse'];
         };
       };
       /** @description Error */
@@ -12001,7 +12219,38 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': components['schemas']['Platform_DealCommissionEligibilityReviewResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-deal-commission-risk-events-list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_AdminDealCommissionRiskAuditResponse'];
         };
       };
       /** @description Error */
@@ -13662,6 +13911,41 @@ export interface operations {
       };
     };
   };
+  'collectibles-nfts-transfer-tx': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mint: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_TransferTxInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_UnsignedTransferTx'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'collectibles-primary-sales-create': {
     parameters: {
       query?: never;
@@ -14562,6 +14846,39 @@ export interface operations {
       };
     };
   };
+  'collectibles-wallet-challenges-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_WalletChallengeInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleWalletChallenge'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'group-marketplace-discord-verify-member': {
     parameters: {
       query?: never;
@@ -15303,7 +15620,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json':
+            | components['schemas']['Platform_DealCommissionEntryResponse'][]
+            | null;
         };
       };
       /** @description Error */
@@ -15332,7 +15651,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json':
+            | components['schemas']['Platform_DealCommissionEntryResponse'][]
+            | null;
         };
       };
       /** @description Error */

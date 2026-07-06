@@ -695,7 +695,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Success envelope inner data."
+                  "$ref": "#/components/schemas/Platform_AdminDealCommissionQueueResponse"
                 }
               }
             },
@@ -757,7 +757,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Success envelope inner data."
+                  "$ref": "#/components/schemas/Platform_DealCommissionEligibilityReviewResponse"
                 }
               }
             },
@@ -780,6 +780,50 @@
           }
         ],
         "summary": "Evaluate a provisional Deal commission against authoritative order and risk evidence",
+        "tags": ["deal-attribution"]
+      }
+    },
+    "/platform/v1/admin/deal-commission-entries/{id}/risk-events": {
+      "get": {
+        "operationId": "admin-deal-commission-risk-events-list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_AdminDealCommissionRiskAuditResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Inspect immutable automatic risk events for a provisional Deal commission",
         "tags": ["deal-attribution"]
       }
     },
@@ -3049,6 +3093,60 @@
         "tags": ["collectibles"]
       }
     },
+    "/platform/v1/collectibles/nfts/{mint}/transfer-tx": {
+      "post": {
+        "operationId": "collectibles-nfts-transfer-tx",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mint",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_TransferTxInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_UnsignedTransferTx"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Build an unsigned Metaplex pNFT TransferV1 transaction",
+        "tags": ["collectibles"]
+      }
+    },
     "/platform/v1/collectibles/primary-sales": {
       "post": {
         "operationId": "collectibles-primary-sales-create",
@@ -4433,6 +4531,51 @@
         "tags": ["collectibles"]
       }
     },
+    "/platform/v1/collectibles/wallets/challenges": {
+      "post": {
+        "operationId": "collectibles-wallet-challenges-create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_WalletChallengeInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_CollectibleWalletChallenge",
+                  "description": "Short-lived Solana wallet ownership challenge."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create a Solana wallet ownership challenge",
+        "tags": ["collectibles"]
+      }
+    },
     "/platform/v1/community-marketplaces/discord/{instanceID}/verify-member": {
       "post": {
         "operationId": "group-marketplace-discord-verify-member",
@@ -5584,7 +5727,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Success envelope inner data."
+                  "items": {
+                    "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
+                  },
+                  "type": ["array", "null"]
                 }
               }
             },
@@ -5618,7 +5764,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Success envelope inner data."
+                  "items": {
+                    "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
+                  },
+                  "type": ["array", "null"]
                 }
               }
             },
@@ -34298,6 +34447,232 @@
         "required": ["provider"],
         "type": "object"
       },
+      "Platform_AdminDealCommissionQueueEntryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptanceConsistent": {
+            "type": "boolean"
+          },
+          "acceptanceStatus": {
+            "type": "string"
+          },
+          "buyerPeerID": {
+            "type": "string"
+          },
+          "buyerUserID": {
+            "type": "string"
+          },
+          "entry": {
+            "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
+          },
+          "promoterPeerID": {
+            "type": "string"
+          },
+          "promoterUserID": {
+            "type": "string"
+          },
+          "reviewHoldRemainingSeconds": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reviewReady": {
+            "type": "boolean"
+          },
+          "riskSummary": {
+            "$ref": "#/components/schemas/Platform_AdminDealCommissionRiskSummaryResponse"
+          },
+          "sellerPeerID": {
+            "type": "string"
+          },
+          "tenantID": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry",
+          "riskSummary",
+          "tenantID",
+          "sellerPeerID",
+          "promoterUserID",
+          "promoterPeerID",
+          "buyerUserID",
+          "buyerPeerID",
+          "acceptanceStatus",
+          "acceptanceConsistent",
+          "reviewReady",
+          "reviewHoldRemainingSeconds"
+        ],
+        "type": "object"
+      },
+      "Platform_AdminDealCommissionQueueResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_AdminDealCommissionQueueEntryResponse"
+            },
+            "type": ["array", "null"]
+          },
+          "generatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "limit": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "offset": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["entries", "total", "limit", "offset", "generatedAt"],
+        "type": "object"
+      },
+      "Platform_AdminDealCommissionRiskAuditResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "entryID": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_AdminDealCommissionRiskEventResponse"
+            },
+            "type": ["array", "null"]
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "payable": {
+            "type": "boolean"
+          },
+          "riskSummary": {
+            "$ref": "#/components/schemas/Platform_AdminDealCommissionRiskSummaryResponse"
+          },
+          "status": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entryID",
+          "orderID",
+          "status",
+          "payable",
+          "riskSummary",
+          "events",
+          "truncated"
+        ],
+        "type": "object"
+      },
+      "Platform_AdminDealCommissionRiskEventResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "appliedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "refund_observed",
+              "dispute_opened",
+              "chargeback_observed",
+              "risk_evidence_invalid"
+            ],
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "previousStatus": {
+            "type": "string"
+          },
+          "providerID": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "resultStatus": {
+            "type": "string"
+          },
+          "source": {
+            "enum": ["live_event", "reconciliation"],
+            "type": "string"
+          },
+          "sourceEventID": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "sourceEventID",
+          "providerID",
+          "kind",
+          "previousStatus",
+          "resultStatus",
+          "reasonCode",
+          "applied",
+          "observedAt",
+          "appliedAt"
+        ],
+        "type": "object"
+      },
+      "Platform_AdminDealCommissionRiskSummaryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "appliedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hasRisk": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "refund_observed",
+              "dispute_opened",
+              "chargeback_observed",
+              "risk_evidence_invalid"
+            ],
+            "type": "string"
+          },
+          "lastEventID": {
+            "type": "string"
+          },
+          "lastReconciliationAttemptedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "providerID": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        },
+        "required": ["hasRisk"],
+        "type": "object"
+      },
       "Platform_AdminPatchAIConfigInputBody": {
         "additionalProperties": false,
         "properties": {
@@ -34920,6 +35295,9 @@
           "certNumber": {
             "type": "string"
           },
+          "collateralRequirementStatus": {
+            "type": "string"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -34988,6 +35366,12 @@
           "nftMint": {
             "type": "string"
           },
+          "orderOptionalFeatures": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
           "photosJSON": {
             "type": "string"
           },
@@ -35045,6 +35429,7 @@
           "sellerPeerID",
           "holderWallet",
           "certNumber",
+          "collateralRequirementStatus",
           "divisibility",
           "status",
           "releaseStatus",
@@ -35090,6 +35475,52 @@
           }
         },
         "required": ["tenantID", "userID", "wallet", "chain", "createdAt"],
+        "type": "object"
+      },
+      "Platform_CollectibleWalletChallenge": {
+        "additionalProperties": false,
+        "properties": {
+          "challengeID": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "nftMint": {
+            "type": "string"
+          },
+          "tenantID": {
+            "type": "string"
+          },
+          "usedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "userID": {
+            "type": "string"
+          },
+          "wallet": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "challengeID",
+          "tenantID",
+          "userID",
+          "wallet",
+          "nftMint",
+          "message",
+          "expiresAt",
+          "createdAt"
+        ],
         "type": "object"
       },
       "Platform_CollectiblesMeta": {
@@ -35214,6 +35645,192 @@
           }
         },
         "required": ["testOrderCheck", "relatedAccountCheck"],
+        "type": "object"
+      },
+      "Platform_DealCommissionEligibilityReviewResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "autoRelatedAccount": {
+            "type": "boolean"
+          },
+          "chargebackObserved": {
+            "type": "boolean"
+          },
+          "decision": {
+            "enum": ["deferred", "eligible", "disputed", "reversed"],
+            "type": "string"
+          },
+          "disputeHistory": {
+            "type": "boolean"
+          },
+          "entry": {
+            "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
+          },
+          "orderState": {
+            "type": "string"
+          },
+          "payable": {
+            "type": "boolean"
+          },
+          "providerDisputeHistory": {
+            "type": "boolean"
+          },
+          "providerDisputeOpen": {
+            "type": "boolean"
+          },
+          "providerDisputeOutcome": {
+            "type": "string"
+          },
+          "reasonCodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "refundObserved": {
+            "type": "boolean"
+          },
+          "relatedAccountCheck": {
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "resultStatus": {
+            "enum": ["observed", "pending_review", "disputed", "reversed", "settled"],
+            "type": "string"
+          },
+          "reviewID": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "testOrderCheck": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry",
+          "reviewID",
+          "decision",
+          "resultStatus",
+          "reasonCodes",
+          "orderState",
+          "refundObserved",
+          "disputeHistory",
+          "providerDisputeHistory",
+          "providerDisputeOpen",
+          "chargebackObserved",
+          "testOrderCheck",
+          "relatedAccountCheck",
+          "autoRelatedAccount",
+          "reviewedAt",
+          "replayed",
+          "payable"
+        ],
+        "type": "object"
+      },
+      "Platform_DealCommissionEntryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptanceID": {
+            "type": "string"
+          },
+          "attributionClaimID": {
+            "type": "string"
+          },
+          "calculationBase": {
+            "type": "string"
+          },
+          "commissionBaseAmountAtomic": {
+            "type": "string"
+          },
+          "commissionRateBPS": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "currencyDivisibility": {
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "dealLinkID": {
+            "type": "string"
+          },
+          "declaredFundingSource": {
+            "type": "string"
+          },
+          "eligibilityReviewedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastEligibilityDecision": {
+            "enum": ["deferred", "eligible", "disputed", "reversed"],
+            "type": "string"
+          },
+          "lastEligibilityReasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "observedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "payable": {
+            "type": "boolean"
+          },
+          "programID": {
+            "type": "string"
+          },
+          "proposedCommissionAmountAtomic": {
+            "type": "string"
+          },
+          "reviewNotBefore": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "settlementMode": {
+            "type": "string"
+          },
+          "status": {
+            "enum": ["observed", "pending_review", "disputed", "reversed", "settled"],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "attributionClaimID",
+          "acceptanceID",
+          "orderID",
+          "programID",
+          "dealLinkID",
+          "status",
+          "calculationBase",
+          "commissionRateBPS",
+          "commissionBaseAmountAtomic",
+          "proposedCommissionAmountAtomic",
+          "currency",
+          "currencyDivisibility",
+          "declaredFundingSource",
+          "settlementMode",
+          "payable",
+          "reviewNotBefore",
+          "observedAt"
+        ],
         "type": "object"
       },
       "Platform_DealLinkRequest": {
@@ -35488,6 +36105,52 @@
           }
         },
         "required": ["isVisible"],
+        "type": "object"
+      },
+      "Platform_HolderSyncIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "nftMint": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "message"],
+        "type": "object"
+      },
+      "Platform_HolderSyncReport": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedNFTs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_HolderSyncIssue"
+            },
+            "type": ["array", "null"]
+          },
+          "missingSnapshots": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "tenantID": {
+            "type": "string"
+          },
+          "updatedSlots": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["tenantID", "checkedNFTs", "updatedSlots"],
         "type": "object"
       },
       "Platform_HumaPingAuthOutputBody": {
@@ -36241,6 +36904,9 @@
           "generatedAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "holderSync": {
+            "$ref": "#/components/schemas/Platform_HolderSyncReport"
           },
           "issues": {
             "items": {
@@ -37024,6 +37690,41 @@
         "required": ["id", "name", "prefix", "scopes", "created_at", "active"],
         "type": "object"
       },
+      "Platform_TransferTxInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "destination": {
+            "type": "string"
+          },
+          "holder": {
+            "type": "string"
+          }
+        },
+        "required": ["holder", "destination"],
+        "type": "object"
+      },
+      "Platform_UnsignedTransferTx": {
+        "additionalProperties": false,
+        "properties": {
+          "destination": {
+            "type": "string"
+          },
+          "holder": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "nftMint": {
+            "type": "string"
+          },
+          "transaction": {
+            "type": "string"
+          }
+        },
+        "required": ["nftMint", "holder", "destination", "transaction", "message"],
+        "type": "object"
+      },
       "Platform_UnsignedTx": {
         "additionalProperties": false,
         "properties": {
@@ -37111,6 +37812,25 @@
       "Platform_WalletBindInputBody": {
         "additionalProperties": false,
         "properties": {
+          "challengeID": {
+            "type": "string"
+          },
+          "nftMint": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "wallet": {
+            "type": "string"
+          }
+        },
+        "required": ["wallet", "nftMint", "challengeID", "signature"],
+        "type": "object"
+      },
+      "Platform_WalletChallengeInputBody": {
+        "additionalProperties": false,
+        "properties": {
           "nftMint": {
             "type": "string"
           },
@@ -37118,7 +37838,7 @@
             "type": "string"
           }
         },
-        "required": ["wallet"],
+        "required": ["wallet", "nftMint"],
         "type": "object"
       },
       "Node_AdminSessionStatus": {
