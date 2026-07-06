@@ -52,6 +52,7 @@ import {
   Store,
   Building2,
   Mail,
+  Settings,
 } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { NotificationDropdown } from '../Notification';
@@ -464,12 +465,18 @@ export const Header: React.FC = () => {
                   ) : null}
 
                   <DropdownMenuItem
-                    onClick={() => router.push('/settings/general')}
+                    onClick={() =>
+                      router.push(standaloneMode ? '/admin/settings' : '/settings/general')
+                    }
                     className="cursor-pointer"
                     data-testid="header-menu-settings"
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    {t('userMenu.account')}
+                    {standaloneMode ? (
+                      <Settings className="mr-2 h-4 w-4" />
+                    ) : (
+                      <User className="mr-2 h-4 w-4" />
+                    )}
+                    {standaloneMode ? t('admin.nav.settings') : t('userMenu.account')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

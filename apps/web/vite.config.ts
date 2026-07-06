@@ -55,11 +55,14 @@ function readBody(req: IncomingMessage): Promise<string> {
  * - Telegram SDK conditional loader script
  * - Blocking /runtime-config.js → inline bootstrap + defer dynamic merge (saves one Tor RTT)
  */
-function sovereignHtmlStripPlugin(): Plugin {
+function sovereignHtmlStripPlugin(options: { preserveTelegramSDK?: boolean } = {}): Plugin {
   const inlineRuntimeConfig = JSON.stringify({
     schemaVersion: 3,
     authMode: 'standalone',
-    deployment: { mode: 'sovereign', allowExternalResources: false },
+    deployment: {
+      mode: 'sovereign',
+      allowExternalResources: options.preserveTelegramSDK === true,
+    },
     experience: { kind: 'store' },
     capabilitiesReady: false,
     features: { guestCheckout: { effective: true, overridable: [] } },
@@ -83,19 +86,88 @@ function sovereignHtmlStripPlugin(): Plugin {
   return {
     name: 'sovereign-html-strip',
     transformIndexHtml(html) {
-      const result = html
+      // A multi-route storefront bridge has no single node-level runtime config.
+      // Its signed route snapshot selects the node after bootstrap, so loading
+      // the generic /runtime-config.js placeholder would overwrite this inline
+      // store configuration with hosted/platform defaults.
+      const runtimeConfigBootstrap = options.preserveTelegramSDK
+        ? `    <script>window.__RUNTIME_CONFIG__=${inlineRuntimeConfig};</script>`
+        : `    <script>window.__RUNTIME_CONFIG__=${inlineRuntimeConfig};</script>\n    <script defer src="/runtime-config.js"></script>`;
+      let result = html
         // Remove Google Fonts links
         .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
         .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
-        // Remove Telegram SDK loader script block
-        .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '')
         // Inline static bootstrap; defer server-driven merge (brand/features)
-        .replace(
-          /\s*<script src="\/runtime-config\.js"[^>]*><\/script>/,
-          `    <script>window.__RUNTIME_CONFIG__=${inlineRuntimeConfig};</script>\n    <script defer src="/runtime-config.js"></script>`
+        .replace(/\s*<script src="\/runtime-config\.js"[^>]*><\/script>/, runtimeConfigBootstrap);
+
+      if (!options.preserveTelegramSDK) {
+        result = result.replace(
+          /\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g,
+          ''
         );
+      }
 
       return result;
+    },
+  };
+}
+
+/**
+ * Reject forbidden implementation modules before Rollup erases their import
+ * specifiers. The post-build string audit remains a second privacy boundary.
+ */
+function sovereignForbiddenModuleGuardPlugin(): Plugin {
+  const forbiddenModules: Array<{ label: string; pattern: RegExp }> = [
+    {
+      label: 'Stripe SDK',
+      pattern: /node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?@stripe\//,
+    },
+    {
+      label: 'PayPal SDK',
+      pattern: /node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?@paypal\//,
+    },
+    {
+      label: 'Discord embedded SDK',
+      pattern: /node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?@discord\/embedded-app-sdk/,
+    },
+    {
+      label: 'Matrix SDK',
+      pattern: /node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?matrix-js-sdk/,
+    },
+    {
+      label: 'fiat order dispute UI',
+      pattern: /\/components\/Order\/cards\/FiatDisputeBanner\.[jt]sx?$/,
+    },
+    {
+      label: 'fiat checkout implementation',
+      pattern: /\/components\/Payment\/(?:PayPalPaymentForm|FiatPaymentSection)\.[jt]sx?$/,
+    },
+  ];
+
+  return {
+    name: 'sovereign-forbidden-module-guard',
+    generateBundle(_options, bundle) {
+      const violations = new Map<string, string[]>();
+      for (const output of Object.values(bundle)) {
+        if (output.type !== 'chunk') continue;
+        for (const moduleID of Object.keys(output.modules)) {
+          const normalized = moduleID.replaceAll('\\', '/').split('?')[0] ?? moduleID;
+          for (const rule of forbiddenModules) {
+            if (!rule.pattern.test(normalized)) continue;
+            const entries = violations.get(rule.label) ?? [];
+            entries.push(normalized);
+            violations.set(rule.label, entries);
+          }
+        }
+      }
+      if (violations.size === 0) return;
+      const details = [...violations.entries()]
+        .map(
+          ([label, modules]) =>
+            `${label}:\n${[...new Set(modules)].map(id => `  - ${id}`).join('\n')}`
+        )
+        .join('\n');
+      this.error(`Sovereign bundle contains forbidden modules:\n${details}`);
     },
   };
 }
@@ -139,6 +211,27 @@ function sovereignResolvePlugin(): Plugin {
         './src/components/Payment/StripePaymentForm_sovereign.tsx'
       ),
     },
+    {
+      test: /\/src\/components\/Payment\/PayPalPaymentForm\.tsx$/,
+      replacement: path.resolve(
+        __dirname,
+        './src/components/Payment/PayPalPaymentForm_sovereign.tsx'
+      ),
+    },
+    {
+      test: /\/src\/components\/Payment\/FiatPaymentSection\.tsx$/,
+      replacement: path.resolve(
+        __dirname,
+        './src/components/Payment/FiatPaymentSection_sovereign.tsx'
+      ),
+    },
+    {
+      test: /\/src\/components\/Order\/cards\/FiatDisputeBanner\.tsx$/,
+      replacement: path.resolve(
+        __dirname,
+        './src/components/Order/cards/FiatDisputeBanner_sovereign.tsx'
+      ),
+    },
     // --- Matrix / Chat isolation for Sovereign ---
     {
       test: /\/packages\/core\/hooks\/useMatrixInit\.ts$/,
@@ -180,10 +273,29 @@ function sovereignResolvePlugin(): Plugin {
         '../../packages/core/services/matrix/index_sovereign.ts'
       ),
     },
+    {
+      test: /\/packages\/core\/services\/auth\/miniAppAuth\.ts$/,
+      replacement: path.resolve(
+        __dirname,
+        '../../packages/core/services/auth/miniAppAuth_sovereign.ts'
+      ),
+    },
     // Redirect chat page to a no-op stub
     {
       test: /\/src\/app\/chat\/page\.tsx$/,
       replacement: path.resolve(__dirname, './src/app/chat/page_sovereign.tsx'),
+    },
+    {
+      test: /\/src\/app\/admin\/payments\/page\.tsx$/,
+      replacement: path.resolve(__dirname, './src/app/admin/payments/page_sovereign.tsx'),
+    },
+    {
+      test: /\/src\/app\/admin\/orders\/page\.tsx$/,
+      replacement: path.resolve(__dirname, './src/app/admin/orders/page_sovereign.tsx'),
+    },
+    {
+      test: /\/src\/components\/AuthProvider\.tsx$/,
+      replacement: path.resolve(__dirname, './src/components/AuthProvider_sovereign.tsx'),
     },
   ];
 
@@ -206,7 +318,8 @@ function sovereignResolvePlugin(): Plugin {
 
 function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
   const buildTarget = env.VITE_BUILD_TARGET || 'default';
-  const isSovereign = buildTarget === 'sovereign';
+  const isRoutedTMA = buildTarget === 'routed-tma';
+  const isSovereign = buildTarget === 'sovereign' || isRoutedTMA;
 
   return {
     name: 'standalone-runtime-config',
@@ -375,7 +488,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_', 'VITE_']);
   const apiBase = env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
   const buildTarget = env.VITE_BUILD_TARGET || 'default';
-  const isSovereign = buildTarget === 'sovereign';
+  const isRoutedTMA = buildTarget === 'routed-tma';
+  const isSovereign = buildTarget === 'sovereign' || isRoutedTMA;
+  const commercialExtensionEntry = env.VITE_COMMERCIAL_EXTENSION_ENTRY?.trim();
+  const hasCommercialExtension = isSovereign && Boolean(commercialExtensionEntry);
 
   // 注入 AI 相关环境变量到 process.env（供 aiHandler 使用）
   if (env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = env.OPENAI_API_KEY;
@@ -390,13 +506,21 @@ export default defineConfig(({ mode }) => {
         ? [hostedRuntimeConfigAssetPlugin(env)]
         : []),
       ...(!isSovereign ? [aiProxyPlugin()] : []),
-      ...(isSovereign ? [sovereignHtmlStripPlugin(), sovereignResolvePlugin()] : []),
+      ...(isSovereign
+        ? [
+            sovereignHtmlStripPlugin({ preserveTelegramSDK: isRoutedTMA }),
+            sovereignResolvePlugin(),
+            sovereignForbiddenModuleGuardPlugin(),
+          ]
+        : []),
     ],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
     define: {
       __SOVEREIGN__: JSON.stringify(isSovereign),
+      __ROUTED_TMA__: JSON.stringify(isRoutedTMA),
+      __COMMERCIAL_EXTENSION__: JSON.stringify(hasCommercialExtension),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       'process.env.NEXT_PUBLIC_ENV_MODE': JSON.stringify(
         isSovereign ? 'standalone' : env.NEXT_PUBLIC_ENV_MODE || 'test'
@@ -441,6 +565,20 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: [
+        {
+          find: /^@mobazha\/commerce-kit\/(.+)$/,
+          replacement: `${path.resolve(__dirname, '../../packages/commerce-kit/src')}/$1`,
+        },
+        {
+          find: '@mobazha/commerce-kit',
+          replacement: path.resolve(__dirname, '../../packages/commerce-kit/src/index.ts'),
+        },
+        {
+          find: /^@mobazha\/commercial-extension$/,
+          replacement: hasCommercialExtension
+            ? path.resolve(commercialExtensionEntry!)
+            : path.resolve(__dirname, './src/stubs/commercial-extension.tsx'),
+        },
         // Sovereign build-time module replacements — physically remove forbidden code
         ...(isSovereign
           ? [
@@ -542,13 +680,17 @@ export default defineConfig(({ mode }) => {
                   './src/components/Payment/StripePaymentForm_sovereign.tsx'
                 ),
               },
-              {
-                find: /^@\/components\/TGMiniAppProvider$/,
-                replacement: path.resolve(
-                  __dirname,
-                  './src/components/TGMiniAppProvider_sovereign.tsx'
-                ),
-              },
+              ...(!isRoutedTMA
+                ? [
+                    {
+                      find: /^@\/components\/TGMiniAppProvider$/,
+                      replacement: path.resolve(
+                        __dirname,
+                        './src/components/TGMiniAppProvider_sovereign.tsx'
+                      ),
+                    },
+                  ]
+                : []),
               // NPM-level package stubs — prevent any transitive import from pulling in forbidden SDKs.
               // Regex must match the ENTIRE specifier (.*) so the replacement is the sole resolved path.
               {
@@ -612,6 +754,7 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve(__dirname, './src/compat/font-local.ts'),
         },
       ],
+      dedupe: ['react', 'react-dom', 'react-router-dom'],
     },
     server: {
       port: parseInt(process.env.PORT || '3000', 10),

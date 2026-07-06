@@ -1,5 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { parseStartParam, buildStartParam } from '../startParam';
+import { parseStartParam, buildStartParam, resolveTelegramStartParam } from '../startParam';
+
+describe('resolveTelegramStartParam', () => {
+  it('prefers the signed init-data value', () => {
+    expect(resolveTelegramStartParam('V7k3mQ2xN9pRt4YwLc8Hjg', 'N4b8tR6pQ2xKm7YwLc3Hjg')).toBe(
+      'V7k3mQ2xN9pRt4YwLc8Hjg'
+    );
+  });
+
+  it('falls back to tgWebAppStartParam while init data is unavailable', () => {
+    expect(resolveTelegramStartParam(undefined, 'V7k3mQ2xN9pRt4YwLc8Hjg')).toBe(
+      'V7k3mQ2xN9pRt4YwLc8Hjg'
+    );
+  });
+
+  it('ignores empty values', () => {
+    expect(resolveTelegramStartParam('  ', '')).toBeNull();
+  });
+});
 
 describe('parseStartParam', () => {
   describe('legacy single-segment inputs', () => {
@@ -25,6 +43,18 @@ describe('parseStartParam', () => {
 
     it('parses sf_{slug}', () => {
       expect(parseStartParam('sf_summer-sale')).toEqual({ storefrontSlug: 'summer-sale' });
+    });
+
+    it('parses an opaque routed-store token', () => {
+      expect(parseStartParam('V7k3mQ2xN9pRt4YwLc8Hjg')).toEqual({
+        storeRouteToken: 'V7k3mQ2xN9pRt4YwLc8Hjg',
+      });
+    });
+
+    it('does not split a valid token containing a double underscore', () => {
+      expect(parseStartParam('AAAA__AAAAAAAAAAAAAAAA')).toEqual({
+        storeRouteToken: 'AAAA__AAAAAAAAAAAAAAAA',
+      });
     });
   });
 
@@ -76,6 +106,13 @@ describe('parseStartParam', () => {
       expect(parseStartParam(`sf_${tooLong}`)).toEqual({});
     });
 
+    it('rejects enumerable and malformed route values', () => {
+      expect(parseStartParam('003')).toEqual({});
+      expect(parseStartParam('../admin')).toEqual({});
+      expect(parseStartParam('a'.repeat(21))).toEqual({});
+      expect(parseStartParam('a'.repeat(23))).toEqual({});
+    });
+
     it('drops unknown segment prefixes silently', () => {
       expect(parseStartParam('future_magic__store_QmX')).toEqual({ storePeerID: 'QmX' });
     });
@@ -118,5 +155,14 @@ describe('buildStartParam', () => {
       storePeerID: 'QmX',
     });
     expect(built).toBe('store_QmX__sf_deal__bind_sess42__s_xyz');
+  });
+
+  it('emits a routed-store token as an exclusive start parameter', () => {
+    expect(
+      buildStartParam({
+        storeRouteToken: 'V7k3mQ2xN9pRt4YwLc8Hjg',
+        storefrontSlug: 'ignored',
+      })
+    ).toBe('V7k3mQ2xN9pRt4YwLc8Hjg');
   });
 });

@@ -1,6 +1,7 @@
 // API 配置
 export {
   setApiConfig,
+  resetApiConfig,
   getApiConfig,
   getHostingUrl,
   getGatewayUrl,
@@ -81,6 +82,10 @@ export {
 } from './openapi-client';
 
 export { refreshRuntimeConfig } from './runtimeConfig';
+
+// Local Node administrator authentication (standalone + sovereign).
+export * as adminAuthApi from './adminAuth';
+export type { ChangeAdminPasswordRequest, ChangeAdminPasswordResponse } from './adminAuth';
 
 // 商品 API
 export * as productsApi from './products';

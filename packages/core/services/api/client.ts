@@ -72,7 +72,7 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
       const { code, message, detail, traceID, details } = body.error as ErrorEnvelope['error'];
       return new ApiError(message, response.status, code, details, detail, traceID);
     }
-    const fallbackMsg = body?.error || body?.message || response.statusText;
+    const fallbackMsg = body?.error?.message || body?.error || body?.message || response.statusText;
     return new ApiError(String(fallbackMsg), response.status);
   } catch {
     return new ApiError(response.statusText, response.status);

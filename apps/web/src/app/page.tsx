@@ -30,6 +30,7 @@ import {
   useRuntimeConfig,
   shouldRenderMarketplaceExperienceAtRoot,
   resolveProductCardSellerDisplay,
+  routedStoreContextService,
 } from '@mobazha/core';
 import { MarketplaceDetailPageContent } from '@/components/CommunityMarketplace/MarketplaceDetailPageContent';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
@@ -372,9 +373,10 @@ function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null
 
     async function fetchProducts() {
       try {
-        const fetcher = overridePeerID
-          ? () => productDataService.getStoreListings(overridePeerID)
-          : () => productDataService.getMyListings();
+        const fetcher =
+          overridePeerID && !routedStoreContextService.getStoreRouteToken()
+            ? () => productDataService.getStoreListings(overridePeerID)
+            : () => productDataService.getMyListings();
 
         const localListings = (await getListingsWithDedup(
           `store-${effectivePeerID}`,

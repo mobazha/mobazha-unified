@@ -52,6 +52,17 @@ export function parseOrderSourceFilter(searchParams: URLSearchParams): OrderSour
   return null;
 }
 
+/** Resolve a list source while enforcing seller-only distribution defaults. */
+export function resolveOrderSourceFilter(
+  searchParams: URLSearchParams,
+  defaultSource: OrderSourceFilter,
+  guestOnly: boolean
+): OrderSourceFilter {
+  const requested = parseOrderSourceFilter(searchParams);
+  if (guestOnly && requested !== 'guest') return defaultSource;
+  return requested ?? defaultSource;
+}
+
 export function parseGuestOrderToken(searchParams: URLSearchParams): string | null {
   const token = searchParams.get('guestOrder');
   return token?.trim() || null;

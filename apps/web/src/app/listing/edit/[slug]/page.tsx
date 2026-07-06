@@ -73,9 +73,9 @@ import {
   AiAssistButton,
   AiSetupPrompt,
   useListingAiIntegration,
-  MobileListingWizard,
   SupplySummaryBar,
 } from '@/components/Listing';
+import { MobileListingWizard } from '@/components/Listing/MobileListingWizard';
 import { useListingSupplySummary } from '@/hooks/useListingSupplySummary';
 import { useListingPriceChange } from '@/hooks/useListingPriceChange';
 import { BasePriceSyncDialog } from '@/components/Listing/BasePriceSyncDialog';

@@ -33,6 +33,11 @@ export function setApiConfig(config: Partial<ApiConfig>): void {
   configOverrides = { ...configOverrides, ...config };
 }
 
+/** Clear all runtime API overrides when switching routing contexts. */
+export function resetApiConfig(): void {
+  configOverrides = {};
+}
+
 /**
  * 获取 API 配置（始终从环境配置获取最新值）
  * 在浏览器环境下自动使用代理路径

@@ -203,12 +203,14 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {t('admin.dashboard.privateStoreActiveDesc')}
               </p>
-              <Link
-                href="/admin/settings/access-control/privacy"
-                className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
-              >
-                {t('admin.dashboard.managePrivacy')} →
-              </Link>
+              {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+                <Link
+                  href="/admin/settings/access-control/privacy"
+                  className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+                >
+                  {t('admin.dashboard.managePrivacy')} →
+                </Link>
+              )}
             </div>
           </div>
         )}
@@ -235,12 +237,14 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-muted-foreground mt-0.5">
               {t('admin.dashboard.privateStoreActiveDesc')}
             </p>
-            <Link
-              href="/admin/settings/access-control/privacy"
-              className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
-            >
-              {t('admin.dashboard.managePrivacy')} →
-            </Link>
+            {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+              <Link
+                href="/admin/settings/access-control/privacy"
+                className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+              >
+                {t('admin.dashboard.managePrivacy')} →
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -326,7 +330,11 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="relative">
           <Link
-            href="/listing/quick"
+            href={
+              typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
+                ? '/listing/new?from=admin'
+                : '/listing/quick'
+            }
             className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
           >
             <div className="p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400 group-hover:from-purple-500 group-hover:to-blue-500 group-hover:text-white transition-all">
@@ -341,12 +349,14 @@ export default function AdminDashboardPage() {
               </p>
             </div>
           </Link>
-          <Link
-            href="/listing/new?from=admin"
-            className="absolute bottom-1.5 right-2 text-[10px] text-muted-foreground hover:text-primary transition-colors hidden sm:inline"
-          >
-            {t('admin.dashboard.fullEditor')}
-          </Link>
+          {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+            <Link
+              href="/listing/new?from=admin"
+              className="absolute bottom-1.5 right-2 text-[10px] text-muted-foreground hover:text-primary transition-colors hidden sm:inline"
+            >
+              {t('admin.dashboard.fullEditor')}
+            </Link>
+          )}
         </div>
 
         {!isMobile && (

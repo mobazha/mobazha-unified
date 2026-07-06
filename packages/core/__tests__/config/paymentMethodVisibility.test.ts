@@ -57,6 +57,7 @@ describe('paymentMethodVisibility', () => {
   it('projects versioned backend payment capabilities', () => {
     const runtimeConfig = initializeRuntimeConfig(
       runtimeMethods([
+        { id: 'XMR', kind: 'crypto', flow: 'address-transfer' },
         { id: 'BTC', kind: 'crypto', flow: 'address-transfer' },
         { id: 'ZEC', kind: 'crypto', flow: 'address-transfer', addressMode: 'transparent' },
         { id: 'stripe', kind: 'fiat', flow: 'provider-session' },
@@ -66,12 +67,16 @@ describe('paymentMethodVisibility', () => {
     expect(isTronPaymentVisible()).toBe(false);
     expect(isFiatPaymentVisible()).toBe(true);
     expect(filterVisibleAcceptedCurrencies(['BTC', 'ETH', 'ZEC'])).toEqual(['BTC', 'ZEC']);
+    expect(
+      sanitizeAcceptedPaymentCoins(['crypto:monero:mainnet:native', 'crypto:tron:mainnet:native'])
+    ).toEqual(['crypto:monero:mainnet:native']);
     expect(filterVisibleFiatProviderIDs(['stripe', 'paypal'])).toEqual(['stripe']);
     expect(sanitizeCheckoutFiatProvider('stripe')).toBe('stripe');
     expect(sanitizeCheckoutFiatProvider('paypal')).toBeUndefined();
     expect(sanitizeCheckoutTokenId('ZEC')).toBe('ZEC');
-    expect(getVisibleSupportedChainCount()).toBe(2);
+    expect(getVisibleSupportedChainCount()).toBe(3);
     expect(projectRuntimeCryptoPaymentMethods(runtimeConfig)).toEqual([
+      { id: 'XMR', name: 'Monero' },
       { id: 'BTC', name: 'Bitcoin' },
       { id: 'ZEC', name: 'Zcash' },
     ]);

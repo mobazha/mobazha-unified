@@ -26,6 +26,16 @@ const BASE_CRYPTO_CURRENCIES: CurrencyInfo[] = [
     type: 'crypto',
   },
   {
+    code: 'XMR',
+    symbol: 'XMR',
+    symbolNative: 'XMR',
+    name: 'Monero',
+    namePlural: 'XMR',
+    decimals: 12,
+    rounding: 0,
+    type: 'crypto',
+  },
+  {
     code: 'ETH',
     symbol: 'Ξ',
     symbolNative: 'Ξ',

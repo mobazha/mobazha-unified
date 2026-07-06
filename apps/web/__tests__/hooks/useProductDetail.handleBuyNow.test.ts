@@ -10,6 +10,11 @@ const mockPush = vi.fn();
 const mockGetPublicProduct = vi.fn();
 const mockTrackCheckoutHandoff = vi.fn();
 const mockIsSovereignMode = vi.fn(() => false);
+const mockUsePaymentMethods = vi.fn(() => ({
+  crypto: ['BTC'],
+  activeFiat: [],
+  isLoading: false,
+}));
 let mockMarketplaceContext = {
   isSubMarket: true,
   subdomain: 'collectibles',
@@ -71,11 +76,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       selector({ open: vi.fn() }),
     useChatStore: (selector: (state: { openDrawerWithPeer: () => void }) => unknown) =>
       selector({ openDrawerWithPeer: vi.fn() }),
-    usePaymentMethods: () => ({
-      crypto: ['BTC'],
-      activeFiat: [],
-      isLoading: false,
-    }),
+    usePaymentMethods: () => mockUsePaymentMethods(),
     productDataService: {
       ...actual.productDataService,
       getPublicProduct: (...args: unknown[]) => mockGetPublicProduct(...args),
@@ -136,6 +137,12 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
     mockTrackCheckoutHandoff.mockReset();
     mockIsSovereignMode.mockReset();
     mockIsSovereignMode.mockReturnValue(false);
+    mockUsePaymentMethods.mockReset();
+    mockUsePaymentMethods.mockReturnValue({
+      crypto: ['BTC'],
+      activeFiat: [],
+      isLoading: false,
+    });
     mockMarketplaceContext = {
       isSubMarket: true,
       subdomain: 'collectibles',
@@ -152,6 +159,26 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
       error: null,
       retry: vi.fn(),
     };
+  });
+
+  it('keeps direct-payment purchase available when hosted methods are absent in sovereign mode', async () => {
+    mockIsSovereignMode.mockReturnValue(true);
+    mockUsePaymentMethods.mockReturnValue({
+      crypto: [],
+      activeFiat: [],
+      isLoading: false,
+    });
+    mockGetPublicProduct.mockResolvedValue({
+      product: authoritativeRwaProduct,
+      isOffline: false,
+    });
+
+    const { result } = renderHook(() => useProductDetail({ slug: 'psa-charizard' }));
+
+    await waitFor(() => {
+      expect(result.current.product).not.toBeNull();
+      expect(result.current.paymentAvailable).toBe(true);
+    });
   });
 
   it('navigates authoritative RWA title listings to checkout with quantity=1', async () => {

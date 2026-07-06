@@ -10,6 +10,7 @@
  *                | "sf_"    <slug>         # storefront inside a store
  *                | "bind_"  <sessionID>    # account-binding callback
  *                | "s_"     <shortCode>    # short-link redirect
+ *                | <routeToken>             # opaque routed-store token
  *
  * Design notes:
  *   - Double underscore `__` is the segment separator. Base58 peer IDs and
@@ -34,6 +35,26 @@ export interface ParsedStartParam {
   bindSessionId?: string;
   /** Short-link redirect code. */
   shortCode?: string;
+  /** Opaque 128-bit routed-store token (22-char unpadded Base64URL). */
+  storeRouteToken?: string;
+}
+
+/**
+ * Resolve the Telegram Mini App start parameter from its two official
+ * delivery channels. Telegram includes the value in both signed init data
+ * (`start_param`) and the page query (`tgWebAppStartParam`). Prefer the signed
+ * value once it is available, while keeping the query value as an early-load
+ * fallback for SDK initialization races.
+ */
+export function resolveTelegramStartParam(
+  initDataStartParam: string | null | undefined,
+  queryStartParam: string | null | undefined
+): string | null {
+  const fromInitData = initDataStartParam?.trim();
+  if (fromInitData) return fromInitData;
+
+  const fromQuery = queryStartParam?.trim();
+  return fromQuery || null;
 }
 
 const SEGMENT_SEPARATOR = '__';
@@ -45,6 +66,7 @@ const SEGMENT_SEPARATOR = '__';
 const PEER_ID_PATTERN = /^[A-Za-z0-9]{1,80}$/;
 const BIND_SESSION_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 const SHORT_CODE_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+const STORE_ROUTE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/;
 
 /**
  * Parse a `start_param` string into its component segments.
@@ -56,7 +78,14 @@ export function parseStartParam(input: string | null | undefined): ParsedStartPa
   const result: ParsedStartParam = {};
   if (!input) return result;
 
-  const segments = input.split(SEGMENT_SEPARATOR);
+  const trimmedInput = input.trim();
+  // A routed-store token is the entire start_param. Check it before splitting:
+  // Base64URL tokens may legitimately contain a double underscore.
+  if (STORE_ROUTE_TOKEN_PATTERN.test(trimmedInput)) {
+    return { storeRouteToken: trimmedInput };
+  }
+
+  const segments = trimmedInput.split(SEGMENT_SEPARATOR);
   for (const raw of segments) {
     const segment = raw.trim();
     if (!segment) continue;
@@ -92,6 +121,7 @@ export function parseStartParam(input: string | null | undefined): ParsedStartPa
       }
       continue;
     }
+
     // Unknown prefix: ignore so future protocol extensions are forward-compat.
   }
 
@@ -106,6 +136,11 @@ export function parseStartParam(input: string | null | undefined): ParsedStartPa
  * dropped — the caller is responsible for validating business rules.
  */
 export function buildStartParam(parts: ParsedStartParam): string {
+  // Routed-store tokens are intentionally exclusive: they select the node
+  // before any store-scoped API request can be interpreted.
+  if (parts.storeRouteToken && STORE_ROUTE_TOKEN_PATTERN.test(parts.storeRouteToken)) {
+    return parts.storeRouteToken;
+  }
   const segments: string[] = [];
   if (parts.storePeerID && PEER_ID_PATTERN.test(parts.storePeerID)) {
     segments.push(`store_${parts.storePeerID}`);

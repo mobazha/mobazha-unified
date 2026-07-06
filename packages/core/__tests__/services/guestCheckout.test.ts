@@ -11,12 +11,11 @@ import {
 
 vi.mock('../../services/api/helpers', () => ({
   authPut: vi.fn(),
-  authPost: vi.fn(),
   anonymousGet: vi.fn(),
   anonymousPost: vi.fn(),
 }));
 
-import { anonymousGet, anonymousPost, authPost, authPut } from '../../services/api/helpers';
+import { anonymousGet, anonymousPost, authPut } from '../../services/api/helpers';
 
 const statusDto = {
   orderToken: 'tok',
@@ -87,7 +86,6 @@ describe('normalizeGuestOrderStatus', () => {
 describe('guest order mutations', () => {
   beforeEach(() => {
     vi.mocked(authPut).mockReset();
-    vi.mocked(authPost).mockReset();
     vi.mocked(anonymousGet).mockReset();
     vi.mocked(anonymousPost).mockReset();
   });
@@ -185,12 +183,12 @@ describe('guest order mutations', () => {
   });
 
   it('refetches status after complete returns 204', async () => {
-    vi.mocked(authPost).mockResolvedValue(undefined);
+    vi.mocked(authPut).mockResolvedValue(undefined);
     vi.mocked(anonymousGet).mockResolvedValue({ ...statusDto, state: 'COMPLETED' });
 
     const result = await completeGuestOrder('tok');
 
-    expect(authPost).toHaveBeenCalledOnce();
+    expect(authPut).toHaveBeenCalledWith('/guest/orders/tok/complete', {});
     expect(anonymousGet).toHaveBeenCalledOnce();
     expect(result.state).toBe('COMPLETED');
   });

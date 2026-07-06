@@ -6651,6 +6651,8 @@ export const en: TranslationResource = {
       pageDescCryptoOnly:
         'Configure how your store receives payments — crypto receiving accounts, guest checkout, and confirmation rules.',
       payoutInfoTitle: 'How do I get paid?',
+      unavailableTitle: 'Store payments',
+      unavailableDesc: 'Payment administration is not provided by this Sovereign distribution.',
     },
     dashboard: {
       welcome: 'Welcome back, {{name}}',
@@ -7239,6 +7241,7 @@ export const en: TranslationResource = {
       showingCount: 'Showing {{count}} orders',
       allOrders: 'All Orders',
       standardOrders: 'Standard Orders',
+      legacyOrders: 'Legacy Orders',
       guestOrders: 'Guest Orders',
       sourceStandard: 'Registered',
       sourceGuest: 'Guest',
@@ -7270,6 +7273,7 @@ export const en: TranslationResource = {
         'Payment received. Add tracking details (optional), then mark as shipped.',
       guestOrderTypeDigital: 'Digital',
       guestOrderTypePhysical: 'Physical',
+      guestOrderTypeService: 'Service',
       guestOrderTypeUnknown: 'Type unknown',
       guestContractTypeMissingTitle: 'Product type unavailable',
       guestContractTypeMissingHelp:
@@ -7739,6 +7743,22 @@ export const en: TranslationResource = {
       aiModelsCardDesc: 'LLM provider, API keys, and AI feature toggles',
       guestCheckout: 'Guest Checkout',
       guestCheckoutDesc: 'Allow anonymous buyers to pay with cryptocurrency.',
+      preferences: 'Preferences',
+      preferencesDesc: 'Language, region, appearance, and notifications',
+      security: 'Security',
+      securityDesc: 'Change the local store administrator password',
+      changePassword: 'Change password',
+      currentPassword: 'Current password',
+      newPassword: 'New password',
+      confirmPassword: 'Confirm new password',
+      changingPassword: 'Changing password…',
+      passwordAllRequired: 'Complete all password fields.',
+      passwordLength: 'Use between 8 and 128 characters.',
+      passwordMismatch: 'The new passwords do not match.',
+      passwordChangeFailed: 'Failed to change the administrator password.',
+      passwordChangedLoginAgain: 'Password changed. Sign in again with your new password.',
+      passwordSessionWarning:
+        'Changing the password signs out every administrator session, including this one.',
     },
     guestCheckout: {
       title: 'Guest Checkout',

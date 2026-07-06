@@ -18,6 +18,7 @@ import {
   completeTelegramBind,
   parseBindSessionFromStartParam,
   parseStartParam,
+  resolveTelegramStartParam,
   storeContextService,
   storefrontContextService,
   standaloneStoresApi,
@@ -25,6 +26,7 @@ import {
   buildStorefrontAuthRedirect,
   extractStorefrontReturn,
   buildTelegramMiniAppStoreContextFromWindow,
+  routedStoreContextService,
 } from '@mobazha/core';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { useDiscordActivity } from '@/components/DiscordActivityProvider';
@@ -87,6 +89,10 @@ export function AuthProvider({
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
   const tg = useTGMiniApp();
   const discord = useDiscordActivity();
+  const telegramStartParam = resolveTelegramStartParam(
+    tg.initDataUnsafe?.start_param,
+    searchParams.get('tgWebAppStartParam')
+  );
 
   // Cross-domain token: detect _auth_token in hash before initializing refs.
   const hasHashToken =
@@ -135,6 +141,7 @@ export function AuthProvider({
   // initialized by the time this component mounts.
   const isTGMiniApp =
     tg.isAvailable ||
+    !!telegramStartParam ||
     (typeof window !== 'undefined' &&
       !!(window as unknown as Record<string, unknown>).__EMBEDDED_APP__);
   const isDiscordActivity = discord.isAvailable;
@@ -153,8 +160,19 @@ export function AuthProvider({
     // into localStorage, and getHeadersWithContext() reads them dynamically so
     // X-Store-PeerID / X-Storefront-Slug are emitted on every subsequent request.
     let hasDeepLinkStore = false;
-    if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
-      const parsed = parseStartParam(tg.initDataUnsafe.start_param);
+    let hasRoutedStore = false;
+    if (isTGMiniApp && telegramStartParam) {
+      const parsed = parseStartParam(telegramStartParam);
+      if (parsed.storeRouteToken) {
+        hasRoutedStore = routedStoreContextService.setStoreRouteToken(parsed.storeRouteToken);
+        if (hasRoutedStore) {
+          storeContextService.clearStoreContext();
+          storefrontContextService.clearStorefrontSlug();
+          hasDeepLinkStore = true;
+        }
+      } else if (__SOVEREIGN__) {
+        routedStoreContextService.clearStoreRoute();
+      }
       if (parsed.storePeerID) {
         storeContextService.setStoreContext(parsed.storePeerID);
         hasDeepLinkStore = true;
@@ -162,6 +180,13 @@ export function AuthProvider({
       if (parsed.storefrontSlug) {
         storefrontContextService.setStorefrontSlug(parsed.storefrontSlug);
       }
+    }
+
+    // The routed-store TMA is explicitly anonymous. Do not send Telegram initData
+    // to Hosting auth or persist a SaaS/standalone buyer identity.
+    if (hasRoutedStore) {
+      enterAnonymousMode('telegram');
+      return true;
     }
 
     // No deep link but stale localStorage context — validate asynchronously.
@@ -204,8 +229,8 @@ export function AuthProvider({
       : undefined;
 
     // Check for binding deep link return (TG only)
-    if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
-      const bindSessionId = parseBindSessionFromStartParam(tg.initDataUnsafe.start_param);
+    if (isTGMiniApp && telegramStartParam) {
+      const bindSessionId = parseBindSessionFromStartParam(telegramStartParam);
       if (bindSessionId && tg.initData) {
         setLoadingMessage('Linking account…');
         try {
@@ -248,8 +273,8 @@ export function AuthProvider({
   }, [
     isMiniApp,
     isTGMiniApp,
+    telegramStartParam,
     tg.initData,
-    tg.initDataUnsafe,
     discord.accessToken,
     loginMiniApp,
     enterAnonymousMode,
@@ -405,8 +430,8 @@ export function AuthProvider({
 
     let shortCode: string | null = null;
 
-    if (isTGMiniApp && tg.initDataUnsafe?.start_param?.startsWith('s_')) {
-      shortCode = tg.initDataUnsafe.start_param.slice(2);
+    if (isTGMiniApp && telegramStartParam?.startsWith('s_')) {
+      shortCode = telegramStartParam.slice(2);
     }
 
     if (!shortCode) {
@@ -422,7 +447,7 @@ export function AuthProvider({
         router.replace(`/store/${peerID}`);
       }
     });
-  }, [isInitialized, isTGMiniApp, tg.initDataUnsafe, searchParams, router]);
+  }, [isInitialized, isTGMiniApp, telegramStartParam, searchParams, router]);
 
   if (!isInitialized || isProcessingOAuth) {
     const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : undefined);

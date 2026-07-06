@@ -7,6 +7,7 @@
 
 export const CONTRACT_TYPE_DIGITAL = 'DIGITAL_GOOD';
 export const CONTRACT_TYPE_PHYSICAL = 'PHYSICAL_GOOD';
+export const CONTRACT_TYPE_SERVICE = 'SERVICE';
 
 export type ContractTypeLineItem = {
   contractType?: string | null;

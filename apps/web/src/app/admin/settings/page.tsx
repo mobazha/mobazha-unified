@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useI18n, useUserContext, useFeature } from '@mobazha/core';
+import { isStandalone, useI18n, useUserContext, useFeature } from '@mobazha/core';
 import { useUserStore } from '@mobazha/core/stores/userStore';
 import {
   Shield,
@@ -16,6 +16,8 @@ import {
   Download,
   Sparkles,
   Store,
+  LockKeyhole,
+  SlidersHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -156,6 +158,7 @@ export default function AdminSettingsPage() {
   const { isEmbeddedApp } = usePlatform();
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
   const isSovereign = __SOVEREIGN__;
+  const supportsLocalAdminPassword = isStandalone();
 
   return (
     <div data-testid="admin-settings">
@@ -182,6 +185,22 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.profileDesc')}
             href="/admin/settings/profile"
           />
+          {supportsLocalAdminPassword && (
+            <SettingsCard
+              icon={SlidersHorizontal}
+              title={t('admin.settings.preferences')}
+              description={t('admin.settings.preferencesDesc')}
+              href="/admin/settings/preferences"
+            />
+          )}
+          {supportsLocalAdminPassword && (
+            <SettingsCard
+              icon={LockKeyhole}
+              title={t('admin.settings.security')}
+              description={t('admin.settings.securityDesc')}
+              href="/admin/settings/security"
+            />
+          )}
           {!isSovereign && (
             <SettingsCard
               icon={Shield}

@@ -6,6 +6,7 @@ import {
   useI18n,
   getImageUrl,
   useStorefrontProfile,
+  useStorefrontProfileLoading,
   getBrandConfig,
   stripHtmlTags,
 } from '@mobazha/core';
@@ -16,8 +17,8 @@ export function StoreHero() {
   const router = useRouter();
   const { t } = useI18n();
   const profile = useStorefrontProfile();
+  const isLoading = useStorefrontProfileLoading();
 
-  const isLoading = !profile;
   const avatarUrl = profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : null;
 
   const headerUrl = profile?.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : null;

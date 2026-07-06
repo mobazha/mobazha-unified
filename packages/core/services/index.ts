@@ -40,6 +40,9 @@ export * from './storefrontContext';
 // start_param 多段协议解析器（MS-Phase-2b · MS2b.1）
 export * from './startParam';
 
+// Session-only routed-store Bridge context.
+export * from './routedStoreContext';
+
 // RWA 服务
 export * from './rwa';
 

@@ -31,17 +31,20 @@ NC='\033[0m'
 
 L1_FAIL=0
 L2_WARN=0
+PARITY_FAIL=0
 
 # ============================================================
 # Level 1: Hard failures — external domains & SDK identifiers
 # These MUST NOT appear anywhere in the JS/CSS bundle.
 # ============================================================
 L1_PATTERNS=(
-  "telegram-web-app.js"
   "app.mobazha.org"
   "reown.com"
   "discord.com"
   "js.stripe.com"
+  "api.stripe.com"
+  "dashboard.stripe.com"
+  "paypal.com"
   "fonts.googleapis.com"
   "fonts.gstatic.com"
   "cdn.jsdelivr.net"
@@ -53,6 +56,10 @@ L1_PATTERNS=(
   "miniapp.mobazha.org"
   "miniappdev.mobazha.org"
 )
+
+if [ "${ALLOW_TELEGRAM_SDK:-0}" != "1" ]; then
+  L1_PATTERNS+=("telegram-web-app.js")
+fi
 
 echo "=== Level 1: External Domains & SDK Identifiers ==="
 echo ""
@@ -75,19 +82,13 @@ echo ""
 # ============================================================
 # Level 2: Warnings — business terms that may appear in i18n,
 # type definitions, or legitimate contexts. Requires human review.
-# Only match import-path or URL-like patterns, not plain English words.
+# The Vite sovereign-forbidden-module-guard checks Rollup's pre-erasure module
+# graph. This output scan is a secondary check for external specifiers that a
+# plugin or copied runtime could emit directly into a generated chunk.
 # ============================================================
 L2_PATTERNS=(
-  # Match "matrix" only in import/URL context, not plain text
-  'import.*matrix'
-  'from.*matrix'
-  'require.*matrix'
-  # Match "discord" in import/URL context
-  'import.*discord'
-  'from.*discord'
-  # Match "stripe" in import/URL context
-  'import.*stripe'
-  'from.*stripe'
+  # Static/dynamic/CommonJS module specifiers containing forbidden domains.
+  "(from|import\\(|require\\()[[:space:]]*[\"'][^\"']*(matrix|discord|stripe)"
   '@stripe/'
   # Casdoor-specific identifiers
   'casdoor-js-sdk'
@@ -98,7 +99,7 @@ echo "=== Level 2: Business Term Patterns (review manually) ==="
 echo ""
 
 for pattern in "${L2_PATTERNS[@]}"; do
-  matches=$(grep -rl --include='*.js' -i "$pattern" "$DIST_DIR" 2>/dev/null || true)
+  matches=$(grep -Erl --include='*.js' -i "$pattern" "$DIST_DIR" 2>/dev/null || true)
   if [ -n "$matches" ]; then
     echo -e "${YELLOW}WARN${NC}: Pattern '$pattern' found in:"
     echo "$matches" | sed 's/^/  /'
@@ -113,11 +114,41 @@ fi
 echo ""
 
 # ============================================================
+# Level 3: Established Sovereign experience parity
+# Commercial composition may add private pages, but must not replace the
+# canonical Unified admin shell or collapse the established local-AI surface.
+# ============================================================
+REQUIRED_PATTERNS=(
+  "show-high-risk-clients-toggle"
+  "admin-header-chat"
+  "admin-menu-settings"
+)
+
+echo "=== Level 3: Sovereign Experience Parity ==="
+echo ""
+
+if [ "${SKIP_ADMIN_PARITY:-0}" = "1" ]; then
+  echo -e "${GREEN}PASS${NC}: Storefront-only build; admin experience parity is not applicable."
+else
+  for pattern in "${REQUIRED_PATTERNS[@]}"; do
+    if ! grep -Rql --include='*.js' "$pattern" "$DIST_DIR" 2>/dev/null; then
+      echo -e "${RED}FAIL${NC}: required Sovereign experience marker '$pattern' is missing."
+      PARITY_FAIL=1
+    fi
+  done
+
+  if [ "$PARITY_FAIL" -eq 0 ]; then
+    echo -e "${GREEN}PASS${NC}: Canonical Unified admin and local-AI surfaces are present."
+  fi
+fi
+echo ""
+
+# ============================================================
 # Summary
 # ============================================================
 echo "=== Summary ==="
-if [ "$L1_FAIL" -ne 0 ]; then
-  echo -e "${RED}BLOCKED${NC}: Level 1 violations detected. Fix before shipping."
+if [ "$L1_FAIL" -ne 0 ] || [ "$PARITY_FAIL" -ne 0 ]; then
+  echo -e "${RED}BLOCKED${NC}: Sovereign bundle boundary violations detected. Fix before shipping."
   exit 1
 elif [ "$L2_WARN" -ne 0 ]; then
   echo -e "${YELLOW}REVIEW${NC}: Level 2 warnings detected. Manual review recommended."

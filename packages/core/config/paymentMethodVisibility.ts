@@ -4,7 +4,12 @@
  * Apply visibility here (API projection + checkout session), not in each UI leaf.
  * Payment methods fail closed until an authoritative backend snapshot is available.
  */
-import { getTokenById, isPaymentCoinEnabled, isRetiredPaymentChain } from '../data/tokens';
+import {
+  getTokenById,
+  getTokenByPaymentCoin,
+  isPaymentCoinEnabled,
+  isRetiredPaymentChain,
+} from '../data/tokens';
 import {
   getRuntimePaymentCapabilities,
   getRuntimeConfig,
@@ -32,6 +37,7 @@ export interface RuntimePaymentDisplayMethod {
 }
 
 const RUNTIME_PAYMENT_DISPLAY: Record<string, RuntimePaymentDisplayMethod> = {
+  XMR: { id: 'XMR', name: 'Monero' },
   BTC: { id: 'BTC', name: 'Bitcoin' },
   BCH: { id: 'BCH', name: 'Bitcoin Cash' },
   LTC: { id: 'LTC', name: 'Litecoin' },
@@ -106,7 +112,7 @@ export function isVisibleAcceptedCurrency(
   const trimmed = coin.trim();
   if (!trimmed) return false;
 
-  const token = getTokenById(trimmed);
+  const token = getTokenByPaymentCoin(trimmed);
   const chain = runtimeChainID(token?.chain ?? trimmed);
   if (token?.disabled && !isTransparentZecRuntimeCapability(token, config)) return false;
   if (!hasRuntimePaymentCapabilities(config)) return false;

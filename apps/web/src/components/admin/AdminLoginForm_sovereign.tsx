@@ -31,6 +31,9 @@ export function AdminLoginForm({ casdoorAvailable: _ignored }: AdminLoginFormPro
 
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const passwordChanged =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('passwordChanged') === '1';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +67,14 @@ export function AdminLoginForm({ casdoorAvailable: _ignored }: AdminLoginFormPro
                 {t('login.sellerAdmin', { defaultValue: 'Store Admin' })}
               </h1>
             </div>
+
+            {passwordChanged && (
+              <div className="mb-5 rounded-lg border border-emerald-400/30 bg-emerald-400/15 p-3">
+                <p className="text-sm text-emerald-200">
+                  {t('admin.settings.passwordChangedLoginAgain')}
+                </p>
+              </div>
+            )}
 
             {displayError && (
               <div className="mb-5 p-3 bg-error/20 border border-error/30 rounded-lg">

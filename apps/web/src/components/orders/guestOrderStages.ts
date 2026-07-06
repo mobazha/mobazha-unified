@@ -33,7 +33,9 @@ export function guestProgressStageLabel(
 ): string {
   if (stage === 'delivered') {
     if (orderKind === 'physical') return t('guestOrder.stages.shipped');
-    if (orderKind === 'digital') return t('guestOrder.stages.delivered');
+    if (orderKind === 'digital' || orderKind === 'service') {
+      return t('guestOrder.stages.delivered');
+    }
     return t('guestOrder.stages.deliveredGeneric');
   }
   const keyMap: Record<Exclude<GuestOrderProgressStage, 'delivered'>, string> = {

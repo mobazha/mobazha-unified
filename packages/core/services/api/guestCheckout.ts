@@ -11,7 +11,7 @@ import type {
   QuoteGuestOrderSupplyRequest,
 } from '../../types/supplyAvailability';
 import { getImageUrl } from './config';
-import { anonymousGet, anonymousPost, authGet, authPut, authPost, authDel } from './helpers';
+import { anonymousGet, anonymousPost, authGet, authPut, authDel } from './helpers';
 
 export type {
   GuestOrderSupplyQuoteItem,
@@ -374,6 +374,6 @@ export async function shipGuestOrder(
 }
 
 export async function completeGuestOrder(token: string): Promise<GuestOrderStatus> {
-  await authPost(NODE_API.GUEST_ORDER_COMPLETE(token), {});
+  await authPut(NODE_API.GUEST_ORDER_COMPLETE(token), {});
   return getGuestOrderStatus(token);
 }

@@ -187,10 +187,10 @@ export default function GuestCheckoutPage() {
     hasMissing: hasMissingContractType,
     hasMixed: hasMixedContractTypes,
     canCheckout: canContinueCart,
-    isAllDigital,
+    needsShippingAddress,
     hasDigitalItems,
   } = contractTypeCheckout;
-  const STEPS = isAllDigital ? STEPS_DIGITAL : STEPS_WITH_SHIPPING;
+  const STEPS = needsShippingAddress ? STEPS_WITH_SHIPPING : STEPS_DIGITAL;
   const supplyBlocksCheckout =
     items.length > 0 &&
     (supplyQuote.loading || (supplyQuote.authoritative && !supplyQuote.canProceed));
@@ -234,7 +234,7 @@ export default function GuestCheckoutPage() {
         // PM-3a: for physical orders, try to encrypt the address client-side
         // before sending. Falls back to plaintext if PGP is not configured.
         let finalEncrypted: string | null = encryptedAddress;
-        if (!isAllDigital && encryptionAvailable && !finalEncrypted) {
+        if (needsShippingAddress && encryptionAvailable && !finalEncrypted) {
           finalEncrypted = await encryptAddress(buildAddressPayload(addressData));
           if (!submitOrderAbortRef.current && finalEncrypted) {
             setEncryptedAddress(finalEncrypted);
@@ -243,8 +243,8 @@ export default function GuestCheckoutPage() {
 
         const req = buildOrderRequest(
           items,
-          isAllDigital ? null : addressData,
-          isAllDigital ? null : finalEncrypted,
+          needsShippingAddress ? addressData : null,
+          needsShippingAddress ? finalEncrypted : null,
           contactEmail,
           coin
         );
@@ -271,7 +271,7 @@ export default function GuestCheckoutPage() {
     },
     [
       items,
-      isAllDigital,
+      needsShippingAddress,
       addressData,
       encryptedAddress,
       encryptionAvailable,
@@ -401,7 +401,7 @@ export default function GuestCheckoutPage() {
 
                   {/* For digital-only orders, show a compact email field before
                       proceeding to coin selection (no shipping address needed). */}
-                  {isAllDigital && (
+                  {!needsShippingAddress && (
                     <div className="space-y-1.5">
                       <Label htmlFor="cart-email">{t('guestCheckout.emailLabel')}</Label>
                       <Input
@@ -422,12 +422,12 @@ export default function GuestCheckoutPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => setStep(isAllDigital ? 'coin' : 'shipping')}
+                    onClick={() => setStep(needsShippingAddress ? 'shipping' : 'coin')}
                     disabled={!canContinueCart || supplyBlocksCheckout}
                   >
-                    {isAllDigital
-                      ? t('guestCheckout.continueToPayment')
-                      : t('guestCheckout.continueToShipping')}
+                    {needsShippingAddress
+                      ? t('guestCheckout.continueToShipping')
+                      : t('guestCheckout.continueToPayment')}
                   </Button>
                 </>
               )}

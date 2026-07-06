@@ -29,7 +29,7 @@ import { NotificationDropdown } from '../Notification';
 import {
   ArrowLeft,
   Eye,
-  User,
+  Settings,
   LogOut,
   MessageSquare,
   MessageCircle,
@@ -48,6 +48,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const { t } = useI18n();
   const { profile, logout } = useUserStore();
   const standaloneMode = useStorefrontMode();
+  const ownerOnlyMode = standaloneMode || (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__);
   const { isSubMarket } = useMarketplaceContext();
   const toggleAIChat = useAIChatStore(s => s.toggle);
   const openChatDrawer = useChatStore(state => state.openDrawer);
@@ -251,22 +252,26 @@ export function AdminHeader({ title }: AdminHeaderProps) {
                   {t('userMenu.viewStore')}
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  onClick={() => router.push(ordersListPath('admin', 'purchases'))}
-                  className="cursor-pointer"
-                  data-testid="admin-menu-my-purchases"
-                >
-                  <ShoppingBag className="mr-2 h-4 w-4" />
-                  {t('order.myPurchases')}
-                </DropdownMenuItem>
+                {!ownerOnlyMode && (
+                  <DropdownMenuItem
+                    onClick={() => router.push(ordersListPath('admin', 'purchases'))}
+                    className="cursor-pointer"
+                    data-testid="admin-menu-my-purchases"
+                  >
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    {t('order.myPurchases')}
+                  </DropdownMenuItem>
+                )}
 
                 <DropdownMenuItem
-                  onClick={() => router.push('/settings/general')}
+                  onClick={() =>
+                    router.push(ownerOnlyMode ? '/admin/settings' : '/settings/general')
+                  }
                   className="cursor-pointer"
                   data-testid="admin-menu-settings"
                 >
-                  <User className="mr-2 h-4 w-4" />
-                  {t('userMenu.account')}
+                  <Settings className="mr-2 h-4 w-4" />
+                  {t('admin.nav.settings')}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />

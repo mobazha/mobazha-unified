@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -11,11 +13,18 @@ import { usePWAInstall } from '@/components/PWAInstall';
 
 export default function AdvancedSettingsPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const { toast } = useToast();
 
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { canInstall, install } = usePWAInstall();
+
+  useEffect(() => {
+    if (__SOVEREIGN__) router.replace('/admin/system');
+  }, [router]);
+
+  if (__SOVEREIGN__) return null;
 
   const handleBackupWallet = () => {
     toast({

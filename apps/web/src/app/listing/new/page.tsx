@@ -69,10 +69,10 @@ import {
   AiAssistButton,
   AiSetupPrompt,
   useListingAiIntegration,
-  MobileListingWizard,
   BasePriceSyncDialog,
   ListingPriceHierarchyBanner,
 } from '@/components/Listing';
+import { MobileListingWizard } from '@/components/Listing/MobileListingWizard';
 import { useListingPriceChange } from '@/hooks/useListingPriceChange';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -149,7 +149,8 @@ function CreateListingContent() {
   const returnToDashboard = fromOnboarding || fromAdmin;
 
   const sourceDepositPrefillInput = useMemo(
-    (): SourceDepositListingPrefillInput | null => parseSourceDepositListingSearchParams(searchParams),
+    (): SourceDepositListingPrefillInput | null =>
+      parseSourceDepositListingSearchParams(searchParams),
     [searchParams]
   );
   const isSourceDepositListingMode = sourceDepositPrefillInput !== null;
@@ -406,7 +407,7 @@ function CreateListingContent() {
         }
       }
     },
-    [validate, submit, toast, t, router, returnToDashboard, formData.contractType]
+    [validate, submit, toast, t, router, fromOnboarding, formData.contractType]
   );
 
   // 保存草稿

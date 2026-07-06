@@ -463,8 +463,15 @@ export function useProductDetail({
       setQuantity(1);
     }
   }, [isCollectibleTitleListing, product?.slug]);
+  // A sovereign storefront resolves its direct-payment rail from the local
+  // guest-checkout settings. The hosted seller payment-method endpoint used
+  // by usePaymentMethods is intentionally unavailable there, so an empty
+  // hosted projection must not disable the purchase flow.
   const paymentAvailable =
-    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    isSovereignMode() ||
+    paymentMethodsLoading ||
+    vendorCrypto.length > 0 ||
+    vendorActiveFiat.length > 0;
 
   const isRwaToken =
     product?.metadata?.contractType === 'RWA_TOKEN' &&

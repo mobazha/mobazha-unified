@@ -12,10 +12,14 @@ export default function SettingsPage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (__SOVEREIGN__) {
+      router.replace('/admin/settings');
+      return;
+    }
     if (window.innerWidth < 1024) {
       router.replace('/me');
     } else {
-      router.replace(__SOVEREIGN__ ? '/settings/general' : '/settings/page-profile');
+      router.replace('/settings/page-profile');
     }
   }, [router]);
 

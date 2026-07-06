@@ -60,6 +60,14 @@ export interface PaymentChainConfig {
  */
 export const TOKENS: TokenConfig[] = [
   {
+    id: 'XMR',
+    assetId: 'crypto:monero:mainnet:native',
+    token: 'XMR',
+    chain: 'XMR',
+    isNative: true,
+    decimals: 12,
+  },
+  {
     id: 'BTC',
     assetId: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
     token: 'BTC',

@@ -3243,6 +3243,8 @@ export interface TranslationResource {
       pageDesc?: string;
       pageDescCryptoOnly?: string;
       payoutInfoTitle?: string;
+      unavailableTitle?: string;
+      unavailableDesc?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -3794,6 +3796,7 @@ export interface TranslationResource {
       showingCount?: string;
       allOrders?: string;
       standardOrders?: string;
+      legacyOrders?: string;
       guestOrders?: string;
       sourceStandard?: string;
       sourceGuest?: string;
@@ -3823,6 +3826,7 @@ export interface TranslationResource {
       guestPhysicalShipHelp?: string;
       guestOrderTypeDigital?: string;
       guestOrderTypePhysical?: string;
+      guestOrderTypeService?: string;
       guestOrderTypeUnknown?: string;
       guestContractTypeMissingTitle?: string;
       guestContractTypeMissingHelp?: string;
@@ -4201,6 +4205,21 @@ export interface TranslationResource {
       aiModelsCardDesc?: string;
       guestCheckout?: string;
       guestCheckoutDesc?: string;
+      preferences?: string;
+      preferencesDesc?: string;
+      security?: string;
+      securityDesc?: string;
+      changePassword?: string;
+      currentPassword?: string;
+      newPassword?: string;
+      confirmPassword?: string;
+      changingPassword?: string;
+      passwordAllRequired?: string;
+      passwordLength?: string;
+      passwordMismatch?: string;
+      passwordChangeFailed?: string;
+      passwordChangedLoginAgain?: string;
+      passwordSessionWarning?: string;
     };
     finance?: {
       title?: string;

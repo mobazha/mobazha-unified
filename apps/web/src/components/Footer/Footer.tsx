@@ -111,6 +111,7 @@ export const Footer: React.FC = () => {
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
   const brandProfile = standaloneMode ? storefrontProfile : profile;
+  const visibleSocialLinks = __SOVEREIGN__ ? [] : socialLinks;
 
   const startSellingHref = standaloneMode
     ? '/listing/new'
@@ -148,9 +149,13 @@ export const Footer: React.FC = () => {
       },
     ],
     community: [
-      { label: 'Twitter', href: 'https://twitter.com/mobazha', external: true },
-      { label: 'Discord', href: 'https://discord.gg/mobazha', external: true },
-      { label: 'GitHub', href: 'https://github.com/mobazha', external: true },
+      ...(!__SOVEREIGN__
+        ? [
+            { label: 'Twitter', href: 'https://twitter.com/mobazha', external: true },
+            { label: 'Discord', href: 'https://discord.gg/mobazha', external: true },
+            { label: 'GitHub', href: 'https://github.com/mobazha', external: true },
+          ]
+        : []),
     ],
     legal: [
       { label: t('policies.privacyPolicy'), href: '/policies/privacy' },
@@ -202,7 +207,7 @@ export const Footer: React.FC = () => {
                     </p>
                   )}
                   <HStack gap="sm">
-                    {socialLinks.map(social => (
+                    {visibleSocialLinks.map(social => (
                       <a
                         key={social.label}
                         href={social.href}
@@ -225,7 +230,7 @@ export const Footer: React.FC = () => {
                   <p className="text-sm text-muted-foreground mb-1 italic">{t('footer.slogan')}</p>
                   <p className="text-sm text-muted-foreground mb-4">{t('footer.tagline')}</p>
                   <HStack gap="sm">
-                    {socialLinks.map(social => (
+                    {visibleSocialLinks.map(social => (
                       <a
                         key={social.label}
                         href={social.href}

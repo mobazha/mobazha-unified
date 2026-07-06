@@ -472,6 +472,14 @@ if (!__SOVEREIGN__) {
           element: lazyPage(() => import('./app/admin/settings/profile/page')),
         },
         {
+          path: 'settings/preferences',
+          element: lazyPage(() => import('./app/admin/settings/preferences/page')),
+        },
+        {
+          path: 'settings/security',
+          element: lazyPage(() => import('./app/admin/settings/security/page')),
+        },
+        {
           path: 'settings/shipping',
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
         },
@@ -628,7 +636,69 @@ if (!__SOVEREIGN__) {
  * no marketplace/search/wallet/chat/moderation/social features.
  */
 let sovereignRoutes: RouteObject[] = [];
-if (__SOVEREIGN__) {
+let routedTmaRoutes: RouteObject[] = [];
+
+if (__ROUTED_TMA__) {
+  routedTmaRoutes = [
+    { path: '/', element: lazyPage(() => import('./app/page')) },
+    {
+      path: '/store',
+      element: capabilityPage('commerce.storefront', () => import('./app/store/page')),
+    },
+    {
+      path: '/store/:peerId',
+      element: capabilityPage('commerce.storefront', () => import('./app/store/[peerId]/page')),
+    },
+    {
+      path: '/product/:slug',
+      element: capabilityPage(
+        'commerce.storefront',
+        () => import('./app/product/[slug]/ProductPageClient')
+      ),
+    },
+    { path: '/collections', element: lazyPage(() => import('./app/collections/page')) },
+    {
+      path: '/collections/:id',
+      element: lazyPage(() => import('./app/collections/[id]/page')),
+    },
+    { path: '/cart', element: lazyPage(() => import('./app/cart/page')) },
+    {
+      path: '/guest-checkout',
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.guestCheckout,
+        () => import('./app/guest-checkout/page')
+      ),
+    },
+    {
+      path: '/guest-order/:orderToken',
+      element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
+    },
+    { path: '/track', element: lazyPage(() => import('./app/track/page')) },
+    {
+      path: '/policies',
+      element: lazyPage(() => import('./app/policies/PoliciesLayoutVite')),
+      children: [
+        { path: 'privacy', element: lazyPage(() => import('./app/policies/privacy/page')) },
+        { path: 'terms', element: lazyPage(() => import('./app/policies/terms/page')) },
+        { path: 'shipping', element: lazyPage(() => import('./app/policies/shipping/page')) },
+        { path: 'returns', element: lazyPage(() => import('./app/policies/returns/page')) },
+        { path: 'refund', element: lazyPage(() => import('./app/policies/refund/page')) },
+      ],
+    },
+    {
+      path: '/help',
+      element: lazyPage(() => import('./app/help/HelpLayoutVite')),
+      children: [
+        {
+          path: 'exchange-usdt-payment',
+          element: lazyPage(() => import('./app/help/exchange-usdt-payment/page')),
+        },
+      ],
+    },
+  ];
+}
+
+if (__SOVEREIGN__ && !__ROUTED_TMA__) {
   sovereignRoutes = [
     // Storefront (single-store home)
     { path: '/', element: lazyPage(() => import('./app/page')) },
@@ -730,6 +800,7 @@ if (__SOVEREIGN__) {
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+        { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         {
           path: 'collections',
           element: lazyPage(() => import('./app/admin/collections/page')),
@@ -746,6 +817,14 @@ if (__SOVEREIGN__) {
         {
           path: 'settings/profile',
           element: lazyPage(() => import('./app/admin/settings/profile/page')),
+        },
+        {
+          path: 'settings/preferences',
+          element: lazyPage(() => import('./app/admin/settings/preferences/page')),
+        },
+        {
+          path: 'settings/security',
+          element: lazyPage(() => import('./app/admin/settings/security/page')),
         },
         {
           path: 'settings/shipping',
@@ -790,6 +869,58 @@ if (__SOVEREIGN__) {
           ],
         },
         { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
+        ...(typeof __COMMERCIAL_EXTENSION__ !== 'undefined' && __COMMERCIAL_EXTENSION__
+          ? [
+              {
+                path: 'finance',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.FinancePage,
+                  }))
+                ),
+              },
+              {
+                path: 'finance/xmr-wallet',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.WalletPage,
+                  }))
+                ),
+              },
+              {
+                path: 'finance/xmr-withdraw',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.WithdrawPage,
+                  }))
+                ),
+              },
+              {
+                path: 'finance/xmr-secrets',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.SecretsPage,
+                  }))
+                ),
+              },
+              {
+                path: 'finance/xmr-transfers',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.TransfersPage,
+                  }))
+                ),
+              },
+              {
+                path: 'settings/monero-nodes',
+                element: lazyPage(() =>
+                  import('@mobazha/commercial-extension').then(module => ({
+                    default: module.NodePoolPage,
+                  }))
+                ),
+              },
+            ]
+          : []),
       ],
     },
 
@@ -817,7 +948,7 @@ if (__SOVEREIGN__) {
   ];
 } // end if (!__SOVEREIGN__)
 
-const activeRoutes = __SOVEREIGN__ ? sovereignRoutes : routes;
+const activeRoutes = __ROUTED_TMA__ ? routedTmaRoutes : __SOVEREIGN__ ? sovereignRoutes : routes;
 
 // 导出路由配置数组（供 main.tsx 使用）
 export { activeRoutes as routes };

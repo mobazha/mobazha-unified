@@ -119,6 +119,8 @@ export default [
         decodeURIComponent: 'readonly',
         // Vite build-time constants
         __SOVEREIGN__: 'readonly',
+        __ROUTED_TMA__: 'readonly',
+        __COMMERCIAL_EXTENSION__: 'readonly',
         // Node globals
         process: 'readonly',
         module: 'readonly',
@@ -168,4 +170,3 @@ export default [
   },
   prettier,
 ];
-

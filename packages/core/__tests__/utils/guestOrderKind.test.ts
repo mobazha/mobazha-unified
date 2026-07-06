@@ -10,6 +10,18 @@ describe('guestOrderKind', () => {
     expect(inferGuestOrderKindFromItems([{ contractType: 'PHYSICAL_GOOD' }])).toBe('physical');
   });
 
+  it('infers service orders from persisted item contract types', () => {
+    expect(inferGuestOrderKindFromItems([{ contractType: 'SERVICE' }])).toBe('service');
+    expect(
+      resolveGuestOrderKind({
+        deliveryKnown: true,
+        isDigitalFromApi: false,
+        deliveryReason: 'missing_contract_type',
+        kindFromItems: 'service',
+      })
+    ).toBe('service');
+  });
+
   it('returns null when line items mix contract types (abnormal persisted data)', () => {
     expect(
       inferGuestOrderKindFromItems([

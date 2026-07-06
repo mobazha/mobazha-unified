@@ -53,6 +53,8 @@ export function guestOrderKindLabel(orderKind: GuestOrderKind, t: TranslateFunct
       return t('admin.orders.guestOrderTypeDigital');
     case 'physical':
       return t('admin.orders.guestOrderTypePhysical');
+    case 'service':
+      return t('admin.orders.guestOrderTypeService');
     default:
       return t('admin.orders.guestOrderTypeUnknown');
   }

@@ -5,16 +5,20 @@
  * contract type homogeneity (see contractTypeCheckout.ts).
  */
 
-import { CONTRACT_TYPE_DIGITAL, CONTRACT_TYPE_PHYSICAL } from './contractTypeCheckout';
+import {
+  CONTRACT_TYPE_DIGITAL,
+  CONTRACT_TYPE_PHYSICAL,
+  CONTRACT_TYPE_SERVICE,
+} from './contractTypeCheckout';
 
 export type GuestOrderKindLineItem = {
   contractType?: string | null;
 };
 
-export type GuestOrderKindHint = 'digital' | 'physical' | null;
+export type GuestOrderKindHint = 'digital' | 'physical' | 'service' | null;
 
 /** Resolved guest order kind — never infer physical from missing metadata. */
-export type GuestOrderKind = 'digital' | 'physical' | 'unknown';
+export type GuestOrderKind = 'digital' | 'physical' | 'service' | 'unknown';
 
 /** Infer order kind from persisted line-item contract types (authoritative when present). */
 export function inferGuestOrderKindFromItems(items: GuestOrderKindLineItem[]): GuestOrderKindHint {
@@ -27,6 +31,7 @@ export function inferGuestOrderKindFromItems(items: GuestOrderKindLineItem[]): G
 
   if (distinct.has(CONTRACT_TYPE_DIGITAL)) return 'digital';
   if (distinct.has(CONTRACT_TYPE_PHYSICAL)) return 'physical';
+  if (distinct.has(CONTRACT_TYPE_SERVICE)) return 'service';
   return null;
 }
 
@@ -41,6 +46,10 @@ export function resolveGuestOrderKind(input: {
   deliveryReason?: string | null;
   kindFromItems: GuestOrderKindHint;
 }): GuestOrderKind {
+  // Services intentionally have no digital-delivery manifest. Their persisted
+  // line-item type is authoritative even when that API reports not applicable.
+  if (input.kindFromItems === 'service') return 'service';
+
   if (input.deliveryKnown && isMissingContractTypeReason(input.deliveryReason)) {
     return 'unknown';
   }

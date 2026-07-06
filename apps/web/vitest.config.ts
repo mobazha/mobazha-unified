@@ -18,6 +18,18 @@ export default defineConfig({
   },
   resolve: {
     alias: [
+      {
+        find: /^@mobazha\/commercial-extension$/,
+        replacement: path.resolve(__dirname, './src/stubs/commercial-extension.tsx'),
+      },
+      {
+        find: /^@mobazha\/commerce-kit\/(.+)$/,
+        replacement: `${path.resolve(__dirname, '../../packages/commerce-kit/src')}/$1`,
+      },
+      {
+        find: '@mobazha/commerce-kit',
+        replacement: path.resolve(__dirname, '../../packages/commerce-kit/src/index.ts'),
+      },
       { find: '@', replacement: path.resolve(__dirname, './src') },
       {
         find: /^@mobazha\/core\/(.+)$/,

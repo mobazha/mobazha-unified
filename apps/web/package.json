@@ -10,6 +10,8 @@
     "build": "vite build",
     "build:sovereign": "vite build --mode sovereign",
     "build:sovereign:verify": "vite build --mode sovereign && bash ../../scripts/sovereign-bundle-denylist.sh dist",
+    "build:routed-tma": "vite build --mode routed-tma",
+    "build:routed-tma:verify": "vite build --mode routed-tma && ALLOW_TELEGRAM_SDK=1 SKIP_ADMIN_PARITY=1 bash ../../scripts/sovereign-bundle-denylist.sh dist",
     "build:next": "next build",
     "start": "vite preview",
     "start:next": "next start",

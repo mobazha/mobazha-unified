@@ -11,6 +11,7 @@ import {
   parseOrderDetailRole,
   parseOrderListRole,
   parseOrderSourceFilter,
+  resolveOrderSourceFilter,
   parseOrderListStatusFilter,
 } from '@/lib/ordersNavigation';
 
@@ -48,6 +49,24 @@ describe('ordersNavigation', () => {
     it('returns null for unknown source', () => {
       expect(parseOrderSourceFilter(new URLSearchParams('source=unknown'))).toBeNull();
       expect(parseOrderSourceFilter(new URLSearchParams())).toBeNull();
+    });
+  });
+
+  describe('resolveOrderSourceFilter', () => {
+    it('keeps the configured default when the source is absent', () => {
+      expect(resolveOrderSourceFilter(new URLSearchParams(), 'guest', false)).toBe('guest');
+    });
+
+    it('forces guest-only distributions back to their guest default', () => {
+      expect(resolveOrderSourceFilter(new URLSearchParams('source=standard'), 'guest', true)).toBe(
+        'guest'
+      );
+      expect(resolveOrderSourceFilter(new URLSearchParams('source=all'), 'guest', true)).toBe(
+        'guest'
+      );
+      expect(resolveOrderSourceFilter(new URLSearchParams('source=guest'), 'guest', true)).toBe(
+        'guest'
+      );
     });
   });
 

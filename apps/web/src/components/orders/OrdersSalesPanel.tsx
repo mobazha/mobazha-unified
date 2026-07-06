@@ -8,7 +8,6 @@ import {
   ordersApi,
   useOrderAction,
   batchGetProfileDisplayInfo,
-  getImageUrl,
   orderUsesCancelableBackendSettlement,
   useCurrency,
   getOrderListShippedLabelKey,
@@ -81,7 +80,7 @@ import {
   patchOrderListSearchParams,
   parseGuestOrderToken,
   parseOrderListStatusFilter,
-  parseOrderSourceFilter,
+  resolveOrderSourceFilter,
   type OrderSourceFilter,
   type OrdersShell,
 } from '@/lib/ordersNavigation';
@@ -667,9 +666,15 @@ function AdminOrdersTable({
 
 export interface OrdersSalesPanelProps {
   shell?: OrdersShell;
+  defaultSource?: OrderSourceFilter;
+  sovereignSellerOnly?: boolean;
 }
 
-export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
+export function OrdersSalesPanel({
+  shell = 'admin',
+  defaultSource = 'all',
+  sovereignSellerOnly = false,
+}: OrdersSalesPanelProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const router = useRouter();
@@ -680,7 +685,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
   const { orders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useAdminOrders();
 
   const [orderView, setOrderView] = useState<OrderSourceFilter>(() => {
-    return parseOrderSourceFilter(searchParams) ?? 'all';
+    return resolveOrderSourceFilter(searchParams, defaultSource, sovereignSellerOnly);
   });
   const [guestOrders, setGuestOrders] = useState<GuestOrderSummary[]>([]);
   const [guestLoading, setGuestLoading] = useState(false);
@@ -768,7 +773,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     if (!guestDetail) return;
     setGuestShipCarrier(guestDetail.shippingCarrier ?? '');
     setGuestShipTracking(guestDetail.trackingNumber ?? '');
-  }, [guestDetail?.orderToken, guestDetail?.shippingCarrier, guestDetail?.trackingNumber]);
+  }, [guestDetail]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
@@ -780,8 +785,8 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
   }, [searchParams]);
 
   useEffect(() => {
-    setOrderView(parseOrderSourceFilter(searchParams) ?? 'all');
-  }, [searchParams]);
+    setOrderView(resolveOrderSourceFilter(searchParams, defaultSource, sovereignSellerOnly));
+  }, [defaultSource, searchParams, sovereignSellerOnly]);
 
   useEffect(() => {
     const tokenFromUrl = parseGuestOrderToken(searchParams);
@@ -1362,28 +1367,6 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
         >
           <button
             type="button"
-            onClick={() => handleOrderViewChange('all')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              orderView === 'all'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('admin.orders.allOrders')}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOrderViewChange('standard')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              orderView === 'standard'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('admin.orders.standardOrders')}
-          </button>
-          <button
-            type="button"
             onClick={() => handleOrderViewChange('guest')}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               orderView === 'guest'
@@ -1393,6 +1376,34 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
           >
             {t('admin.orders.guestOrders')}
           </button>
+          {!sovereignSellerOnly || orders.length > 0 ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleOrderViewChange('standard')}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  orderView === 'standard'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {sovereignSellerOnly
+                  ? t('admin.orders.legacyOrders')
+                  : t('admin.orders.standardOrders')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOrderViewChange('all')}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  orderView === 'all'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('admin.orders.allOrders')}
+              </button>
+            </>
+          ) : null}
         </div>
       )}
 

@@ -285,6 +285,7 @@ function RwaPaymentLockedCard({
 }
 
 function getProviderPaymentUrl(provider: string, paymentID: string): string | null {
+  if (__SOVEREIGN__) return null;
   if (!paymentID) return null;
   if (provider === 'stripe') return `https://dashboard.stripe.com/payments/${paymentID}`;
   if (provider === 'paypal') return `https://www.paypal.com/activity/payment/${paymentID}`;
@@ -294,6 +295,7 @@ function getProviderPaymentUrl(provider: string, paymentID: string): string | nu
 /** Internal: Fiat payment info card */
 function FiatPaymentCard({ order }: { order: DisplayOrder }) {
   const { t } = useI18n();
+  if (__SOVEREIGN__) return null;
   const fiat = order.fiatPayment!;
   const providerLabel = fiat.provider === 'stripe' ? 'Stripe' : 'PayPal';
   const paymentUrl = getProviderPaymentUrl(fiat.provider, fiat.paymentID);

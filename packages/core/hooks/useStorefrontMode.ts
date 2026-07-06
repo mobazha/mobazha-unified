@@ -22,6 +22,7 @@ interface StorefrontCtx {
   peerID: string | null;
   isStorefront: boolean;
   storeProfile: UserProfile | null;
+  storeProfileLoaded: boolean;
 }
 
 const StorefrontContext = createContext<StorefrontCtx | null>(null);
@@ -91,4 +92,10 @@ export function useStorefrontPeerID(): string | null {
 export function useStorefrontProfile(): UserProfile | null {
   const ctx = useContext(StorefrontContext);
   return ctx?.storeProfile ?? null;
+}
+
+/** Distinguishes a missing public profile from a profile request in flight. */
+export function useStorefrontProfileLoading(): boolean {
+  const ctx = useContext(StorefrontContext);
+  return ctx ? !ctx.storeProfileLoaded : false;
 }
