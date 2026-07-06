@@ -6704,7 +6704,7 @@ export const zh: PartialTranslationResource = {
       dealCreateSubtitle: '选择已发布的数字商品或服务，商品版本和价格将锁定在此链接中。',
       productLabel: '商品或服务',
       productPlaceholder: '选择要出售的内容',
-      noEligibleProducts: '请先发布数字商品或服务，再创建受保护链接。',
+      noEligibleProducts: '请先发布固定价格的服务，或为数字商品配置可交付资产。',
       deliveryTypeLabel: '交付方式',
       deliveryDigitalFile: '数字文件',
       deliveryLicenseKey: '许可证或访问码',

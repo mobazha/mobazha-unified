@@ -9,6 +9,7 @@ import { Copy, ExternalLink, Link2, Loader2, Pause, Play, Plus, ShieldCheck } fr
 import {
   buildSellerDealLinkBrowseHref,
   buildPromoterProgramHref,
+  digitalAssetsApi,
   formatAttributionWindowDays,
   formatCommissionRateFromBPS,
   isValidOptionalCommissionAmount,
@@ -64,6 +65,8 @@ export default function AdminDealLinksPage() {
 
   const [selectedProductSlug, setSelectedProductSlug] = useState('');
   const [deliveryType, setDeliveryType] = useState<DealLinkDeliveryType>('digital_file');
+  const [digitalDeliveryReady, setDigitalDeliveryReady] = useState<boolean | null>(null);
+  const [digitalDeliveryChecking, setDigitalDeliveryChecking] = useState(false);
   const [reviewDays, setReviewDays] = useState('3');
   const [creatingDealLink, setCreatingDealLink] = useState(false);
   const [createdDealLinkId, setCreatedDealLinkId] = useState('');
@@ -90,6 +93,11 @@ export default function AdminDealLinksPage() {
     [listings]
   );
 
+  const selectedListing = useMemo(
+    () => eligibleListings.find(item => item.slug === selectedProductSlug),
+    [eligibleListings, selectedProductSlug]
+  );
+
   const activeDealLinks = useMemo(
     () => dealLinks.filter(link => link.status === 'active'),
     [dealLinks]
@@ -99,6 +107,7 @@ export default function AdminDealLinksPage() {
   const handleProductChange = useCallback(
     (slug: string) => {
       setSelectedProductSlug(slug);
+      setDigitalDeliveryReady(null);
       const listing = eligibleListings.find(item => item.slug === slug);
       const nextDeliveryType: DealLinkDeliveryType =
         listing?.contractType === 'SERVICE' ? 'fixed_service' : 'digital_file';
@@ -109,7 +118,41 @@ export default function AdminDealLinksPage() {
   );
 
   React.useEffect(() => {
-    const requestedProduct = searchParams.get('product');
+    if (!selectedListing) {
+      setDigitalDeliveryReady(null);
+      setDigitalDeliveryChecking(false);
+      return;
+    }
+    if (selectedListing.contractType === 'SERVICE') {
+      setDigitalDeliveryReady(true);
+      setDigitalDeliveryChecking(false);
+      return;
+    }
+
+    let cancelled = false;
+    setDigitalDeliveryChecking(true);
+    void digitalAssetsApi
+      .listAssets(selectedListing.slug)
+      .then(assets => {
+        if (cancelled) return;
+        setDigitalDeliveryReady(
+          assets.some(asset => asset.assetType === 'file' || asset.assetType === 'link')
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setDigitalDeliveryReady(false);
+      })
+      .finally(() => {
+        if (!cancelled) setDigitalDeliveryChecking(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedListing]);
+
+  React.useEffect(() => {
+    const requestedProduct = searchParams.get('dealProduct');
     if (!requestedProduct || selectedProductSlug) return;
     if (eligibleListings.some(item => item.slug === requestedProduct)) {
       handleProductChange(requestedProduct);
@@ -122,6 +165,7 @@ export default function AdminDealLinksPage() {
     const minimumReviewDays = deliveryType === 'fixed_service' ? 7 : 3;
     if (
       !listing?.cid ||
+      (listing.contractType === 'DIGITAL_GOOD' && digitalDeliveryReady !== true) ||
       !Number.isInteger(parsedReviewDays) ||
       parsedReviewDays < minimumReviewDays ||
       parsedReviewDays > 365
@@ -160,6 +204,7 @@ export default function AdminDealLinksPage() {
   }, [
     createActiveDealLink,
     deliveryType,
+    digitalDeliveryReady,
     eligibleListings,
     fromMinimalUnit,
     reviewDays,
@@ -296,29 +341,19 @@ export default function AdminDealLinksPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deal-delivery-type">{t('admin.dealLinks.deliveryTypeLabel')}</Label>
-              <Select
-                value={deliveryType}
-                onValueChange={value => {
-                  setDeliveryType(value);
-                  setReviewDays(value === 'fixed_service' ? '7' : '3');
-                }}
-              >
-                <SelectTrigger id="deal-delivery-type" className="min-h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="digital_file">
-                    {t('admin.dealLinks.deliveryDigitalFile')}
-                  </SelectItem>
-                  <SelectItem value="license_key">
-                    {t('admin.dealLinks.deliveryLicenseKey')}
-                  </SelectItem>
-                  <SelectItem value="fixed_service">
-                    {t('admin.dealLinks.deliveryFixedService')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>{t('admin.dealLinks.deliveryTypeLabel')}</Label>
+              <div className="flex min-h-11 items-center rounded-md border border-border bg-muted/30 px-3 text-sm text-foreground">
+                {deliveryType === 'fixed_service'
+                  ? t('admin.dealLinks.deliveryFixedService')
+                  : t('admin.dealLinks.deliveryDigitalFile')}
+              </div>
+              {selectedListing?.contractType === 'DIGITAL_GOOD' &&
+              !digitalDeliveryChecking &&
+              digitalDeliveryReady === false ? (
+                <p className="text-xs text-destructive">
+                  {t('admin.dealLinks.noEligibleProducts')}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -341,7 +376,13 @@ export default function AdminDealLinksPage() {
           <Button
             type="button"
             className="min-h-11 w-full sm:w-auto"
-            disabled={creatingDealLink || listingsLoading || !eligibleListings.length}
+            disabled={
+              creatingDealLink ||
+              listingsLoading ||
+              digitalDeliveryChecking ||
+              !eligibleListings.length ||
+              (selectedListing?.contractType === 'DIGITAL_GOOD' && digitalDeliveryReady !== true)
+            }
             onClick={() => void handleCreateDealLink()}
             data-testid="admin-deal-links-create-link"
           >

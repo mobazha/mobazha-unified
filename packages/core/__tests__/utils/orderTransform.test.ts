@@ -54,6 +54,20 @@ function buildOrder(progress: {
 }
 
 describe('transformCoreOrder payment progress formatting', () => {
+  it('does not let the URL role override a matched order participant', () => {
+    const buyerView = transformCoreOrder(buildOrder({}), {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'sale',
+    });
+    const sellerView = transformCoreOrder(buildOrder({}), {
+      currentUserPeerID: 'vendor-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(buyerView?.userRole).toBe('buyer');
+    expect(sellerView?.userRole).toBe('seller');
+  });
+
   it('preserves the immutable Deal Link source on the display order', () => {
     const rawOrder = buildOrder({});
     rawOrder.contract.orderOpen.dealLinkID = 'deal-link-123456789';

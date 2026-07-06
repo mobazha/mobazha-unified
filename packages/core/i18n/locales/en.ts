@@ -7365,7 +7365,8 @@ export const en: TranslationResource = {
         'Choose a published digital product or service. The price and product version are locked into this link.',
       productLabel: 'Product or service',
       productPlaceholder: 'Choose what you are selling',
-      noEligibleProducts: 'Publish a digital product or service before creating a protected link.',
+      noEligibleProducts:
+        'Publish a fixed-price service, or configure delivery assets for a digital product first.',
       deliveryTypeLabel: 'How you will deliver it',
       deliveryDigitalFile: 'Digital file',
       deliveryLicenseKey: 'License key or access code',

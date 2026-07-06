@@ -929,26 +929,21 @@ function determineUserRole(
   moderatorId: string,
   viewingContext?: 'sale' | 'purchase'
 ): DisplayUserRole {
-  let userRole: DisplayUserRole = 'buyer';
-
   if (currentUserPeerID) {
     if (currentUserPeerID === vendorPeerID) {
-      userRole = 'seller';
-    } else if (currentUserPeerID === buyerPeerID) {
-      userRole = 'buyer';
-    } else if (moderatorId === currentUserPeerID) {
-      userRole = 'moderator';
+      return 'seller';
+    }
+    if (currentUserPeerID === buyerPeerID) {
+      return 'buyer';
+    }
+    if (moderatorId === currentUserPeerID) {
+      return 'moderator';
     }
   }
 
-  // 如果 peerID 匹配失败，使用 viewingContext 作为后备（参考桌面端的 type 参数）
-  if (userRole === 'buyer' && viewingContext === 'sale') {
-    userRole = 'seller';
-  } else if (userRole === 'seller' && viewingContext === 'purchase') {
-    userRole = 'buyer';
-  }
-
-  return userRole;
+  // Only use the URL context when identity is unavailable or is not a party to
+  // the order. A buyer must never gain seller actions by changing ?role=sale.
+  return viewingContext === 'sale' ? 'seller' : 'buyer';
 }
 
 function normalizePaymentMethod(method: string | number | undefined): string | number {
