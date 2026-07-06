@@ -116,7 +116,9 @@ describe('acceptance helpers', () => {
   });
 
   it('creates payment redirect using the established orderID query contract', () => {
-    expect(buildDealLinkPaymentHref('order-123')).toBe('/payment?orderID=order-123');
+    expect(buildDealLinkPaymentHref('order-123')).toBe(
+      '/payment?orderID=order-123&source=deal_link'
+    );
   });
 
   it('generates idempotency keys', () => {

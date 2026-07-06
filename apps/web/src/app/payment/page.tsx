@@ -262,13 +262,17 @@ export default function PaymentPage() {
   const urlContractType = searchParams.get('contractType');
   const urlImage = searchParams.get('image');
   const urlPaymentPolicy = searchParams.get('paymentPolicy');
+  const isDealPaymentEntry = searchParams.get('source') === 'deal_link';
 
   // 订单数据状态
   const [isLoadingOrder, setIsLoadingOrder] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [rawOrder, setRawOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const isDealBacked = useMemo(() => isDealBackedOrder(rawOrder), [rawOrder]);
+  const isDealBacked = useMemo(
+    () => isDealPaymentEntry || isDealBackedOrder(rawOrder),
+    [isDealPaymentEntry, rawOrder]
+  );
 
   // 支付状态
   const [paymentStep, setPaymentStep] = useState<PaymentStep>('idle');

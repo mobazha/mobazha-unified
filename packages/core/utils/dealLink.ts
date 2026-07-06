@@ -16,7 +16,7 @@ export function createDealLinkIdempotencyKey(): string {
 }
 
 export function buildDealLinkPaymentHref(orderID: string): string {
-  return `/payment?orderID=${encodeURIComponent(orderID)}`;
+  return `/payment?orderID=${encodeURIComponent(orderID)}&source=deal_link`;
 }
 
 export function buildDealLinkAcceptanceRequest(
