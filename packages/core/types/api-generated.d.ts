@@ -280,23 +280,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/deal-commission-entries/{id}/risk-events': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Inspect immutable automatic risk events for a provisional Deal commission */
-    get: operations['admin-deal-commission-risk-events-list'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/platform/v1/admin/exchange-rates/config': {
     parameters: {
       query?: never;
@@ -9947,32 +9930,6 @@ export interface components {
       /** Format: int64 */
       total: number;
     };
-    Platform_AdminDealCommissionRiskAuditResponse: {
-      entryID: string;
-      events: components['schemas']['Platform_AdminDealCommissionRiskEventResponse'][] | null;
-      orderID: string;
-      payable: boolean;
-      riskSummary: components['schemas']['Platform_AdminDealCommissionRiskSummaryResponse'];
-      status: string;
-      truncated: boolean;
-    };
-    Platform_AdminDealCommissionRiskEventResponse: {
-      applied: boolean;
-      /** Format: date-time */
-      appliedAt: string;
-      id: string;
-      /** @enum {string} */
-      kind: 'refund_observed' | 'dispute_opened' | 'chargeback_observed' | 'risk_evidence_invalid';
-      /** Format: date-time */
-      observedAt: string;
-      previousStatus: string;
-      providerID: string;
-      reasonCode: string;
-      resultStatus: string;
-      /** @enum {string} */
-      source: 'live_event' | 'reconciliation';
-      sourceEventID: string;
-    };
     Platform_AdminDealCommissionRiskSummaryResponse: {
       /** Format: date-time */
       appliedAt?: string;
@@ -12220,37 +12177,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['Platform_DealCommissionEligibilityReviewResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'admin-deal-commission-risk-events-list': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_AdminDealCommissionRiskAuditResponse'];
         };
       };
       /** @description Error */

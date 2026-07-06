@@ -24,8 +24,6 @@ export const HOSTING_API_PATHS = {
   ADMIN_DEAL_COMMISSION_ENTRIES: '/platform/v1/admin/deal-commission-entries',
   ADMIN_DEAL_COMMISSION_ENTRIES_REVIEW_ELIGIBILITY: (id: string) =>
     `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/review-eligibility`,
-  ADMIN_DEAL_COMMISSION_ENTRIES_RISK_EVENTS: (id: string) =>
-    `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/risk-events`,
   ADMIN_EXCHANGE_RATES_CONFIG: '/platform/v1/admin/exchange-rates/config',
   ADMIN_EXCHANGE_RATES_HEALTH: '/platform/v1/admin/exchange-rates/health',
   ADMIN_FIAT_PROVIDERS: '/platform/v1/admin/fiat-providers',
