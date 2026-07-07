@@ -2,6 +2,11 @@
 
 import React, { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  COMMERCIAL_CDN_MISSING,
+  COMMERCIAL_LOCAL_ICON_MAP,
+  COMMERCIAL_TOKEN_SYMBOL_MAP,
+} from './commercial/tokenIconSymbols';
 
 // Token ID 到标准符号的映射
 const TOKEN_SYMBOL_MAP: Record<string, string> = {
@@ -61,8 +66,7 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   CFX: 'cfx',
   // MBZ
   MBZ: 'mbz',
-  // Monero
-  XMR: 'xmr',
+  ...COMMERCIAL_TOKEN_SYMBOL_MAP,
 };
 
 // 法币映射 - 用于法币时显示默认图标
@@ -90,7 +94,7 @@ const FIAT_CURRENCIES = new Set([
 ]);
 
 // CDN 中不存在的 symbol，直接从 local 开始加载
-const CDN_MISSING = new Set(['base', 'mbz', 'arbitrum', 'sol', 'xmr']);
+const CDN_MISSING = new Set(['base', 'mbz', 'arbitrum', 'sol', ...COMMERCIAL_CDN_MISSING]);
 
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
@@ -123,7 +127,7 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   trx: 'TRX',
   tron: 'TRX',
   mbz: 'MBZ',
-  xmr: 'XMR',
+  ...COMMERCIAL_LOCAL_ICON_MAP,
 };
 
 export interface TokenIconProps {

@@ -24,6 +24,7 @@ import {
   readCheckoutPaymentPolicyFromSession,
   type CheckoutPaymentPolicy,
 } from './checkoutPaymentPolicy';
+import { PRIVACY_COIN_RUNTIME_DISPLAY } from '../data/commercial/privacyPayment';
 
 export {
   PAYMENT_METHOD_VISIBILITY,
@@ -37,7 +38,7 @@ export interface RuntimePaymentDisplayMethod {
 }
 
 const RUNTIME_PAYMENT_DISPLAY: Record<string, RuntimePaymentDisplayMethod> = {
-  XMR: { id: 'XMR', name: 'Monero' },
+  [PRIVACY_COIN_RUNTIME_DISPLAY.id]: { ...PRIVACY_COIN_RUNTIME_DISPLAY },
   BTC: { id: 'BTC', name: 'Bitcoin' },
   BCH: { id: 'BCH', name: 'Bitcoin Cash' },
   LTC: { id: 'LTC', name: 'Litecoin' },

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
+/* global process, console */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -56,8 +57,10 @@ for (const forbidden of ['@reown/', '@walletconnect/']) {
 // exception does not authorize a general payment wallet, executor, or adapter.
 const allowedSolanaImports = new Set([
   'packages/core/collectibles/burnTx.ts',
+  'packages/core/collectibles/transferTx.ts',
   'packages/core/utils/solana.ts',
   'packages/core/__tests__/collectibles/burnTx.test.ts',
+  'packages/core/__tests__/collectibles/transferTx.test.ts',
 ]);
 
 const forbiddenExecutionPaths = [
@@ -126,6 +129,18 @@ function isTestOrFixture(path) {
   );
 }
 
+// Commercial / sovereign overlays are not part of the Community Edition
+// projection. They stay in the private monorepo but are excluded from the
+// fingerprint gate that prepares sanitized public exports.
+function isCommercialBoundaryExcluded(publicPath) {
+  return (
+    publicPath.includes('_sovereign.') ||
+    publicPath.endsWith('/sovereign.d.ts') ||
+    publicPath.endsWith('/routes.commercial.tsx') ||
+    publicPath.includes('/commercial/')
+  );
+}
+
 function scanSourceTree(path) {
   for (const entry of readdirSync(path, { withFileTypes: true })) {
     if (entry.name === 'node_modules' || entry.name === 'dist') continue;
@@ -144,6 +159,7 @@ function scanSourceTree(path) {
       fail(`private implementation path leaked into public tree: ${publicPath}`);
     }
     if (!textExtensions.has(extname(entry.name))) continue;
+    if (isCommercialBoundaryExcluded(publicPath)) continue;
     const source = readFileSync(child, 'utf8');
     if (containsFingerprint(source, privateProductFingerprints)) {
       fail(`private product identity leaked into production source: ${publicPath}`);
@@ -159,7 +175,7 @@ function scanSourceTree(path) {
         fail(`retired private frontend identifier leaked into public source: ${publicPath}`);
       }
     }
-    if (/\b(?:from\s*|require\s*\()['\"]@solana\/web3\.js['\"]/.test(source)) {
+    if (/\b(?:from\s*|require\s*\()['"]@solana\/web3\.js['"]/.test(source)) {
       if (!allowedSolanaImports.has(publicPath)) {
         fail(`Solana SDK import is outside the Collectibles allowlist: ${publicPath}`);
       }

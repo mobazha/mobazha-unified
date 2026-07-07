@@ -32,21 +32,36 @@ Detect via `usePlatform()` → `isEmbeddedApp` / `isTGMiniApp`, or `data-embedde
 
 ## 2. Back Button / Navigation
 
-- **NEVER** show in-page back buttons (`<`, `← Back`) in TMA.
-  `TGBackButtonManager` (layout-level) already manages the native Telegram BackButton
-  for all non-root-tab pages.
-- In `MobilePageHeader`: early-return a left-aligned title layout for embedded apps.
+- **Primary path (TMA)**: use **PlatformProvider / `useBackAction()`** — never call
+  `Telegram.WebApp.BackButton.show()` / `onClick()` directly in page code.
+- **Layout**: `TGBackButtonManager` registers `router.back()` via
+  `useBackAction().pushHandler()` for all non-root-tab pages.
+- **Modals / nested UI**: `useBackAction().pushHandler(onClose)` so the stack owns
+  native BackButton visibility.
+- **Fallback only**: `MobilePageHeader` shows an in-page `←` when embedded **and**
+  `!back.isNative` (SDK unavailable or Web adapter). When `back.isNative === true`,
+  do not render a duplicate in-page back arrow.
 - In `SettingsPageHeader`: `hideBackLink = isEmbeddedApp`.
 - In custom headers (e.g. ChatMessages room header): guard with `!isEmbeddedApp`.
-- Root tab pages (`/`, `/orders`, `/cart`, `/chat`, `/me`): TG BackButton is hidden
-  automatically.
+- Root tab pages (`/`, `/orders`, `/cart`, `/chat`, `/me`): no back handler pushed;
+  native BackButton stays hidden.
 
 ```tsx
-// ❌ Bad — redundant with TG native back button
-{onBack && <button onClick={onBack}>←</button>}
+// ❌ Bad — bypasses Platform stack; races with TGBackAction lifecycle
+backButton.show();
+backButton.onClick(handleBack);
 
-// ✅ Good — hidden in TMA
-{onBack && !isEmbeddedApp && <button onClick={onBack}>←</button>}
+// ❌ Bad — always shows in-page back in TMA even when native works
+{showBack && <button onClick={handleBack}>←</button>}
+
+// ✅ Good — layout manager uses Platform stack
+useEffect(() => {
+  if (isRootTab) return;
+  return back.pushHandler(handleBack);
+}, [back, isRootTab, handleBack]);
+
+// ✅ Good — header fallback only when native back unavailable
+const showInPageBack = showBack && !back.isNative;
 ```
 
 ## 3. L2 Page Headers

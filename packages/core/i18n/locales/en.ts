@@ -6516,7 +6516,7 @@ export const en: TranslationResource = {
       regionDesc: 'Set your country and preferred display currency',
       preferencesFailed: 'Failed to save preferences',
       completeTitle: 'Your store profile is ready',
-      completeDesc: 'Set up your Monero wallet next to start accepting XMR orders.',
+      completeDesc: 'Set up your payment wallet next to start accepting orders.',
     },
   },
 
@@ -7698,8 +7698,6 @@ export const en: TranslationResource = {
       setupPayments: 'Set up payment methods',
       setupPaymentsDesc: 'Add crypto wallets, connect Stripe or PayPal',
       setupPaymentsDescCryptoOnly: 'Add crypto receiving addresses for your store',
-      setupMoneroWallet: 'Set up Monero wallet',
-      setupMoneroWalletDesc: 'Create or restore the local XMR wallet for this store',
       paymentConfigured: 'Payment method configured',
       storeName: 'Store Name',
       storeNamePlaceholder: 'My Awesome Store',

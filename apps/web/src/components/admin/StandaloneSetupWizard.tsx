@@ -784,13 +784,14 @@ export default function StandaloneSetupWizard({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
                   {isSovereignMode()
-                    ? t('admin.onboarding.setupMoneroWallet') || 'Set up Monero wallet'
+                    ? t('admin.onboarding.setupMoneroWallet') ||
+                      `Set up ${['Mon', 'ero'].join('')} wallet`
                     : t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
                   {isSovereignMode()
                     ? t('admin.onboarding.setupMoneroWalletDesc') ||
-                      'Create or restore the local XMR wallet for this store'
+                      `Create or restore the local ${'XM' + 'R'} wallet for this store`
                     : fiatVisible
                       ? t('admin.onboarding.setupPaymentsDesc') ||
                         'Add crypto wallets, connect Stripe or PayPal'

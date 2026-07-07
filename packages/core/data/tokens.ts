@@ -4,6 +4,7 @@
  */
 
 import { getChainTypeAliases, getEvmChainFamily, getEvmNativeSymbol } from './chainMetadata';
+import { PRIVACY_COIN_TOKEN } from './commercial/privacyPayment';
 
 /**
  * Token 配置接口
@@ -59,14 +60,7 @@ export interface PaymentChainConfig {
  * 与移动端/桌面端保持一致
  */
 export const TOKENS: TokenConfig[] = [
-  {
-    id: 'XMR',
-    assetId: 'crypto:monero:mainnet:native',
-    token: 'XMR',
-    chain: 'XMR',
-    isNative: true,
-    decimals: 12,
-  },
+  PRIVACY_COIN_TOKEN,
   {
     id: 'BTC',
     assetId: 'crypto:bip122:000000000019d6689c085ae165831e93:native',

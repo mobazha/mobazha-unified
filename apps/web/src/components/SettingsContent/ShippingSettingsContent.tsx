@@ -23,6 +23,7 @@ import {
   useCurrency,
   profileApi,
   isSovereignMode,
+  PRIVACY_COIN_CODE,
 } from '@mobazha/core';
 import type { ShippingProfile, ShippingZone, ShippingLocation } from '@mobazha/core';
 import { Plus, Truck, FolderOpen, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -293,7 +294,7 @@ export function ShippingSettingsContent() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { localCurrency } = useCurrency();
-  const shippingCurrency = isSovereignMode() ? 'XMR' : localCurrency;
+  const shippingCurrency = isSovereignMode() ? PRIVACY_COIN_CODE : localCurrency;
 
   const {
     profiles,

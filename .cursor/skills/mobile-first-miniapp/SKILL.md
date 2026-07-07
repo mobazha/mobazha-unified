@@ -1,8 +1,21 @@
 # Mobile-First Mini App 改造执行器
 
-> **触发词**：
-> "继续移动端改造"、"Phase M 下一步"、"Mini App 优化"、
-> "移动端下一步"、"M0-x"、"M1-x"、"M2-x"、"M3-x"、"M4-x"
+> **触发词**："继续移动端改造"、"Phase M 下一步"、"Mini
+> App 优化"、"移动端下一步"、"M0-x"、"M1-x"、"M2-x"、"M3-x"、"M4-x"
+
+## 当前实现：后退按钮（2026-07）
+
+> 以下取代文档中过时的 `useTGBackButton` 规划；Phase M1/M2 历史步骤仍供对照。
+
+| 层级     | 组件                                 | 职责                                                 |
+| -------- | ------------------------------------ | ---------------------------------------------------- |
+| Platform | `useBackAction()` (`@/lib/platform`) | LIFO `BackActionStack`；TG 适配器驱动原生 BackButton |
+| Layout   | `TGBackButtonManager`                | 非根 tab 页面 `back.pushHandler(router.back)`        |
+| Header   | `MobilePageHeader`                   | TMA 内默认无页内 ←；仅 `!back.isNative` 时兜底       |
+| 弹层     | 任意 modal                           | `back.pushHandler(onClose)` 覆盖路由级 handler       |
+
+**禁止**在页面里直接调用 `Telegram.WebApp.BackButton.show()`。规则详见
+`.cursor/rules/tma-ui-rules.mdc` §2。
 
 ## 1. 执行协议
 

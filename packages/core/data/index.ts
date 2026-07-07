@@ -74,6 +74,8 @@ export {
   type PaymentChainConfig,
 } from './tokens';
 
+export { PRIVACY_COIN_CODE } from './commercial/privacyPayment';
+
 // DG-1.12: digital-goods cost-comparison pricing data + calculator
 export {
   PROCESSORS,

@@ -17,6 +17,7 @@ import {
   type RuntimeCapabilityKey,
   type UnifiedFrontendFeatureId,
 } from '@mobazha/core';
+import { commercialExtensionRoutes } from './routes.commercial';
 
 // 加载中的占位组件
 function PageLoading() {
@@ -870,56 +871,7 @@ if (__SOVEREIGN__ && !__ROUTED_TMA__) {
         },
         { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
         ...(typeof __COMMERCIAL_EXTENSION__ !== 'undefined' && __COMMERCIAL_EXTENSION__
-          ? [
-              {
-                path: 'finance',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.FinancePage,
-                  }))
-                ),
-              },
-              {
-                path: 'finance/xmr-wallet',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.WalletPage,
-                  }))
-                ),
-              },
-              {
-                path: 'finance/xmr-withdraw',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.WithdrawPage,
-                  }))
-                ),
-              },
-              {
-                path: 'finance/xmr-secrets',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.SecretsPage,
-                  }))
-                ),
-              },
-              {
-                path: 'finance/xmr-transfers',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.TransfersPage,
-                  }))
-                ),
-              },
-              {
-                path: 'settings/monero-nodes',
-                element: lazyPage(() =>
-                  import('@mobazha/commercial-extension').then(module => ({
-                    default: module.NodePoolPage,
-                  }))
-                ),
-              },
-            ]
+          ? commercialExtensionRoutes()
           : []),
       ],
     },

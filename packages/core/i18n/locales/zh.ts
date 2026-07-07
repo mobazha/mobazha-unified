@@ -5892,7 +5892,7 @@ export const zh: PartialTranslationResource = {
       regionDesc: '设置您的国家和首选显示货币',
       preferencesFailed: '偏好设置保存失败',
       completeTitle: '店铺资料已就绪',
-      completeDesc: '下一步设置门罗币钱包，即可开始接收 XMR 订单。',
+      completeDesc: '下一步设置收款钱包，即可开始接收订单。',
     },
   },
   ai: {
@@ -7175,8 +7175,6 @@ export const zh: PartialTranslationResource = {
       setupPayments: '设置收款方式',
       setupPaymentsDesc: '添加加密钱包，或连接 Stripe / PayPal',
       setupPaymentsDescCryptoOnly: '为店铺添加加密货币收款地址',
-      setupMoneroWallet: '设置门罗币钱包',
-      setupMoneroWalletDesc: '为本店铺创建或恢复本地 XMR 钱包',
       paymentConfigured: '收款方式已配置',
       storeName: '店铺名称',
       storeNamePlaceholder: '我的店铺',

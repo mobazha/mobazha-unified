@@ -8,6 +8,7 @@
 
 import type { CurrencyInfo } from '../types/currency';
 import { TOKENS, CHAINS, getPaymentCoinDisplayLabel, parseCanonicalPaymentCoin } from './tokens';
+import { PRIVACY_COIN_CURRENCY } from './commercial/privacyPayment';
 
 /**
  * 基础加密货币列表
@@ -15,6 +16,7 @@ import { TOKENS, CHAINS, getPaymentCoinDisplayLabel, parseCanonicalPaymentCoin }
  * TOKENS 中定义的币种（含复合代币）会自动生成
  */
 const BASE_CRYPTO_CURRENCIES: CurrencyInfo[] = [
+  PRIVACY_COIN_CURRENCY,
   {
     code: 'BTC',
     symbol: '₿',
@@ -22,16 +24,6 @@ const BASE_CRYPTO_CURRENCIES: CurrencyInfo[] = [
     name: 'Bitcoin',
     namePlural: 'BTC',
     decimals: 8,
-    rounding: 0,
-    type: 'crypto',
-  },
-  {
-    code: 'XMR',
-    symbol: 'XMR',
-    symbolNative: 'XMR',
-    name: 'Monero',
-    namePlural: 'XMR',
-    decimals: 12,
     rounding: 0,
     type: 'crypto',
   },
