@@ -1,83 +1,133 @@
 # Mobazha Unified
 
-An open-source commerce frontend for storefronts, marketplaces, checkout, and seller management.
+**The capability-driven storefront, checkout, seller, and marketplace experience for Mobazha.**
 
-Mobazha Unified powers the buyer and seller experiences at
-[app.mobazha.org](https://app.mobazha.org/). The same codebase connects to both Mobazha-hosted
-services and self-hosted Mobazha nodes, adapting the interface to the capabilities reported by the
-connected backend.
+Mobazha Unified is the shared frontend for hosted services and self-hosted Mobazha Nodes. It
+resolves the active store and backend, renders only effective capabilities, and presents buyer,
+seller, and operator workflows without becoming a second authority for orders or money.
 
-[Try Mobazha](https://app.mobazha.org/) ·
-[Run a self-hosted node](https://github.com/mobazha/mobazha) ·
-[Documentation](https://docs.mobazha.org) ·
+[Try the hosted Beta](https://app.mobazha.org/) ·
+[Product map](https://docs.mobazha.org/project/product-map) ·
+[Run a Node](https://docs.mobazha.org/self-host/install) ·
 [Runtime capabilities](https://docs.mobazha.org/build/runtime-capabilities) ·
-[Public roadmap](https://docs.mobazha.org/project/roadmap) · [Contributing](./CONTRIBUTING.md)
+[Contributing](./CONTRIBUTING.md)
 
-> **Status:** This project is a release candidate. APIs, packaging, and deployment instructions may
-> change before the first stable release.
+> **Release status:** the current public target is `v0.3.0-rc.1`. It has not been tagged or
+> published as a stable frontend release. Workspace package versions such as `0.0.1` are
+> development-package versions, not a separate public product release.
 
-## What is included
+[![Conceptual Mobazha product map showing experiences, commerce Core, and optional services](https://docs.mobazha.org/images/docs/project/mobazha-product-atlas.svg)](https://docs.mobazha.org/project/product-map)
 
-- Buyer-facing storefronts, product discovery, and marketplace experiences
-- Product detail, cart, checkout, and payment-selection flows
-- Seller administration for products, orders, shipping, and store appearance
-- Responsive interfaces for web, mobile, and embedded experiences
-- Shared Vite and Next.js entry points backed by reusable core and UI packages
+_One commerce model can be presented through hosted, standalone, storefront, marketplace, embedded,
+and Agent-assisted experiences. The connected backend remains authoritative for effective
+capabilities and business state._
 
-## Use Mobazha
+## Start with your goal
 
-### Hosted service
+| Goal                                      | Start here                                                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Explore the current hosted experience     | [Open app.mobazha.org](https://app.mobazha.org/)                                                |
+| Understand the complete product           | [How Mobazha fits together](https://docs.mobazha.org/project/product-map)                       |
+| Connect Unified to your own backend       | [Install a Mobazha Node](https://docs.mobazha.org/self-host/install)                            |
+| Understand whether a feature is available | [Runtime capabilities](https://docs.mobazha.org/build/runtime-capabilities)                     |
+| Build or embed a frontend surface         | [Development](#development) and [package boundaries](./docs/architecture/PACKAGE_BOUNDARIES.md) |
+| Review future direction                   | [Public roadmap](https://docs.mobazha.org/project/roadmap)                                      |
 
-Visit [app.mobazha.org](https://app.mobazha.org/) to create a store or explore Mobazha without
-setting up infrastructure.
+## Where this repository fits
 
-### Self-hosted node
+| Component                                          | Responsibility                                                                                                     | Source                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| [Mobazha Node](https://github.com/mobazha/mobazha) | Commerce Core, business-state authority, persistence, payment verification, APIs, messaging, and operator controls | `mobazha/mobazha`                        |
+| **Mobazha Unified — this repository**              | Storefront, checkout, seller administration, marketplace, and responsive experience surfaces                       | `mobazha/mobazha-unified`                |
+| Mobazha hosted services                            | Optional managed backend operation, routing, discovery, and service-specific capabilities                          | Service-specific distributions and terms |
+| [Mobazha Docs](https://docs.mobazha.org)           | Canonical public product knowledge, user guidance, policy, architecture, and release scope                         | `mobazha/mobazha-docs`                   |
 
-Run the open-source [Mobazha node](https://github.com/mobazha/mobazha) on your own infrastructure
-when you want to control the deployment, data, domain, and available integrations. The node provides
-the backend and can serve its embedded Web UI after startup.
+Unified presents and requests work. The backend serving the active store or order context validates
+protected actions and owns admitted state.
 
-The current open-source node enables BTC, BCH, and LTC payments by default. Actual availability also
-depends on the seller configuration and the current checkout session.
+## Product surfaces
 
-## How it works
+| Surface     | Current responsibilities                                                                                                      |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Buyer       | Store and marketplace discovery, product detail, cart, checkout, payment selection, order tracking, and recovery entry points |
+| Seller      | Products, options, supply, shipping, orders, storefront appearance, policies, payments, and integrations                      |
+| Operator    | Marketplace and seller-review workflows, deployment-aware navigation, and capability-gated administration                     |
+| Integration | Responsive Web, embedded and sovereign profiles, deep links, notifications, and API-backed workflows                          |
 
-Mobazha Unified does not build a separate frontend for each deployment type. The connected backend
-publishes a versioned runtime-capability snapshot, and the frontend renders only the experiences and
-payment methods that snapshot makes available.
+The repository also contains a browser-extension application entry point. Source presence does not
+mean the extension, every embedded channel, or every profile is part of the current universal
+release boundary.
 
-Payment availability is resolved from:
+## One frontend, several operating paths
 
-1. The backend runtime-capability response, which is authoritative
-2. The payment methods enabled by the seller
-3. The current checkout session
+### Hosted
 
-The frontend may narrow that result for safety or session validity, but it never enables a payment
-method that the backend did not advertise. Optional payment paths remain unavailable until a valid
-capability response is present.
+[app.mobazha.org](https://app.mobazha.org/) is the fastest way to evaluate the current buyer and
+seller experience without maintaining the underlying server. Hosted availability, data handling,
+limits, and pricing follow the applicable service terms.
 
-Browser-wallet integrations use browser-injected provider standards. The public source tree does not
-bundle Reown AppKit or WalletConnect SDK packages, while UTXO checkout remains backend-monitored and
-does not require a browser wallet connector.
+### Self-hosted
 
-See the canonical [runtime capability guide](https://docs.mobazha.org/build/runtime-capabilities)
-for public semantics and use the versioned configuration types and tests in this repository for
-exact implementation evidence.
+Run the open-source [Mobazha Node](https://github.com/mobazha/mobazha) when you want direct control
+over deployment, store data, domain, backup, and enabled integrations. Unified can connect to the
+Node directly or be served as its embedded Web UI.
+
+### Composed and embedded
+
+Build profiles can adapt navigation, authentication transport, branding, external-resource policy,
+and included frontend surfaces. A profile can narrow what the user sees; it cannot enable a backend
+capability or bypass authorization.
+
+Compare
+[hosted, self-hosted, and hybrid operation](https://docs.mobazha.org/start/choose-deployment) and
+review
+[channels and integration contracts](https://docs.mobazha.org/project/surfaces-and-integrations).
+
+## Capability-driven experience
+
+Unified keeps deployment, experience, capability, permission, and experiment state separate. New
+work becomes available only when the applicable gates agree:
+
+```text
+distribution allowlist
+  ∩ compatible contract
+  ∩ feature included in the build
+  ∩ backend capability ready
+  ∩ current identity authorized
+  ∩ resource and dependency ready
+```
+
+Pending capability state remains a loading state, not an authoritative denial. Clients may hide or
+narrow actions for safety, but they never widen the backend's response. Notifications and local UI
+state do not independently advance an order or payment.
+
+The framework-neutral composition and shared commerce contracts live in `@mobazha/commerce-kit`;
+applications retain routing, providers, authorization, localization, and final rendering.
+
+## Current release boundary
+
+- The release target is `v0.3.0-rc.1`; stable signed artifacts and reproducibility attestations
+  remain pending.
+- Hosted and self-hosted experiences share frontend contracts but can expose different effective
+  capabilities.
+- The default open-source Node release boundary includes BTC, BCH, and LTC, subject to seller
+  configuration and the active checkout session.
+- Browser wallet support uses standards exposed by the browser. Connector presence in source is not
+  a release commitment.
+- Vite and Next.js entry points must preserve the same capability and provider boundaries.
+
+Read the canonical [release scope](https://docs.mobazha.org/project/release-scope) and
+[runtime capability guide](https://docs.mobazha.org/build/runtime-capabilities).
 
 ## Development
 
 ### Requirements
 
-See [Public package boundaries](./docs/architecture/PACKAGE_BOUNDARIES.md) for
-the ownership and dependency rules of the shared packages.
-
 - Node.js 20 or newer
-- pnpm 9 (the repository pins pnpm 9.15.4)
-- A compatible Mobazha backend
+- pnpm 9; the repository pins pnpm 9.15.4
+- A compatible hosted or self-hosted Mobazha backend
 
-### Run the frontend locally
-
-Install the workspace dependencies:
+Install the workspace:
 
 ```bash
 git clone https://github.com/mobazha/mobazha-unified.git
@@ -85,7 +135,7 @@ cd mobazha-unified
 corepack pnpm install --frozen-lockfile
 ```
 
-To run the Vite frontend against a self-hosted node listening on `http://127.0.0.1:5102`:
+Run the Vite frontend against a self-hosted Node on `http://127.0.0.1:5102`:
 
 ```bash
 NEXT_PUBLIC_ENV_MODE=standalone \
@@ -95,55 +145,77 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:5102 \
 corepack pnpm dev:vite
 ```
 
-The development server is available at `http://127.0.0.1:3000` by default. Build and start the
-[Mobazha node](https://github.com/mobazha/mobazha#build-from-source) first if you do not already
-have a compatible backend.
-
-### Common commands
-
-```bash
-corepack pnpm typecheck
-corepack pnpm test
-corepack pnpm --filter @mobazha/web build
-corepack pnpm --filter @mobazha/web build:next
-```
+The development server listens on `http://127.0.0.1:3000` by default.
 
 ### Application entry points
 
-Both entry points share the same outer provider tree in
-`apps/web/src/components/OuterProviders.tsx`:
+Both entry points share the outer provider tree in `apps/web/src/components/OuterProviders.tsx`:
 
-| Entry                             | File                          | Command                                 |
-| --------------------------------- | ----------------------------- | --------------------------------------- |
-| Vite (development / embedded app) | `apps/web/src/main.tsx`       | `pnpm dev:vite`                         |
-| Next.js (production SSR)          | `apps/web/src/app/layout.tsx` | `pnpm --filter @mobazha/web build:next` |
+| Entry                               | File                          | Command                                 |
+| ----------------------------------- | ----------------------------- | --------------------------------------- |
+| Vite — development and embedded app | `apps/web/src/main.tsx`       | `pnpm dev:vite`                         |
+| Next.js — production SSR            | `apps/web/src/app/layout.tsx` | `pnpm --filter @mobazha/web build:next` |
 
-Provider order and runtime-capability behavior must remain equivalent across both entry points.
+Provider order, runtime configuration, and capability behavior must remain equivalent across both
+entry points.
 
 ## Project layout
 
 ```text
 mobazha-unified/
 ├── apps/web/                 # Next.js and Vite web application
-├── apps/extension/           # Browser extension entry point
-├── packages/core/            # Internal runtime, API, payment and domain implementation
+├── apps/extension/           # Browser-extension application entry point
+├── packages/core/            # Internal runtime, API, payment, and domain implementation
 ├── packages/ui/              # Generic visual and platform foundations
 ├── packages/commerce-kit/    # Public commerce contracts and feature surfaces
 ├── config/editions/          # Packaging and compatibility profiles
-└── docs/architecture/        # Public architecture contracts
+└── docs/architecture/        # Repository-local architecture contracts
 ```
 
-## Security and supply chain
+See [Public package boundaries](./docs/architecture/PACKAGE_BOUNDARIES.md).
 
-Report security issues privately as described in [SECURITY.md](./SECURITY.md). Exact production
-dependency licenses and release checks are recorded in the
-[supply-chain audit](./docs/security/SUPPLY_CHAIN_AUDIT.md).
+## Verification
 
-## Contributing
+Run the main repository checks:
 
-Contributions are welcome. Before opening a pull request, read [CONTRIBUTING.md](./CONTRIBUTING.md)
-and sign off commits under the [Developer Certificate of Origin](./DCO.md). Project decisions and
-release responsibilities are described in [GOVERNANCE.md](./GOVERNANCE.md).
+```bash
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm --filter @mobazha/web build
+corepack pnpm --filter @mobazha/web build:next
+corepack pnpm docs:authority:check
+```
+
+Release maintainers must also inspect production bundles, desktop and mobile behavior, dependency
+and secret scans, checksums, provenance, and the exact source commit used for each artifact.
+
+## Documentation
+
+Canonical public knowledge:
+
+- [Product model](https://docs.mobazha.org/project/product-map)
+- [Buyer guidance](https://docs.mobazha.org/buy)
+- [Seller guidance](https://docs.mobazha.org/sell)
+- [Channels and integrations](https://docs.mobazha.org/project/surfaces-and-integrations)
+- [Runtime capabilities](https://docs.mobazha.org/build/runtime-capabilities)
+- [Public roadmap](https://docs.mobazha.org/project/roadmap)
+
+Repository-local implementation evidence:
+
+- [Frontend package boundaries](./docs/architecture/PACKAGE_BOUNDARIES.md)
+- [Supply-chain audit](./docs/security/SUPPLY_CHAIN_AUDIT.md)
+- [v0.3.0-rc.1 release-candidate notes](./docs/releases/v0.3.0-rc.1.md)
+
+## Contributing and security
+
+Contributions are welcome. Read [CONTRIBUTING.md](./CONTRIBUTING.md), sign off commits under the
+[Developer Certificate of Origin](./DCO.md), and follow the private vulnerability-reporting process
+in [SECURITY.md](./SECURITY.md).
+
+Project decisions and release responsibilities are described in [GOVERNANCE.md](./GOVERNANCE.md).
+The source-code license does not grant rights to use the Mobazha name or visual identity; see
+[TRADEMARKS.md](./TRADEMARKS.md).
 
 ## License and attribution
 
@@ -154,8 +226,3 @@ contributors. The canonical source repository is
 [mobazha/mobazha-unified](https://github.com/mobazha/mobazha-unified). Project origin, copyright,
 and redistribution attribution are recorded in [NOTICE](./NOTICE) and
 [Attribution and source identity](./docs/legal/ATTRIBUTION.md).
-
-## Trademark
-
-The Mobazha name, logo, and visual identity are not granted by the MPL-2.0 source license and remain
-subject to [the trademark policy](./TRADEMARKS.md).
