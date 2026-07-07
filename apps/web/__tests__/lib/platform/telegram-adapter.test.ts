@@ -174,6 +174,7 @@ describe('TelegramAdapter', () => {
       const sdk = mockSdk({ BackButton: bb });
       const a = createTelegramAdapter(sdk);
       expect(bb.show).not.toHaveBeenCalled();
+      expect(bb.hide).toHaveBeenCalledTimes(1);
 
       const r1 = a.backAction.pushHandler(() => {});
       expect(bb.show).toHaveBeenCalledTimes(1);
@@ -183,9 +184,9 @@ describe('TelegramAdapter', () => {
       expect(bb.show).toHaveBeenCalledTimes(1);
 
       r2();
-      expect(bb.hide).not.toHaveBeenCalled();
-      r1();
       expect(bb.hide).toHaveBeenCalledTimes(1);
+      r1();
+      expect(bb.hide).toHaveBeenCalledTimes(2);
     });
 
     it('BackButton click triggers top handler (LIFO)', () => {

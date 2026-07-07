@@ -78,39 +78,42 @@ async function installPendingGuestRequestFetch(
   page: Page,
   target: 'settings' | 'order'
 ): Promise<void> {
-  await page.addInitScript(({ target }) => {
-    const originalFetch = window.fetch.bind(window);
-    window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-      const request = input instanceof Request ? input : undefined;
-      const rawURL = request?.url ?? (input instanceof URL ? input.href : String(input));
-      const url = new URL(rawURL, window.location.origin);
-      const method = init?.method ?? request?.method ?? 'GET';
-      const isTarget =
-        (target === 'settings' &&
-          url.pathname === '/v1/settings/guest-checkout' &&
-          method.toUpperCase() === 'GET') ||
-        (target === 'order' &&
-          url.pathname === '/v1/guest/orders' &&
-          method.toUpperCase() === 'POST');
-      if (isTarget) {
-        const startedKey = `guest-${target}-request-started-count`;
-        const abortedKey = `guest-${target}-request-aborted-count`;
-        const started = Number(window.sessionStorage.getItem(startedKey) ?? '0');
-        window.sessionStorage.setItem(startedKey, String(started + 1));
-        return new Promise((_resolve, reject) => {
-          const signal = init?.signal ?? request?.signal;
-          const rejectAborted = () => {
-            const aborted = Number(window.sessionStorage.getItem(abortedKey) ?? '0');
-            window.sessionStorage.setItem(abortedKey, String(aborted + 1));
-            reject(new DOMException('Aborted', 'AbortError'));
-          };
-          if (signal?.aborted) rejectAborted();
-          else signal?.addEventListener('abort', rejectAborted, { once: true });
-        });
-      }
-      return originalFetch(input, init);
-    };
-  }, { target });
+  await page.addInitScript(
+    ({ target }) => {
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = ((input: unknown, init?: RequestInit): Promise<Response> => {
+        const request = input instanceof Request ? input : undefined;
+        const rawURL = request?.url ?? (input instanceof URL ? input.href : String(input));
+        const url = new URL(rawURL, window.location.origin);
+        const method = init?.method ?? request?.method ?? 'GET';
+        const isTarget =
+          (target === 'settings' &&
+            url.pathname === '/v1/settings/guest-checkout' &&
+            method.toUpperCase() === 'GET') ||
+          (target === 'order' &&
+            url.pathname === '/v1/guest/orders' &&
+            method.toUpperCase() === 'POST');
+        if (isTarget) {
+          const startedKey = `guest-${target}-request-started-count`;
+          const abortedKey = `guest-${target}-request-aborted-count`;
+          const started = Number(window.sessionStorage.getItem(startedKey) ?? '0');
+          window.sessionStorage.setItem(startedKey, String(started + 1));
+          return new Promise((_resolve, reject) => {
+            const signal = init?.signal ?? request?.signal;
+            const rejectAborted = () => {
+              const aborted = Number(window.sessionStorage.getItem(abortedKey) ?? '0');
+              window.sessionStorage.setItem(abortedKey, String(aborted + 1));
+              reject(new DOMException('Aborted', 'AbortError'));
+            };
+            if (signal?.aborted) rejectAborted();
+            else signal?.addEventListener('abort', rejectAborted, { once: true });
+          });
+        }
+        return originalFetch(input as Parameters<typeof fetch>[0], init);
+      }) as typeof window.fetch;
+    },
+    { target }
+  );
 }
 
 async function pendingRequestCount(
@@ -128,7 +131,7 @@ async function pendingRequestCount(
 async function navigateHomeWithinApp(page: Page): Promise<void> {
   await page.evaluate(() => {
     window.history.pushState({}, '', '/');
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    window.dispatchEvent(new Event('popstate'));
   });
   await expect(page).toHaveURL('/');
 }
@@ -259,7 +262,9 @@ test.describe('Guest Checkout distribution matrix', () => {
       await beginGuestOrder(page);
 
       await expect(page.getByText(PAYMENT_ADDRESS)).toBeVisible();
-      await expect(page.getByTestId('guest-checkout-save-link')).toBeVisible();
+      const recoveryCard = page.getByTestId('guest-checkout-save-link');
+      await expect(recoveryCard).toBeVisible();
+      await expect(recoveryCard.locator('input')).toHaveCount(0);
       expect(requests.createdOrders()).toBe(1);
     });
 
@@ -282,7 +287,9 @@ test.describe('Guest Checkout distribution matrix', () => {
       expect(requests.createdOrders()).toBe(0);
     });
 
-    test(`${distribution.name} aborts settings loading when checkout unmounts`, async ({ page }) => {
+    test(`${distribution.name} aborts settings loading when checkout unmounts`, async ({
+      page,
+    }) => {
       await installPendingGuestRequestFetch(page, 'settings');
       await seedBrowserContext(page, distribution.storeContext);
       await mockDistributionAPIs(page, distribution);

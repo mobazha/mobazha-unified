@@ -51,9 +51,16 @@ export function SaveOrderLinkCard({
 
   const handleCopy = useCallback(async () => {
     try {
+      let copiedWithClipboard = false;
       if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(orderUrl);
-      } else {
+        try {
+          await navigator.clipboard.writeText(orderUrl);
+          copiedWithClipboard = true;
+        } catch {
+          // Fall back to a temporary input when clipboard permissions are denied.
+        }
+      }
+      if (!copiedWithClipboard) {
         const ta = document.createElement('textarea');
         ta.value = orderUrl;
         ta.setAttribute('readonly', '');
@@ -61,13 +68,14 @@ export function SaveOrderLinkCard({
         ta.style.left = '-9999px';
         document.body.appendChild(ta);
         ta.select();
-        document.execCommand('copy');
+        const copiedWithFallback = document.execCommand('copy');
         document.body.removeChild(ta);
+        if (!copiedWithFallback) throw new Error('Unable to copy the private order link');
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // silent: user can still copy manually from the input
+      // Keep the private receipt on the page so the user can retry or share it.
     }
   }, [orderUrl]);
 
@@ -114,14 +122,6 @@ export function SaveOrderLinkCard({
         </div>
       </div>
       <div className="space-y-2">
-        <input
-          type="text"
-          value={orderUrl}
-          readOnly
-          onFocus={e => e.currentTarget.select()}
-          aria-label={title}
-          className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
         <div className={`grid gap-2 ${canShare && shareLabel ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <Button
             type="button"

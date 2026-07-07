@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useTGMiniApp } from './TGMiniAppProvider';
+import { useBackAction } from '@/lib/platform';
 
 /**
  * Paths that correspond to bottom-nav root tabs.
@@ -16,12 +16,16 @@ const RETURN_URL_PATHS = new Set(['/checkout/payment-method', '/checkout/moderat
 /**
  * Layout-level manager for the Telegram Mini App native BackButton.
  *
- * - Root tabs (Home, Orders, Cart, Me) → hide BackButton
+ * Routes through `useBackAction()` so the PlatformProvider TG adapter owns
+ * show/hide/onClick — direct SDK calls here used to race adapter lifecycle
+ * and leave BackButton hidden after adapter re-init.
+ *
+ * - Root tabs (Home, Orders, Cart, Me) → no handler (BackButton hidden)
  * - Checkout sub-pages with `returnUrl` → navigate to that URL
- * - All other pages → show BackButton, click → router.back()
+ * - All other pages → push handler, click → router.back()
  */
 export function TGBackButtonManager() {
-  const { isAvailable, backButton } = useTGMiniApp();
+  const back = useBackAction();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -38,19 +42,9 @@ export function TGBackButtonManager() {
   }, [returnUrl, router]);
 
   useEffect(() => {
-    if (!isAvailable || !backButton) return;
-
-    if (isRootTab) {
-      backButton.hide();
-    } else {
-      backButton.show();
-      backButton.onClick(handleBack);
-    }
-
-    return () => {
-      backButton.offClick(handleBack);
-    };
-  }, [isAvailable, backButton, isRootTab, handleBack]);
+    if (isRootTab) return;
+    return back.pushHandler(handleBack);
+  }, [back, isRootTab, handleBack]);
 
   return null;
 }

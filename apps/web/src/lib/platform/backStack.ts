@@ -76,6 +76,13 @@ export class BackActionStack {
 
   subscribe(observer: BackStackObserver): () => void {
     this.observers.add(observer);
+    try {
+      observer(this.hasHandler);
+    } catch (err) {
+      if (typeof console !== 'undefined') {
+        console.error('[BackActionStack] observer threw on subscribe', err);
+      }
+    }
     return () => {
       this.observers.delete(observer);
     };

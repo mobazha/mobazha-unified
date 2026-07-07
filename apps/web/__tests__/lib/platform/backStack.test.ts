@@ -59,23 +59,24 @@ describe('BackActionStack (G1 LIFO)', () => {
     expect(s.size).toBe(0);
   });
 
-  it('notifies observers on empty ↔ non-empty transitions only', () => {
+  it('notifies observers on subscribe and empty ↔ non-empty transitions', () => {
     const s = new BackActionStack();
     const observer = vi.fn();
     s.subscribe(observer);
+    expect(observer).toHaveBeenNthCalledWith(1, false);
 
     const r1 = s.push(() => {});
-    expect(observer).toHaveBeenNthCalledWith(1, true);
+    expect(observer).toHaveBeenNthCalledWith(2, true);
 
     const r2 = s.push(() => {});
     // No additional notification for push when already non-empty.
-    expect(observer).toHaveBeenCalledTimes(1);
+    expect(observer).toHaveBeenCalledTimes(2);
 
     r2();
-    expect(observer).toHaveBeenCalledTimes(1);
+    expect(observer).toHaveBeenCalledTimes(2);
 
     r1();
-    expect(observer).toHaveBeenNthCalledWith(2, false);
+    expect(observer).toHaveBeenNthCalledWith(3, false);
   });
 
   it('handler exception does not poison the stack', () => {

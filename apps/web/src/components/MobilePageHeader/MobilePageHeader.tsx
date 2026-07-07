@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
+import { useBackAction } from '@/lib/platform';
 
 export interface MobilePageHeaderProps {
   /** 页面标题 */
@@ -30,7 +31,7 @@ export interface MobilePageHeaderProps {
  * 移动端页面顶部导航栏
  * - 仅在移动端显示（lg:hidden）
  * - 原生 App 风格：返回箭头 + 居中标题
- * - TG/Discord: 隐藏自带返回按钮，通过 useTGBackButton 绑定原生 BackButton
+ * - TG/Discord: 优先使用原生 BackButton（TGBackButtonManager）；不可用时回退页内箭头
  */
 export function MobilePageHeader({
   title,
@@ -44,32 +45,7 @@ export function MobilePageHeader({
   const router = useRouter();
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
-
-  // Root tab pages in embedded apps: L1 (native header) + bottom nav
-  // already provide full context — this header is pure redundancy.
-  if (rootTab && isEmbeddedApp) {
-    return null;
-  }
-
-  // Embedded apps: left-aligned title, no back button
-  // TG: native BackButton managed by TGBackButtonManager
-  // Discord: Activity frame has its own navigation
-  if (isEmbeddedApp) {
-    return (
-      <div
-        className={`sticky top-0 z-40 lg:hidden ${
-          transparent
-            ? 'bg-transparent'
-            : 'bg-background/95 backdrop-blur-sm border-b border-border'
-        } ${className}`}
-      >
-        <div className="flex items-center justify-between h-12 px-4">
-          {title && <h1 className="text-lg font-semibold text-foreground truncate">{title}</h1>}
-          {rightAction && <div className="flex items-center">{rightAction}</div>}
-        </div>
-      </div>
-    );
-  }
+  const back = useBackAction();
 
   const handleBack = () => {
     if (onBack) {
@@ -78,6 +54,57 @@ export function MobilePageHeader({
       router.back();
     }
   };
+
+  // Root tab pages in embedded apps: L1 (native header) + bottom nav
+  // already provide full context — this header is pure redundancy.
+  if (rootTab && isEmbeddedApp) {
+    return null;
+  }
+
+  // Embedded apps: rely on TG native BackButton when available; otherwise
+  // render an in-page arrow so product/checkout pages are never stuck.
+  if (isEmbeddedApp) {
+    const showInPageBack = showBack && !back.isNative;
+
+    return (
+      <div
+        className={`sticky top-0 z-40 lg:hidden ${
+          transparent
+            ? 'bg-transparent'
+            : 'bg-background/95 backdrop-blur-sm border-b border-border'
+        } ${className}`}
+      >
+        <div className="flex items-center justify-between h-12 px-1">
+          {showInPageBack ? (
+            <button
+              onClick={handleBack}
+              className="w-11 h-11 flex items-center justify-center text-foreground touch-feedback rounded-full active:bg-muted/50"
+              aria-label={t('common.back')}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-11 h-11 shrink-0" />
+          )}
+          {title && (
+            <h1 className="flex-1 text-lg font-semibold text-foreground truncate px-2">{title}</h1>
+          )}
+          {rightAction ? (
+            <div className="flex items-center shrink-0">{rightAction}</div>
+          ) : (
+            <div className="w-11 h-11 shrink-0" />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
