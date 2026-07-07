@@ -8,11 +8,9 @@ import {
   CHAINS as CORE_CHAINS,
   isPaymentCoinEnabled,
 } from '@mobazha/core/data/tokens';
-import {
-  filterVisiblePaymentTokens,
-  getTokenIdFromPaymentCoin,
-  isFiatCurrency,
-} from '@mobazha/core';
+import { filterVisiblePaymentTokens } from '@mobazha/core/config/paymentMethodVisibility';
+import { getTokenIdFromPaymentCoin } from '@mobazha/core/data/tokens';
+import { isFiatCurrency } from '@mobazha/core/data/currencies';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
 // 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
