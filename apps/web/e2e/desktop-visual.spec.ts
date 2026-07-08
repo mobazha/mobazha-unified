@@ -23,6 +23,7 @@ import {
   mockSearchAPI,
   mockProductDetailAPI,
   mockProductImportWorkbenchAPI,
+  mockDealLinksAPI,
   MOCK_PRODUCT_IMPORT_RUN_ID,
 } from './fixtures/mock-api-routes';
 
@@ -417,6 +418,24 @@ test.describe('Desktop Visual - Authenticated Admin', () => {
     await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/settings');
     await expect(page).toHaveScreenshot('desktop-authed-admin-settings.png', { fullPage: true });
+  });
+
+  test('authed: admin-deal-links (mocked)', async ({ page }) => {
+    await setupMockAuth(page);
+    await mockDealLinksAPI(page);
+    await navigateAndVerify(page, '/admin/deal-links');
+    await expect(page.getByTestId('admin-deal-links-page')).toBeVisible();
+    await expect(page).toHaveScreenshot('desktop-authed-admin-deal-links.png', { fullPage: true });
+  });
+
+  test('authed: admin-deal-links-programs tab (mocked)', async ({ page }) => {
+    await setupMockAuth(page);
+    await mockDealLinksAPI(page);
+    await navigateAndVerify(page, '/admin/deal-links?tab=programs');
+    await expect(page.getByTestId('deal-links-tab-panel-programs')).toBeVisible();
+    await expect(page).toHaveScreenshot('desktop-authed-admin-deal-links-programs.png', {
+      fullPage: true,
+    });
   });
 });
 

@@ -103,6 +103,9 @@ export default function PromoteProgramPage() {
           <p className="font-medium">{t('promote.disclosureTitle')}</p>
           <p className="text-muted-foreground">{t('promote.disclosureBody')}</p>
           <p className="text-muted-foreground">{t('promote.manualReviewOnlyNotice')}</p>
+          <p className="text-muted-foreground">
+            {t('dealCommissionStatements.disclosurePaymentPromoter')}
+          </p>
           {promotion ? (
             <dl className="grid gap-3 border-t border-primary/15 pt-3 sm:grid-cols-3">
               <div>

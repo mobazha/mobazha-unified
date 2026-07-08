@@ -23,6 +23,7 @@ import {
   mockSearchAPI,
   mockProductDetailAPI,
   mockProductImportWorkbenchAPI,
+  mockDealLinksAPI,
   MOCK_PRODUCT_IMPORT_RUN_ID,
 } from './fixtures/mock-api-routes';
 
@@ -410,6 +411,14 @@ test.describe('Mobile Visual - Authenticated Admin', () => {
     await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/settings');
     await expect(page).toHaveScreenshot('mobile-authed-admin-settings.png', { fullPage: true });
+  });
+
+  test('authed: admin-deal-links (mocked)', async ({ page }) => {
+    await setupMockAuth(page);
+    await mockDealLinksAPI(page);
+    await navigateAndVerify(page, '/admin/deal-links');
+    await expect(page.getByTestId('admin-deal-links-page')).toBeVisible();
+    await expect(page).toHaveScreenshot('mobile-authed-admin-deal-links.png', { fullPage: true });
   });
 });
 

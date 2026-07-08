@@ -51,9 +51,20 @@ const buildTMock = () => (key: string, params?: Record<string, unknown>) => {
   const labels: Record<string, string> = {
     'dealCommissionStatements.promoterTitle': 'Provisional attributed commissions',
     'dealCommissionStatements.promoterSubtitle': 'Observations only',
-    'dealCommissionStatements.disclosureTitle': 'Evidence only',
-    'dealCommissionStatements.disclosureBody': 'Not a balance',
-    'dealCommissionStatements.manualReviewOnlyNotice': 'Manual review only',
+    'dealCommissionStatements.disclosureTitle': 'Provisional attribution only',
+    'dealCommissionStatements.disclosureBody': 'Mobazha records attribution and estimated amounts.',
+    'dealCommissionStatements.manualReviewOnlyNotice':
+      'Only exception cases enter platform review.',
+    'dealCommissionStatements.disclosurePaymentPromoter':
+      'Payouts are arranged by the seller outside Mobazha.',
+    'dealCommissionStatements.sellerControlsTitle': 'Seller controls',
+    'dealCommissionStatements.sellerControlsBody':
+      'Approval, disputes, and payment records are not yet active controls.',
+    'dealCommissionStatements.sellerControlAcknowledge': 'Acknowledge attribution',
+    'dealCommissionStatements.sellerControlDispute': 'Dispute attribution',
+    'dealCommissionStatements.sellerControlRecordPayment': 'Record external payment',
+    'dealCommissionStatements.sellerControlsUnavailable':
+      'Coming after Gate 2/3: seller acknowledgement, attribution disputes, and reconciled payment evidence.',
     'dealCommissionStatements.refresh': 'Refresh',
     'dealCommissionStatements.observedAt': `Observed ${params?.date}`,
     'dealCommissionStatements.proposedCommission': 'Proposed commission',
@@ -63,17 +74,19 @@ const buildTMock = () => (key: string, params?: Record<string, unknown>) => {
     'dealCommissionStatements.settlementManualReview': 'Manual review only',
     'dealCommissionStatements.fundingSource': 'Funding source',
     'dealCommissionStatements.fundingSellerManualBudget': 'Seller-funded',
-    'dealCommissionStatements.reviewNotBefore': 'Earliest review eligibility',
+    'dealCommissionStatements.reviewNotBefore': 'Protection ends',
     'dealCommissionStatements.reviewNotBeforeHint': 'Not a payout date',
     'dealCommissionStatements.programRef': 'Program',
     'dealCommissionStatements.dealLinkRef': 'Deal Link',
-    'dealCommissionStatements.statusObserved': 'Observed',
-    'dealCommissionStatements.statusPendingReview': 'Pending review',
+    'dealCommissionStatements.statusObserved': 'In protection period',
+    'dealCommissionStatements.statusPendingReview': 'Platform review',
     'dealCommissionStatements.statusDisputed': 'Disputed',
     'dealCommissionStatements.statusReversed': 'Reversed',
     'dealCommissionStatements.statusSettled': 'Settled',
-    'dealCommissionStatements.statusObservedDescription': 'Waiting period in progress',
-    'dealCommissionStatements.statusPendingReviewDescription': 'Ready for review',
+    'dealCommissionStatements.statusObservedDescription':
+      'This purchase was attributed and is in the automatic protection period.',
+    'dealCommissionStatements.statusPendingReviewDescription':
+      'Protection has ended and this record is in platform exception review.',
     'dealCommissionStatements.statusDisputedDescription': 'Review paused',
     'dealCommissionStatements.statusReversedDescription': 'Did not pass eligibility checks',
     'dealCommissionStatements.statusSettledDescription': 'Review approved',
@@ -150,15 +163,15 @@ describe('ProvisionalCommissionStatementsPanel', () => {
     mockStatements = [defaultStatement];
   });
 
-  it('renders reward status, review timing, and the estimated amount', async () => {
+  it('renders attribution status, protection timing, and the estimated amount', async () => {
     render(<ProvisionalCommissionStatementsPanel audience="promoter" />);
 
     expect(screen.getByTestId('deal-commission-statements-promoter')).toBeInTheDocument();
     expect(screen.getByTestId('deal-commission-global-disclosure')).toHaveTextContent(
-      'Not a balance'
+      'Mobazha records attribution and estimated amounts.'
     );
     expect(screen.getByTestId('deal-commission-status-summary')).toHaveTextContent(
-      'Waiting period in progress'
+      'This purchase was attributed and is in the automatic protection period.'
     );
     expect(screen.getByTestId('deal-commission-statement-stmt-1')).toBeInTheDocument();
     expect(screen.getByText('$5')).toBeInTheDocument();
@@ -199,5 +212,39 @@ describe('ProvisionalCommissionStatementsPanel', () => {
     expect(screen.getByTestId('deal-commission-status-summary')).toHaveTextContent(
       'Did not pass eligibility checks'
     );
+  });
+
+  it('compact variant hides review timing until expanded and keeps rows short', async () => {
+    render(
+      <ProvisionalCommissionStatementsPanel
+        audience="seller"
+        variant="compact"
+        embedded
+        statusFilter="all"
+      />
+    );
+
+    expect(screen.getByTestId('deal-commission-statement-stmt-1')).toBeInTheDocument();
+    expect(screen.getByTestId('deal-commission-seller-controls')).toHaveTextContent(
+      'Seller controls'
+    );
+    expect(screen.getByTestId('deal-commission-seller-control-acknowledge')).toBeDisabled();
+    expect(screen.getByTestId('deal-commission-seller-control-dispute')).toBeDisabled();
+    expect(screen.getByTestId('deal-commission-seller-control-record-payment')).toBeDisabled();
+    expect(screen.queryByText('Protection ends')).not.toBeInTheDocument();
+
+    screen.getByTestId('deal-commission-statement-stmt-1').click();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('This purchase was attributed and is in the automatic protection period.')
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Protection ends')).not.toBeInTheDocument();
+
+    await screen.findByText('View calculation and references');
+    screen.getByText('View calculation and references').click();
+    expect(screen.getByText('Commission base')).toBeInTheDocument();
+    expect(screen.getByText('Rate')).toBeInTheDocument();
   });
 });

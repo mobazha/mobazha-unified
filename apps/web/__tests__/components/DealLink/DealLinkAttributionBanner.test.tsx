@@ -11,7 +11,7 @@ vi.mock('@mobazha/core', () => ({
       const translations: Record<string, string> = {
         'dealPromotion.attributionBannerTitle': 'You arrived through a partner link',
         'dealPromotion.attributionBannerBody':
-          'Your price stays the same. Any partner reward is handled after order review.',
+          'Your price stays the same. Any partner attribution is recorded provisionally and is not a guaranteed payout.',
       };
       return translations[key] ?? key;
     },
@@ -45,7 +45,7 @@ describe('DealLinkAttributionBanner', () => {
     expect(screen.getByText('You arrived through a partner link')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Your price stays the same. Any partner reward is handled after order review.'
+        'Your price stays the same. Any partner attribution is recorded provisionally and is not a guaranteed payout.'
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/5|USD|window|manual review/i)).not.toBeInTheDocument();

@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   convertAtomicAmountToMajor,
+  countDealAttributionExceptions,
+  summarizeDealCommissionStatementCounts,
   formatAtomicCommissionAmount,
   isKnownDealCommissionEligibilityReasonCode,
   normalizeDealCommissionStatement,
@@ -229,5 +231,114 @@ describe('dealCommissionStatement utils', () => {
     expect(truncateStatementReference('QmLongOrderIdentifierExample1234567890')).toBe(
       'QmLong…7890'
     );
+  });
+
+  it('counts pending seller attribution observations', () => {
+    const base = {
+      attributionClaimID: 'claim-1',
+      acceptanceID: 'acc-1',
+      programID: 'prog-1',
+      dealLinkID: 'deal-1',
+      calculationBase: 'gross_order_amount',
+      commissionRateBPS: 500,
+      commissionBaseAmountAtomic: '10000',
+      proposedCommissionAmountAtomic: '500',
+      currency: 'USD',
+      currencyDivisibility: 2,
+      declaredFundingSource: 'seller_manual_budget',
+      settlementMode: 'manual_review_only',
+      payable: false,
+      reviewNotBefore: '2026-07-10T00:00:00Z',
+      observedAt: '2026-07-05T12:00:00Z',
+    };
+
+    const statements = (['observed', 'pending_review', 'settled', 'reversed'] as const).map(
+      (status, index) =>
+        normalizeDealCommissionStatement({
+          id: `stmt-${index}`,
+          orderID: `order-${index}`,
+          status,
+          ...base,
+        })
+    );
+
+    expect(countDealAttributionExceptions(statements)).toBe(1);
+  });
+
+  it('summarizeDealCommissionStatementCounts groups attribution statuses', () => {
+    const base = {
+      attributionClaimID: 'claim-1',
+      acceptanceID: 'acc-1',
+      orderID: 'order-1',
+      programID: 'prog-1',
+      dealLinkID: 'deal-1',
+      calculationBase: 'gross_order_amount' as const,
+      commissionRateBPS: 500,
+      commissionBaseAmountAtomic: '10000',
+      proposedCommissionAmountAtomic: '500',
+      currency: 'USD',
+      currencyDivisibility: 2,
+      declaredFundingSource: 'seller_manual_budget' as const,
+      settlementMode: 'manual_review_only' as const,
+      payable: false,
+      reviewNotBefore: '2026-07-10T00:00:00Z',
+      observedAt: '2026-07-05T12:00:00Z',
+    };
+
+    const statements = (['observed', 'pending_review', 'settled', 'reversed'] as const).map(
+      (status, index) =>
+        normalizeDealCommissionStatement({
+          id: `stmt-${index}`,
+          orderID: `order-${index}`,
+          status,
+          ...base,
+        })
+    );
+
+    expect(summarizeDealCommissionStatementCounts(statements)).toEqual({
+      total: 4,
+      needingAttention: 1,
+      pendingReview: 1,
+      observed: 1,
+      reversed: 1,
+      settled: 1,
+      disputed: 0,
+    });
+  });
+
+  it('summarizeDealCommissionStatementCounts counts disputed as needing attention', () => {
+    const base = {
+      attributionClaimID: 'claim-1',
+      acceptanceID: 'acc-1',
+      orderID: 'order-1',
+      programID: 'prog-1',
+      dealLinkID: 'deal-1',
+      calculationBase: 'gross_order_amount' as const,
+      commissionRateBPS: 500,
+      commissionBaseAmountAtomic: '10000',
+      proposedCommissionAmountAtomic: '500',
+      currency: 'USD',
+      currencyDivisibility: 2,
+      declaredFundingSource: 'seller_manual_budget' as const,
+      settlementMode: 'manual_review_only' as const,
+      payable: false,
+      reviewNotBefore: '2026-07-10T00:00:00Z',
+      observedAt: '2026-07-05T12:00:00Z',
+    };
+
+    expect(
+      summarizeDealCommissionStatementCounts([
+        normalizeDealCommissionStatement({ id: 'stmt-1', status: 'observed', ...base }),
+        normalizeDealCommissionStatement({ id: 'stmt-2', status: 'disputed', ...base }),
+      ])
+    ).toEqual({
+      total: 2,
+      needingAttention: 1,
+      pendingReview: 0,
+      observed: 1,
+      reversed: 0,
+      settled: 0,
+      disputed: 1,
+    });
   });
 });

@@ -28,6 +28,8 @@ export * from './useDealPromotionPrograms';
 export * from './useDealPromotionLink';
 export * from './useDealAttributionClaim';
 export * from './useDealCommissionStatements';
+export * from './useSharedDealCommissionStatements';
+export * from './useDealLinksAttributionCounts';
 
 // 用户资料相关
 export * from './useProfile';

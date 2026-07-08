@@ -428,7 +428,21 @@ if (!__SOVEREIGN__) {
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
-        { path: 'deal-links', element: lazyPage(() => import('./app/admin/deal-links/page')) },
+        {
+          path: 'deal-links',
+          element: lazyPage(() => import('./app/admin/deal-links/DealLinksLayoutVite')),
+          children: [
+            { index: true, element: lazyPage(() => import('./app/admin/deal-links/page')) },
+            {
+              path: 'new',
+              element: lazyPage(() => import('./app/admin/deal-links/new/page')),
+            },
+            {
+              path: 'programs/new',
+              element: lazyPage(() => import('./app/admin/deal-links/programs/new/page')),
+            },
+          ],
+        },
         {
           path: 'discounts/new',
           element: lazyPage(() => import('./app/admin/discounts/new/page')),

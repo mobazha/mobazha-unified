@@ -7,6 +7,7 @@
  */
 
 import type { Page } from '@playwright/test';
+import { runtimeConfigFixture, runtimeConfigScript } from './runtime-config';
 
 const FAKE_TOKEN = 'basic:dGVzdHVzZXIxOjEyMw=='; // base64("testuser1:123")
 const FAKE_PEER_ID = 'QmY8Mzg1LzU2NzgvOTAxMjM0NTY3ODkwMTIzNDU2Nzg5MA';
@@ -277,10 +278,35 @@ export async function mockSessionAPIs(page: Page): Promise<void> {
 }
 
 /**
+ * Mock runtime config bootstrap + refresh so admin shells do not fail when no
+ * backend is running on the Vite dev proxy.
+ */
+export async function mockRuntimeConfig(page: Page): Promise<void> {
+  const config = runtimeConfigFixture({ deployment: 'hosted' });
+
+  await page.route('**/runtime-config.js', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: runtimeConfigScript({ deployment: 'hosted' }),
+    })
+  );
+
+  await page.route('**/v1/runtime-config**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: config }),
+    })
+  );
+}
+
+/**
  * Combined: inject auth + mock session APIs.
  * Call once before the first page.goto() in the test.
  */
 export async function setupMockAuth(page: Page): Promise<void> {
   await injectMockAuth(page);
+  await mockRuntimeConfig(page);
   await mockSessionAPIs(page);
 }

@@ -11,7 +11,10 @@ import {
   useFeatureFlags,
   useFeature,
   getAdminStorePaymentsPath,
+  useDealLinksAttributionCounts,
+  useCachedDealLinksAttributionCounts,
 } from '@mobazha/core';
+import { buildDealLinksAttributionAttentionHref } from '@/components/admin/deal-links/dealLinksTypes';
 import {
   LayoutDashboard,
   Package,
@@ -180,11 +183,24 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const storefrontsEnabled = isEnabled('storefrontsEnabled', 'killStorefrontRoutingDisabled');
   const supplyChainEnabled = isEnabled('supplyChainEnabled');
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const isDealLinksRoute = pathname.startsWith('/admin/deal-links');
+  useDealLinksAttributionCounts(isDealLinksRoute);
+  const attributionCounts = useCachedDealLinksAttributionCounts();
+  const attentionCount = attributionCounts.needingAttention;
 
   const navEntries = applyAiWorkspaceNav(
     getNavItems(storefrontsEnabled, supplyChainEnabled),
     aiWorkspaceEnabled
-  );
+  ).map(item => {
+    if (item.id !== 'deal-links' || attentionCount <= 0) {
+      return item;
+    }
+    return {
+      ...item,
+      badge: attentionCount,
+      href: buildDealLinksAttributionAttentionHref(attributionCounts),
+    };
+  });
 
   const isActive = (item: NavItem) =>
     isAdminNavItemActive(item.href, pathname, item.id, fromSettings);
@@ -212,7 +228,11 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
         <Icon className="w-[18px] h-[18px] shrink-0" />
         {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
         {!collapsed && item.badge != null && item.badge > 0 && (
-          <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-destructive text-destructive-foreground text-xs font-bold rounded-full">
+          <span
+            className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-amber-500 text-white text-xs font-bold rounded-full"
+            data-testid={`admin-nav-${item.id}-badge`}
+            aria-label={t('admin.dealLinks.attentionBadge', { count: item.badge })}
+          >
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}

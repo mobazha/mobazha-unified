@@ -1141,6 +1141,105 @@ export async function mockDiscountsAPI(page: Page): Promise<void> {
 }
 
 /**
+ * Mock deal links admin APIs for /admin/deal-links visual and E2E tests.
+ */
+export async function mockDealLinksAPI(page: Page): Promise<void> {
+  const mockDealLink = {
+    id: 'deal-visual-1',
+    publicToken: 'visual-deal-token',
+    publicPath: '/platform/v1/public/deal-links/visual-deal-token',
+    sellerPeerID: MOCK_PEER_ID,
+    status: 'active',
+    currentRevision: 1,
+    title: 'Northstar Analytics UI Kit — protected offer',
+    deliveryType: 'digital_file',
+    priceAmount: '49.00',
+    priceCurrency: 'USD',
+    terms: { acceptanceHours: 72, deliverables: ['Northstar Analytics UI Kit'] },
+    termsHash: 'hash-visual-1',
+    createdAt: WEEK_AGO,
+    updatedAt: NOW,
+  };
+
+  const mockProgram = {
+    id: 'prog-visual-1',
+    dealLinkID: 'deal-visual-1',
+    name: 'E2E direct promoter pilot',
+    status: 'active',
+    commissionRateBPS: 500,
+    attributionWindowSeconds: 86400,
+    declaredFundingSource: 'seller_manual_budget',
+    settlementMode: 'manual_review_only',
+    createdAt: WEEK_AGO,
+    updatedAt: NOW,
+  };
+
+  const statementBase = {
+    attributionClaimID: 'claim-visual-1',
+    acceptanceID: 'acc-visual-1',
+    programID: 'prog-visual-1',
+    dealLinkID: 'deal-visual-1',
+    calculationBase: 'gross_order_amount',
+    commissionRateBPS: 500,
+    commissionBaseAmountAtomic: '1000000000000000',
+    proposedCommissionAmountAtomic: '50000000000000',
+    currency: 'ETH',
+    currencyDivisibility: 18,
+    declaredFundingSource: 'seller_manual_budget',
+    settlementMode: 'manual_review_only',
+    payable: false,
+    reviewNotBefore: '2030-07-10T00:00:00Z',
+    observedAt: DAY_AGO,
+  };
+
+  const mockStatements = [
+    { id: 'stmt-visual-1', orderID: 'QmRc5TVisual001', status: 'observed', ...statementBase },
+    {
+      id: 'stmt-visual-2',
+      orderID: 'QmPendingVisual02',
+      status: 'pending_review',
+      ...statementBase,
+    },
+    {
+      id: 'stmt-visual-3',
+      orderID: 'QmReversedVisual3',
+      status: 'reversed',
+      ...statementBase,
+      lastEligibilityDecision: 'reversed',
+      lastEligibilityReasons: ['provider_dispute_outcome_unconfirmed'],
+      eligibilityReviewedAt: DAY_AGO,
+    },
+  ];
+
+  await page.route('**/platform/v1/deal-links**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockDealLink]),
+    });
+  });
+
+  await page.route('**/platform/v1/deal-promotion-programs**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockProgram]),
+    });
+  });
+
+  await page.route('**/platform/v1/deal-commission-statements/seller**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockStatements),
+    });
+  });
+}
+
+/**
  * Mock collections admin API for admin collections page.
  * Intercepts GET /v1/collections (broader pattern than mock-auth.ts).
  */

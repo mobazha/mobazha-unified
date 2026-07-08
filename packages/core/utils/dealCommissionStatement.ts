@@ -262,3 +262,61 @@ export function truncateStatementReference(value: string, head = 6, tail = 4): s
   if (trimmed.length <= head + tail + 1) return trimmed;
   return `${trimmed.slice(0, head)}…${trimmed.slice(-tail)}`;
 }
+
+/** Counts seller-side attribution exceptions that may need monitoring. */
+export function countDealAttributionExceptions(statements: DealCommissionStatement[]): number {
+  return summarizeDealCommissionStatementCounts(statements).needingAttention;
+}
+
+export type DealCommissionStatementStatusCount = Exclude<DealCommissionStatement['status'], never>;
+
+export interface DealCommissionStatementStatusCounts {
+  total: number;
+  needingAttention: number;
+  pendingReview: number;
+  observed: number;
+  reversed: number;
+  settled: number;
+  disputed: number;
+}
+
+/** Per-status counts for attribution filters and exception attention badges. */
+export function summarizeDealCommissionStatementCounts(
+  statements: DealCommissionStatement[]
+): DealCommissionStatementStatusCounts {
+  const counts: DealCommissionStatementStatusCounts = {
+    total: statements.length,
+    needingAttention: 0,
+    pendingReview: 0,
+    observed: 0,
+    reversed: 0,
+    settled: 0,
+    disputed: 0,
+  };
+
+  for (const statement of statements) {
+    switch (statement.status) {
+      case 'observed':
+        counts.observed += 1;
+        break;
+      case 'pending_review':
+        counts.pendingReview += 1;
+        counts.needingAttention += 1;
+        break;
+      case 'reversed':
+        counts.reversed += 1;
+        break;
+      case 'settled':
+        counts.settled += 1;
+        break;
+      case 'disputed':
+        counts.disputed += 1;
+        counts.needingAttention += 1;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return counts;
+}
