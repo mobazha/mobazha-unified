@@ -6,13 +6,14 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Save } from 'lucide-react';
-import { useSellerAffiliateProgram } from '@mobazha/core';
+import { useI18n, useSellerAffiliateProgram } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramPanel() {
+  const { t } = useI18n();
   const { program, loading, error, save } = useSellerAffiliateProgram();
   const [status, setStatus] = useState<'active' | 'paused'>('paused');
   const [rate, setRate] = useState('5');
@@ -37,7 +38,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       !Number.isInteger(days) ||
       days <= 0
     ) {
-      setSaveError('Enter a commission from 0–100% and an attribution window in whole days.');
+      setSaveError(t('sellerAffiliate.invalidProgram'));
       return;
     }
     setSaving(true);
@@ -49,44 +50,37 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
         attributionWindowSeconds: days * 86400,
       });
     } catch (cause) {
-      setSaveError(
-        cause instanceof Error ? cause.message : 'Unable to save the affiliate program.'
-      );
+      setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
     } finally {
       setSaving(false);
     }
-  }, [rate, save, status, windowDays]);
+  }, [rate, save, status, t, windowDays]);
 
   return (
     <Card data-testid="seller-affiliate-program-panel" aria-busy={loading || saving}>
       <CardHeader>
-        <CardTitle className="text-base">Seller affiliate program</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          One storefront-wide program. Referral attribution and commission status update
-          automatically from verified orders.
-        </p>
+        <CardTitle className="text-base">{t('sellerAffiliate.programTitle')}</CardTitle>
+        <p className="text-sm text-muted-foreground">{t('sellerAffiliate.programDescription')}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {error ? (
-          <p className="text-sm text-destructive">
-            Unable to load the current program. Saving will create it.
-          </p>
+          <p className="text-sm text-destructive">{t('sellerAffiliate.programLoadFailed')}</p>
         ) : null}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="affiliate-status">Status</Label>
+            <Label htmlFor="affiliate-status">{t('sellerAffiliate.status')}</Label>
             <select
               id="affiliate-status"
               value={status}
               onChange={event => setStatus(event.target.value as 'active' | 'paused')}
               className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
+              <option value="active">{t('sellerAffiliate.active')}</option>
+              <option value="paused">{t('sellerAffiliate.paused')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="affiliate-rate">Commission %</Label>
+            <Label htmlFor="affiliate-rate">{t('sellerAffiliate.commissionRate')}</Label>
             <Input
               id="affiliate-rate"
               inputMode="decimal"
@@ -95,7 +89,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="affiliate-window">Attribution days</Label>
+            <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionDays')}</Label>
             <Input
               id="affiliate-window"
               inputMode="numeric"
@@ -104,9 +98,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             />
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          No review queue, manual budget, claim process, or platform payout is part of this program.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('sellerAffiliate.noManualWorkflow')}</p>
         {saveError ? (
           <p className="text-sm text-destructive" role="alert">
             {saveError}
@@ -121,11 +113,13 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             data-testid="seller-affiliate-program-save"
           >
             <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-            Save program
+            {t('sellerAffiliate.saveProgram')}
           </Button>
           {program ? (
             <Button asChild type="button" variant="outline" className="min-h-11">
-              <Link href={`/promote/${encodeURIComponent(program.id)}`}>Get promoter link</Link>
+              <Link href={`/promote/${encodeURIComponent(program.id)}`}>
+                {t('sellerAffiliate.getPromoterLink')}
+              </Link>
             </Button>
           ) : null}
         </div>

@@ -91,10 +91,7 @@ export default function PromoteProgramPage() {
         <CardContent className="space-y-2 p-4 text-sm leading-6">
           <p className="font-medium">{t('promote.disclosureTitle')}</p>
           <p className="text-muted-foreground">{t('promote.disclosureBody')}</p>
-          <p className="text-muted-foreground">
-            Commission status is generated automatically from verified orders. The platform does not
-            review or pay out this balance.
-          </p>
+          <p className="text-muted-foreground">{t('sellerAffiliate.programLinkDescription')}</p>
         </CardContent>
       </Card>
 
@@ -161,7 +158,7 @@ export default function PromoteProgramPage() {
               className="min-h-11"
               onClick={() => programId && void ensureLink(programId)}
             >
-              Create link
+              {t('sellerAffiliate.createLink')}
             </Button>
           ) : null}
         </CardContent>

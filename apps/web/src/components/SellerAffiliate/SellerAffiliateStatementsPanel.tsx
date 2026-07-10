@@ -5,7 +5,7 @@
 
 import React, { memo } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { renderPairedPrice, useSellerAffiliateStatements } from '@mobazha/core';
+import { renderPairedPrice, useI18n, useSellerAffiliateStatements } from '@mobazha/core';
 import type { SellerAffiliateStatementAudience } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,18 @@ function statusClass(status: string): string {
 export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateStatementsPanel({
   audience,
 }: SellerAffiliateStatementsPanelProps) {
+  const { t } = useI18n();
   const { statements, loading, error, reload } = useSellerAffiliateStatements(audience);
-  const title = audience === 'seller' ? 'Affiliate commissions' : 'Affiliate earnings';
+  const title = t(
+    audience === 'seller'
+      ? 'sellerAffiliate.sellerStatementTitle'
+      : 'sellerAffiliate.promoterStatementTitle'
+  );
+  const statusLabels: Record<string, string> = {
+    pending: t('sellerAffiliate.pending'),
+    earned: t('sellerAffiliate.earned'),
+    reversed: t('sellerAffiliate.reversed'),
+  };
 
   return (
     <Card data-testid={`seller-affiliate-statements-${audience}`} aria-busy={loading}>
@@ -32,7 +42,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
         <div>
           <CardTitle className="text-base">{title}</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            Status is updated automatically from the order lifecycle. This is not a payout record.
+            {t('sellerAffiliate.statementDescription')}
           </p>
         </div>
         <Button
@@ -42,17 +52,17 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
           className="min-h-11"
           onClick={() => void reload()}
           disabled={loading}
-          aria-label="Refresh affiliate statement"
+          aria-label={t('sellerAffiliate.refresh')}
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
         {error ? (
-          <p className="text-sm text-destructive">Unable to load the affiliate statement.</p>
+          <p className="text-sm text-destructive">{t('sellerAffiliate.statementLoadFailed')}</p>
         ) : null}
         {!loading && !error && !statements.length ? (
-          <p className="text-sm text-muted-foreground">No affiliate commissions yet.</p>
+          <p className="text-sm text-muted-foreground">{t('sellerAffiliate.statementEmpty')}</p>
         ) : null}
         {statements.map(({ attribution, commissionLine }) => (
           <article
@@ -65,11 +75,11 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
               <span
                 className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(commissionLine.status)}`}
               >
-                {commissionLine.status}
+                {statusLabels[commissionLine.status] ?? commissionLine.status}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm text-muted-foreground">Commission</p>
+              <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
               <p className="font-medium">
                 {renderPairedPrice(
                   commissionLine.commissionAtomic,
@@ -80,7 +90,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
               </p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Referral {attribution.referralSessionID}
+              {t('sellerAffiliate.referral', { id: attribution.referralSessionID })}
             </p>
           </article>
         ))}

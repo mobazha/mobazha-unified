@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation';
 import {
   createSellerAffiliateReferralSession,
   getPublicSellerAffiliateLink,
+  useI18n,
   writeSellerAffiliateReferralSession,
 } from '@mobazha/core';
 import { Header } from '@/components';
@@ -19,6 +20,7 @@ import { DealLinkStatusPanel } from '@/components/DealLink/DealLinkStatusPanel';
 type PromoEntryPhase = 'loading' | 'ready' | 'not_found' | 'inactive' | 'error';
 
 export default function SellerAffiliateEntryPage() {
+  const { t } = useI18n();
   const params = useParams<{ token: string }>();
   const token = typeof params?.token === 'string' ? params.token : undefined;
   const [phase, setPhase] = useState<PromoEntryPhase>('loading');
@@ -69,7 +71,9 @@ export default function SellerAffiliateEntryPage() {
         <Header />
         <Container className="py-8">
           <DealLinkStatusPanel kind="loading" />
-          <p className="mt-4 text-center text-sm text-muted-foreground">Saving your referral…</p>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            {t('sellerAffiliate.referralSaving')}
+          </p>
         </Container>
       </div>
     );
@@ -104,16 +108,19 @@ export default function SellerAffiliateEntryPage() {
         <Container className="py-8">
           <Card className="mx-auto max-w-xl">
             <CardHeader>
-              <CardTitle>Referral saved</CardTitle>
+              <CardTitle>{t('sellerAffiliate.referralSaved')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Eligible purchases from this seller will be attributed automatically when you check
-                out.
+                {t('sellerAffiliate.referralDescription')}
               </p>
-              <p className="font-mono text-xs text-muted-foreground">Seller: {sellerPeerID}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {t('sellerAffiliate.seller', { id: sellerPeerID ?? '' })}
+              </p>
               <Button asChild className="min-h-11">
-                <a href="/">Browse marketplace</a>
+                <a href={`/store/${encodeURIComponent(sellerPeerID ?? '')}`}>
+                  {t('sellerAffiliate.browseStore')}
+                </a>
               </Button>
             </CardContent>
           </Card>
