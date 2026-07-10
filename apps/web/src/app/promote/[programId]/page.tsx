@@ -6,16 +6,7 @@
 import React, { useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
-import {
-  buildDealPromotionEntryHref,
-  buildPromoterCommissionsHref,
-  formatAttributionWindowDays,
-  formatCommissionRateFromBPS,
-  setLoginRedirectPath,
-  useDealPromotionLink,
-  useI18n,
-  useUserStore,
-} from '@mobazha/core';
+import { setLoginRedirectPath, useI18n, useSellerAffiliateLink, useUserStore } from '@mobazha/core';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,13 +21,11 @@ export default function PromoteProgramPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
-  const { link, promotion, shareHref, loading, error, ensureLink } = useDealPromotionLink(
-    programId,
-    isAuthenticated
-  );
-  const promotionWindowDays = promotion
-    ? (formatAttributionWindowDays(promotion.attributionWindowSeconds) ?? 1)
-    : undefined;
+  const { link, loading, error, ensureLink } = useSellerAffiliateLink();
+  const shareHref =
+    link && typeof window !== 'undefined'
+      ? `${window.location.origin}/promo/${encodeURIComponent(link.publicToken)}`
+      : null;
 
   const handleRequireAuth = useCallback(() => {
     if (!programId) return;
@@ -102,37 +91,10 @@ export default function PromoteProgramPage() {
         <CardContent className="space-y-2 p-4 text-sm leading-6">
           <p className="font-medium">{t('promote.disclosureTitle')}</p>
           <p className="text-muted-foreground">{t('promote.disclosureBody')}</p>
-          <p className="text-muted-foreground">{t('promote.manualReviewOnlyNotice')}</p>
           <p className="text-muted-foreground">
-            {t('dealCommissionStatements.disclosurePaymentPromoter')}
+            Commission status is generated automatically from verified orders. The platform does not
+            review or pay out this balance.
           </p>
-          {promotion ? (
-            <dl className="grid gap-3 border-t border-primary/15 pt-3 sm:grid-cols-3">
-              <div>
-                <dt className="text-muted-foreground">{t('promote.commissionRate')}</dt>
-                <dd className="font-medium">
-                  {t('promote.commissionValue', {
-                    percent: formatCommissionRateFromBPS(promotion.commissionRateBPS),
-                  })}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t('promote.attributionWindow')}</dt>
-                <dd className="font-medium">
-                  {t(
-                    promotionWindowDays === 1
-                      ? 'promote.windowDayValue'
-                      : 'promote.windowDaysValue',
-                    { count: promotionWindowDays ?? 1 }
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t('promote.currency')}</dt>
-                <dd className="font-medium">{promotion.currency}</dd>
-              </div>
-            </dl>
-          ) : null}
         </CardContent>
       </Card>
 
@@ -154,7 +116,7 @@ export default function PromoteProgramPage() {
                 type="button"
                 variant="outline"
                 className="min-h-11"
-                onClick={() => void ensureLink()}
+                onClick={() => programId && void ensureLink(programId)}
               >
                 {t('promote.retry')}
               </Button>
@@ -167,7 +129,7 @@ export default function PromoteProgramPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {t('promote.entryPathHint', {
-                  path: buildDealPromotionEntryHref(link.publicToken),
+                  path: `/promo/${link.publicToken}`,
                 })}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -193,6 +155,15 @@ export default function PromoteProgramPage() {
               </div>
             </>
           ) : null}
+          {!loading && !error && !link ? (
+            <Button
+              type="button"
+              className="min-h-11"
+              onClick={() => programId && void ensureLink(programId)}
+            >
+              Create link
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -203,7 +174,7 @@ export default function PromoteProgramPage() {
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">{t('promote.commissionsLinkBody')}</p>
           <Button type="button" variant="outline" className="min-h-11" asChild>
-            <Link href={buildPromoterCommissionsHref()} data-testid="promote-commissions-link">
+            <Link href="/promote/commissions" data-testid="promote-commissions-link">
               <ScrollText className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('promote.commissionsLinkCta')}
             </Link>

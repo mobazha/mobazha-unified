@@ -21,9 +21,7 @@ export const HOSTING_API_PATHS = {
   ACCOUNTS_UNLINK: '/platform/v1/accounts/unlink',
   ADMIN_AI_CONFIG: '/platform/v1/admin/ai/config',
   ADMIN_CONFIG: '/platform/v1/admin/config',
-  ADMIN_DEAL_COMMISSION_ENTRIES: '/platform/v1/admin/deal-commission-entries',
-  ADMIN_DEAL_COMMISSION_ENTRIES_REVIEW_ELIGIBILITY: (id: string) =>
-    `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/review-eligibility`,
+  ADMIN_DEAL_ACCEPTANCES: '/platform/v1/admin/deal-acceptances',
   ADMIN_EXCHANGE_RATES_CONFIG: '/platform/v1/admin/exchange-rates/config',
   ADMIN_EXCHANGE_RATES_HEALTH: '/platform/v1/admin/exchange-rates/health',
   ADMIN_FIAT_PROVIDERS: '/platform/v1/admin/fiat-providers',
@@ -167,19 +165,10 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/${encodeURIComponent(sellerID)}/review`,
   COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceID: string) =>
     `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceID)}/verify-member`,
-  DEAL_COMMISSION_STATEMENTS_PROMOTER: '/platform/v1/deal-commission-statements/promoter',
-  DEAL_COMMISSION_STATEMENTS_SELLER: '/platform/v1/deal-commission-statements/seller',
   DEAL_LINKS: '/platform/v1/deal-links',
   DEAL_LINKS_ACTIVATE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/activate`,
   DEAL_LINKS_BY_ID: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}`,
   DEAL_LINKS_PAUSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/pause`,
-  DEAL_PROMOTION_PROGRAMS: '/platform/v1/deal-promotion-programs',
-  DEAL_PROMOTION_PROGRAMS_ACTIVATE: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/activate`,
-  DEAL_PROMOTION_PROGRAMS_LINKS: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/links`,
-  DEAL_PROMOTION_PROGRAMS_PAUSE: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/pause`,
   ENCRYPTION_LISTINGS_KEY: (peerID: string, slug: string) =>
     `/platform/v1/encryption/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}/key`,
   ENCRYPTION_PRODUCT_GROUPS_ROTATE_KEY: (id: string) =>
@@ -276,10 +265,6 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/public/deal-links/${encodeURIComponent(token)}/accept`,
   PUBLIC_DEAL_LINKS_FEE_QUOTES: (token: string) =>
     `/platform/v1/public/deal-links/${encodeURIComponent(token)}/fee-quotes`,
-  PUBLIC_DEAL_PROMOTION_LINKS: (token: string) =>
-    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}`,
-  PUBLIC_DEAL_PROMOTION_LINKS_CLAIMS: (token: string) =>
-    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}/claims`,
   PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
   PUBLIC_MARKETPLACES_ATTRIBUTION_EVENTS: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
@@ -289,10 +274,19 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
   PUBLIC_MARKETPLACES_SELLER_APPLICATIONS_MINE: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
+  PUBLIC_SELLER_AFFILIATE_LINKS: (token: string) =>
+    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}`,
+  PUBLIC_SELLER_AFFILIATE_LINKS_SESSIONS: (token: string) =>
+    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
   RELAY_EXECUTE: '/platform/v1/relay/execute',
   RELAY_GAS_WALLET: '/platform/v1/relay/gas-wallet',
   RELAY_GAS_WALLET_STATUS: '/platform/v1/relay/gas-wallet/status',
   RELAY_STATUS: '/platform/v1/relay/status',
+  SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
+  SELLER_AFFILIATE_PROGRAMS_LINKS: (id: string) =>
+    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
+  SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/platform/v1/seller-affiliate/statements/promoter',
+  SELLER_AFFILIATE_STATEMENTS_SELLER: '/platform/v1/seller-affiliate/statements/seller',
   SELLERS_MARKETPLACES: (userID: string) =>
     `/platform/v1/sellers/${encodeURIComponent(userID)}/marketplaces`,
   SELLERS_VISIBILITY: (userID: string, platform: string, instanceID: string) =>

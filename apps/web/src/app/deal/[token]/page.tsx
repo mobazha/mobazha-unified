@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ImageIcon, ShieldCheck, Store } from 'lucide-react';
 import {
   buildDealLinkPaymentHref,
+  clearSellerAffiliateReferralSession,
   formatUserName,
   getCurrencySymbol,
   getImageUrl,
   resolveDealLinkAcceptanceWindowDays,
   resolveDealLinkProtectionWindowDays,
+  readSellerAffiliateReferralSession,
   setLoginRedirectPath,
   useCurrency,
-  useDealAttributionClaim,
   useDealLinkCheckout,
   useI18n,
   useUserStore,
@@ -21,7 +22,6 @@ import { Header } from '@/components';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DealLinkAttributionBanner } from '@/components/DealLink/DealLinkAttributionBanner';
 import { DealLinkBottomBar } from '@/components/DealLink/DealLinkBottomBar';
 import { DealLinkCountdown } from '@/components/DealLink/DealLinkCountdown';
 import { DealLinkFeeBreakdown } from '@/components/DealLink/DealLinkFeeBreakdown';
@@ -32,16 +32,12 @@ function resolveDealPath(token: string): string {
 }
 
 function DealLinkProductImage({ src, title }: { src?: string; title: string }) {
+  return <DealLinkProductImageContent key={src ?? 'missing'} src={src} title={title} />;
+}
+
+function DealLinkProductImageContent({ src, title }: { src?: string; title: string }) {
   const { t } = useI18n();
   const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(src ? 'loading' : 'failed');
-
-  useEffect(() => {
-    if (!src) {
-      setStatus('failed');
-      return;
-    }
-    setStatus('loading');
-  }, [src]);
 
   useEffect(() => {
     if (!src || status !== 'loading') return;
@@ -83,7 +79,7 @@ export default function DealLinkPage() {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
-  const attribution = useDealAttributionClaim(token);
+  const affiliateReferral = useMemo(() => readSellerAffiliateReferralSession(), []);
 
   const handleRequireAuth = useCallback(() => {
     if (!token) return;
@@ -101,10 +97,10 @@ export default function DealLinkPage() {
 
   const checkout = useDealLinkCheckout(token, {
     isAuthenticated,
-    attributionClaimToken: attribution.claim?.claimToken ?? null,
+    affiliateReferral,
     onRequireAuth: handleRequireAuth,
     onAccepted: handleAccepted,
-    onClearAttributionClaim: attribution.clearClaim,
+    onClearAffiliateReferral: clearSellerAffiliateReferralSession,
   });
 
   const deal = checkout.deal;
@@ -366,8 +362,6 @@ export default function DealLinkPage() {
                 <p className="text-muted-foreground">{t('dealLink.paymentNeutralBody')}</p>
               </CardContent>
             </Card>
-
-            {attribution.claim ? <DealLinkAttributionBanner claim={attribution.claim} /> : null}
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">

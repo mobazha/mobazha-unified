@@ -1,6 +1,6 @@
 export interface DealLinkAcceptanceRequest {
   feeQuoteID: string;
-  attributionClaim?: string;
+  affiliateReferralSessionID?: string;
   shipTo?: string;
   address?: string;
   addressNotes?: string;

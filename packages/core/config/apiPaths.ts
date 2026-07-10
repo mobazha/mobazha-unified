@@ -416,22 +416,16 @@ export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
 
 export const HOSTING_API = {
   ...HOSTING_API_PATHS,
-  // --- Deal Link direct promotion (single-level attribution pilot) ---
-  DEAL_PROMOTION_PROGRAMS: '/platform/v1/deal-promotion-programs',
-  DEAL_PROMOTION_PROGRAMS_ACTIVATE: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/activate`,
-  DEAL_PROMOTION_PROGRAMS_PAUSE: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/pause`,
-  DEAL_PROMOTION_PROGRAMS_LINKS: (id: string) =>
-    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/links`,
-  PUBLIC_DEAL_PROMOTION_LINKS: (token: string) =>
-    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}`,
-  PUBLIC_DEAL_PROMOTION_LINKS_CLAIMS: (token: string) =>
-    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}/claims`,
-
-  // --- Deal Link provisional commission statements (read-only evidence) ---
-  DEAL_COMMISSION_STATEMENTS_SELLER: '/platform/v1/deal-commission-statements/seller',
-  DEAL_COMMISSION_STATEMENTS_PROMOTER: '/platform/v1/deal-commission-statements/promoter',
+  // --- Seller Affiliate (automation-first; no review or settlement queue) ---
+  SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
+  SELLER_AFFILIATE_PROGRAM_LINKS: (id: string) =>
+    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
+  PUBLIC_SELLER_AFFILIATE_LINK: (token: string) =>
+    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}`,
+  PUBLIC_SELLER_AFFILIATE_SESSIONS: (token: string) =>
+    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
+  SELLER_AFFILIATE_STATEMENTS_SELLER: '/platform/v1/seller-affiliate/statements/seller',
+  SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/platform/v1/seller-affiliate/statements/promoter',
 
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',

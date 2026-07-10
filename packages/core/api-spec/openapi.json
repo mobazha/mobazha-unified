@@ -641,29 +641,18 @@
         "tags": ["admin"]
       }
     },
-    "/platform/v1/admin/deal-commission-entries": {
+    "/platform/v1/admin/deal-acceptances": {
       "get": {
-        "operationId": "admin-deal-commission-entries-list",
+        "operationId": "admin-deal-acceptances-list",
         "parameters": [
           {
-            "description": "Queue status; defaults to observed.",
+            "description": "Recovery status; defaults to manual_review.",
             "explode": false,
             "in": "query",
             "name": "status",
             "schema": {
-              "description": "Queue status; defaults to observed.",
-              "enum": ["observed", "pending_review", "disputed", "reversed", "all"],
-              "type": "string"
-            }
-          },
-          {
-            "description": "Review hold state; defaults to all.",
-            "explode": false,
-            "in": "query",
-            "name": "readiness",
-            "schema": {
-              "description": "Review hold state; defaults to all.",
-              "enum": ["all", "ready", "holding"],
+              "description": "Recovery status; defaults to manual_review.",
+              "enum": ["manual_review", "processing", "all"],
               "type": "string"
             }
           },
@@ -695,7 +684,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Platform_AdminDealCommissionQueueResponse"
+                  "$ref": "#/components/schemas/Platform_AdminDealAcceptanceRecoveryPageResponse"
                 }
               }
             },
@@ -717,70 +706,8 @@
             "bearerAuth": []
           }
         ],
-        "summary": "List provisional Deal commissions awaiting operator review",
-        "tags": ["deal-attribution"]
-      }
-    },
-    "/platform/v1/admin/deal-commission-entries/{id}/review-eligibility": {
-      "post": {
-        "operationId": "admin-deal-commission-eligibility-review",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_DealCommissionEligibilityReviewRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_DealCommissionEligibilityReviewResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Evaluate a provisional Deal commission against authoritative order and risk evidence",
-        "tags": ["deal-attribution"]
+        "summary": "List Deal acceptances requiring order recovery",
+        "tags": ["deal-links"]
       }
     },
     "/platform/v1/admin/exchange-rates/config": {
@@ -5675,80 +5602,6 @@
         "tags": ["group-marketplace"]
       }
     },
-    "/platform/v1/deal-commission-statements/promoter": {
-      "get": {
-        "operationId": "deal-commission-statements-promoter",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
-                  },
-                  "type": ["array", "null"]
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "List provisional commission observations attributed to the current promoter",
-        "tags": ["deal-attribution"]
-      }
-    },
-    "/platform/v1/deal-commission-statements/seller": {
-      "get": {
-        "operationId": "deal-commission-statements-seller",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
-                  },
-                  "type": ["array", "null"]
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "List provisional commission observations funded by the current seller",
-        "tags": ["deal-attribution"]
-      }
-    },
     "/platform/v1/deal-links": {
       "get": {
         "operationId": "deal-links-list-mine",
@@ -6007,214 +5860,6 @@
         ],
         "summary": "Pause a Deal Link",
         "tags": ["deal-links"]
-      }
-    },
-    "/platform/v1/deal-promotion-programs": {
-      "get": {
-        "operationId": "deal-promotion-programs-list-mine",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "List promotion policies owned by the current seller",
-        "tags": ["deal-attribution"]
-      },
-      "post": {
-        "operationId": "deal-promotion-programs-create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_DealPromotionProgramRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Create an immutable single-level Deal promotion policy",
-        "tags": ["deal-attribution"]
-      }
-    },
-    "/platform/v1/deal-promotion-programs/{id}/activate": {
-      "post": {
-        "operationId": "deal-promotion-programs-activate",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Activate a Deal promotion policy",
-        "tags": ["deal-attribution"]
-      }
-    },
-    "/platform/v1/deal-promotion-programs/{id}/links": {
-      "post": {
-        "operationId": "deal-promotion-links-create",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Create or reuse the current promoter direct link",
-        "tags": ["deal-attribution"]
-      }
-    },
-    "/platform/v1/deal-promotion-programs/{id}/pause": {
-      "post": {
-        "operationId": "deal-promotion-programs-pause",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Pause a Deal promotion policy",
-        "tags": ["deal-attribution"]
       }
     },
     "/platform/v1/encryption/listings/{peerID}/{slug}/key": {
@@ -9567,9 +9212,9 @@
         "tags": ["deal-links"]
       }
     },
-    "/platform/v1/public/deal-promotion-links/{token}": {
+    "/platform/v1/public/seller-affiliate-links/{token}": {
       "get": {
-        "operationId": "public-deal-promotion-links-get",
+        "operationId": "public-seller-affiliate-links-get",
         "parameters": [
           {
             "in": "path",
@@ -9602,13 +9247,13 @@
             "description": "Error"
           }
         },
-        "summary": "Resolve a single-level promoter direct link",
-        "tags": ["deal-attribution"]
+        "summary": "Resolve an active direct affiliate link",
+        "tags": ["seller-affiliate"]
       }
     },
-    "/platform/v1/public/deal-promotion-links/{token}/claims": {
+    "/platform/v1/public/seller-affiliate-links/{token}/sessions": {
       "post": {
-        "operationId": "public-deal-attribution-claims-create",
+        "operationId": "public-seller-affiliate-sessions-create",
         "parameters": [
           {
             "in": "path",
@@ -9641,8 +9286,8 @@
             "description": "Error"
           }
         },
-        "summary": "Issue a short-lived signed attribution claim",
-        "tags": ["deal-attribution"]
+        "summary": "Create an expiring seller-scoped referral session",
+        "tags": ["seller-affiliate"]
       }
     },
     "/platform/v1/relay/execute": {
@@ -9804,6 +9449,200 @@
         ],
         "summary": "Relay service configuration snapshot",
         "tags": ["relay"]
+      }
+    },
+    "/platform/v1/seller-affiliate/program": {
+      "get": {
+        "operationId": "seller-affiliate-program-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get the current seller's affiliate program",
+        "tags": ["seller-affiliate"]
+      },
+      "put": {
+        "operationId": "seller-affiliate-program-put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_SellerAffiliateProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create or update the seller's storefront-wide affiliate program",
+        "tags": ["seller-affiliate"]
+      }
+    },
+    "/platform/v1/seller-affiliate/programs/{id}/links": {
+      "post": {
+        "operationId": "seller-affiliate-links-create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create or return the current promoter's direct link",
+        "tags": ["seller-affiliate"]
+      }
+    },
+    "/platform/v1/seller-affiliate/statements/promoter": {
+      "get": {
+        "operationId": "seller-affiliate-statements-promoter",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Platform_AffiliateStatementLine"
+                  },
+                  "type": ["array", "null"]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List canonical affiliate commission lines attributed to the current promoter",
+        "tags": ["seller-affiliate"]
+      }
+    },
+    "/platform/v1/seller-affiliate/statements/seller": {
+      "get": {
+        "operationId": "seller-affiliate-statements-seller",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Platform_AffiliateStatementLine"
+                  },
+                  "type": ["array", "null"]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List canonical affiliate commission lines for the current seller",
+        "tags": ["seller-affiliate"]
       }
     },
     "/platform/v1/sellers/{userID}/marketplaces": {
@@ -34663,13 +34502,13 @@
         "required": ["provider"],
         "type": "object"
       },
-      "Platform_AdminDealCommissionQueueEntryResponse": {
+      "Platform_AdminDealAcceptanceRecoveryItemResponse": {
         "additionalProperties": false,
         "properties": {
-          "acceptanceConsistent": {
-            "type": "boolean"
+          "acceptanceID": {
+            "type": "string"
           },
-          "acceptanceStatus": {
+          "affiliateReferralSessionID": {
             "type": "string"
           },
           "buyerPeerID": {
@@ -34678,60 +34517,72 @@
           "buyerUserID": {
             "type": "string"
           },
-          "entry": {
-            "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
-          },
-          "promoterPeerID": {
+          "createdAt": {
+            "format": "date-time",
             "type": "string"
           },
-          "promoterUserID": {
+          "dealLinkID": {
             "type": "string"
           },
-          "reviewHoldRemainingSeconds": {
+          "dealRevision": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "feeQuoteID": {
+            "type": "string"
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "recoveryAttemptCount": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "recoveryLastError": {
+            "type": "string"
+          },
+          "recoveryLeaseUntil": {
             "format": "int64",
             "type": "integer"
           },
-          "reviewReady": {
-            "type": "boolean"
+          "recoveryNextAttemptAt": {
+            "format": "int64",
+            "type": "integer"
           },
-          "riskSummary": {
-            "$ref": "#/components/schemas/Platform_AdminDealCommissionRiskSummaryResponse"
-          },
-          "sellerPeerID": {
+          "status": {
             "type": "string"
           },
-          "tenantID": {
+          "updatedAt": {
+            "format": "date-time",
             "type": "string"
           }
         },
         "required": [
-          "entry",
-          "riskSummary",
-          "tenantID",
-          "sellerPeerID",
-          "promoterUserID",
-          "promoterPeerID",
+          "acceptanceID",
           "buyerUserID",
           "buyerPeerID",
-          "acceptanceStatus",
-          "acceptanceConsistent",
-          "reviewReady",
-          "reviewHoldRemainingSeconds"
+          "dealLinkID",
+          "dealRevision",
+          "feeQuoteID",
+          "status",
+          "recoveryAttemptCount",
+          "recoveryNextAttemptAt",
+          "recoveryLeaseUntil",
+          "createdAt",
+          "updatedAt"
         ],
         "type": "object"
       },
-      "Platform_AdminDealCommissionQueueResponse": {
+      "Platform_AdminDealAcceptanceRecoveryPageResponse": {
         "additionalProperties": false,
         "properties": {
-          "entries": {
+          "items": {
             "items": {
-              "$ref": "#/components/schemas/Platform_AdminDealCommissionQueueEntryResponse"
+              "$ref": "#/components/schemas/Platform_AdminDealAcceptanceRecoveryItemResponse"
             },
             "type": ["array", "null"]
-          },
-          "generatedAt": {
-            "format": "date-time",
-            "type": "string"
           },
           "limit": {
             "format": "int64",
@@ -34746,47 +34597,7 @@
             "type": "integer"
           }
         },
-        "required": ["entries", "total", "limit", "offset", "generatedAt"],
-        "type": "object"
-      },
-      "Platform_AdminDealCommissionRiskSummaryResponse": {
-        "additionalProperties": false,
-        "properties": {
-          "appliedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "hasRisk": {
-            "type": "boolean"
-          },
-          "kind": {
-            "enum": [
-              "refund_observed",
-              "dispute_opened",
-              "chargeback_observed",
-              "risk_evidence_invalid"
-            ],
-            "type": "string"
-          },
-          "lastEventID": {
-            "type": "string"
-          },
-          "lastReconciliationAttemptedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "observedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "providerID": {
-            "type": "string"
-          },
-          "reasonCode": {
-            "type": "string"
-          }
-        },
-        "required": ["hasRisk"],
+        "required": ["items", "total", "limit", "offset"],
         "type": "object"
       },
       "Platform_AdminPatchAIConfigInputBody": {
@@ -34938,6 +34749,125 @@
             "type": "integer"
           }
         },
+        "type": "object"
+      },
+      "Platform_AffiliateAttribution": {
+        "additionalProperties": false,
+        "properties": {
+          "attributedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "buyerPeerID": {
+            "type": "string"
+          },
+          "commissionRateBPSSnapshot": {
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "programID": {
+            "type": "string"
+          },
+          "promoterPeerID": {
+            "type": "string"
+          },
+          "referralSessionID": {
+            "type": "string"
+          },
+          "sellerPeerID": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderID",
+          "referralSessionID",
+          "programID",
+          "sellerPeerID",
+          "buyerPeerID",
+          "promoterPeerID",
+          "commissionRateBPSSnapshot",
+          "attributedAt"
+        ],
+        "type": "object"
+      },
+      "Platform_AffiliateCommissionLine": {
+        "additionalProperties": false,
+        "properties": {
+          "attributionID": {
+            "type": "string"
+          },
+          "commissionAtomic": {
+            "type": "string"
+          },
+          "commissionRateBPSSnapshot": {
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "netMerchandiseAtomic": {
+            "type": "string"
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "orderLineID": {
+            "type": "string"
+          },
+          "reversalReason": {
+            "type": "string"
+          },
+          "reversedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attributionID",
+          "orderID",
+          "orderLineID",
+          "netMerchandiseAtomic",
+          "currency",
+          "commissionRateBPSSnapshot",
+          "commissionAtomic",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Platform_AffiliateStatementLine": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution": {
+            "$ref": "#/components/schemas/Platform_AffiliateAttribution"
+          },
+          "commissionLine": {
+            "$ref": "#/components/schemas/Platform_AffiliateCommissionLine"
+          }
+        },
+        "required": ["attribution", "commissionLine"],
         "type": "object"
       },
       "Platform_AiModelConfigPatchRequest": {
@@ -35710,10 +35640,10 @@
           "addressNotes": {
             "type": "string"
           },
-          "alternateContactInfo": {
+          "affiliateReferralSessionID": {
             "type": "string"
           },
-          "attributionClaim": {
+          "alternateContactInfo": {
             "type": "string"
           },
           "city": {
@@ -35739,214 +35669,6 @@
           }
         },
         "required": ["feeQuoteID"],
-        "type": "object"
-      },
-      "Platform_DealCommissionEligibilityReviewRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "relatedAccountCheck": {
-            "description": "Required operator finding for related-account risk",
-            "enum": ["clear", "related_account"],
-            "type": "string"
-          },
-          "reviewNote": {
-            "description": "Optional audit note; do not include secrets",
-            "maxLength": 2000,
-            "type": "string"
-          },
-          "testOrderCheck": {
-            "description": "Required operator finding for test-order risk",
-            "enum": ["clear", "test_order"],
-            "type": "string"
-          }
-        },
-        "required": ["testOrderCheck", "relatedAccountCheck"],
-        "type": "object"
-      },
-      "Platform_DealCommissionEligibilityReviewResponse": {
-        "additionalProperties": false,
-        "properties": {
-          "autoRelatedAccount": {
-            "type": "boolean"
-          },
-          "chargebackObserved": {
-            "type": "boolean"
-          },
-          "decision": {
-            "enum": ["deferred", "eligible", "disputed", "reversed"],
-            "type": "string"
-          },
-          "disputeHistory": {
-            "type": "boolean"
-          },
-          "entry": {
-            "$ref": "#/components/schemas/Platform_DealCommissionEntryResponse"
-          },
-          "orderState": {
-            "type": "string"
-          },
-          "payable": {
-            "type": "boolean"
-          },
-          "providerDisputeHistory": {
-            "type": "boolean"
-          },
-          "providerDisputeOpen": {
-            "type": "boolean"
-          },
-          "providerDisputeOutcome": {
-            "type": "string"
-          },
-          "reasonCodes": {
-            "items": {
-              "type": "string"
-            },
-            "type": ["array", "null"]
-          },
-          "refundObserved": {
-            "type": "boolean"
-          },
-          "relatedAccountCheck": {
-            "type": "string"
-          },
-          "replayed": {
-            "type": "boolean"
-          },
-          "resultStatus": {
-            "enum": ["observed", "pending_review", "disputed", "reversed", "settled"],
-            "type": "string"
-          },
-          "reviewID": {
-            "type": "string"
-          },
-          "reviewedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "testOrderCheck": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "entry",
-          "reviewID",
-          "decision",
-          "resultStatus",
-          "reasonCodes",
-          "orderState",
-          "refundObserved",
-          "disputeHistory",
-          "providerDisputeHistory",
-          "providerDisputeOpen",
-          "chargebackObserved",
-          "testOrderCheck",
-          "relatedAccountCheck",
-          "autoRelatedAccount",
-          "reviewedAt",
-          "replayed",
-          "payable"
-        ],
-        "type": "object"
-      },
-      "Platform_DealCommissionEntryResponse": {
-        "additionalProperties": false,
-        "properties": {
-          "acceptanceID": {
-            "type": "string"
-          },
-          "attributionClaimID": {
-            "type": "string"
-          },
-          "calculationBase": {
-            "type": "string"
-          },
-          "commissionBaseAmountAtomic": {
-            "type": "string"
-          },
-          "commissionRateBPS": {
-            "format": "int64",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "currencyDivisibility": {
-            "format": "int32",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "dealLinkID": {
-            "type": "string"
-          },
-          "declaredFundingSource": {
-            "type": "string"
-          },
-          "eligibilityReviewedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "lastEligibilityDecision": {
-            "enum": ["deferred", "eligible", "disputed", "reversed"],
-            "type": "string"
-          },
-          "lastEligibilityReasons": {
-            "items": {
-              "type": "string"
-            },
-            "type": ["array", "null"]
-          },
-          "observedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "orderID": {
-            "type": "string"
-          },
-          "payable": {
-            "type": "boolean"
-          },
-          "programID": {
-            "type": "string"
-          },
-          "proposedCommissionAmountAtomic": {
-            "type": "string"
-          },
-          "reviewNotBefore": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "settlementMode": {
-            "type": "string"
-          },
-          "status": {
-            "enum": ["observed", "pending_review", "disputed", "reversed", "settled"],
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "attributionClaimID",
-          "acceptanceID",
-          "orderID",
-          "programID",
-          "dealLinkID",
-          "status",
-          "calculationBase",
-          "commissionRateBPS",
-          "commissionBaseAmountAtomic",
-          "proposedCommissionAmountAtomic",
-          "currency",
-          "currencyDivisibility",
-          "declaredFundingSource",
-          "settlementMode",
-          "payable",
-          "reviewNotBefore",
-          "observedAt"
-        ],
         "type": "object"
       },
       "Platform_DealLinkRequest": {
@@ -35984,32 +35706,6 @@
           "terms",
           "purchaseTemplate"
         ],
-        "type": "object"
-      },
-      "Platform_DealPromotionProgramRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "attributionWindowSeconds": {
-            "format": "int64",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "commissionRateBPS": {
-            "format": "int64",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "dealLinkID": {
-            "type": "string"
-          },
-          "maxCommissionAmount": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": ["dealLinkID", "name", "commissionRateBPS", "attributionWindowSeconds"],
         "type": "object"
       },
       "Platform_DiscordCheckBodyBody": {
@@ -37201,6 +36897,28 @@
           }
         },
         "required": ["name", "domain", "action"],
+        "type": "object"
+      },
+      "Platform_SellerAffiliateProgramRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attributionWindowSeconds": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "commissionRateBPS": {
+            "format": "int32",
+            "maximum": 10000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "status": {
+            "enum": ["active", "paused"],
+            "type": "string"
+          }
+        },
+        "required": ["status", "commissionRateBPS", "attributionWindowSeconds"],
         "type": "object"
       },
       "Platform_SetHandleRequest": {

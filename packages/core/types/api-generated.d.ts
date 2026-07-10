@@ -246,34 +246,17 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/deal-commission-entries': {
+  '/platform/v1/admin/deal-acceptances': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** List provisional Deal commissions awaiting operator review */
-    get: operations['admin-deal-commission-entries-list'];
+    /** List Deal acceptances requiring order recovery */
+    get: operations['admin-deal-acceptances-list'];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/admin/deal-commission-entries/{id}/review-eligibility': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Evaluate a provisional Deal commission against authoritative order and risk evidence */
-    post: operations['admin-deal-commission-eligibility-review'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1849,40 +1832,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/deal-commission-statements/promoter': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List provisional commission observations attributed to the current promoter */
-    get: operations['deal-commission-statements-promoter'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/deal-commission-statements/seller': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List provisional commission observations funded by the current seller */
-    get: operations['deal-commission-statements-seller'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/platform/v1/deal-links': {
     parameters: {
       query?: never;
@@ -1947,75 +1896,6 @@ export interface paths {
     put?: never;
     /** Pause a Deal Link */
     post: operations['deal-links-pause'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/deal-promotion-programs': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List promotion policies owned by the current seller */
-    get: operations['deal-promotion-programs-list-mine'];
-    put?: never;
-    /** Create an immutable single-level Deal promotion policy */
-    post: operations['deal-promotion-programs-create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/deal-promotion-programs/{id}/activate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Activate a Deal promotion policy */
-    post: operations['deal-promotion-programs-activate'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/deal-promotion-programs/{id}/links': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create or reuse the current promoter direct link */
-    post: operations['deal-promotion-links-create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/deal-promotion-programs/{id}/pause': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Pause a Deal promotion policy */
-    post: operations['deal-promotion-programs-pause'];
     delete?: never;
     options?: never;
     head?: never;
@@ -3105,15 +2985,15 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/public/deal-promotion-links/{token}': {
+  '/platform/v1/public/seller-affiliate-links/{token}': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Resolve a single-level promoter direct link */
-    get: operations['public-deal-promotion-links-get'];
+    /** Resolve an active direct affiliate link */
+    get: operations['public-seller-affiliate-links-get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -3122,7 +3002,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/public/deal-promotion-links/{token}/claims': {
+  '/platform/v1/public/seller-affiliate-links/{token}/sessions': {
     parameters: {
       query?: never;
       header?: never;
@@ -3131,8 +3011,8 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Issue a short-lived signed attribution claim */
-    post: operations['public-deal-attribution-claims-create'];
+    /** Create an expiring seller-scoped referral session */
+    post: operations['public-seller-affiliate-sessions-create'];
     delete?: never;
     options?: never;
     head?: never;
@@ -3199,6 +3079,75 @@ export interface paths {
     };
     /** Relay service configuration snapshot */
     get: operations['relay-status'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/seller-affiliate/program': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the current seller's affiliate program */
+    get: operations['seller-affiliate-program-get'];
+    /** Create or update the seller's storefront-wide affiliate program */
+    put: operations['seller-affiliate-program-put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/seller-affiliate/programs/{id}/links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or return the current promoter's direct link */
+    post: operations['seller-affiliate-links-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/seller-affiliate/statements/promoter': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List canonical affiliate commission lines attributed to the current promoter */
+    get: operations['seller-affiliate-statements-promoter'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/seller-affiliate/statements/seller': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List canonical affiliate commission lines for the current seller */
+    get: operations['seller-affiliate-statements-seller'];
     put?: never;
     post?: never;
     delete?: never;
@@ -10001,45 +9950,37 @@ export interface components {
     Platform_AccountUnlinkInputBody: {
       provider: string;
     };
-    Platform_AdminDealCommissionQueueEntryResponse: {
-      acceptanceConsistent: boolean;
-      acceptanceStatus: string;
+    Platform_AdminDealAcceptanceRecoveryItemResponse: {
+      acceptanceID: string;
+      affiliateReferralSessionID?: string;
       buyerPeerID: string;
       buyerUserID: string;
-      entry: components['schemas']['Platform_DealCommissionEntryResponse'];
-      promoterPeerID: string;
-      promoterUserID: string;
-      /** Format: int64 */
-      reviewHoldRemainingSeconds: number;
-      reviewReady: boolean;
-      riskSummary: components['schemas']['Platform_AdminDealCommissionRiskSummaryResponse'];
-      sellerPeerID: string;
-      tenantID: string;
-    };
-    Platform_AdminDealCommissionQueueResponse: {
-      entries: components['schemas']['Platform_AdminDealCommissionQueueEntryResponse'][] | null;
       /** Format: date-time */
-      generatedAt: string;
+      createdAt: string;
+      dealLinkID: string;
+      /** Format: int64 */
+      dealRevision: number;
+      feeQuoteID: string;
+      orderID?: string;
+      /** Format: int64 */
+      recoveryAttemptCount: number;
+      recoveryLastError?: string;
+      /** Format: int64 */
+      recoveryLeaseUntil: number;
+      /** Format: int64 */
+      recoveryNextAttemptAt: number;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_AdminDealAcceptanceRecoveryPageResponse: {
+      items: components['schemas']['Platform_AdminDealAcceptanceRecoveryItemResponse'][] | null;
       /** Format: int64 */
       limit: number;
       /** Format: int64 */
       offset: number;
       /** Format: int64 */
       total: number;
-    };
-    Platform_AdminDealCommissionRiskSummaryResponse: {
-      /** Format: date-time */
-      appliedAt?: string;
-      hasRisk: boolean;
-      /** @enum {string} */
-      kind?: 'refund_observed' | 'dispute_opened' | 'chargeback_observed' | 'risk_evidence_invalid';
-      lastEventID?: string;
-      /** Format: date-time */
-      lastReconciliationAttemptedAt?: string;
-      /** Format: date-time */
-      observedAt?: string;
-      providerID?: string;
-      reasonCode?: string;
     };
     Platform_AdminPatchAIConfigInputBody: {
       /** Format: int64 */
@@ -10097,6 +10038,41 @@ export interface components {
       relay_gas_daily_quota?: number;
       /** Format: int64 */
       webhook_retention_days?: number;
+    };
+    Platform_AffiliateAttribution: {
+      /** Format: date-time */
+      attributedAt: string;
+      buyerPeerID: string;
+      /** Format: int32 */
+      commissionRateBPSSnapshot: number;
+      id: string;
+      orderID: string;
+      programID: string;
+      promoterPeerID: string;
+      referralSessionID: string;
+      sellerPeerID: string;
+    };
+    Platform_AffiliateCommissionLine: {
+      attributionID: string;
+      commissionAtomic: string;
+      /** Format: int32 */
+      commissionRateBPSSnapshot: number;
+      /** Format: date-time */
+      createdAt: string;
+      currency: string;
+      netMerchandiseAtomic: string;
+      orderID: string;
+      orderLineID: string;
+      reversalReason?: string;
+      /** Format: date-time */
+      reversedAt?: string;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_AffiliateStatementLine: {
+      attribution: components['schemas']['Platform_AffiliateAttribution'];
+      commissionLine: components['schemas']['Platform_AffiliateCommissionLine'];
     };
     Platform_AiModelConfigPatchRequest: {
       api_key?: string;
@@ -10350,8 +10326,8 @@ export interface components {
     Platform_DealAcceptanceRequest: {
       address?: string;
       addressNotes?: string;
+      affiliateReferralSessionID?: string;
       alternateContactInfo?: string;
-      attributionClaim?: string;
       city?: string;
       countryCode?: string;
       feeQuoteID: string;
@@ -10359,73 +10335,6 @@ export interface components {
       refundAddress?: string;
       shipTo?: string;
       state?: string;
-    };
-    Platform_DealCommissionEligibilityReviewRequest: {
-      /**
-       * @description Required operator finding for related-account risk
-       * @enum {string}
-       */
-      relatedAccountCheck: 'clear' | 'related_account';
-      /** @description Optional audit note; do not include secrets */
-      reviewNote?: string;
-      /**
-       * @description Required operator finding for test-order risk
-       * @enum {string}
-       */
-      testOrderCheck: 'clear' | 'test_order';
-    };
-    Platform_DealCommissionEligibilityReviewResponse: {
-      autoRelatedAccount: boolean;
-      chargebackObserved: boolean;
-      /** @enum {string} */
-      decision: 'deferred' | 'eligible' | 'disputed' | 'reversed';
-      disputeHistory: boolean;
-      entry: components['schemas']['Platform_DealCommissionEntryResponse'];
-      orderState: string;
-      payable: boolean;
-      providerDisputeHistory: boolean;
-      providerDisputeOpen: boolean;
-      providerDisputeOutcome?: string;
-      reasonCodes: string[] | null;
-      refundObserved: boolean;
-      relatedAccountCheck: string;
-      replayed: boolean;
-      /** @enum {string} */
-      resultStatus: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'settled';
-      reviewID: string;
-      /** Format: date-time */
-      reviewedAt: string;
-      testOrderCheck: string;
-    };
-    Platform_DealCommissionEntryResponse: {
-      acceptanceID: string;
-      attributionClaimID: string;
-      calculationBase: string;
-      commissionBaseAmountAtomic: string;
-      /** Format: int64 */
-      commissionRateBPS: number;
-      currency: string;
-      /** Format: int32 */
-      currencyDivisibility: number;
-      dealLinkID: string;
-      declaredFundingSource: string;
-      /** Format: date-time */
-      eligibilityReviewedAt?: string;
-      id: string;
-      /** @enum {string} */
-      lastEligibilityDecision?: 'deferred' | 'eligible' | 'disputed' | 'reversed';
-      lastEligibilityReasons?: string[] | null;
-      /** Format: date-time */
-      observedAt: string;
-      orderID: string;
-      payable: boolean;
-      programID: string;
-      proposedCommissionAmountAtomic: string;
-      /** Format: date-time */
-      reviewNotBefore: string;
-      settlementMode: string;
-      /** @enum {string} */
-      status: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'settled';
     };
     Platform_DealLinkRequest: {
       deliveryType: string;
@@ -10437,15 +10346,6 @@ export interface components {
       purchaseTemplate: components['schemas']['Platform_PurchaseTemplate'];
       terms: unknown;
       title: string;
-    };
-    Platform_DealPromotionProgramRequest: {
-      /** Format: int64 */
-      attributionWindowSeconds: number;
-      /** Format: int64 */
-      commissionRateBPS: number;
-      dealLinkID: string;
-      maxCommissionAmount?: string;
-      name: string;
     };
     Platform_DiscordCheckBodyBody: {
       access_token: string;
@@ -10840,6 +10740,14 @@ export interface components {
       domain: string;
       /** @description Wire-format scope name, e.g. listings:read. */
       name: string;
+    };
+    Platform_SellerAffiliateProgramRequest: {
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int32 */
+      commissionRateBPS: number;
+      /** @enum {string} */
+      status: 'active' | 'paused';
     };
     Platform_SetHandleRequest: {
       handle: string;
@@ -12274,13 +12182,11 @@ export interface operations {
       };
     };
   };
-  'admin-deal-commission-entries-list': {
+  'admin-deal-acceptances-list': {
     parameters: {
       query?: {
-        /** @description Queue status; defaults to observed. */
-        status?: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'all';
-        /** @description Review hold state; defaults to all. */
-        readiness?: 'all' | 'ready' | 'holding';
+        /** @description Recovery status; defaults to manual_review. */
+        status?: 'manual_review' | 'processing' | 'all';
         /** @description Page size (default 50, max 100). */
         limit?: number;
         /** @description Pagination offset. */
@@ -12298,44 +12204,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Platform_AdminDealCommissionQueueResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'admin-deal-commission-eligibility-review': {
-    parameters: {
-      query?: never;
-      header: {
-        'Idempotency-Key': string;
-      };
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_DealCommissionEligibilityReviewRequest'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_DealCommissionEligibilityReviewResponse'];
+          'application/json': components['schemas']['Platform_AdminDealAcceptanceRecoveryPageResponse'];
         };
       };
       /** @description Error */
@@ -15690,68 +15559,6 @@ export interface operations {
       };
     };
   };
-  'deal-commission-statements-promoter': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json':
-            | components['schemas']['Platform_DealCommissionEntryResponse'][]
-            | null;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-commission-statements-seller': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json':
-            | components['schemas']['Platform_DealCommissionEntryResponse'][]
-            | null;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
   'deal-links-list-mine': {
     parameters: {
       query?: never;
@@ -15912,161 +15719,6 @@ export interface operations {
     };
   };
   'deal-links-pause': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-promotion-programs-list-mine': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-promotion-programs-create': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_DealPromotionProgramRequest'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-promotion-programs-activate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-promotion-links-create': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'deal-promotion-programs-pause': {
     parameters: {
       query?: never;
       header?: never;
@@ -18419,7 +18071,7 @@ export interface operations {
       };
     };
   };
-  'public-deal-promotion-links-get': {
+  'public-seller-affiliate-links-get': {
     parameters: {
       query?: never;
       header?: never;
@@ -18450,7 +18102,7 @@ export interface operations {
       };
     };
   };
-  'public-deal-attribution-claims-create': {
+  'public-seller-affiliate-sessions-create': {
     parameters: {
       query?: never;
       header?: never;
@@ -18591,6 +18243,157 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-program-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-program-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SellerAffiliateProgramRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-links-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-statements-promoter': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_AffiliateStatementLine'][] | null;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-statements-seller': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_AffiliateStatementLine'][] | null;
         };
       };
       /** @description Error */

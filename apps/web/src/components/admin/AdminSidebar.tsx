@@ -11,10 +11,7 @@ import {
   useFeatureFlags,
   useFeature,
   getAdminStorePaymentsPath,
-  useDealLinksAttributionCounts,
-  useCachedDealLinksAttributionCounts,
 } from '@mobazha/core';
-import { buildDealLinksAttributionAttentionHref } from '@/components/admin/deal-links/dealLinksTypes';
 import {
   LayoutDashboard,
   Package,
@@ -183,24 +180,10 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const storefrontsEnabled = isEnabled('storefrontsEnabled', 'killStorefrontRoutingDisabled');
   const supplyChainEnabled = isEnabled('supplyChainEnabled');
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
-  const isDealLinksRoute = pathname.startsWith('/admin/deal-links');
-  useDealLinksAttributionCounts(isDealLinksRoute);
-  const attributionCounts = useCachedDealLinksAttributionCounts();
-  const attentionCount = attributionCounts.needingAttention;
-
   const navEntries = applyAiWorkspaceNav(
     getNavItems(storefrontsEnabled, supplyChainEnabled),
     aiWorkspaceEnabled
-  ).map(item => {
-    if (item.id !== 'deal-links' || attentionCount <= 0) {
-      return item;
-    }
-    return {
-      ...item,
-      badge: attentionCount,
-      href: buildDealLinksAttributionAttentionHref(attributionCounts),
-    };
-  });
+  );
 
   const isActive = (item: NavItem) =>
     isAdminNavItemActive(item.href, pathname, item.id, fromSettings);

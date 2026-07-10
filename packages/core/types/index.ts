@@ -150,6 +150,20 @@ export type {
   PaymentReadinessStatus,
 } from './paymentSession';
 
+export type {
+  SellerAffiliateAttribution,
+  SellerAffiliateCommissionLine,
+  SellerAffiliateCommissionStatus,
+  SellerAffiliateLink,
+  SellerAffiliateProgram,
+  SellerAffiliateProgramRequest,
+  SellerAffiliateProgramStatus,
+  SellerAffiliateReferralSession,
+  SellerAffiliateStatementAudience,
+  SellerAffiliateStatementLine,
+  PublicSellerAffiliateLink,
+} from './sellerAffiliate';
+
 export type { PaymentSelectionQuote } from './paymentSelectionQuote';
 
 // Wallet types
@@ -512,24 +526,6 @@ export type {
   PublicDealLink,
   PublicDealLinkCatalog,
 } from './dealLink';
-
-export type {
-  DealAttributionClaim,
-  DealPromotionLink,
-  DealPromotionPageErrorKind,
-  DealPromotionProgram,
-  DealPromotionProgramRequest,
-  DealPromotionProgramStatus,
-  DealPromotionSettlementMode,
-  PublicDealPromotionLink,
-  StoredDealAttributionClaim,
-} from './dealPromotion';
-export type {
-  DealCommissionEligibilityDecision,
-  DealCommissionStatement,
-  DealCommissionStatementAudience,
-  DealCommissionStatementStatus,
-} from './dealCommissionStatement';
 
 export type { SellerDealLink, SellerDealLinkRequest } from './sellerDealLink';
 

@@ -4,74 +4,48 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
-  buildDealLinkBrowseHref,
-  buildStoredDealAttributionClaim,
-  classifyDealPromotionError,
-  clearStoredDealAttributionClaim,
-  extractDealTokenFromPublicPath,
-  getPublicDealPromotionLink,
-  issueDealAttributionClaim,
-  useI18n,
-  writeStoredDealAttributionClaim,
+  createSellerAffiliateReferralSession,
+  getPublicSellerAffiliateLink,
+  writeSellerAffiliateReferralSession,
 } from '@mobazha/core';
 import { Header } from '@/components';
 import { Container } from '@/components/layouts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DealLinkStatusPanel } from '@/components/DealLink/DealLinkStatusPanel';
 
-type PromoEntryPhase = 'loading' | 'redirecting' | 'not_found' | 'inactive' | 'error';
+type PromoEntryPhase = 'loading' | 'ready' | 'not_found' | 'inactive' | 'error';
 
-export default function DealPromotionEntryPage() {
+export default function SellerAffiliateEntryPage() {
   const params = useParams<{ token: string }>();
   const token = typeof params?.token === 'string' ? params.token : undefined;
-  const router = useRouter();
-  const { t } = useI18n();
   const [phase, setPhase] = useState<PromoEntryPhase>('loading');
-  const [errorKind, setErrorKind] = useState<'not_found' | 'inactive' | 'network' | 'unknown'>(
-    'unknown'
-  );
+  const [sellerPeerID, setSellerPeerID] = useState<string | null>(null);
 
   const resolveAndRedirect = useCallback(async () => {
     if (!token) {
       setPhase('not_found');
-      setErrorKind('not_found');
       return;
     }
 
     setPhase('loading');
-    clearStoredDealAttributionClaim();
     try {
-      const promotion = await getPublicDealPromotionLink(token);
-      const dealToken = extractDealTokenFromPublicPath(promotion.dealPublicPath);
-      if (!dealToken) {
-        setPhase('error');
-        setErrorKind('unknown');
+      const link = await getPublicSellerAffiliateLink(token);
+      if (link.status !== 'active') {
+        setPhase('inactive');
         return;
       }
-
-      const claim = await issueDealAttributionClaim(token);
-      writeStoredDealAttributionClaim(
-        buildStoredDealAttributionClaim(claim, dealToken, {
-          attributionWindowSeconds: promotion.attributionWindowSeconds,
-        })
-      );
-      setPhase('redirecting');
-      router.replace(buildDealLinkBrowseHref(dealToken));
-    } catch (error) {
-      const kind = classifyDealPromotionError(error);
-      setErrorKind(
-        kind === 'not_found'
-          ? 'not_found'
-          : kind === 'inactive' || kind === 'expired'
-            ? 'inactive'
-            : kind === 'network'
-              ? 'network'
-              : 'unknown'
-      );
-      setPhase(kind === 'not_found' ? 'not_found' : kind === 'inactive' ? 'inactive' : 'error');
+      const referral = await createSellerAffiliateReferralSession(token);
+      writeSellerAffiliateReferralSession(referral);
+      setSellerPeerID(referral.sellerPeerID);
+      setPhase('ready');
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message.toLowerCase() : '';
+      setPhase(message.includes('not found') ? 'not_found' : 'error');
     }
-  }, [router, token]);
+  }, [token]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => void resolveAndRedirect(), 0);
@@ -89,17 +63,13 @@ export default function DealPromotionEntryPage() {
     );
   }
 
-  if (phase === 'loading' || phase === 'redirecting') {
+  if (phase === 'loading') {
     return (
-      <div className="min-h-dvh bg-background" data-testid="deal-promotion-entry-loading">
+      <div className="min-h-dvh bg-background" data-testid="seller-affiliate-entry-loading">
         <Header />
         <Container className="py-8">
           <DealLinkStatusPanel kind="loading" />
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            {phase === 'redirecting'
-              ? t('dealPromotion.entryRedirecting')
-              : t('dealPromotion.entryResolving')}
-          </p>
+          <p className="mt-4 text-center text-sm text-muted-foreground">Saving your referral…</p>
         </Container>
       </div>
     );
@@ -127,14 +97,36 @@ export default function DealPromotionEntryPage() {
     );
   }
 
+  if (phase === 'ready') {
+    return (
+      <div className="min-h-dvh bg-background" data-testid="seller-affiliate-entry-ready">
+        <Header />
+        <Container className="py-8">
+          <Card className="mx-auto max-w-xl">
+            <CardHeader>
+              <CardTitle>Referral saved</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Eligible purchases from this seller will be attributed automatically when you check
+                out.
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">Seller: {sellerPeerID}</p>
+              <Button asChild className="min-h-11">
+                <a href="/">Browse marketplace</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-background">
       <Header />
       <Container className="py-8">
-        <DealLinkStatusPanel
-          kind={errorKind === 'network' ? 'network' : 'unknown'}
-          onRetry={resolveAndRedirect}
-        />
+        <DealLinkStatusPanel kind="unknown" onRetry={resolveAndRedirect} />
       </Container>
     </div>
   );

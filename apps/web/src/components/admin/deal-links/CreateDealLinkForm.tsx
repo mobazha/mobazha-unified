@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import {
   digitalAssetsApi,
+  activateSellerDealLink,
+  createSellerDealLink,
   useCurrency,
   useI18n,
   useMyListings,
@@ -21,7 +23,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { useDealLinksContext } from './DealLinksContext';
 
 export interface CreateDealLinkFormProps {
   initialProductSlug?: string;
@@ -38,7 +39,6 @@ export function CreateDealLinkForm({
   const { formatPrice, fromMinimalUnit } = useCurrency();
   const { toast } = useToast();
   const { listings, isLoading: listingsLoading } = useMyListings();
-  const { createActiveDealLink } = useDealLinksContext();
 
   const [selectedProductSlug, setSelectedProductSlug] = useState(initialProductSlug);
   const [deliveryType, setDeliveryType] = useState<DealLinkDeliveryType>('digital_file');
@@ -135,7 +135,7 @@ export function CreateDealLinkForm({
     setCreating(true);
     try {
       const currency = listing.price.currency.code;
-      const created = await createActiveDealLink({
+      const draft = await createSellerDealLink({
         title: listing.title,
         deliveryType,
         priceAmount: String(fromMinimalUnit(listing.price.amount, currency)),
@@ -151,6 +151,7 @@ export function CreateDealLinkForm({
           optionalFeatures: [],
         },
       });
+      const created = await activateSellerDealLink(draft.id);
       toast({ title: t('admin.dealLinks.dealCreateSuccess') });
       onCreated?.(created);
     } catch {
@@ -159,7 +160,6 @@ export function CreateDealLinkForm({
       setCreating(false);
     }
   }, [
-    createActiveDealLink,
     deliveryType,
     digitalDeliveryReady,
     eligibleListings,

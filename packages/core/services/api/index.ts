@@ -267,39 +267,24 @@ export type {
 } from '../../types/dealLink';
 export { getPublicDealLink, createDealLinkFeeQuote, acceptPublicDealLink } from './dealLink';
 
-// Deal Link attribution API (single-level promotion pilot)
-export * as dealPromotionApi from './dealPromotion';
+// Seller affiliate API (automation-first referral and three-state ledger)
+export * as sellerAffiliateApi from './sellerAffiliate';
 export type {
-  DealPromotionProgram,
-  DealPromotionProgramRequest,
-  DealPromotionLink,
-  PublicDealPromotionLink,
-  DealAttributionClaim,
-  StoredDealAttributionClaim,
-} from '../../types/dealPromotion';
+  PublicSellerAffiliateLink,
+  SellerAffiliateLink,
+  SellerAffiliateProgram,
+  SellerAffiliateProgramRequest,
+  SellerAffiliateReferralSession,
+  SellerAffiliateStatementLine,
+} from '../../types/sellerAffiliate';
 export {
-  listDealPromotionPrograms,
-  createDealPromotionProgram,
-  activateDealPromotionProgram,
-  pauseDealPromotionProgram,
-  createDealPromotionLink,
-  getPublicDealPromotionLink,
-  issueDealAttributionClaim,
-} from './dealPromotion';
-
-// Deal Link provisional commission statements (read-only evidence)
-export * as dealCommissionStatementApi from './dealCommissionStatement';
-export type {
-  DealCommissionEligibilityDecision,
-  DealCommissionStatement,
-  DealCommissionStatementAudience,
-  DealCommissionStatementStatus,
-} from '../../types/dealCommissionStatement';
-export {
-  listDealCommissionStatements,
-  listSellerDealCommissionStatements,
-  listPromoterDealCommissionStatements,
-} from './dealCommissionStatement';
+  createSellerAffiliateLink,
+  createSellerAffiliateReferralSession,
+  getPublicSellerAffiliateLink,
+  getSellerAffiliateProgram,
+  listSellerAffiliateStatements,
+  putSellerAffiliateProgram,
+} from './sellerAffiliate';
 
 // Seller Deal Link API (authenticated hosting endpoints)
 export * as sellerDealLinkApi from './sellerDealLink';

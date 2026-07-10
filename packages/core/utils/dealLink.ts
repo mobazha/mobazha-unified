@@ -22,11 +22,11 @@ export function buildDealLinkPaymentHref(orderID: string): string {
 
 export function buildDealLinkAcceptanceRequest(
   feeQuoteID: string,
-  attributionClaim?: string
+  affiliateReferralSessionID?: string
 ): DealLinkAcceptanceRequest {
   const payload: DealLinkAcceptanceRequest = { feeQuoteID };
-  const claim = attributionClaim?.trim();
-  if (claim) payload.attributionClaim = claim;
+  const referralSessionID = affiliateReferralSessionID?.trim();
+  if (referralSessionID) payload.affiliateReferralSessionID = referralSessionID;
   return payload;
 }
 

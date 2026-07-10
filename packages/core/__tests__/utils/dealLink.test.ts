@@ -161,11 +161,11 @@ describe('normalizeDealLinkFeeQuote', () => {
 });
 
 describe('acceptance helpers', () => {
-  it('submits feeQuoteID and optional attribution claim', () => {
+  it('submits feeQuoteID and optional seller affiliate referral session', () => {
     expect(buildDealLinkAcceptanceRequest('quote-1')).toEqual({ feeQuoteID: 'quote-1' });
-    expect(buildDealLinkAcceptanceRequest('quote-1', 'claim-token')).toEqual({
+    expect(buildDealLinkAcceptanceRequest('quote-1', 'referral-session')).toEqual({
       feeQuoteID: 'quote-1',
-      attributionClaim: 'claim-token',
+      affiliateReferralSessionID: 'referral-session',
     });
   });
 

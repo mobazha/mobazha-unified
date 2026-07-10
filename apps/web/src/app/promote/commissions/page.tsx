@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { setLoginRedirectPath, useI18n, useUserStore } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
-import { ProvisionalCommissionStatementsPanel } from '@/components/DealCommission/ProvisionalCommissionStatementsPanel';
+import { SellerAffiliateStatementsPanel } from '@/components/SellerAffiliate/SellerAffiliateStatementsPanel';
 
 export default function PromoteCommissionsPage() {
   const router = useRouter();
@@ -26,9 +26,7 @@ export default function PromoteCommissionsPage() {
         className="mx-auto max-w-2xl space-y-4 px-4 py-8"
         data-testid="promote-commissions-auth-required"
       >
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t('dealCommissionStatements.promoterPageTitle')}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Affiliate earnings</h1>
         <p className="text-sm text-muted-foreground">{t('promote.commissionsAuthRequired')}</p>
         <Button type="button" className="min-h-11" onClick={handleRequireAuth}>
           {t('promote.signInCta')}
@@ -40,15 +38,11 @@ export default function PromoteCommissionsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8" data-testid="promote-commissions-page">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t('dealCommissionStatements.promoterPageTitle')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('dealCommissionStatements.promoterPageSubtitle')}
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Affiliate earnings</h1>
+        <p className="text-sm text-muted-foreground">Orders update this statement automatically.</p>
       </div>
 
-      <ProvisionalCommissionStatementsPanel audience="promoter" />
+      <SellerAffiliateStatementsPanel audience="promoter" />
     </div>
   );
 }

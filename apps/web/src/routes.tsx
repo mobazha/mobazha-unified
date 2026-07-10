@@ -437,10 +437,6 @@ if (!__SOVEREIGN__) {
               path: 'new',
               element: lazyPage(() => import('./app/admin/deal-links/new/page')),
             },
-            {
-              path: 'programs/new',
-              element: lazyPage(() => import('./app/admin/deal-links/programs/new/page')),
-            },
           ],
         },
         {

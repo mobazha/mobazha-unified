@@ -6,6 +6,7 @@ import {
   createDealLinkFeeQuote,
   getPublicDealLink,
 } from '../services/api/dealLink';
+import { ApiError } from '../services/api/client';
 import type { DealLinkFeeQuote, DealLinkPageErrorKind, PublicDealLink } from '../types/dealLink';
 import {
   buildDealLinkAcceptanceRequest,
@@ -16,7 +17,7 @@ import {
   isPublicDealLinkExpired,
   resolveDealLinkIdempotencyState,
 } from '../utils/dealLink';
-import { shouldClearDealAttributionClaimOnError } from '../utils/dealPromotion';
+import type { SellerAffiliateReferralSession } from '../types/sellerAffiliate';
 
 export type DealLinkCheckoutPhase =
   | 'loading'
@@ -29,10 +30,10 @@ export type DealLinkCheckoutPhase =
 export interface UseDealLinkCheckoutOptions {
   enabled?: boolean;
   isAuthenticated?: boolean;
-  attributionClaimToken?: string | null;
+  affiliateReferral?: SellerAffiliateReferralSession | null;
   onRequireAuth?: () => void;
   onAccepted?: (orderID: string) => void;
-  onClearAttributionClaim?: () => void;
+  onClearAffiliateReferral?: () => void;
 }
 
 export interface UseDealLinkCheckoutReturn {
@@ -59,10 +60,10 @@ export function useDealLinkCheckout(
   const {
     enabled = true,
     isAuthenticated = false,
-    attributionClaimToken = null,
+    affiliateReferral = null,
     onRequireAuth,
     onAccepted,
-    onClearAttributionClaim,
+    onClearAffiliateReferral,
   } = options;
 
   const [deal, setDeal] = useState<PublicDealLink | null>(null);
@@ -175,8 +176,12 @@ export function useDealLinkCheckout(
     setAcceptLoading(true);
     setAcceptError(null);
 
+    const affiliateReferralSessionID =
+      affiliateReferral?.sellerPeerID === deal.sellerPeerID
+        ? affiliateReferral.referralSessionID
+        : undefined;
     try {
-      const payload = buildDealLinkAcceptanceRequest(quote.id, attributionClaimToken ?? undefined);
+      const payload = buildDealLinkAcceptanceRequest(quote.id, affiliateReferralSessionID);
       const result = await acceptPublicDealLink(
         token,
         payload,
@@ -185,7 +190,6 @@ export function useDealLinkCheckout(
       if (!result.orderID) {
         throw new Error('Missing order ID');
       }
-      onClearAttributionClaim?.();
       onAccepted?.(result.orderID);
     } catch (error) {
       const kind = classifyDealLinkError(error);
@@ -193,20 +197,20 @@ export function useDealLinkCheckout(
         setQuoteError('quote_expired');
         setQuote(null);
       }
-      if (attributionClaimToken && shouldClearDealAttributionClaimOnError(error)) {
-        onClearAttributionClaim?.();
+      if (affiliateReferralSessionID && shouldClearAffiliateReferralOnError(error)) {
+        onClearAffiliateReferral?.();
       }
       setAcceptError(error instanceof Error ? error.message : 'accept_failed');
     } finally {
       setAcceptLoading(false);
     }
   }, [
-    attributionClaimToken,
+    affiliateReferral,
     canAccept,
     deal,
     isAuthenticated,
     onAccepted,
-    onClearAttributionClaim,
+    onClearAffiliateReferral,
     onRequireAuth,
     quote,
     token,
@@ -228,4 +232,11 @@ export function useDealLinkCheckout(
     reloadDeal,
     acceptDeal,
   };
+}
+
+function shouldClearAffiliateReferralOnError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (![400, 404, 409, 410].includes(error.status ?? 0)) return false;
+  const haystack = `${error.code ?? ''} ${error.message} ${error.detail ?? ''}`.toLowerCase();
+  return haystack.includes('affiliate') || haystack.includes('referral');
 }
