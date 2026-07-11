@@ -9,6 +9,8 @@ export type SellerAffiliateDisplayStatus = 'pending' | 'settling' | 'paid' | 're
 
 export type SellerAffiliateSettlementState = 'planned' | 'submitted' | 'confirmed';
 
+export type SellerAffiliateBuyerKind = 'peer' | 'guest';
+
 export type SellerAffiliateProgramStatus = 'active' | 'paused';
 
 export interface SellerAffiliateProgram {
@@ -59,7 +61,8 @@ export interface SellerAffiliateAttribution {
   referralSessionID: string;
   programID: string;
   sellerPeerID: string;
-  buyerPeerID: string;
+  buyerKind: SellerAffiliateBuyerKind;
+  buyerPeerID?: string;
   promoterPeerID: string;
   commissionRateBPSSnapshot: number;
   attributedAt: string;

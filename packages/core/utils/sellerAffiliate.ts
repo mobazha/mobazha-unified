@@ -113,13 +113,23 @@ export function normalizeSellerAffiliateReferralSession(
 
 function normalizeAttribution(value: unknown): SellerAffiliateAttribution {
   const raw = record(value);
+  const buyerKind = stringField(raw, 'buyerKind');
+  if (buyerKind !== 'peer' && buyerKind !== 'guest')
+    throw new Error('Invalid seller affiliate buyer kind');
+  const buyerPeerID =
+    typeof raw.buyerPeerID === 'string' && raw.buyerPeerID.trim()
+      ? raw.buyerPeerID.trim()
+      : undefined;
+  if ((buyerKind === 'peer' && !buyerPeerID) || (buyerKind === 'guest' && buyerPeerID))
+    throw new Error('Invalid seller affiliate buyer identity');
   return {
     id: stringField(raw, 'id'),
     orderID: stringField(raw, 'orderID'),
     referralSessionID: stringField(raw, 'referralSessionID'),
     programID: stringField(raw, 'programID'),
     sellerPeerID: stringField(raw, 'sellerPeerID'),
-    buyerPeerID: stringField(raw, 'buyerPeerID'),
+    buyerKind,
+    ...(buyerPeerID ? { buyerPeerID } : {}),
     promoterPeerID: stringField(raw, 'promoterPeerID'),
     commissionRateBPSSnapshot: numberField(raw, 'commissionRateBPSSnapshot'),
     attributedAt: stringField(raw, 'attributedAt'),

@@ -21,6 +21,7 @@ function statement(
       referralSessionID: 'referral-1',
       programID: 'program-1',
       sellerPeerID: 'seller-1',
+      buyerKind: 'peer',
       buyerPeerID: 'buyer-1',
       promoterPeerID: 'promoter-1',
       commissionRateBPSSnapshot: 1000,
@@ -96,6 +97,89 @@ describe('seller affiliate statement status', () => {
       'Invalid seller affiliate commission status'
     );
   });
+
+  it('accepts Guest attribution without exposing a buyer peer ID', () => {
+    const normalized = normalizeSellerAffiliateStatementLine({
+      attribution: {
+        id: 'attribution-guest',
+        orderID: 'gst_order_1',
+        referralSessionID: 'referral-1',
+        programID: 'program-1',
+        sellerPeerID: 'seller-1',
+        buyerKind: 'guest',
+        promoterPeerID: 'promoter-1',
+        commissionRateBPSSnapshot: 1000,
+        attributedAt: '2026-07-11T00:00:00Z',
+      },
+      commissionLine: {
+        attributionID: 'attribution-guest',
+        orderID: 'gst_order_1',
+        orderLineID: 'gst_order_1:0',
+        netMerchandiseAtomic: '1000',
+        commissionAtomic: '100',
+        currency: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
+        status: 'pending',
+      },
+    });
+
+    expect(normalized.attribution.buyerKind).toBe('guest');
+    expect(normalized.attribution.buyerPeerID).toBeUndefined();
+  });
+
+  it('rejects a Guest attribution that leaks a peer buyer identity', () => {
+    expect(() =>
+      normalizeSellerAffiliateStatementLine({
+        attribution: {
+          id: 'attribution-guest',
+          orderID: 'gst_order_1',
+          referralSessionID: 'referral-1',
+          programID: 'program-1',
+          sellerPeerID: 'seller-1',
+          buyerKind: 'guest',
+          buyerPeerID: 'unexpected-peer',
+          promoterPeerID: 'promoter-1',
+          commissionRateBPSSnapshot: 1000,
+          attributedAt: '2026-07-11T00:00:00Z',
+        },
+        commissionLine: {
+          attributionID: 'attribution-guest',
+          orderID: 'gst_order_1',
+          orderLineID: 'gst_order_1:0',
+          netMerchandiseAtomic: '1000',
+          commissionAtomic: '100',
+          currency: 'BTC',
+          status: 'pending',
+        },
+      })
+    ).toThrow('Invalid seller affiliate buyer identity');
+  });
+
+  it('rejects a peer attribution without a buyer peer ID', () => {
+    expect(() =>
+      normalizeSellerAffiliateStatementLine({
+        attribution: {
+          id: 'attribution-peer',
+          orderID: 'order-1',
+          referralSessionID: 'referral-1',
+          programID: 'program-1',
+          sellerPeerID: 'seller-1',
+          buyerKind: 'peer',
+          promoterPeerID: 'promoter-1',
+          commissionRateBPSSnapshot: 1000,
+          attributedAt: '2026-07-11T00:00:00Z',
+        },
+        commissionLine: {
+          attributionID: 'attribution-peer',
+          orderID: 'order-1',
+          orderLineID: 'order-1:0',
+          netMerchandiseAtomic: '1000',
+          commissionAtomic: '100',
+          currency: 'BTC',
+          status: 'pending',
+        },
+      })
+    ).toThrow('Invalid seller affiliate buyer identity');
+  });
 });
 
 interface LineOverrides {
@@ -123,6 +207,7 @@ function line(overrides: LineOverrides = {}): SellerAffiliateStatementLine {
       referralSessionID: 'referral-1',
       programID: 'program-1',
       sellerPeerID: 'seller-1',
+      buyerKind: 'peer',
       buyerPeerID: 'buyer-1',
       promoterPeerID: 'promoter-1',
       commissionRateBPSSnapshot: 1000,

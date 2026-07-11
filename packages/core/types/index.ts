@@ -152,6 +152,7 @@ export type {
 
 export type {
   SellerAffiliateAttribution,
+  SellerAffiliateBuyerKind,
   SellerAffiliateCommissionLine,
   SellerAffiliateCommissionStatus,
   SellerAffiliateDisplayStatus,

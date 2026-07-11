@@ -64,6 +64,7 @@ function buildLine(overrides: LineOverrides = {}): SellerAffiliateStatementLine 
       referralSessionID: 'referral-1',
       programID: 'program-1',
       sellerPeerID: 'seller-1',
+      buyerKind: 'peer',
       buyerPeerID: 'buyer-1',
       promoterPeerID: 'promoter-1',
       commissionRateBPSSnapshot: 1000,
