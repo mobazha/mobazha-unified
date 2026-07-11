@@ -4017,7 +4017,6 @@ export interface TranslationResource {
       showFewerDeals?: string;
       immutableEconomicsTitle?: string;
       immutableEconomicsBody?: string;
-      manualReviewOnlyNotice?: string;
       createTitle?: string;
       dealLinkLabel?: string;
       dealLinkPlaceholder?: string;
@@ -4052,11 +4051,6 @@ export interface TranslationResource {
       attributionWindow?: string;
       windowDaysValue?: string;
       windowUnavailable?: string;
-      fundingSource?: string;
-      fundingSellerManualBudget?: string;
-      fundingUnknown?: string;
-      settlementMode?: string;
-      settlementManualReview?: string;
       promoterLinkTitle?: string;
       promoterLinkBody?: string;
       tabs?: {
@@ -4068,8 +4062,6 @@ export interface TranslationResource {
         attributionHint?: string;
       };
       summary?: string;
-      summaryAttention?: string;
-      summaryAttentionCta?: string;
       createLink?: string;
       createProgram?: string;
       economicsLearnMore?: string;

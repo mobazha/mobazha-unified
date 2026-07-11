@@ -6763,8 +6763,6 @@ export const zh: PartialTranslationResource = {
       immutableEconomicsTitle: '激活后经济条款不可更改',
       immutableEconomicsBody:
         '佣金比例、上限和归因窗口在计划激活后锁定。如需不同条款，请创建新计划。',
-      manualReviewOnlyNotice:
-        '保护期结束后，仅异常记录进入平台复核。Mobazha 记录归因证据，但不向推广者自动打款。',
       createTitle: '创建推广计划',
       dealLinkLabel: 'Deal Link',
       dealLinkPlaceholder: '选择 Deal Link',
@@ -6799,11 +6797,6 @@ export const zh: PartialTranslationResource = {
       attributionWindow: '归因窗口',
       windowDaysValue: '{{count}} 天',
       windowUnavailable: '未设置',
-      fundingSource: '声明的资金来源',
-      fundingSellerManualBudget: '卖家人工预算出资',
-      fundingUnknown: '卖家声明的资金来源',
-      settlementMode: '结算方式',
-      settlementManualReview: '仅归因账本（不自动打款）',
       promoterLinkTitle: '推广者入口',
       promoterLinkBody: '分享此需登录的推广者页面，让合作伙伴创建或复用其直接链接。',
       tabs: {
@@ -6815,8 +6808,6 @@ export const zh: PartialTranslationResource = {
         attributionHint: '查看归因到推广链接的购买记录（暂定预估金额，非可提现余额）。',
       },
       summary: '{{linkCount}} 条活跃链接 · {{programCount}} 个计划',
-      summaryAttention: '{{count}} 条归因异常需平台复核',
-      summaryAttentionCta: '查看异常记录',
       createLink: '创建链接',
       createProgram: '创建计划',
       economicsLearnMore: '了解推广经济条款',
@@ -9051,7 +9042,8 @@ export const zh: PartialTranslationResource = {
     commissionRate: '佣金比例 %',
     attributionDays: '归因天数',
     invalidProgram: '请输入 0–100% 的佣金比例，以及正整数的归因天数。',
-    noManualWorkflow: '本计划不包含审核队列、人工预算、申领流程或平台付款。',
+    noManualWorkflow:
+      '本计划没有审核队列、人工预算或申领流程；已支持的加密货币结算通道会在订单资金释放时自动向推广者付款，"已支付"始终代表链上已确认的分账。',
     saveProgram: '保存计划',
     programLoadFailed: '无法加载当前计划；保存将创建一个新计划。',
     saveFailed: '无法保存推广计划。',
@@ -9073,7 +9065,8 @@ export const zh: PartialTranslationResource = {
     referralDescription: '你从该卖家购买符合条件的商品时，归因会在结账时自动带入。',
     seller: '卖家 {{id}}',
     browseStore: '浏览该卖家店铺',
-    programLinkDescription: '佣金状态由付款已验证的订单自动生成。平台不会审核或支付该账单。',
+    programLinkDescription:
+      '佣金状态由已验证的订单自动生成。在已支持的加密货币结算通道上，推广者会在订单资金释放时自动收到分账——平台不设审核队列，也不进行人工打款。',
     createLink: '创建链接',
   },
 

@@ -7431,8 +7431,6 @@ export const en: TranslationResource = {
       immutableEconomicsTitle: 'Economics are fixed at activation',
       immutableEconomicsBody:
         'Commission rate, cap, and attribution window are locked when a program goes active. Create a new program if you need different terms.',
-      manualReviewOnlyNotice:
-        'After the protection period, only exception cases enter platform review. Mobazha records attribution evidence but does not send promoter payouts.',
       createTitle: 'Create promotion program',
       dealLinkLabel: 'Deal Link',
       dealLinkPlaceholder: 'Select a Deal Link',
@@ -7467,11 +7465,6 @@ export const en: TranslationResource = {
       attributionWindow: 'Attribution window',
       windowDaysValue: '{{count}} days',
       windowUnavailable: 'Not set',
-      fundingSource: 'Declared funding source',
-      fundingSellerManualBudget: 'Seller-funded manual budget',
-      fundingUnknown: 'Seller-declared funding source',
-      settlementMode: 'Settlement',
-      settlementManualReview: 'Attribution ledger only (no auto-payout)',
       promoterLinkTitle: 'Promoter entry',
       promoterLinkBody:
         'Share this authenticated promoter page so partners can create or reuse their direct link.',
@@ -7486,8 +7479,6 @@ export const en: TranslationResource = {
           'Provisional attribution statements for purchases credited to your promotion links.',
       },
       summary: '{{linkCount}} active links · {{programCount}} programs',
-      summaryAttention: '{{count}} attribution exceptions need platform review',
-      summaryAttentionCta: 'View exceptions',
       createLink: 'Create link',
       createProgram: 'Create program',
       economicsLearnMore: 'How promotion economics work',
@@ -9825,7 +9816,7 @@ export const en: TranslationResource = {
     attributionDays: 'Attribution days',
     invalidProgram: 'Enter a commission from 0–100% and an attribution window in whole days.',
     noManualWorkflow:
-      'No review queue, manual budget, claim process, or platform payout is part of this program.',
+      'No review queue, manual budget, or claim process. Supported crypto rails pay promoters automatically when the order funds release, and paid always means a confirmed on-chain affiliate payment.',
     saveProgram: 'Save program',
     programLoadFailed: 'Unable to load the current program. Saving will create it.',
     saveFailed: 'Unable to save the affiliate program.',
@@ -9850,7 +9841,7 @@ export const en: TranslationResource = {
     seller: 'Seller {{id}}',
     browseStore: 'Browse this seller',
     programLinkDescription:
-      'Commission status is generated automatically from verified orders. The platform does not review or pay out this balance.',
+      'Commission status is generated automatically from verified orders. On supported crypto rails, promoters are paid automatically when the order funds release — there is no platform review queue or manual payout.',
     createLink: 'Create link',
   },
 
