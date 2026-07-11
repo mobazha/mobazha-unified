@@ -11,7 +11,7 @@ import {
   sanitizeAcceptedPaymentCoins,
   routedStoreContextService,
 } from '@mobazha/core';
-import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
+import { useGuestCartStore } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import { buyerPortalTokenStorageKey } from '@mobazha/core/services/api/guestCheckout';
 import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
@@ -38,10 +38,7 @@ import { AnonymousModeBanner } from '@/components/GuestCheckout/AnonymousModeBan
 import { GuestSupplyAvailabilityPanel } from '@/components/GuestCheckout/GuestSupplyAvailabilityPanel';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
-import type {
-  CommerceGuestOrderRequest,
-  CommerceGuestOrderResponse,
-} from '@mobazha/commerce-kit/checkout';
+import type { CommerceGuestOrderResponse } from '@mobazha/commerce-kit/checkout';
 import { commerceGuestOrderFromLifecycle } from '@mobazha/commerce-kit/checkout';
 import {
   useGuestCheckoutWorkflow,
@@ -57,6 +54,7 @@ import {
   physicalShippingIsReady,
   shippingSelectionMatchesOption,
 } from '@/lib/guestShipping';
+import { buildAddressPayload, buildOrderRequest } from './buildOrderRequest';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -72,55 +70,6 @@ const EMPTY_ADDRESS: Address = {
   country: '',
   addressNotes: '',
 };
-
-function buildAddressPayload(addr: Address): {
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  addressNotes?: string;
-} {
-  return {
-    name: addr.name,
-    address: addr.addressLineOne,
-    city: addr.city,
-    state: addr.state,
-    postalCode: addr.postalCode,
-    country: addr.country,
-    addressNotes: addr.addressNotes || undefined,
-  };
-}
-
-function buildOrderRequest(
-  items: GuestCartItem[],
-  addr: Address | null,
-  encryptedAddr: string | null,
-  email: string,
-  coin: string,
-  affiliateReferralSessionID?: string
-): CommerceGuestOrderRequest {
-  return {
-    items: items.map(i => ({
-      listingSlug: i.slug,
-      listingHash: i.listingHash,
-      quantity: i.quantity,
-      options: i.options?.map(opt => ({ [opt.name]: opt.value })),
-      shippingOption: i.shipping?.name,
-      shippingService: i.shipping?.service,
-    })),
-    paymentCoin: coin,
-    contactEmail: email || undefined,
-    affiliateReferralSessionID: affiliateReferralSessionID?.trim() || undefined,
-    shippingCountry: addr ? normalizeShippingCountry(addr.country) || undefined : undefined,
-    ...(addr !== null && encryptedAddr
-      ? { shippingAddress: encryptedAddr }
-      : addr !== null
-        ? { shippingAddress: buildAddressPayload(addr) }
-        : {}),
-  };
-}
 
 function normalizeGuestPaymentCoin(tokenOrAssetID: string): string {
   const normalized = tokenOrAssetID.trim();
