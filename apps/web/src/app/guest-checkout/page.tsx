@@ -10,6 +10,8 @@ import {
   buildProductHref,
   sanitizeAcceptedPaymentCoins,
   routedStoreContextService,
+  buildGuestOrderRequest,
+  buildGuestShippingAddressPayload,
 } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
@@ -54,7 +56,6 @@ import {
   physicalShippingIsReady,
   shippingSelectionMatchesOption,
 } from '@/lib/guestShipping';
-import { buildAddressPayload, buildOrderRequest } from './buildOrderRequest';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -259,7 +260,7 @@ export default function GuestCheckoutPage() {
           throw new Error('Seller address protection is not ready. Please try again later.');
         }
         if (addressProtectionRequired && !finalEncrypted) {
-          finalEncrypted = await encryptAddress(buildAddressPayload(addressData));
+          finalEncrypted = await encryptAddress(buildGuestShippingAddressPayload(addressData));
           if (!finalEncrypted.startsWith('-----BEGIN PGP MESSAGE-----')) {
             throw new Error('Shipping address encryption failed. No order was created.');
           }
@@ -268,7 +269,7 @@ export default function GuestCheckoutPage() {
           }
         }
 
-        const req = buildOrderRequest(
+        const req = buildGuestOrderRequest(
           items,
           needsShippingAddress ? addressData : null,
           addressProtectionRequired ? finalEncrypted : null,

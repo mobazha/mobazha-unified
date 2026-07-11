@@ -1,12 +1,9 @@
-import { getCountryContinent, toISOCountryCode } from '@mobazha/core';
+import { getCountryContinent, normalizeGuestShippingCountry } from '@mobazha/core';
 import type { GuestCartItem } from '@mobazha/core/stores';
 
 export type GuestShippingOption = NonNullable<GuestCartItem['shippingOptions']>[number];
 
-export function normalizeShippingCountry(value: string): string {
-  const code = toISOCountryCode(value).trim().toUpperCase();
-  return /^[A-Z]{2}$/.test(code) ? code : '';
-}
+export { normalizeGuestShippingCountry as normalizeShippingCountry };
 
 export function shippingOptionSupportsCountry(
   option: GuestShippingOption,

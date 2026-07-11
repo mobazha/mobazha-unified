@@ -22,7 +22,7 @@ import { runtimeConfigScript } from './fixtures/runtime-config';
 const MOCK_ORDER_TOKEN = 'gst_test_order';
 
 // Note: paymentAmount is in minimal units (wei for ETH, satoshi for BTC), per backend contract.
-// See pkg/models/guest_order.go + internal/core/guest_order_app_service.go convertToPaymentCoin().
+// See Open Core pkg/models/guest_order.go and internal/core/guest/service.go paymentCoinConverter().
 const MOCK_GUEST_ORDER_RESPONSE = {
   orderToken: MOCK_ORDER_TOKEN,
   paymentAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38',
