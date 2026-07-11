@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
+import { errorTracker } from '../services/monitoring/errorTracker';
 import type {
   PublicSellerAffiliateLink,
   SellerAffiliateAttribution,
   SellerAffiliateCommissionLine,
   SellerAffiliateDisplayStatus,
+  SellerAffiliateGroupedStatement,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateReferralSession,
+  SellerAffiliateSettlementState,
   SellerAffiliateStatementLine,
   SellerAffiliateSettlementOutput,
 } from '../types/sellerAffiliate';
@@ -164,11 +167,34 @@ function normalizeSettlementOutput(value: unknown): SellerAffiliateSettlementOut
   };
 }
 
+/** A confirmed on-chain affiliate output cannot be reversed after the fact; it always wins over a `reversed` commission line. */
+export function reportSellerAffiliateContractAnomaly(
+  reason: string,
+  line: SellerAffiliateStatementLine
+): void {
+  errorTracker.captureMessage(`seller affiliate contract anomaly: ${reason}`, {
+    level: 'warning',
+    tags: { module: 'sellerAffiliate', reason },
+    extra: {
+      orderID: line.commissionLine.orderID,
+      attributionID: line.commissionLine.attributionID,
+      settlementActionID: line.settlement?.actionID,
+    },
+  });
+}
+
 export function deriveSellerAffiliateDisplayStatus(
   line: SellerAffiliateStatementLine
 ): SellerAffiliateDisplayStatus {
-  if (line.commissionLine.status === 'reversed') return 'reversed';
-  if (line.settlement?.state === 'confirmed') return 'paid';
+  const isConfirmed = line.settlement?.state === 'confirmed';
+  const isReversed = line.commissionLine.status === 'reversed';
+
+  if (isConfirmed && isReversed) {
+    reportSellerAffiliateContractAnomaly('confirmed_settlement_with_reversed_commission', line);
+  }
+
+  if (isConfirmed) return 'paid';
+  if (isReversed) return 'reversed';
   if (line.settlement?.state === 'planned' || line.settlement?.state === 'submitted')
     return 'settling';
   return 'pending';
@@ -186,4 +212,87 @@ export function normalizeSellerAffiliateStatementLine(
       ? { settlement: normalizeSettlementOutput(settlement) }
       : {}),
   };
+}
+
+const SETTLEMENT_STATE_RANK: Record<SellerAffiliateSettlementState, number> = {
+  confirmed: 3,
+  submitted: 2,
+  planned: 1,
+};
+
+function pickRepresentativeSettlement(
+  lines: SellerAffiliateStatementLine[]
+): SellerAffiliateSettlementOutput | undefined {
+  let best: SellerAffiliateSettlementOutput | undefined;
+  for (const { settlement } of lines) {
+    if (!settlement) continue;
+    const isBetter =
+      !best ||
+      SETTLEMENT_STATE_RANK[settlement.state] > SETTLEMENT_STATE_RANK[best.state] ||
+      (SETTLEMENT_STATE_RANK[settlement.state] === SETTLEMENT_STATE_RANK[best.state] &&
+        settlement.updatedAt > best.updatedAt);
+    if (isBetter) best = settlement;
+  }
+  return best;
+}
+
+/**
+ * Collapses statement lines by order + currency so a single settlement (and its tx)
+ * is shown once per order instead of once per commission line, and commission amounts
+ * are summed with BigInt rather than floating point.
+ */
+export function groupSellerAffiliateStatementLines(
+  lines: SellerAffiliateStatementLine[]
+): SellerAffiliateGroupedStatement[] {
+  const groupKeys: string[] = [];
+  const groups = new Map<string, SellerAffiliateStatementLine[]>();
+
+  for (const line of lines) {
+    const key = `${line.commissionLine.orderID}::${line.commissionLine.currency}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(line);
+    } else {
+      groups.set(key, [line]);
+      groupKeys.push(key);
+    }
+  }
+
+  return groupKeys.map(key => {
+    const groupLines = groups.get(key) as SellerAffiliateStatementLine[];
+    const lineStatuses = groupLines.map(deriveSellerAffiliateDisplayStatus);
+    const hasReversed = lineStatuses.includes('reversed');
+    const hasActive = lineStatuses.some(status => status !== 'reversed');
+
+    if (hasReversed && hasActive) {
+      reportSellerAffiliateContractAnomaly(
+        'mixed_reversed_and_active_commission_lines_for_order',
+        groupLines[0]
+      );
+    }
+
+    let displayStatus: SellerAffiliateDisplayStatus;
+    if (lineStatuses.includes('paid')) {
+      displayStatus = 'paid';
+    } else if (!hasActive) {
+      displayStatus = 'reversed';
+    } else if (lineStatuses.includes('settling')) {
+      displayStatus = 'settling';
+    } else {
+      displayStatus = 'pending';
+    }
+
+    const commissionAtomic = groupLines
+      .reduce((sum, line) => sum + BigInt(line.commissionLine.commissionAtomic), 0n)
+      .toString();
+
+    return {
+      orderID: groupLines[0].commissionLine.orderID,
+      currency: groupLines[0].commissionLine.currency,
+      commissionAtomic,
+      displayStatus,
+      settlement: pickRepresentativeSettlement(groupLines),
+      lines: groupLines,
+    };
+  });
 }

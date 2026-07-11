@@ -97,3 +97,16 @@ export interface SellerAffiliateStatementLine {
 }
 
 export type SellerAffiliateStatementAudience = 'seller' | 'promoter';
+
+/**
+ * One order's commission lines for a single currency, collapsed so the same
+ * settlement (and its tx) is not shown or summed once per underlying line.
+ */
+export interface SellerAffiliateGroupedStatement {
+  orderID: string;
+  currency: string;
+  commissionAtomic: string;
+  displayStatus: SellerAffiliateDisplayStatus;
+  settlement?: SellerAffiliateSettlementOutput;
+  lines: SellerAffiliateStatementLine[];
+}

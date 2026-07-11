@@ -155,6 +155,7 @@ export type {
   SellerAffiliateCommissionLine,
   SellerAffiliateCommissionStatus,
   SellerAffiliateDisplayStatus,
+  SellerAffiliateGroupedStatement,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateProgramRequest,
