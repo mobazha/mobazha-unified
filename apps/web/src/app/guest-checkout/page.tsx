@@ -49,6 +49,7 @@ import {
 } from '@mobazha/commerce-kit/checkout/client';
 import { commerceGuestCheckoutPort, commerceGuestOrderStatusPort } from '@/lib/commerce/guestPorts';
 import { buildGuestOrderRecoveryHref, rememberGuestOrder } from '@/lib/guestOrderRecovery';
+import { referralSessionForSeller } from '@mobazha/core/utils/sellerAffiliateReferral';
 import {
   availableShippingOptions,
   effectiveShippingPrice,
@@ -97,7 +98,8 @@ function buildOrderRequest(
   addr: Address | null,
   encryptedAddr: string | null,
   email: string,
-  coin: string
+  coin: string,
+  affiliateReferralSessionID?: string
 ): CommerceGuestOrderRequest {
   return {
     items: items.map(i => ({
@@ -110,6 +112,7 @@ function buildOrderRequest(
     })),
     paymentCoin: coin,
     contactEmail: email || undefined,
+    affiliateReferralSessionID: affiliateReferralSessionID?.trim() || undefined,
     shippingCountry: addr ? normalizeShippingCountry(addr.country) || undefined : undefined,
     ...(addr !== null && encryptedAddr
       ? { shippingAddress: encryptedAddr }
@@ -321,7 +324,8 @@ export default function GuestCheckoutPage() {
           needsShippingAddress ? addressData : null,
           addressProtectionRequired ? finalEncrypted : null,
           contactEmail,
-          coin
+          coin,
+          referralSessionForSeller(items[0]?.vendorPeerID)?.referralSessionID
         );
         const result = await checkoutWorkflow.submit(req);
         if (submitOrderAbortRef.current) return;

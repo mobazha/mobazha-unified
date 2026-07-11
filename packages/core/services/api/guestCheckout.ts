@@ -58,6 +58,7 @@ export interface CreateGuestOrderRequest {
       }
     | string;
   memo?: string;
+  affiliateReferralSessionID?: string;
 }
 
 export interface GuestOrderResponse {

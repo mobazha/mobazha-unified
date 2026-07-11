@@ -42,6 +42,7 @@ export interface CommerceGuestOrderRequest {
       }
     | string;
   memo?: string;
+  affiliateReferralSessionID?: string;
 }
 
 export interface CommerceGuestOrderItemResponse {
