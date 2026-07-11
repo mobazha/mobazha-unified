@@ -5957,6 +5957,14 @@ export interface TranslationResource {
     paid?: string;
     reversed?: string;
     commission?: string;
+    settlementAmount?: string;
+    settlementStatePlanned?: string;
+    settlementStateSubmitted?: string;
+    confirmations?: string;
+    txHash?: string;
+    confirmedAt?: string;
+    copyTx?: string;
+    copied?: string;
     referral?: string;
     referralSaving?: string;
     referralSaved?: string;

@@ -283,7 +283,7 @@ export function groupSellerAffiliateStatementLines(
     }
 
     const commissionAtomic = groupLines
-      .reduce((sum, line) => sum + BigInt(line.commissionLine.commissionAtomic), 0n)
+      .reduce((sum, line) => sum + BigInt(line.commissionLine.commissionAtomic), BigInt(0))
       .toString();
 
     return {

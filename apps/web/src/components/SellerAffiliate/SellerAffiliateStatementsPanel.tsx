@@ -3,15 +3,22 @@
 
 'use client';
 
-import React, { memo } from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, { memo, useCallback, useState } from 'react';
+import { Check, Copy, RefreshCw } from 'lucide-react';
 import {
-  deriveSellerAffiliateDisplayStatus,
+  getPaymentCoinDisplayLabel,
+  groupSellerAffiliateStatementLines,
   renderPairedPrice,
+  truncateAddress,
   useI18n,
   useSellerAffiliateStatements,
 } from '@mobazha/core';
-import type { SellerAffiliateDisplayStatus, SellerAffiliateStatementAudience } from '@mobazha/core';
+import type {
+  SellerAffiliateDisplayStatus,
+  SellerAffiliateGroupedStatement,
+  SellerAffiliateStatementAudience,
+} from '@mobazha/core';
+import { copyToClipboard } from '@/lib/clipboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -26,6 +33,93 @@ function statusClass(status: SellerAffiliateDisplayStatus): string {
   if (status === 'reversed') return 'bg-destructive/10 text-destructive';
   return 'bg-muted text-muted-foreground';
 }
+
+interface CopyableCodeProps {
+  value: string;
+  label: string;
+}
+
+/** Truncated tx/address value with a tap-to-copy affordance; never the sole status signal. */
+const CopyableCode = memo(function CopyableCode({ value, label }: CopyableCodeProps) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    const ok = await copyToClipboard(value);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  }, [value]);
+
+  return (
+    <button
+      type="button"
+      onClick={() => void handleCopy()}
+      className="inline-flex min-h-11 items-center gap-1 rounded px-1 font-mono text-xs text-muted-foreground hover:text-foreground"
+      aria-label={label}
+    >
+      <span>{truncateAddress(value)}</span>
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
+      <span className="sr-only" role="status">
+        {copied ? t('sellerAffiliate.copied') : ''}
+      </span>
+    </button>
+  );
+});
+
+interface SettlementDetailProps {
+  settlement: NonNullable<SellerAffiliateGroupedStatement['settlement']>;
+}
+
+const SettlementDetail = memo(function SettlementDetail({ settlement }: SettlementDetailProps) {
+  const { t } = useI18n();
+
+  return (
+    <div className="mt-2 space-y-1 border-t border-border pt-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-xs text-muted-foreground">{t('sellerAffiliate.settlementAmount')}</p>
+        <p className="text-xs font-medium">
+          {getPaymentCoinDisplayLabel(settlement.coin)}{' '}
+          {renderPairedPrice(settlement.amount, settlement.coin, settlement.coin, {
+            isMinimalUnit: true,
+          })}
+        </p>
+      </div>
+      {settlement.state === 'confirmed' ? (
+        <>
+          {settlement.txHash ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('sellerAffiliate.txHash')}</p>
+              <CopyableCode value={settlement.txHash} label={t('sellerAffiliate.copyTx')} />
+            </div>
+          ) : null}
+          {settlement.confirmedAt ? (
+            <p className="text-xs text-muted-foreground">
+              {t('sellerAffiliate.confirmedAt', {
+                time: new Date(settlement.confirmedAt).toLocaleString(),
+              })}
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {t(
+            settlement.state === 'submitted'
+              ? 'sellerAffiliate.settlementStateSubmitted'
+              : 'sellerAffiliate.settlementStatePlanned'
+          )}
+          {typeof settlement.confirmations === 'number'
+            ? ` · ${t('sellerAffiliate.confirmations', { count: settlement.confirmations })}`
+            : ''}
+        </p>
+      )}
+    </div>
+  );
+});
 
 export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateStatementsPanel({
   audience,
@@ -43,6 +137,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
     paid: t('sellerAffiliate.paid'),
     reversed: t('sellerAffiliate.reversed'),
   };
+  const groups = groupSellerAffiliateStatementLines(statements);
 
   return (
     <Card data-testid={`seller-affiliate-statements-${audience}`} aria-busy={loading}>
@@ -67,45 +162,43 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
       </CardHeader>
       <CardContent className="space-y-3">
         {error ? (
-          <p className="text-sm text-destructive">{t('sellerAffiliate.statementLoadFailed')}</p>
+          <p className="text-sm text-destructive" role="alert">
+            {t('sellerAffiliate.statementLoadFailed')}
+          </p>
         ) : null}
-        {!loading && !error && !statements.length ? (
+        {!loading && !error && !groups.length ? (
           <p className="text-sm text-muted-foreground">{t('sellerAffiliate.statementEmpty')}</p>
         ) : null}
-        {statements.map(line => {
-          const { attribution, commissionLine } = line;
-          const displayStatus = deriveSellerAffiliateDisplayStatus(line);
-          return (
-            <article
-              key={`${commissionLine.orderLineID}-${commissionLine.attributionID}`}
-              className="rounded-lg border border-border p-3"
-              data-testid={`seller-affiliate-statement-${commissionLine.orderID}`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-mono text-xs text-muted-foreground">{commissionLine.orderID}</p>
-                <span
-                  className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(displayStatus)}`}
-                >
-                  {statusLabels[displayStatus]}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
-                <p className="font-medium">
-                  {renderPairedPrice(
-                    commissionLine.commissionAtomic,
-                    commissionLine.currency,
-                    commissionLine.currency,
-                    { isMinimalUnit: true }
-                  )}
-                </p>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t('sellerAffiliate.referral', { id: attribution.referralSessionID })}
+        {groups.map(group => (
+          <article
+            key={`${group.orderID}::${group.currency}`}
+            className="rounded-lg border border-border p-3"
+            data-testid={`seller-affiliate-statement-${group.orderID}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-mono text-xs text-muted-foreground">{group.orderID}</p>
+              <span
+                className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(group.displayStatus)}`}
+              >
+                {statusLabels[group.displayStatus]}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
+              <p className="font-medium">
+                {renderPairedPrice(group.commissionAtomic, group.currency, group.currency, {
+                  isMinimalUnit: true,
+                })}
               </p>
-            </article>
-          );
-        })}
+            </div>
+            {group.settlement ? <SettlementDetail settlement={group.settlement} /> : null}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t('sellerAffiliate.referral', {
+                id: group.lines[0].attribution.referralSessionID,
+              })}
+            </p>
+          </article>
+        ))}
       </CardContent>
     </Card>
   );
