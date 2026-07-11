@@ -154,6 +154,7 @@ export type {
   SellerAffiliateAttribution,
   SellerAffiliateCommissionLine,
   SellerAffiliateCommissionStatus,
+  SellerAffiliateDisplayStatus,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateProgramRequest,
@@ -161,6 +162,8 @@ export type {
   SellerAffiliateReferralSession,
   SellerAffiliateStatementAudience,
   SellerAffiliateStatementLine,
+  SellerAffiliateSettlementOutput,
+  SellerAffiliateSettlementState,
   PublicSellerAffiliateLink,
 } from './sellerAffiliate';
 

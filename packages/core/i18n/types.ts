@@ -5961,7 +5961,8 @@ export interface TranslationResource {
     statementLoadFailed?: string;
     statementEmpty?: string;
     pending?: string;
-    earned?: string;
+    settling?: string;
+    paid?: string;
     reversed?: string;
     commission?: string;
     referral?: string;

@@ -5,17 +5,24 @@
 
 import React, { memo } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { renderPairedPrice, useI18n, useSellerAffiliateStatements } from '@mobazha/core';
-import type { SellerAffiliateStatementAudience } from '@mobazha/core';
+import {
+  deriveSellerAffiliateDisplayStatus,
+  renderPairedPrice,
+  useI18n,
+  useSellerAffiliateStatements,
+} from '@mobazha/core';
+import type { SellerAffiliateDisplayStatus, SellerAffiliateStatementAudience } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SellerAffiliateStatementsPanelProps {
+  /** Selects the seller or promoter statement endpoint and title. */
   audience: SellerAffiliateStatementAudience;
 }
 
-function statusClass(status: string): string {
-  if (status === 'earned') return 'bg-primary/10 text-primary';
+function statusClass(status: SellerAffiliateDisplayStatus): string {
+  if (status === 'paid') return 'bg-primary/10 text-primary';
+  if (status === 'settling') return 'bg-accent text-accent-foreground';
   if (status === 'reversed') return 'bg-destructive/10 text-destructive';
   return 'bg-muted text-muted-foreground';
 }
@@ -30,9 +37,10 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
       ? 'sellerAffiliate.sellerStatementTitle'
       : 'sellerAffiliate.promoterStatementTitle'
   );
-  const statusLabels: Record<string, string> = {
+  const statusLabels: Record<SellerAffiliateDisplayStatus, string> = {
     pending: t('sellerAffiliate.pending'),
-    earned: t('sellerAffiliate.earned'),
+    settling: t('sellerAffiliate.settling'),
+    paid: t('sellerAffiliate.paid'),
     reversed: t('sellerAffiliate.reversed'),
   };
 
@@ -64,36 +72,40 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
         {!loading && !error && !statements.length ? (
           <p className="text-sm text-muted-foreground">{t('sellerAffiliate.statementEmpty')}</p>
         ) : null}
-        {statements.map(({ attribution, commissionLine }) => (
-          <article
-            key={`${commissionLine.orderLineID}-${commissionLine.attributionID}`}
-            className="rounded-lg border border-border p-3"
-            data-testid={`seller-affiliate-statement-${commissionLine.orderID}`}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-mono text-xs text-muted-foreground">{commissionLine.orderID}</p>
-              <span
-                className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(commissionLine.status)}`}
-              >
-                {statusLabels[commissionLine.status] ?? commissionLine.status}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
-              <p className="font-medium">
-                {renderPairedPrice(
-                  commissionLine.commissionAtomic,
-                  commissionLine.currency,
-                  commissionLine.currency,
-                  { isMinimalUnit: true }
-                )}
+        {statements.map(line => {
+          const { attribution, commissionLine } = line;
+          const displayStatus = deriveSellerAffiliateDisplayStatus(line);
+          return (
+            <article
+              key={`${commissionLine.orderLineID}-${commissionLine.attributionID}`}
+              className="rounded-lg border border-border p-3"
+              data-testid={`seller-affiliate-statement-${commissionLine.orderID}`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-mono text-xs text-muted-foreground">{commissionLine.orderID}</p>
+                <span
+                  className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(displayStatus)}`}
+                >
+                  {statusLabels[displayStatus]}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
+                <p className="font-medium">
+                  {renderPairedPrice(
+                    commissionLine.commissionAtomic,
+                    commissionLine.currency,
+                    commissionLine.currency,
+                    { isMinimalUnit: true }
+                  )}
+                </p>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t('sellerAffiliate.referral', { id: attribution.referralSessionID })}
               </p>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t('sellerAffiliate.referral', { id: attribution.referralSessionID })}
-            </p>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </CardContent>
     </Card>
   );

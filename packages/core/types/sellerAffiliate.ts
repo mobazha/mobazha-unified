@@ -2,7 +2,12 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 /** The only Phase 1 commission states. They do not imply a platform payout. */
-export type SellerAffiliateCommissionStatus = 'pending' | 'earned' | 'reversed';
+export type SellerAffiliateCommissionStatus = 'pending' | 'reversed';
+
+/** UI state derived from commission facts and backend settlement confirmation. */
+export type SellerAffiliateDisplayStatus = 'pending' | 'settling' | 'paid' | 'reversed';
+
+export type SellerAffiliateSettlementState = 'planned' | 'submitted' | 'confirmed';
 
 export type SellerAffiliateProgramStatus = 'active' | 'paused';
 
@@ -68,14 +73,27 @@ export interface SellerAffiliateCommissionLine {
   commissionAtomic: string;
   currency: string;
   status: SellerAffiliateCommissionStatus;
-  earnedAt?: string;
   reversedAt?: string;
   reversalReason?: string;
+}
+
+export interface SellerAffiliateSettlementOutput {
+  actionID: string;
+  action: string;
+  state: SellerAffiliateSettlementState;
+  txHash?: string;
+  coin: string;
+  amount: string;
+  address: string;
+  confirmations?: number;
+  updatedAt: string;
+  confirmedAt?: string;
 }
 
 export interface SellerAffiliateStatementLine {
   attribution: SellerAffiliateAttribution;
   commissionLine: SellerAffiliateCommissionLine;
+  settlement?: SellerAffiliateSettlementOutput;
 }
 
 export type SellerAffiliateStatementAudience = 'seller' | 'promoter';

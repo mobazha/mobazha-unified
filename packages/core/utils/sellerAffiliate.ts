@@ -5,10 +5,12 @@ import type {
   PublicSellerAffiliateLink,
   SellerAffiliateAttribution,
   SellerAffiliateCommissionLine,
+  SellerAffiliateDisplayStatus,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateReferralSession,
   SellerAffiliateStatementLine,
+  SellerAffiliateSettlementOutput,
 } from '../types/sellerAffiliate';
 
 function record(value: unknown): Record<string, unknown> {
@@ -124,7 +126,7 @@ function normalizeAttribution(value: unknown): SellerAffiliateAttribution {
 function normalizeCommissionLine(value: unknown): SellerAffiliateCommissionLine {
   const raw = record(value);
   const status = stringField(raw, 'status');
-  if (status !== 'pending' && status !== 'earned' && status !== 'reversed')
+  if (status !== 'pending' && status !== 'reversed')
     throw new Error('Invalid seller affiliate commission status');
   return {
     attributionID: stringField(raw, 'attributionID'),
@@ -134,18 +136,54 @@ function normalizeCommissionLine(value: unknown): SellerAffiliateCommissionLine 
     commissionAtomic: stringField(raw, 'commissionAtomic'),
     currency: stringField(raw, 'currency'),
     status,
-    ...(typeof raw.earnedAt === 'string' ? { earnedAt: raw.earnedAt } : {}),
     ...(typeof raw.reversedAt === 'string' ? { reversedAt: raw.reversedAt } : {}),
     ...(typeof raw.reversalReason === 'string' ? { reversalReason: raw.reversalReason } : {}),
   };
+}
+
+function normalizeSettlementOutput(value: unknown): SellerAffiliateSettlementOutput {
+  const raw = record(value);
+  const state = stringField(raw, 'state');
+  if (state !== 'planned' && state !== 'submitted' && state !== 'confirmed')
+    throw new Error('Invalid seller affiliate settlement state');
+  return {
+    actionID: stringField(raw, 'actionId'),
+    action: stringField(raw, 'action'),
+    state,
+    coin: stringField(raw, 'coin'),
+    amount: stringField(raw, 'amount'),
+    address: stringField(raw, 'address'),
+    updatedAt: stringField(raw, 'updatedAt'),
+    ...(typeof raw.txHash === 'string' && raw.txHash.trim() ? { txHash: raw.txHash } : {}),
+    ...(typeof raw.confirmations === 'number' && Number.isInteger(raw.confirmations)
+      ? { confirmations: raw.confirmations }
+      : {}),
+    ...(typeof raw.confirmedAt === 'string' && raw.confirmedAt.trim()
+      ? { confirmedAt: raw.confirmedAt }
+      : {}),
+  };
+}
+
+export function deriveSellerAffiliateDisplayStatus(
+  line: SellerAffiliateStatementLine
+): SellerAffiliateDisplayStatus {
+  if (line.commissionLine.status === 'reversed') return 'reversed';
+  if (line.settlement?.state === 'confirmed') return 'paid';
+  if (line.settlement?.state === 'planned' || line.settlement?.state === 'submitted')
+    return 'settling';
+  return 'pending';
 }
 
 export function normalizeSellerAffiliateStatementLine(
   value: unknown
 ): SellerAffiliateStatementLine {
   const raw = record(value);
+  const settlement = raw.settlement;
   return {
     attribution: normalizeAttribution(raw.attribution),
     commissionLine: normalizeCommissionLine(raw.commissionLine),
+    ...(settlement !== undefined && settlement !== null
+      ? { settlement: normalizeSettlementOutput(settlement) }
+      : {}),
   };
 }
