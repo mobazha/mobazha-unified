@@ -114,7 +114,7 @@ export default function SellerAffiliateEntryPage() {
               <p className="text-sm text-muted-foreground">
                 {t('sellerAffiliate.referralDescription')}
               </p>
-              <p className="font-mono text-xs text-muted-foreground">
+              <p className="break-all font-mono text-xs text-muted-foreground">
                 {t('sellerAffiliate.seller', { id: sellerPeerID ?? '' })}
               </p>
               <Button asChild className="min-h-11">

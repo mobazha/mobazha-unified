@@ -176,7 +176,9 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
             data-testid={`seller-affiliate-statement-${group.orderID}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-mono text-xs text-muted-foreground">{group.orderID}</p>
+              <p className="min-w-0 break-all font-mono text-xs text-muted-foreground">
+                {group.orderID}
+              </p>
               <span
                 className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass(group.displayStatus)}`}
               >
