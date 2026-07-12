@@ -34,36 +34,47 @@ export function useSellerAffiliateStatements(
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
-  const inFlightRef = useRef(false);
+  const requestSequenceRef = useRef(0);
+  const inFlightRef = useRef<{
+    audience: SellerAffiliateStatementAudience;
+    requestID: number;
+  } | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      requestSequenceRef.current += 1;
+      inFlightRef.current = null;
     };
   }, []);
 
   const reload = useCallback(async (): Promise<void> => {
     if (!enabled) {
+      requestSequenceRef.current += 1;
+      inFlightRef.current = null;
       setStatements([]);
       setLoading(false);
       return;
     }
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
+    if (inFlightRef.current?.audience === audience) return;
+    const requestID = ++requestSequenceRef.current;
+    inFlightRef.current = { audience, requestID };
     setLoading(true);
     setError(null);
     try {
       const next = await listSellerAffiliateStatements(audience);
-      if (mountedRef.current) setStatements(next);
+      if (mountedRef.current && requestSequenceRef.current === requestID) setStatements(next);
     } catch (cause) {
-      if (mountedRef.current) {
+      if (mountedRef.current && requestSequenceRef.current === requestID) {
         setStatements([]);
         setError(cause instanceof Error ? cause.message : 'load_failed');
       }
     } finally {
-      inFlightRef.current = false;
-      if (mountedRef.current) setLoading(false);
+      if (requestSequenceRef.current === requestID) {
+        inFlightRef.current = null;
+        if (mountedRef.current) setLoading(false);
+      }
     }
   }, [audience, enabled]);
 

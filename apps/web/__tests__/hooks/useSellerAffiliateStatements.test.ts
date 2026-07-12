@@ -180,6 +180,49 @@ describe('useSellerAffiliateStatements polling', () => {
     expect(listSellerAffiliateStatementsMock).toHaveBeenCalledTimes(2);
   });
 
+  it('loads a new audience while the previous audience is still in flight and ignores the stale response', async () => {
+    let resolveSeller: (value: SellerAffiliateStatementLine[]) => void = () => {};
+    const sellerLine = line('submitted');
+    const promoterLine: SellerAffiliateStatementLine = {
+      ...line('confirmed'),
+      attribution: {
+        ...line('confirmed').attribution,
+        orderID: 'promoter-order',
+      },
+      commissionLine: {
+        ...line('confirmed').commissionLine,
+        orderID: 'promoter-order',
+      },
+    };
+    listSellerAffiliateStatementsMock.mockImplementation(audience => {
+      if (audience === 'seller') {
+        return new Promise<SellerAffiliateStatementLine[]>(resolve => {
+          resolveSeller = resolve;
+        });
+      }
+      return Promise.resolve([promoterLine]);
+    });
+
+    const initialProps: { audience: 'seller' | 'promoter' } = { audience: 'seller' };
+    const { result, rerender } = renderHook(
+      ({ audience }: { audience: 'seller' | 'promoter' }) => useSellerAffiliateStatements(audience),
+      { initialProps }
+    );
+    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('seller');
+
+    rerender({ audience: 'promoter' });
+    await flush();
+    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter');
+    expect(result.current.statements).toEqual([promoterLine]);
+
+    await act(async () => {
+      resolveSeller([sellerLine]);
+      await Promise.resolve();
+    });
+    expect(result.current.statements).toEqual([promoterLine]);
+    expect(result.current.loading).toBe(false);
+  });
+
   it('stops the poll timer on unmount', async () => {
     listSellerAffiliateStatementsMock.mockResolvedValue([line('submitted')]);
     const { unmount } = renderHook(() => useSellerAffiliateStatements('seller'));
