@@ -5,7 +5,12 @@
 export type SellerAffiliateCommissionStatus = 'pending' | 'reversed';
 
 /** UI state derived from commission facts and backend settlement confirmation. */
-export type SellerAffiliateDisplayStatus = 'pending' | 'settling' | 'paid' | 'reversed';
+export type SellerAffiliateDisplayStatus =
+  | 'pending'
+  | 'settling'
+  | 'paid'
+  | 'reversed'
+  | 'clawback_due';
 
 export type SellerAffiliateSettlementState = 'planned' | 'submitted' | 'confirmed';
 
@@ -27,6 +32,19 @@ export interface SellerAffiliateProgramRequest {
   status: SellerAffiliateProgramStatus;
   commissionRateBPS: number;
   attributionWindowSeconds: number;
+}
+
+export interface SellerAffiliateRailCapability {
+  railID: string;
+  assetScope: 'exact';
+  orderKinds: string[];
+  actions: string[];
+  guestSupport: boolean;
+}
+
+export interface SellerAffiliateCapabilities {
+  version: number;
+  rails: SellerAffiliateRailCapability[];
 }
 
 export interface SellerAffiliateLink {

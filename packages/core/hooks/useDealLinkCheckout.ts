@@ -6,7 +6,6 @@ import {
   createDealLinkFeeQuote,
   getPublicDealLink,
 } from '../services/api/dealLink';
-import { ApiError } from '../services/api/client';
 import type { DealLinkFeeQuote, DealLinkPageErrorKind, PublicDealLink } from '../types/dealLink';
 import {
   buildDealLinkAcceptanceRequest,
@@ -18,6 +17,7 @@ import {
   resolveDealLinkIdempotencyState,
 } from '../utils/dealLink';
 import type { SellerAffiliateReferralSession } from '../types/sellerAffiliate';
+import { shouldClearSellerAffiliateReferralOnError } from '../utils/sellerAffiliateReferral';
 
 export type DealLinkCheckoutPhase =
   | 'loading'
@@ -197,7 +197,7 @@ export function useDealLinkCheckout(
         setQuoteError('quote_expired');
         setQuote(null);
       }
-      if (affiliateReferralSessionID && shouldClearAffiliateReferralOnError(error)) {
+      if (affiliateReferralSessionID && shouldClearSellerAffiliateReferralOnError(error)) {
         onClearAffiliateReferral?.();
       }
       setAcceptError(error instanceof Error ? error.message : 'accept_failed');
@@ -232,11 +232,4 @@ export function useDealLinkCheckout(
     reloadDeal,
     acceptDeal,
   };
-}
-
-function shouldClearAffiliateReferralOnError(error: unknown): boolean {
-  if (!(error instanceof ApiError)) return false;
-  if (![400, 404, 409, 410].includes(error.status ?? 0)) return false;
-  const haystack = `${error.code ?? ''} ${error.message} ${error.detail ?? ''}`.toLowerCase();
-  return haystack.includes('affiliate') || haystack.includes('referral');
 }

@@ -9,6 +9,7 @@ const paramsMock = vi.fn<() => { programId?: string } | null>();
 const routerPushMock = vi.fn();
 const setLoginRedirectPathMock = vi.fn();
 const createSellerAffiliateLinkMock = vi.fn();
+const getPublicSellerAffiliateLinkMock = vi.fn();
 const mockToast = vi.fn();
 const copyToClipboardMock = vi.fn<(text: string) => Promise<boolean>>(async () => true);
 
@@ -43,6 +44,7 @@ vi.mock('@mobazha/core', async importOriginal => {
     useUserStore: (selector: (state: { isAuthenticated: boolean }) => unknown) =>
       selector({ isAuthenticated }),
     setLoginRedirectPath: (...args: unknown[]) => setLoginRedirectPathMock(...args),
+    getPublicSellerAffiliateLink: (...args: unknown[]) => getPublicSellerAffiliateLinkMock(...args),
   };
 });
 
@@ -52,6 +54,7 @@ vi.mock('@mobazha/core/services/api/sellerAffiliate', async importOriginal => {
   return {
     ...actual,
     createSellerAffiliateLink: (...args: unknown[]) => createSellerAffiliateLinkMock(...args),
+    getPublicSellerAffiliateLink: (...args: unknown[]) => getPublicSellerAffiliateLinkMock(...args),
   };
 });
 
@@ -64,6 +67,8 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
     routerPushMock.mockClear();
     setLoginRedirectPathMock.mockClear();
     createSellerAffiliateLinkMock.mockReset();
+    getPublicSellerAffiliateLinkMock.mockReset();
+    getPublicSellerAffiliateLinkMock.mockRejectedValue(new Error('not mocked'));
     mockToast.mockClear();
     copyToClipboardMock.mockClear();
     Object.defineProperty(window, 'location', {
@@ -109,6 +114,37 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
 
     expect(createSellerAffiliateLinkMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText('https://example.test/promo/token-1')).toBeInTheDocument();
+  });
+
+  it('shows the commission rate and attribution window once the link exists', async () => {
+    createSellerAffiliateLinkMock.mockResolvedValue({
+      id: 'link-1',
+      programID: 'program-1',
+      promoterPeerID: 'promoter-1',
+      publicToken: 'token-1',
+      publicPath: '/promo/token-1',
+      status: 'active',
+      createdAt: '2026-07-11T00:00:00Z',
+      updatedAt: '2026-07-11T00:00:00Z',
+    });
+    getPublicSellerAffiliateLinkMock.mockResolvedValue({
+      programID: 'program-1',
+      sellerPeerID: 'seller-1',
+      status: 'active',
+      commissionRateBPS: 500,
+      attributionWindowSeconds: 2592000,
+    });
+
+    render(<PromoteProgramPage />);
+    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+
+    // The i18n mock returns key names, so assert the wiring (fetch + rendered
+    // terms block) rather than interpolated copy.
+    const terms = await screen.findByTestId('promote-earn-terms');
+    expect(getPublicSellerAffiliateLinkMock).toHaveBeenCalledWith('token-1');
+    expect(terms).toHaveTextContent('promote.termsRate');
+    expect(terms).toHaveTextContent('promote.termsWindow');
+    expect(terms).toHaveTextContent('promote.termsLastTouch');
   });
 
   it('copies the link and shows success feedback', async () => {

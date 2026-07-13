@@ -21,6 +21,9 @@ import {
   resolveCheckoutPaymentPolicyFromCheckoutItems,
   persistCheckoutPaymentPolicy,
   sanitizeCheckoutPaymentPolicySession,
+  referralSessionForSeller,
+  clearSellerAffiliateReferralSession,
+  shouldClearSellerAffiliateReferralOnError,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import type { OrderItemOption, ProductSku } from '@mobazha/core';
@@ -814,9 +817,11 @@ export function useCheckout(): UseCheckoutReturn {
         needsShippingAddress && selectedApiAddress ? toOrderAddress(selectedApiAddress) : undefined;
 
       const discountCodes = appliedDiscounts.filter(d => d.code).map(d => d.code!);
+      const affiliateReferral = referralSessionForSeller(checkoutItems[0]?.vendor.peerID);
 
       const result = await ordersApi.createOrder({
         vendorId: checkoutItems[0]?.vendor.peerID,
+        affiliateReferralSessionID: affiliateReferral?.referralSessionID,
         discountCodes: discountCodes.length > 0 ? discountCodes : undefined,
         items: checkoutItems.map(item => {
           const payload: {
@@ -900,6 +905,10 @@ export function useCheckout(): UseCheckoutReturn {
 
       router.push(paymentUrl.toString());
     } catch (error) {
+      const affiliateReferral = referralSessionForSeller(checkoutItems[0]?.vendor.peerID);
+      if (affiliateReferral && shouldClearSellerAffiliateReferralOnError(error)) {
+        clearSellerAffiliateReferralSession();
+      }
       console.error('Create order failed:', error);
       toast({
         title: t('checkout.createOrderFailed'),

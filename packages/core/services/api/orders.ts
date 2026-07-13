@@ -619,6 +619,7 @@ export interface CreateOrderData {
   pricingCoin?: string; // 定价币种
   refundAddress?: string; // 买家显式声明的退款钱包地址（托管/交易所付款或无法自动解析时填写）
   moderator?: string; // 仲裁人 ID
+  affiliateReferralSessionID?: string; // 卖家范围内的推广归因会话
 }
 
 /**
@@ -702,6 +703,10 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
   // 添加 moderator（如果有）
   if (restData.moderator) {
     apiData.moderator = restData.moderator;
+  }
+
+  if (restData.affiliateReferralSessionID?.trim()) {
+    apiData.affiliateReferralSessionID = restData.affiliateReferralSessionID.trim();
   }
 
   // 如果有地址，转换为扁平字段格式（仅物理商品）

@@ -15,7 +15,7 @@ import {
 } from '../../utils/sellerAffiliate';
 import { get, post } from './client';
 import { getHostingUrl } from './config';
-import { hostingGet, hostingPost, hostingPut } from './helpers';
+import { hostingDel, hostingGet, hostingPost, hostingPut } from './helpers';
 
 export async function getSellerAffiliateProgram() {
   return normalizeSellerAffiliateProgram(
@@ -38,6 +38,18 @@ export async function putSellerAffiliateProgram(body: SellerAffiliateProgramRequ
 export async function createSellerAffiliateLink(programID: string) {
   return normalizeSellerAffiliateLink(
     await hostingPost<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINKS(programID))
+  );
+}
+
+export async function listSellerAffiliateLinks(programID: string) {
+  return unwrapSellerAffiliateList(
+    await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINKS(programID))
+  ).map(normalizeSellerAffiliateLink);
+}
+
+export async function revokeSellerAffiliateLink(programID: string, linkID: string) {
+  return normalizeSellerAffiliateLink(
+    await hostingDel<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINK(programID, linkID))
   );
 }
 

@@ -5,6 +5,7 @@ import { errorTracker } from '../services/monitoring/errorTracker';
 import type {
   PublicSellerAffiliateLink,
   SellerAffiliateAttribution,
+  SellerAffiliateCapabilities,
   SellerAffiliateCommissionLine,
   SellerAffiliateDisplayStatus,
   SellerAffiliateCapabilities,
@@ -121,6 +122,36 @@ export function normalizeSellerAffiliateProgram(value: unknown): SellerAffiliate
   };
 }
 
+export function normalizeSellerAffiliateCapabilities(value: unknown): SellerAffiliateCapabilities {
+  const raw = data(value);
+  const rails = raw.rails;
+  if (!Array.isArray(rails)) throw new Error('Invalid seller affiliate capabilities');
+  return {
+    version: numberField(raw, 'version'),
+    rails: rails.map(value => {
+      const rail = record(value);
+      const assetScope = stringField(rail, 'assetScope');
+      if (assetScope !== 'exact') throw new Error('Invalid seller affiliate asset scope');
+      if (
+        !Array.isArray(rail.orderKinds) ||
+        !rail.orderKinds.every(item => typeof item === 'string')
+      )
+        throw new Error('Invalid seller affiliate order kinds');
+      if (!Array.isArray(rail.actions) || !rail.actions.every(item => typeof item === 'string'))
+        throw new Error('Invalid seller affiliate actions');
+      if (typeof rail.guestSupport !== 'boolean')
+        throw new Error('Invalid seller affiliate guest support');
+      return {
+        railID: stringField(rail, 'railID'),
+        assetScope,
+        orderKinds: rail.orderKinds,
+        actions: rail.actions,
+        guestSupport: rail.guestSupport,
+      };
+    }),
+  };
+}
+
 export function normalizeSellerAffiliateLink(value: unknown): SellerAffiliateLink {
   const raw = data(value);
   const status = stringField(raw, 'status');
@@ -229,7 +260,7 @@ function normalizeSettlementOutput(value: unknown): SellerAffiliateSettlementOut
   };
 }
 
-/** A confirmed on-chain affiliate output cannot be reversed after the fact; it always wins over a `reversed` commission line. */
+/** Reports inconsistent cross-layer facts without silently changing their economic meaning. */
 export function reportSellerAffiliateContractAnomaly(
   reason: string,
   line: SellerAffiliateStatementLine
@@ -252,7 +283,7 @@ export function deriveSellerAffiliateDisplayStatus(
   const isReversed = line.commissionLine.status === 'reversed';
 
   if (isConfirmed && isReversed) {
-    reportSellerAffiliateContractAnomaly('confirmed_settlement_with_reversed_commission', line);
+    return 'clawback_due';
   }
 
   if (isConfirmed) return 'paid';
@@ -323,8 +354,8 @@ export function groupSellerAffiliateStatementLines(
   return groupKeys.map(key => {
     const groupLines = groups.get(key) as SellerAffiliateStatementLine[];
     const lineStatuses = groupLines.map(deriveSellerAffiliateDisplayStatus);
-    const hasReversed = lineStatuses.includes('reversed');
-    const hasActive = lineStatuses.some(status => status !== 'reversed');
+    const hasReversed = groupLines.some(line => line.commissionLine.status === 'reversed');
+    const hasActive = groupLines.some(line => line.commissionLine.status !== 'reversed');
 
     if (hasReversed && hasActive) {
       reportSellerAffiliateContractAnomaly(
@@ -334,7 +365,9 @@ export function groupSellerAffiliateStatementLines(
     }
 
     let displayStatus: SellerAffiliateDisplayStatus;
-    if (lineStatuses.includes('paid')) {
+    if (lineStatuses.includes('clawback_due')) {
+      displayStatus = 'clawback_due';
+    } else if (lineStatuses.includes('paid')) {
       displayStatus = 'paid';
     } else if (!hasActive) {
       displayStatus = 'reversed';

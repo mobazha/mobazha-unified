@@ -421,6 +421,8 @@ export const HOSTING_API = {
   SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',
   SELLER_AFFILIATE_PROGRAM_LINKS: (id: string) =>
     `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
+  SELLER_AFFILIATE_PROGRAM_LINK: (id: string, linkID: string) =>
+    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links/${encodeURIComponent(linkID)}`,
   PUBLIC_SELLER_AFFILIATE_LINK: (token: string) =>
     `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}`,
   PUBLIC_SELLER_AFFILIATE_SESSIONS: (token: string) =>

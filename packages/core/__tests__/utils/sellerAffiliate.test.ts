@@ -123,18 +123,9 @@ describe('seller affiliate statement status', () => {
     expect(deriveSellerAffiliateDisplayStatus(statement(settlementState))).toBe(expected);
   });
 
-  it('treats an irreversible confirmed on-chain output as paid even if the commission line was reversed', () => {
-    expect(deriveSellerAffiliateDisplayStatus(statement('confirmed', 'reversed'))).toBe('paid');
-  });
-
-  it('reports a contract anomaly when confirmed settlement contradicts a reversed commission line', () => {
-    const captureMessage = vi.spyOn(errorTracker, 'captureMessage');
-
-    deriveSellerAffiliateDisplayStatus(statement('confirmed', 'reversed'));
-
-    expect(captureMessage).toHaveBeenCalledWith(
-      expect.stringContaining('confirmed_settlement_with_reversed_commission'),
-      expect.objectContaining({ level: 'warning' })
+  it('derives an irreversible paid then reversed commission as clawback debt', () => {
+    expect(deriveSellerAffiliateDisplayStatus(statement('confirmed', 'reversed'))).toBe(
+      'clawback_due'
     );
   });
 
@@ -340,6 +331,12 @@ describe('groupSellerAffiliateStatementLines', () => {
     ];
 
     expect(groupSellerAffiliateStatementLines(lines)[0].displayStatus).toBe('paid');
+  });
+
+  it('shows confirmed then reversed commission as clawback debt', () => {
+    const lines = [line({ status: 'reversed', settlement: { state: 'confirmed' } })];
+
+    expect(groupSellerAffiliateStatementLines(lines)[0].displayStatus).toBe('clawback_due');
   });
 
   it('is reversed only when every line in the group is reversed', () => {

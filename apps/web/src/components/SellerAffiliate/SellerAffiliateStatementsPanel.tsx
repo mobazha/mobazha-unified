@@ -31,6 +31,7 @@ function statusClass(status: SellerAffiliateDisplayStatus): string {
   if (status === 'paid') return 'bg-primary/10 text-primary';
   if (status === 'settling') return 'bg-accent text-accent-foreground';
   if (status === 'reversed') return 'bg-destructive/10 text-destructive';
+  if (status === 'clawback_due') return 'bg-destructive/10 text-destructive';
   return 'bg-muted text-muted-foreground';
 }
 
@@ -136,6 +137,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
     settling: t('sellerAffiliate.settling'),
     paid: t('sellerAffiliate.paid'),
     reversed: t('sellerAffiliate.reversed'),
+    clawback_due: t('sellerAffiliate.clawbackDue'),
   };
   const groups = groupSellerAffiliateStatementLines(statements);
 

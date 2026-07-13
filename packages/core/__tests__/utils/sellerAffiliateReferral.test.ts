@@ -6,9 +6,11 @@ import {
   clearSellerAffiliateReferralSession,
   readSellerAffiliateReferralSession,
   referralSessionForSeller,
+  shouldClearSellerAffiliateReferralOnError,
   writeSellerAffiliateReferralSession,
 } from '../../utils/sellerAffiliateReferral';
 import type { SellerAffiliateReferralSession } from '../../types/sellerAffiliate';
+import { ApiError } from '../../services/api/client';
 
 const SELLER_A = 'QmSellerAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const SELLER_B = 'QmSellerBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
@@ -49,21 +51,35 @@ describe('seller affiliate referral session storage', () => {
     expect(readSellerAffiliateReferralSession()).toBeNull();
   });
 
+  it('survives a tab close by persisting in localStorage', () => {
+    writeSellerAffiliateReferralSession(session());
+    expect(localStorage.getItem('mobazha:seller-affiliate-referral')).not.toBeNull();
+    expect(sessionStorage.getItem('mobazha:seller-affiliate-referral')).toBeNull();
+  });
+
+  it('migrates a referral left behind by a prior sessionStorage build', () => {
+    sessionStorage.setItem(
+      'mobazha:seller-affiliate-referral',
+      JSON.stringify(session({ referralSessionID: 'legacy-1' }))
+    );
+    expect(readSellerAffiliateReferralSession()?.referralSessionID).toBe('legacy-1');
+  });
+
   it('treats an already-stale stored session as unusable and clears it on read', () => {
     // Bypass writeSellerAffiliateReferralSession's own expiry guard to simulate a
     // session that was valid when written but has since expired.
-    sessionStorage.setItem(
+    localStorage.setItem(
       'mobazha:seller-affiliate-referral',
       JSON.stringify(session({ expiresAt: '2000-01-01T00:00:00Z' }))
     );
     expect(readSellerAffiliateReferralSession()).toBeNull();
-    expect(sessionStorage.getItem('mobazha:seller-affiliate-referral')).toBeNull();
+    expect(localStorage.getItem('mobazha:seller-affiliate-referral')).toBeNull();
   });
 
   it('ignores malformed stored JSON and clears it', () => {
-    sessionStorage.setItem('mobazha:seller-affiliate-referral', '{not-json');
+    localStorage.setItem('mobazha:seller-affiliate-referral', '{not-json');
     expect(readSellerAffiliateReferralSession()).toBeNull();
-    expect(sessionStorage.getItem('mobazha:seller-affiliate-referral')).toBeNull();
+    expect(localStorage.getItem('mobazha:seller-affiliate-referral')).toBeNull();
   });
 
   it('only returns the session when it matches the requested seller', () => {
@@ -84,5 +100,17 @@ describe('seller affiliate referral session storage', () => {
 
     expect(referralSessionForSeller(SELLER_A)).toBeNull();
     expect(referralSessionForSeller(SELLER_B)?.referralSessionID).toBe('referral-2');
+  });
+
+  it('only clears referral state for explicit affiliate rejections', () => {
+    expect(
+      shouldClearSellerAffiliateReferralOnError(
+        new ApiError('invalid affiliate referral session', 409, 'CONFLICT')
+      )
+    ).toBe(true);
+    expect(
+      shouldClearSellerAffiliateReferralOnError(new ApiError('network unavailable', 503))
+    ).toBe(false);
+    expect(shouldClearSellerAffiliateReferralOnError(new Error('affiliate failed'))).toBe(false);
   });
 });

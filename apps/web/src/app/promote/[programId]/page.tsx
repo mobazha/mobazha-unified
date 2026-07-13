@@ -3,10 +3,16 @@
 
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
-import { setLoginRedirectPath, useI18n, useSellerAffiliateLink, useUserStore } from '@mobazha/core';
+import {
+  getPublicSellerAffiliateLink,
+  setLoginRedirectPath,
+  useI18n,
+  useSellerAffiliateLink,
+  useUserStore,
+} from '@mobazha/core';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +28,39 @@ export default function PromoteProgramPage() {
   const { toast } = useToast();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const { link, loading, error, ensureLink } = useSellerAffiliateLink();
+  const [terms, setTerms] = useState<{ token: string; rate: number; days: number } | null>(null);
+  const [termsErrorToken, setTermsErrorToken] = useState<string | null>(null);
   const shareHref =
     link && typeof window !== 'undefined'
       ? `${window.location.origin}/promo/${encodeURIComponent(link.publicToken)}`
       : null;
+
+  const publicToken = link?.publicToken;
+  useEffect(() => {
+    if (!publicToken) return;
+    let cancelled = false;
+    void getPublicSellerAffiliateLink(publicToken)
+      .then(details => {
+        if (cancelled) return;
+        setTerms({
+          token: publicToken,
+          rate: details.commissionRateBPS / 100,
+          days: Math.max(1, Math.round(details.attributionWindowSeconds / 86400)),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setTermsErrorToken(publicToken);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicToken]);
+
+  // Derive at render time (keyed on the current token) instead of resetting
+  // state inside the effect, so a token change never shows stale terms.
+  const activeTerms = terms && terms.token === publicToken ? terms : null;
+  const showTermsUnavailable =
+    !activeTerms && Boolean(publicToken) && termsErrorToken === publicToken;
 
   const handleRequireAuth = useCallback(() => {
     if (!programId) return;
@@ -129,6 +164,23 @@ export default function PromoteProgramPage() {
                   path: `/promo/${link.publicToken}`,
                 })}
               </p>
+              {activeTerms ? (
+                <div
+                  className="space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3"
+                  data-testid="promote-earn-terms"
+                >
+                  <p className="text-sm font-medium">{t('promote.termsTitle')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('promote.termsRate', { rate: String(activeTerms.rate) })}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('promote.termsWindow', { days: String(activeTerms.days) })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('promote.termsLastTouch')}</p>
+                </div>
+              ) : showTermsUnavailable ? (
+                <p className="text-xs text-muted-foreground">{t('promote.termsUnavailable')}</p>
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"

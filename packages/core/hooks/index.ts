@@ -25,6 +25,8 @@ export * from './useGuestSupplyQuote';
 export * from './useCheckoutSupplyQuote';
 export * from './useDealLinkCheckout';
 export * from './useSellerAffiliateProgram';
+export * from './useSellerAffiliateCapabilities';
+export * from './useSellerAffiliateLinks';
 export * from './useSellerAffiliateLink';
 export * from './useSellerAffiliateStatements';
 
