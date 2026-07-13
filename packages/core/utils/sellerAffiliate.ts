@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
+import BigNumber from 'bignumber.js';
 import { errorTracker } from '../services/monitoring/errorTracker';
 import type {
   PublicSellerAffiliateLink,
@@ -93,6 +94,91 @@ export function sellerAffiliateAttributionSecondsFromDaysInput(input: string): n
   if (!Number.isFinite(days) || days <= 0 || days > 365) return null;
   const seconds = Math.round(days * SECONDS_PER_DAY);
   return seconds >= SECONDS_PER_MINUTE ? seconds : null;
+}
+
+/**
+ * Grades an attribution window against how content-driven promotion actually
+ * converts. Social/video audiences buy over days, so a very short window
+ * silently discards sales a promoter genuinely drove — the seller should be
+ * warned before saving one, not after promoters churn.
+ *
+ * - 'too_short': under one day; most referred buyers never convert this fast.
+ * - 'short': under a week; workable but below the 7–30 day norm.
+ * - null: at or above a week; no advice needed.
+ */
+export function sellerAffiliateAttributionWindowAdvice(
+  seconds: number
+): 'too_short' | 'short' | null {
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  if (seconds < SECONDS_PER_DAY) return 'too_short';
+  if (seconds < 7 * SECONDS_PER_DAY) return 'short';
+  return null;
+}
+
+/**
+ * Estimates a promoter's commission on one sale from the item's merchandise
+ * amount (minimal units) and the program rate in basis points, floored like
+ * the backend. Display-only: a promoter sees "you earn ≈X" per item so the
+ * commission rate becomes a concrete number instead of an abstract percent.
+ */
+export function estimateSellerAffiliateCommissionAtomic(
+  merchandiseAtomic: string | number,
+  commissionRateBPS: number
+): string {
+  if (!Number.isFinite(commissionRateBPS) || commissionRateBPS <= 0) return '0';
+  const merchandise = new BigNumber(merchandiseAtomic);
+  if (!merchandise.isFinite() || merchandise.lte(0)) return '0';
+  return merchandise
+    .multipliedBy(commissionRateBPS)
+    .dividedBy(10_000)
+    .integerValue(BigNumber.ROUND_FLOOR)
+    .toFixed(0);
+}
+
+/** A promoter's/seller's earnings at a glance: counts by lifecycle plus paid totals per currency. */
+export interface SellerAffiliateEarningsSummary {
+  totalOrders: number;
+  /** Orders whose commission is confirmed paid on-chain. */
+  paidOrders: number;
+  /** Orders still in the pending/settling pipeline (not yet paid, not reversed). */
+  pendingOrders: number;
+  /** Confirmed-paid commission summed per currency, so mixed rails never cross-sum. */
+  paidByCurrency: { currency: string; commissionAtomic: string }[];
+}
+
+/**
+ * Rolls grouped statements into a headline summary. Paid amounts stay grouped
+ * by currency (a promoter paid in SOL and USDC must not be summed into one
+ * meaningless number); fiat conversion, if any, is left to the display layer.
+ */
+export function summarizeSellerAffiliateEarnings(
+  groups: SellerAffiliateGroupedStatement[]
+): SellerAffiliateEarningsSummary {
+  let paidOrders = 0;
+  let pendingOrders = 0;
+  const paidTotals = new Map<string, bigint>();
+  const currencyOrder: string[] = [];
+
+  for (const group of groups) {
+    if (group.displayStatus === 'paid') {
+      paidOrders += 1;
+      const prior = paidTotals.get(group.currency);
+      if (prior === undefined) currencyOrder.push(group.currency);
+      paidTotals.set(group.currency, (prior ?? BigInt(0)) + BigInt(group.commissionAtomic));
+    } else if (group.displayStatus === 'pending' || group.displayStatus === 'settling') {
+      pendingOrders += 1;
+    }
+  }
+
+  return {
+    totalOrders: groups.length,
+    paidOrders,
+    pendingOrders,
+    paidByCurrency: currencyOrder.map(currency => ({
+      currency,
+      commissionAtomic: (paidTotals.get(currency) as bigint).toString(),
+    })),
+  };
 }
 
 function record(value: unknown): Record<string, unknown> {

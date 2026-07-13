@@ -9997,6 +9997,14 @@ export const en: TranslationResource = {
     windowMinutes: '{{count}} minutes',
     windowSeconds: '{{count}} seconds',
     attributionWindowExact: 'Exact attribution window: {{window}}',
+    attributionWindowRecommend:
+      'Content-driven promotion converts over days — 7–30 days is typical. A short window discards sales your promoters actually drove.',
+    attributionWindowTooShort:
+      'Under 24 hours is very short for content promotion — most social and video buyers convert over days. Consider 7 days or more.',
+    earningsSummaryHeading: 'Earnings summary',
+    earningsPaidLabel: 'Paid out',
+    earningsInProgressLabel: 'In progress',
+    earningsOrders: '{{count}} orders',
     invalidProgram:
       'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
     noManualWorkflow:
@@ -10083,6 +10091,10 @@ export const en: TranslationResource = {
     termsWindow: 'Attribution window {{days}} days after a buyer opens your link',
     termsWindowExact: 'Attribution window: {{window}} after a buyer opens your link',
     promotingStore: 'Promoting {{name}}',
+    storefrontTitle: "What you're promoting",
+    storefrontSubtitle: 'A few items from this store, so you know what your audience is buying.',
+    storefrontViewAll: 'View full store',
+    storefrontEarn: 'You earn ≈{{amount}}',
     termsLastTouch:
       'Attribution is last-touch: if the buyer later opens another promoter link, it can replace yours.',
     termsUnavailable: 'Commission terms are unavailable right now.',

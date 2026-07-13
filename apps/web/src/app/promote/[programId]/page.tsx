@@ -18,6 +18,7 @@ import {
 } from '@mobazha/core';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components';
+import { PromoteStorefront } from '@/components/SellerAffiliate/PromoteStorefront';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -179,6 +180,13 @@ export default function PromoteProgramPage() {
             <p className="text-muted-foreground">{t('sellerAffiliate.programLinkDescription')}</p>
           </CardContent>
         </Card>
+
+        {activeTerms ? (
+          <PromoteStorefront
+            sellerPeerID={activeTerms.sellerPeerID}
+            commissionRateBPS={Math.round(activeTerms.rate * 100)}
+          />
+        ) : null}
 
         <Card>
           <CardHeader>

@@ -9205,6 +9205,14 @@ export const zh: PartialTranslationResource = {
     windowMinutes: '{{count}} 分钟',
     windowSeconds: '{{count}} 秒',
     attributionWindowExact: '实际归因窗口：{{window}}',
+    attributionWindowRecommend:
+      '内容带货的转化通常发生在数天内，行业常见 7–30 天。窗口过短会白白丢掉推广者真正带来的成交。',
+    attributionWindowTooShort:
+      '低于 24 小时对内容带货来说非常短——社媒/视频观众大多在数天内才下单，建议设为 7 天以上。',
+    earningsSummaryHeading: '收益概览',
+    earningsPaidLabel: '已到账',
+    earningsInProgressLabel: '进行中',
+    earningsOrders: '{{count}} 笔订单',
     invalidProgram: '请输入 0–100% 的佣金比例，以及不少于 0.01 天的归因窗口。',
     noManualWorkflow:
       '本计划没有审核队列、人工预算或申领流程；已支持的加密货币结算通道会在订单资金释放时自动向推广者付款，"已支付"始终代表链上已确认的分账。',
@@ -9287,6 +9295,10 @@ export const zh: PartialTranslationResource = {
     termsWindow: '买家点击你的链接后 {{days}} 天内的购买都会归因给你',
     termsWindowExact: '归因窗口：买家打开你的链接后 {{window}} 内有效',
     promotingStore: '推广店铺：{{name}}',
+    storefrontTitle: '你正在推广的商品',
+    storefrontSubtitle: '这家店铺的部分在售商品，先看看你的观众会买什么。',
+    storefrontViewAll: '查看完整店铺',
+    storefrontEarn: '每单约赚 ≈{{amount}}',
     termsLastTouch: '归因为"最后触点"：若买家之后又点击了其他推广链接，你的归因可能被顶替。',
     termsUnavailable: '暂时无法加载佣金条款。',
     commissionsLinkTitle: '推广收益账单',

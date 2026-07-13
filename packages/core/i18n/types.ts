@@ -5956,6 +5956,12 @@ export interface TranslationResource {
     windowMinutes?: string;
     windowSeconds?: string;
     attributionWindowExact?: string;
+    attributionWindowRecommend?: string;
+    attributionWindowTooShort?: string;
+    earningsSummaryHeading?: string;
+    earningsPaidLabel?: string;
+    earningsInProgressLabel?: string;
+    earningsOrders?: string;
     invalidProgram?: string;
     noManualWorkflow?: string;
     saveProgram?: string;
@@ -6034,6 +6040,10 @@ export interface TranslationResource {
     termsWindow?: string;
     termsWindowExact?: string;
     promotingStore?: string;
+    storefrontTitle?: string;
+    storefrontSubtitle?: string;
+    storefrontViewAll?: string;
+    storefrontEarn?: string;
     termsLastTouch?: string;
     termsUnavailable?: string;
     commissionsLinkTitle?: string;

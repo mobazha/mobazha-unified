@@ -9,7 +9,9 @@ import {
   getPaymentCoinDisplayLabel,
   groupSellerAffiliateStatementLines,
   renderPairedPrice,
+  summarizeSellerAffiliateEarnings,
   truncateAddress,
+  useCurrencyFormat,
   useI18n,
   useSellerAffiliateStatements,
 } from '@mobazha/core';
@@ -78,6 +80,7 @@ interface SettlementDetailProps {
 
 const SettlementDetail = memo(function SettlementDetail({ settlement }: SettlementDetailProps) {
   const { t } = useI18n();
+  const { localCurrency } = useCurrencyFormat();
 
   return (
     <div className="mt-2 space-y-1 border-t border-border pt-2">
@@ -85,7 +88,7 @@ const SettlementDetail = memo(function SettlementDetail({ settlement }: Settleme
         <p className="text-xs text-muted-foreground">{t('sellerAffiliate.settlementAmount')}</p>
         <p className="text-xs font-medium">
           {getPaymentCoinDisplayLabel(settlement.coin)}{' '}
-          {renderPairedPrice(settlement.amount, settlement.coin, settlement.coin, {
+          {renderPairedPrice(settlement.amount, settlement.coin, localCurrency, {
             isMinimalUnit: true,
           })}
         </p>
@@ -126,6 +129,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
   audience,
 }: SellerAffiliateStatementsPanelProps) {
   const { t } = useI18n();
+  const { localCurrency } = useCurrencyFormat();
   const { statements, loading, error, reload } = useSellerAffiliateStatements(audience);
   const title = t(
     audience === 'seller'
@@ -140,6 +144,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
     clawback_due: t('sellerAffiliate.clawbackDue'),
   };
   const groups = groupSellerAffiliateStatementLines(statements);
+  const summary = summarizeSellerAffiliateEarnings(groups);
 
   return (
     <Card data-testid={`seller-affiliate-statements-${audience}`} aria-busy={loading}>
@@ -177,6 +182,42 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
             )}
           </p>
         ) : null}
+        {groups.length ? (
+          <div
+            className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/20 p-3"
+            data-testid={`seller-affiliate-earnings-summary-${audience}`}
+          >
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('sellerAffiliate.earningsPaidLabel')}
+              </p>
+              {summary.paidByCurrency.length ? (
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  {summary.paidByCurrency.map(entry => (
+                    <span key={entry.currency} className="text-sm font-semibold text-primary">
+                      {renderPairedPrice(entry.commissionAtomic, entry.currency, localCurrency, {
+                        isMinimalUnit: true,
+                      })}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-muted-foreground">—</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {t('sellerAffiliate.earningsOrders', { count: summary.paidOrders })}
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('sellerAffiliate.earningsInProgressLabel')}
+              </p>
+              <p className="text-sm font-semibold">
+                {t('sellerAffiliate.earningsOrders', { count: summary.pendingOrders })}
+              </p>
+            </div>
+          </div>
+        ) : null}
         {groups.map(group => (
           <article
             key={`${group.orderID}::${group.currency}`}
@@ -196,7 +237,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
             <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-sm text-muted-foreground">{t('sellerAffiliate.commission')}</p>
               <p className="font-medium">
-                {renderPairedPrice(group.commissionAtomic, group.currency, group.currency, {
+                {renderPairedPrice(group.commissionAtomic, group.currency, localCurrency, {
                   isMinimalUnit: true,
                 })}
               </p>

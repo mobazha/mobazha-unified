@@ -9,6 +9,7 @@ import {
   normalizeSellerAffiliateCapabilities,
   normalizeSellerAffiliateStatementLine,
   normalizeSellerAffiliateStatementPage,
+  summarizeSellerAffiliateEarnings,
 } from '../../utils/sellerAffiliate';
 import type { SellerAffiliateStatementLine } from '../../types/sellerAffiliate';
 
@@ -475,5 +476,89 @@ describe('unwrapSellerAffiliateList envelopes', () => {
     expect(unwrapSellerAffiliateList({ data: [{ a: 1 }] })).toEqual([{ a: 1 }]);
     expect(unwrapSellerAffiliateList([{ a: 1 }])).toEqual([{ a: 1 }]);
     expect(unwrapSellerAffiliateList({ data: { page: 1 } })).toEqual([]);
+  });
+});
+
+describe('sellerAffiliateAttributionWindowAdvice', () => {
+  it('flags a sub-day window as too short and a sub-week window as short', async () => {
+    const { sellerAffiliateAttributionWindowAdvice } = await import('../../utils/sellerAffiliate');
+    expect(sellerAffiliateAttributionWindowAdvice(3_600)).toBe('too_short');
+    expect(sellerAffiliateAttributionWindowAdvice(86_400 - 1)).toBe('too_short');
+    expect(sellerAffiliateAttributionWindowAdvice(86_400)).toBe('short');
+    expect(sellerAffiliateAttributionWindowAdvice(6 * 86_400)).toBe('short');
+    expect(sellerAffiliateAttributionWindowAdvice(7 * 86_400)).toBeNull();
+    expect(sellerAffiliateAttributionWindowAdvice(30 * 86_400)).toBeNull();
+    expect(sellerAffiliateAttributionWindowAdvice(0)).toBeNull();
+  });
+});
+
+describe('estimateSellerAffiliateCommissionAtomic', () => {
+  it('applies the basis-point rate and floors like the backend', async () => {
+    const { estimateSellerAffiliateCommissionAtomic } = await import('../../utils/sellerAffiliate');
+    // 5% of 10_000 minimal units = 500.
+    expect(estimateSellerAffiliateCommissionAtomic('10000', 500)).toBe('500');
+    // Flooring: 5% of 199 = 9.95 -> 9.
+    expect(estimateSellerAffiliateCommissionAtomic('199', 500)).toBe('9');
+  });
+
+  it('stays exact for amounts beyond Number.MAX_SAFE_INTEGER (wei-scale)', async () => {
+    const { estimateSellerAffiliateCommissionAtomic } = await import('../../utils/sellerAffiliate');
+    // 10% of 1e19 wei = 1e18 wei, unrepresentable in float64.
+    expect(estimateSellerAffiliateCommissionAtomic('10000000000000000000', 1000)).toBe(
+      '1000000000000000000'
+    );
+  });
+
+  it('returns "0" for a non-positive amount or rate', async () => {
+    const { estimateSellerAffiliateCommissionAtomic } = await import('../../utils/sellerAffiliate');
+    expect(estimateSellerAffiliateCommissionAtomic('0', 500)).toBe('0');
+    expect(estimateSellerAffiliateCommissionAtomic('10000', 0)).toBe('0');
+    expect(estimateSellerAffiliateCommissionAtomic('nope', 500)).toBe('0');
+  });
+});
+
+describe('summarizeSellerAffiliateEarnings', () => {
+  it('counts lifecycle buckets and sums paid commission per currency', () => {
+    const groups = groupSellerAffiliateStatementLines([
+      // Paid order in ETH.
+      line({ orderID: 'o1', commissionAtomic: '100', settlement: { state: 'confirmed' } }),
+      // A second paid ETH order — sums with the first.
+      line({ orderID: 'o2', commissionAtomic: '250', settlement: { state: 'confirmed' } }),
+      // Paid order in a different currency — kept separate, never cross-summed.
+      line({
+        orderID: 'o3',
+        currency: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
+        commissionAtomic: '77',
+        settlement: { state: 'confirmed' },
+      }),
+      // Settling (in-progress).
+      line({ orderID: 'o4', settlement: { state: 'submitted' } }),
+      // Pending (in-progress).
+      line({ orderID: 'o5' }),
+      // Reversed — neither paid nor in-progress.
+      line({ orderID: 'o6', status: 'reversed' }),
+    ]);
+
+    const summary = summarizeSellerAffiliateEarnings(groups);
+
+    expect(summary.totalOrders).toBe(6);
+    expect(summary.paidOrders).toBe(3);
+    expect(summary.pendingOrders).toBe(2);
+    expect(summary.paidByCurrency).toEqual([
+      { currency: 'crypto:eip155:1:native', commissionAtomic: '350' },
+      {
+        currency: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
+        commissionAtomic: '77',
+      },
+    ]);
+  });
+
+  it('is all-zero for an empty statement', () => {
+    expect(summarizeSellerAffiliateEarnings([])).toEqual({
+      totalOrders: 0,
+      paidOrders: 0,
+      pendingOrders: 0,
+      paidByCurrency: [],
+    });
   });
 });

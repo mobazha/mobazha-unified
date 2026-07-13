@@ -197,6 +197,32 @@ describe('SellerAffiliateStatementsPanel', () => {
     );
   });
 
+  it('renders an earnings summary strip that sums paid commission per currency', () => {
+    // Two paid ETH orders (100 + 250) plus one pending order: the summary must
+    // surface the paid total and the paid/in-progress split so a promoter sees
+    // "what have I earned" without reading every row.
+    mockStatements([
+      buildLine({ orderID: 'o1', commissionAtomic: '100', settlement: { state: 'confirmed' } }),
+      buildLine({ orderID: 'o2', commissionAtomic: '250', settlement: { state: 'confirmed' } }),
+      buildLine({ orderID: 'o3' }),
+    ]);
+    render(<SellerAffiliateStatementsPanel audience="promoter" />);
+
+    const summary = screen.getByTestId('seller-affiliate-earnings-summary-promoter');
+    expect(summary).toHaveTextContent('sellerAffiliate.earningsPaidLabel');
+    expect(summary).toHaveTextContent('sellerAffiliate.earningsInProgressLabel');
+    // renderPairedPrice is mocked to AMT:<amount>; 100 + 250 summed with BigInt.
+    expect(summary).toHaveTextContent('AMT:350');
+  });
+
+  it('omits the earnings summary when there are no statements', () => {
+    mockStatements([]);
+    render(<SellerAffiliateStatementsPanel audience="promoter" />);
+    expect(
+      screen.queryByTestId('seller-affiliate-earnings-summary-promoter')
+    ).not.toBeInTheDocument();
+  });
+
   it('groups multiple lines of the same order into a single card with one settlement block', () => {
     mockStatements([
       buildLine({ orderLineID: 'line-1', settlement: { state: 'confirmed', txHash: '0xtx' } }),

@@ -122,6 +122,31 @@ describe('SellerAffiliateProgramPanel', () => {
     );
   });
 
+  it('warns that a sub-day attribution window is too short for content promotion', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      attributionWindowSeconds: 3600,
+    });
+    render(<SellerAffiliateProgramPanel />);
+
+    const advice = await screen.findByTestId('affiliate-window-advice');
+    expect(advice).toHaveAttribute('data-advice', 'too_short');
+    expect(advice).toHaveTextContent('sellerAffiliate.attributionWindowTooShort');
+  });
+
+  it('gives no window advice at or above the recommended one-week window', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      attributionWindowSeconds: 30 * 86_400,
+    });
+    render(<SellerAffiliateProgramPanel />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('30')
+    );
+    expect(screen.queryByTestId('affiliate-window-advice')).not.toBeInTheDocument();
+  });
+
   it('disables the form inputs until the stored program has hydrated', async () => {
     getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
     render(<SellerAffiliateProgramPanel />);

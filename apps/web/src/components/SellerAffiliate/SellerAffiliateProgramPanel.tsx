@@ -9,6 +9,7 @@ import {
   describeSellerAffiliateAttributionWindow,
   getPaymentCoinDisplayLabel,
   sellerAffiliateAttributionDaysInput,
+  sellerAffiliateAttributionWindowAdvice,
   sellerAffiliateAttributionSecondsFromDaysInput,
   sellerAffiliateAttributionWindowCopy,
   useI18n,
@@ -81,6 +82,12 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       ? t('sellerAffiliate.attributionWindowExact', {
           window: formatWindow(effectiveWindowSeconds),
         })
+      : null;
+
+  // Warn before a too-short window silently discards promoter-driven sales.
+  const windowAdvice =
+    effectiveWindowSeconds !== null
+      ? sellerAffiliateAttributionWindowAdvice(effectiveWindowSeconds)
       : null;
 
   const handleSave = useCallback(async (): Promise<void> => {
@@ -188,6 +195,23 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             {windowHint ? (
               <p className="text-xs text-muted-foreground" data-testid="affiliate-window-hint">
                 {windowHint}
+              </p>
+            ) : null}
+            {windowAdvice ? (
+              <p
+                className={
+                  windowAdvice === 'too_short'
+                    ? 'text-xs font-medium text-destructive'
+                    : 'text-xs text-muted-foreground'
+                }
+                data-testid="affiliate-window-advice"
+                data-advice={windowAdvice}
+              >
+                {t(
+                  windowAdvice === 'too_short'
+                    ? 'sellerAffiliate.attributionWindowTooShort'
+                    : 'sellerAffiliate.attributionWindowRecommend'
+                )}
               </p>
             ) : null}
           </div>

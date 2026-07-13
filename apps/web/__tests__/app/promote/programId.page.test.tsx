@@ -19,6 +19,12 @@ vi.mock('@/components', () => ({
   Header: () => <div data-testid="mock-header" />,
 }));
 
+// The storefront pulls live listings via React Query; this page test renders
+// without a QueryClientProvider, so stub it (its own test covers its behavior).
+vi.mock('@/components/SellerAffiliate/PromoteStorefront', () => ({
+  PromoteStorefront: () => <div data-testid="mock-promote-storefront" />,
+}));
+
 vi.mock('next/navigation', () => ({
   useParams: () => paramsMock(),
   useRouter: () => ({ push: routerPushMock }),
