@@ -34,19 +34,6 @@ export interface SellerAffiliateProgramRequest {
   attributionWindowSeconds: number;
 }
 
-export interface SellerAffiliateRailCapability {
-  railID: string;
-  assetScope: 'exact';
-  orderKinds: string[];
-  actions: string[];
-  guestSupport: boolean;
-}
-
-export interface SellerAffiliateCapabilities {
-  version: number;
-  rails: SellerAffiliateRailCapability[];
-}
-
 /** One promoter payout destination projected with a human-readable rail name. */
 export interface SellerAffiliatePayoutRail {
   railID: string;

@@ -9,7 +9,6 @@ import type {
   SellerAffiliateCapabilities,
   SellerAffiliateCommissionLine,
   SellerAffiliateDisplayStatus,
-  SellerAffiliateCapabilities,
   SellerAffiliateGroupedStatement,
   SellerAffiliateLink,
   SellerAffiliatePayoutRail,
@@ -284,36 +283,6 @@ export function normalizeSellerAffiliateProgram(value: unknown): SellerAffiliate
     attributionWindowSeconds: numberField(raw, 'attributionWindowSeconds'),
     createdAt: stringField(raw, 'createdAt'),
     updatedAt: stringField(raw, 'updatedAt'),
-  };
-}
-
-export function normalizeSellerAffiliateCapabilities(value: unknown): SellerAffiliateCapabilities {
-  const raw = data(value);
-  const rails = raw.rails;
-  if (!Array.isArray(rails)) throw new Error('Invalid seller affiliate capabilities');
-  return {
-    version: numberField(raw, 'version'),
-    rails: rails.map(value => {
-      const rail = record(value);
-      const assetScope = stringField(rail, 'assetScope');
-      if (assetScope !== 'exact') throw new Error('Invalid seller affiliate asset scope');
-      if (
-        !Array.isArray(rail.orderKinds) ||
-        !rail.orderKinds.every(item => typeof item === 'string')
-      )
-        throw new Error('Invalid seller affiliate order kinds');
-      if (!Array.isArray(rail.actions) || !rail.actions.every(item => typeof item === 'string'))
-        throw new Error('Invalid seller affiliate actions');
-      if (typeof rail.guestSupport !== 'boolean')
-        throw new Error('Invalid seller affiliate guest support');
-      return {
-        railID: stringField(rail, 'railID'),
-        assetScope,
-        orderKinds: rail.orderKinds,
-        actions: rail.actions,
-        guestSupport: rail.guestSupport,
-      };
-    }),
   };
 }
 
