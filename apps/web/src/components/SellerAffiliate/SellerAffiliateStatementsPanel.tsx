@@ -169,7 +169,13 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
           </p>
         ) : null}
         {!loading && !error && !groups.length ? (
-          <p className="text-sm text-muted-foreground">{t('sellerAffiliate.statementEmpty')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              audience === 'promoter'
+                ? 'sellerAffiliate.statementEmptyPromoter'
+                : 'sellerAffiliate.statementEmptySeller'
+            )}
+          </p>
         ) : null}
         {groups.map(group => (
           <article

@@ -6,7 +6,11 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Check, Copy, Save, Trash2 } from 'lucide-react';
 import {
+  describeSellerAffiliateAttributionWindow,
   getPaymentCoinDisplayLabel,
+  sellerAffiliateAttributionDaysInput,
+  sellerAffiliateAttributionSecondsFromDaysInput,
+  sellerAffiliateAttributionWindowCopy,
   useI18n,
   useSellerAffiliateCapabilities,
   useSellerAffiliateLinks,
@@ -36,6 +40,10 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const [status, setStatus] = useState<'active' | 'paused'>('paused');
   const [rate, setRate] = useState('5');
   const [windowDays, setWindowDays] = useState('30');
+  // The exact stored window. While the input text still matches this value's
+  // rendering, saving must send it back verbatim: the days input is lossy for
+  // sub-day windows and must never silently rewrite an untouched setting.
+  const [savedWindowSeconds, setSavedWindowSeconds] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -46,18 +54,42 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     if (!program) return;
     setStatus(program.status);
     setRate(String(program.commissionRateBPS / 100));
-    setWindowDays(String(Math.max(1, Math.round(program.attributionWindowSeconds / 86400))));
+    setSavedWindowSeconds(program.attributionWindowSeconds);
+    setWindowDays(sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
   }, [program]);
+
+  // The window that would actually be saved: the untouched stored value, or
+  // the user's (possibly fractional) days input converted to seconds.
+  const effectiveWindowSeconds =
+    savedWindowSeconds !== null &&
+    windowDays === sellerAffiliateAttributionDaysInput(savedWindowSeconds)
+      ? savedWindowSeconds
+      : sellerAffiliateAttributionSecondsFromDaysInput(windowDays);
+
+  const formatWindow = useCallback(
+    (seconds: number): string => {
+      const copy = sellerAffiliateAttributionWindowCopy(seconds);
+      return t(copy.key, copy.params);
+    },
+    [t]
+  );
+
+  // Sub-day windows render as fractional days, so spell out the exact duration.
+  const windowHint =
+    effectiveWindowSeconds !== null &&
+    describeSellerAffiliateAttributionWindow(effectiveWindowSeconds).unit !== 'day'
+      ? t('sellerAffiliate.attributionWindowExact', {
+          window: formatWindow(effectiveWindowSeconds),
+        })
+      : null;
 
   const handleSave = useCallback(async (): Promise<void> => {
     const rateNumber = Number(rate);
-    const days = Number(windowDays);
     if (
       !Number.isFinite(rateNumber) ||
       rateNumber <= 0 ||
       rateNumber > 100 ||
-      !Number.isInteger(days) ||
-      days <= 0
+      effectiveWindowSeconds === null
     ) {
       setSaveError(t('sellerAffiliate.invalidProgram'));
       return;
@@ -68,14 +100,14 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       await save({
         status,
         commissionRateBPS: Math.round(rateNumber * 100),
-        attributionWindowSeconds: days * 86400,
+        attributionWindowSeconds: effectiveWindowSeconds,
       });
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
     } finally {
       setSaving(false);
     }
-  }, [rate, save, status, t, windowDays]);
+  }, [effectiveWindowSeconds, rate, save, status, t]);
 
   const handleCopyPromoterInvite = useCallback(async (): Promise<void> => {
     if (!program || typeof window === 'undefined') return;
@@ -128,6 +160,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
               value={status}
               onChange={event => setStatus(event.target.value as 'active' | 'paused')}
               className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+              disabled={loading}
             >
               <option value="active">{t('sellerAffiliate.active')}</option>
               <option value="paused">{t('sellerAffiliate.paused')}</option>
@@ -140,16 +173,23 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
               inputMode="decimal"
               value={rate}
               onChange={event => setRate(event.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionDays')}</Label>
             <Input
               id="affiliate-window"
-              inputMode="numeric"
+              inputMode="decimal"
               value={windowDays}
               onChange={event => setWindowDays(event.target.value)}
+              disabled={loading}
             />
+            {windowHint ? (
+              <p className="text-xs text-muted-foreground" data-testid="affiliate-window-hint">
+                {windowHint}
+              </p>
+            ) : null}
           </div>
         </div>
         <p className="text-sm text-muted-foreground">{t('sellerAffiliate.noManualWorkflow')}</p>

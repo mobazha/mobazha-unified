@@ -47,6 +47,14 @@ export interface SellerAffiliateCapabilities {
   rails: SellerAffiliateRailCapability[];
 }
 
+/** One promoter payout destination projected with a human-readable rail name. */
+export interface SellerAffiliatePayoutRail {
+  railID: string;
+  /** Backend-provided display name, e.g. "Bitcoin (BTC)"; may be absent on older backends. */
+  railLabel?: string;
+  address: string;
+}
+
 export interface SellerAffiliateLink {
   id: string;
   programID: string;
@@ -54,6 +62,8 @@ export interface SellerAffiliateLink {
   publicToken: string;
   publicPath: string;
   status: 'active' | 'revoked';
+  /** Rails this link can pay commissions on; absent on backends that predate it. */
+  payoutRails?: SellerAffiliatePayoutRail[];
   createdAt: string;
   updatedAt: string;
 }

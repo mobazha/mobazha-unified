@@ -7,7 +7,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
 import {
+  getPaymentCoinDisplayLabel,
+  getProfileDisplayInfo,
   getPublicSellerAffiliateLink,
+  sellerAffiliateAttributionWindowCopy,
   setLoginRedirectPath,
   useI18n,
   useSellerAffiliateLink,
@@ -28,8 +31,14 @@ export default function PromoteProgramPage() {
   const { toast } = useToast();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const { link, loading, error, ensureLink } = useSellerAffiliateLink();
-  const [terms, setTerms] = useState<{ token: string; rate: number; days: number } | null>(null);
+  const [terms, setTerms] = useState<{
+    token: string;
+    rate: number;
+    windowSeconds: number;
+    sellerPeerID: string;
+  } | null>(null);
   const [termsErrorToken, setTermsErrorToken] = useState<string | null>(null);
+  const [sellerName, setSellerName] = useState<string | null>(null);
   const shareHref =
     link && typeof window !== 'undefined'
       ? `${window.location.origin}/promo/${encodeURIComponent(link.publicToken)}`
@@ -45,7 +54,8 @@ export default function PromoteProgramPage() {
         setTerms({
           token: publicToken,
           rate: details.commissionRateBPS / 100,
-          days: Math.max(1, Math.round(details.attributionWindowSeconds / 86400)),
+          windowSeconds: details.attributionWindowSeconds,
+          sellerPeerID: details.sellerPeerID,
         });
       })
       .catch(() => {
@@ -55,6 +65,24 @@ export default function PromoteProgramPage() {
       cancelled = true;
     };
   }, [publicToken]);
+
+  // Resolve the seller's display name so the promoter can see whose store the
+  // link promotes; the raw peer ID means nothing to a non-technical user.
+  const termsSellerPeerID = terms?.sellerPeerID;
+  useEffect(() => {
+    if (!termsSellerPeerID) return;
+    let cancelled = false;
+    void getProfileDisplayInfo(termsSellerPeerID)
+      .then(profile => {
+        if (!cancelled && profile?.name) setSellerName(profile.name);
+      })
+      .catch(() => {
+        // Display-only enrichment: the page stays fully usable without a name.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [termsSellerPeerID]);
 
   // Derive at render time (keyed on the current token) instead of resetting
   // state inside the effect, so a token change never shows stale terms.
@@ -119,6 +147,16 @@ export default function PromoteProgramPage() {
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8" data-testid="promote-program-page">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t('promote.title')}</h1>
+        {sellerName && activeTerms ? (
+          <p className="text-sm font-medium" data-testid="promote-seller-name">
+            <Link
+              href={`/store/${encodeURIComponent(activeTerms.sellerPeerID)}`}
+              className="text-primary hover:underline"
+            >
+              {t('promote.promotingStore', { name: sellerName })}
+            </Link>
+          </p>
+        ) : null}
         <p className="text-sm text-muted-foreground">{t('promote.subtitle')}</p>
       </div>
 
@@ -174,12 +212,32 @@ export default function PromoteProgramPage() {
                     {t('promote.termsRate', { rate: String(activeTerms.rate) })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {t('promote.termsWindow', { days: String(activeTerms.days) })}
+                    {(() => {
+                      // Render the window in its exact unit ("1 hour", "7 days") —
+                      // rounding a sub-day window up to days would misstate terms.
+                      const copy = sellerAffiliateAttributionWindowCopy(activeTerms.windowSeconds);
+                      return t('promote.termsWindowExact', { window: t(copy.key, copy.params) });
+                    })()}
                   </p>
                   <p className="text-xs text-muted-foreground">{t('promote.termsLastTouch')}</p>
                 </div>
               ) : showTermsUnavailable ? (
                 <p className="text-xs text-muted-foreground">{t('promote.termsUnavailable')}</p>
+              ) : null}
+              {link.payoutRails?.length ? (
+                <div className="space-y-1" data-testid="promote-payout-rails">
+                  <p className="text-sm font-medium">{t('sellerAffiliate.payoutRailsTitle')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {link.payoutRails.map(rail => (
+                      <span
+                        key={rail.railID}
+                        className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
+                      >
+                        {rail.railLabel || getPaymentCoinDisplayLabel(rail.railID)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ) : null}
               <div className="flex flex-wrap gap-2">
                 <Button

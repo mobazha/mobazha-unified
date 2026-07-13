@@ -5949,6 +5949,13 @@ export interface TranslationResource {
     paused?: string;
     commissionRate?: string;
     attributionDays?: string;
+    windowDay?: string;
+    windowDays?: string;
+    windowHour?: string;
+    windowHours?: string;
+    windowMinutes?: string;
+    windowSeconds?: string;
+    attributionWindowExact?: string;
     invalidProgram?: string;
     noManualWorkflow?: string;
     saveProgram?: string;
@@ -5976,6 +5983,9 @@ export interface TranslationResource {
     refresh?: string;
     statementLoadFailed?: string;
     statementEmpty?: string;
+    statementEmptySeller?: string;
+    statementEmptyPromoter?: string;
+    payoutRailsTitle?: string;
     pending?: string;
     settling?: string;
     paid?: string;
@@ -6022,6 +6032,8 @@ export interface TranslationResource {
     termsTitle?: string;
     termsRate?: string;
     termsWindow?: string;
+    termsWindowExact?: string;
+    promotingStore?: string;
     termsLastTouch?: string;
     termsUnavailable?: string;
     commissionsLinkTitle?: string;

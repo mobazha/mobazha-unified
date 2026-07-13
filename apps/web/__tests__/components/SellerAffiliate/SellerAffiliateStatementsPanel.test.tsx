@@ -129,10 +129,14 @@ describe('SellerAffiliateStatementsPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('sellerAffiliate.statementLoadFailed');
   });
 
-  it('shows an empty state', () => {
+  it('shows an audience-specific empty state', () => {
     mockStatements([]);
-    render(<SellerAffiliateStatementsPanel audience="seller" />);
-    expect(screen.getByText('sellerAffiliate.statementEmpty')).toBeInTheDocument();
+    const { unmount } = render(<SellerAffiliateStatementsPanel audience="seller" />);
+    expect(screen.getByText('sellerAffiliate.statementEmptySeller')).toBeInTheDocument();
+    unmount();
+
+    render(<SellerAffiliateStatementsPanel audience="promoter" />);
+    expect(screen.getByText('sellerAffiliate.statementEmptyPromoter')).toBeInTheDocument();
   });
 
   it('renders pending when there is no settlement', () => {
@@ -182,11 +186,14 @@ describe('SellerAffiliateStatementsPanel', () => {
     expect(screen.queryByText('secret-action-42')).not.toBeInTheDocument();
   });
 
-  it('renders confirmed settlement as paid even when the commission line is reversed', () => {
+  it('renders a confirmed-but-reversed commission as clawback due, not paid', () => {
+    // A confirmed on-chain payment whose commission line was later reversed is
+    // money owed back — deriveSellerAffiliateDisplayStatus surfaces that as
+    // clawback_due instead of continuing to show a reassuring "paid".
     mockStatements([buildLine({ status: 'reversed', settlement: { state: 'confirmed' } })]);
     render(<SellerAffiliateStatementsPanel audience="seller" />);
     expect(screen.getByTestId('seller-affiliate-statement-order-1')).toHaveTextContent(
-      'sellerAffiliate.paid'
+      'sellerAffiliate.clawbackDue'
     );
   });
 

@@ -9990,7 +9990,15 @@ export const en: TranslationResource = {
     paused: 'Paused',
     commissionRate: 'Commission %',
     attributionDays: 'Attribution days',
-    invalidProgram: 'Enter a commission from 0–100% and an attribution window in whole days.',
+    windowDay: '1 day',
+    windowDays: '{{count}} days',
+    windowHour: '1 hour',
+    windowHours: '{{count}} hours',
+    windowMinutes: '{{count}} minutes',
+    windowSeconds: '{{count}} seconds',
+    attributionWindowExact: 'Exact attribution window: {{window}}',
+    invalidProgram:
+      'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
     noManualWorkflow:
       'No review queue, manual budget, or claim process. Supported crypto rails pay promoters automatically when the order funds release, and paid always means a confirmed on-chain affiliate payment.',
     saveProgram: 'Save program',
@@ -10019,6 +10027,11 @@ export const en: TranslationResource = {
     refresh: 'Refresh affiliate statement',
     statementLoadFailed: 'Unable to load the affiliate statement.',
     statementEmpty: 'No affiliate commissions yet.',
+    statementEmptySeller:
+      'No affiliate commissions yet. Rows appear automatically once a promoter-referred order is paid.',
+    statementEmptyPromoter:
+      'No commissions yet. Share your link — after a buyer pays through it, the commission appears here automatically and is paid on-chain when the order funds release.',
+    payoutRailsTitle: 'You can receive commission on',
     pending: 'Pending',
     settling: 'Settling',
     paid: 'Paid',
@@ -10068,6 +10081,8 @@ export const en: TranslationResource = {
     termsTitle: 'What you earn',
     termsRate: 'Commission {{rate}}% on qualifying orders',
     termsWindow: 'Attribution window {{days}} days after a buyer opens your link',
+    termsWindowExact: 'Attribution window: {{window}} after a buyer opens your link',
+    promotingStore: 'Promoting {{name}}',
     termsLastTouch:
       'Attribution is last-touch: if the buyer later opens another promoter link, it can replace yours.',
     termsUnavailable: 'Commission terms are unavailable right now.',

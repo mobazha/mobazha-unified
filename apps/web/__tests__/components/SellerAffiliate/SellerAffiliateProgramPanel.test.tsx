@@ -7,6 +7,8 @@ import React from 'react';
 
 const getSellerAffiliateProgramMock = vi.fn();
 const putSellerAffiliateProgramMock = vi.fn();
+const getSellerAffiliateCapabilitiesMock = vi.fn();
+const listSellerAffiliateLinksMock = vi.fn();
 
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
@@ -23,6 +25,8 @@ vi.mock('@mobazha/core/services/api/sellerAffiliate', async importOriginal => {
     ...actual,
     getSellerAffiliateProgram: () => getSellerAffiliateProgramMock(),
     putSellerAffiliateProgram: (...args: unknown[]) => putSellerAffiliateProgramMock(...args),
+    getSellerAffiliateCapabilities: () => getSellerAffiliateCapabilitiesMock(),
+    listSellerAffiliateLinks: (...args: unknown[]) => listSellerAffiliateLinksMock(...args),
   };
 });
 
@@ -42,6 +46,12 @@ describe('SellerAffiliateProgramPanel', () => {
   beforeEach(() => {
     getSellerAffiliateProgramMock.mockReset();
     putSellerAffiliateProgramMock.mockReset();
+    getSellerAffiliateCapabilitiesMock.mockReset();
+    listSellerAffiliateLinksMock.mockReset();
+    // Unrelated panel sections must not inject their own error alerts into
+    // program-form assertions.
+    getSellerAffiliateCapabilitiesMock.mockResolvedValue({ version: 2, rails: [] });
+    listSellerAffiliateLinksMock.mockResolvedValue([]);
   });
 
   it('loads and populates the form from the existing program', async () => {
@@ -81,6 +91,50 @@ describe('SellerAffiliateProgramPanel', () => {
       )
     );
     expect(screen.queryByText('sellerAffiliate.programLoadFailed')).not.toBeInTheDocument();
+  });
+
+  it('shows a sub-day window honestly and never rewrites it on an untouched save', async () => {
+    // A 1-hour window set out-of-band (API, tests) must not display as "1 day",
+    // and clicking Save without touching the field must send back 3600 verbatim
+    // instead of silently converting the program to a 1-day window.
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      attributionWindowSeconds: 3600,
+    });
+    putSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      attributionWindowSeconds: 3600,
+    });
+    render(<SellerAffiliateProgramPanel />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('0.04')
+    );
+    expect(screen.getByTestId('affiliate-window-hint')).toHaveTextContent(
+      'sellerAffiliate.attributionWindowExact'
+    );
+
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+    await waitFor(() =>
+      expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith(
+        expect.objectContaining({ attributionWindowSeconds: 3600 })
+      )
+    );
+  });
+
+  it('disables the form inputs until the stored program has hydrated', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    render(<SellerAffiliateProgramPanel />);
+
+    // Before hydration the fields show placeholder defaults; editing them then
+    // would either be clobbered or clobber the real program.
+    expect(screen.getByLabelText('sellerAffiliate.status')).toBeDisabled();
+    expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toBeDisabled();
+    expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toBeDisabled();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).not.toBeDisabled()
+    );
   });
 
   it('validates the commission rate and attribution window before saving', async () => {

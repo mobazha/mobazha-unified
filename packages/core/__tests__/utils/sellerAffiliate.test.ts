@@ -376,3 +376,87 @@ describe('groupSellerAffiliateStatementLines', () => {
     expect(groupSellerAffiliateStatementLines(lines)[0].settlement?.actionID).toBe('action-2');
   });
 });
+
+describe('attribution window fidelity', () => {
+  it('describes windows in the largest exact unit — a 1-hour window is never "1 day"', async () => {
+    const { describeSellerAffiliateAttributionWindow } =
+      await import('../../utils/sellerAffiliate');
+    expect(describeSellerAffiliateAttributionWindow(7 * 86_400)).toEqual({
+      unit: 'day',
+      value: 7,
+    });
+    expect(describeSellerAffiliateAttributionWindow(3_600)).toEqual({ unit: 'hour', value: 1 });
+    expect(describeSellerAffiliateAttributionWindow(43_200)).toEqual({ unit: 'hour', value: 12 });
+    expect(describeSellerAffiliateAttributionWindow(90)).toEqual({ unit: 'second', value: 90 });
+    expect(describeSellerAffiliateAttributionWindow(300)).toEqual({ unit: 'minute', value: 5 });
+  });
+
+  it('maps windows to i18n copy keyed by unit and plurality', async () => {
+    const { sellerAffiliateAttributionWindowCopy } = await import('../../utils/sellerAffiliate');
+    expect(sellerAffiliateAttributionWindowCopy(86_400)).toEqual({
+      key: 'sellerAffiliate.windowDay',
+    });
+    expect(sellerAffiliateAttributionWindowCopy(7 * 86_400)).toEqual({
+      key: 'sellerAffiliate.windowDays',
+      params: { count: '7' },
+    });
+    expect(sellerAffiliateAttributionWindowCopy(3_600)).toEqual({
+      key: 'sellerAffiliate.windowHour',
+    });
+  });
+
+  it('round-trips the days input without inventing precision', async () => {
+    const { sellerAffiliateAttributionDaysInput, sellerAffiliateAttributionSecondsFromDaysInput } =
+      await import('../../utils/sellerAffiliate');
+    expect(sellerAffiliateAttributionDaysInput(7 * 86_400)).toBe('7');
+    expect(sellerAffiliateAttributionDaysInput(3_600)).toBe('0.04');
+    expect(sellerAffiliateAttributionDaysInput(43_200)).toBe('0.5');
+
+    expect(sellerAffiliateAttributionSecondsFromDaysInput('14')).toBe(14 * 86_400);
+    expect(sellerAffiliateAttributionSecondsFromDaysInput('0.5')).toBe(43_200);
+    expect(sellerAffiliateAttributionSecondsFromDaysInput('0')).toBeNull();
+    expect(sellerAffiliateAttributionSecondsFromDaysInput('abc')).toBeNull();
+    expect(sellerAffiliateAttributionSecondsFromDaysInput('400')).toBeNull();
+  });
+});
+
+describe('normalizeSellerAffiliateLink payout rails', () => {
+  it('projects payout rails and drops malformed entries without failing the link', async () => {
+    const { normalizeSellerAffiliateLink } = await import('../../utils/sellerAffiliate');
+    const link = normalizeSellerAffiliateLink({
+      id: 'link-1',
+      programID: 'program-1',
+      promoterPeerID: 'promoter-1',
+      publicToken: 'token-1',
+      publicPath: '/promo/token-1',
+      status: 'active',
+      payoutRails: [
+        { railID: 'crypto:eip155:1:native', railLabel: 'Ethereum (ETH)', address: '0xabc' },
+        { railID: '', address: '0xdef' },
+        { railID: 'crypto:solana:mainnet:native', address: 'So1abc' },
+        'garbage',
+      ],
+      createdAt: '2026-07-13T00:00:00Z',
+      updatedAt: '2026-07-13T00:00:00Z',
+    });
+    expect(link.payoutRails).toEqual([
+      { railID: 'crypto:eip155:1:native', railLabel: 'Ethereum (ETH)', address: '0xabc' },
+      { railID: 'crypto:solana:mainnet:native', address: 'So1abc' },
+    ]);
+  });
+
+  it('omits payoutRails entirely on backends that predate the field', async () => {
+    const { normalizeSellerAffiliateLink } = await import('../../utils/sellerAffiliate');
+    const link = normalizeSellerAffiliateLink({
+      id: 'link-1',
+      programID: 'program-1',
+      promoterPeerID: 'promoter-1',
+      publicToken: 'token-1',
+      publicPath: '/promo/token-1',
+      status: 'active',
+      createdAt: '2026-07-13T00:00:00Z',
+      updatedAt: '2026-07-13T00:00:00Z',
+    });
+    expect(link.payoutRails).toBeUndefined();
+  });
+});

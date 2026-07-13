@@ -11,6 +11,7 @@ import type {
   SellerAffiliateCapabilities,
   SellerAffiliateGroupedStatement,
   SellerAffiliateLink,
+  SellerAffiliatePayoutRail,
   SellerAffiliateProgram,
   SellerAffiliateReferralSession,
   SellerAffiliateSettlementState,
@@ -18,6 +19,81 @@ import type {
   SellerAffiliateStatementPage,
   SellerAffiliateSettlementOutput,
 } from '../types/sellerAffiliate';
+
+const SECONDS_PER_DAY = 86_400;
+const SECONDS_PER_HOUR = 3_600;
+const SECONDS_PER_MINUTE = 60;
+
+/** An attribution window expressed in the largest unit that represents it exactly. */
+export interface SellerAffiliateAttributionWindow {
+  unit: 'day' | 'hour' | 'minute' | 'second';
+  value: number;
+}
+
+/**
+ * Describes an attribution window in the largest unit that divides it exactly,
+ * so a 3600-second window reads "1 hour" and is never rounded up to "1 day".
+ * Commission terms must not be misstated by display rounding.
+ */
+export function describeSellerAffiliateAttributionWindow(
+  seconds: number
+): SellerAffiliateAttributionWindow {
+  if (!Number.isFinite(seconds) || seconds <= 0) return { unit: 'second', value: 0 };
+  if (seconds % SECONDS_PER_DAY === 0) return { unit: 'day', value: seconds / SECONDS_PER_DAY };
+  if (seconds % SECONDS_PER_HOUR === 0) return { unit: 'hour', value: seconds / SECONDS_PER_HOUR };
+  if (seconds % SECONDS_PER_MINUTE === 0)
+    return { unit: 'minute', value: seconds / SECONDS_PER_MINUTE };
+  return { unit: 'second', value: seconds };
+}
+
+/**
+ * i18n key + params for an attribution window, shared by every surface that
+ * renders the window so seller and promoter always see the same wording.
+ */
+export function sellerAffiliateAttributionWindowCopy(seconds: number): {
+  key: string;
+  params?: Record<string, string>;
+} {
+  const window = describeSellerAffiliateAttributionWindow(seconds);
+  switch (window.unit) {
+    case 'day':
+      return window.value === 1
+        ? { key: 'sellerAffiliate.windowDay' }
+        : { key: 'sellerAffiliate.windowDays', params: { count: String(window.value) } };
+    case 'hour':
+      return window.value === 1
+        ? { key: 'sellerAffiliate.windowHour' }
+        : { key: 'sellerAffiliate.windowHours', params: { count: String(window.value) } };
+    case 'minute':
+      return { key: 'sellerAffiliate.windowMinutes', params: { count: String(window.value) } };
+    default:
+      return { key: 'sellerAffiliate.windowSeconds', params: { count: String(window.value) } };
+  }
+}
+
+/**
+ * Renders the seller panel's "attribution days" input value without inventing
+ * precision: whole days stay integers; sub-day windows keep two decimals so a
+ * 1-hour window reads "0.04" instead of a fabricated "1".
+ */
+export function sellerAffiliateAttributionDaysInput(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '';
+  if (seconds % SECONDS_PER_DAY === 0) return String(seconds / SECONDS_PER_DAY);
+  const days = (seconds / SECONDS_PER_DAY).toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+  return days === '' || days === '0' ? '0.01' : days;
+}
+
+/**
+ * Parses the seller panel's days input into whole seconds. Fractional days are
+ * allowed (0.5 = 12 hours). Returns null when the input cannot be a real
+ * window (non-numeric, non-positive, above one year, or under one minute).
+ */
+export function sellerAffiliateAttributionSecondsFromDaysInput(input: string): number | null {
+  const days = Number(input);
+  if (!Number.isFinite(days) || days <= 0 || days > 365) return null;
+  const seconds = Math.round(days * SECONDS_PER_DAY);
+  return seconds >= SECONDS_PER_MINUTE ? seconds : null;
+}
 
 function record(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value))
@@ -152,11 +228,32 @@ export function normalizeSellerAffiliateCapabilities(value: unknown): SellerAffi
   };
 }
 
+/** Tolerant projection: payout rails are display-only, so bad entries are dropped, never fatal. */
+function normalizePayoutRails(value: unknown): SellerAffiliatePayoutRail[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap(entry => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
+    const rail = entry as Record<string, unknown>;
+    if (typeof rail.railID !== 'string' || !rail.railID.trim()) return [];
+    if (typeof rail.address !== 'string' || !rail.address.trim()) return [];
+    return [
+      {
+        railID: rail.railID,
+        address: rail.address,
+        ...(typeof rail.railLabel === 'string' && rail.railLabel.trim()
+          ? { railLabel: rail.railLabel }
+          : {}),
+      },
+    ];
+  });
+}
+
 export function normalizeSellerAffiliateLink(value: unknown): SellerAffiliateLink {
   const raw = data(value);
   const status = stringField(raw, 'status');
   if (status !== 'active' && status !== 'revoked')
     throw new Error('Invalid seller affiliate link status');
+  const payoutRails = normalizePayoutRails(raw.payoutRails);
   return {
     id: stringField(raw, 'id'),
     programID: stringField(raw, 'programID'),
@@ -164,6 +261,7 @@ export function normalizeSellerAffiliateLink(value: unknown): SellerAffiliateLin
     publicToken: stringField(raw, 'publicToken'),
     publicPath: stringField(raw, 'publicPath'),
     status,
+    ...(payoutRails.length ? { payoutRails } : {}),
     createdAt: stringField(raw, 'createdAt'),
     updatedAt: stringField(raw, 'updatedAt'),
   };

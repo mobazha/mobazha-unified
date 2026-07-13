@@ -7,7 +7,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import {
   createSellerAffiliateReferralSession,
+  getProfileDisplayInfo,
   getPublicSellerAffiliateLink,
+  truncateAddress,
   useI18n,
   writeSellerAffiliateReferralSession,
 } from '@mobazha/core';
@@ -25,6 +27,7 @@ export default function SellerAffiliateEntryPage() {
   const token = typeof params?.token === 'string' ? params.token : undefined;
   const [phase, setPhase] = useState<PromoEntryPhase>('loading');
   const [sellerPeerID, setSellerPeerID] = useState<string | null>(null);
+  const [sellerName, setSellerName] = useState<string | null>(null);
 
   const resolveAndRedirect = useCallback(async () => {
     if (!token) {
@@ -43,6 +46,13 @@ export default function SellerAffiliateEntryPage() {
       writeSellerAffiliateReferralSession(referral);
       setSellerPeerID(referral.sellerPeerID);
       setPhase('ready');
+      // Display-only enrichment: a store name reads far better than a raw peer
+      // ID, but the referral is already saved either way.
+      void getProfileDisplayInfo(referral.sellerPeerID)
+        .then(profile => {
+          if (profile?.name) setSellerName(profile.name);
+        })
+        .catch(() => {});
     } catch (cause) {
       const message = cause instanceof Error ? cause.message.toLowerCase() : '';
       setPhase(message.includes('not found') ? 'not_found' : 'error');
@@ -111,11 +121,16 @@ export default function SellerAffiliateEntryPage() {
               <CardTitle>{t('sellerAffiliate.referralSaved')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {sellerName ? (
+                <p className="text-lg font-semibold" data-testid="promo-seller-name">
+                  {sellerName}
+                </p>
+              ) : null}
               <p className="text-sm text-muted-foreground">
                 {t('sellerAffiliate.referralDescription')}
               </p>
-              <p className="break-all font-mono text-xs text-muted-foreground">
-                {t('sellerAffiliate.seller', { id: sellerPeerID ?? '' })}
+              <p className="font-mono text-xs text-muted-foreground">
+                {t('sellerAffiliate.seller', { id: truncateAddress(sellerPeerID ?? '') })}
               </p>
               <Button asChild className="min-h-11">
                 <a href={`/store/${encodeURIComponent(sellerPeerID ?? '')}`}>
