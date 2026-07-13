@@ -83,6 +83,7 @@ import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner'
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
 import { CollectiblePrimarySaleCard } from '@/components/Order/cards/CollectiblePrimarySaleCard';
+import { CollectibleOrderCustodyAssuranceCard } from '@/components/collectibles/CollectibleOrderCustodyAssuranceCard';
 import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
 import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
@@ -1174,6 +1175,14 @@ export function OrderDetailMobile({
                   disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
                 />
               )}
+
+              {collectiblesHubEnabled ? (
+                <CollectibleOrderCustodyAssuranceCard
+                  orderId={orderId}
+                  coreOrder={coreOrder}
+                  className="mt-3"
+                />
+              ) : null}
 
               {showRatingInvite && (
                 <RatingInviteBanner

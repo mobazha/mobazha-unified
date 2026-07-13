@@ -3,10 +3,11 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
+  ApiError,
   MARKETPLACE_BUYER_ACCESS_MODE_KEYS,
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
@@ -21,11 +22,14 @@ import {
   useOperatorMarketplace,
   useRuntimeCapability,
 } from '@mobazha/core';
-import type { MarketplaceStoreMembership } from '@mobazha/core';
+import type { MarketplaceSellerResolveCandidate, MarketplaceStoreMembership } from '@mobazha/core';
+import { resolveMarketplaceSellers } from '@mobazha/core/services/api/marketplace';
+import { getImageUrl } from '@mobazha/core/services/api/config';
 import { Header, Footer } from '@/components';
 import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
 import { Container } from '@/components/layouts';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,6 +57,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   Loader2,
   PauseCircle,
   PlayCircle,
@@ -73,6 +78,17 @@ type MembershipFilter =
 type OperatorTab = 'overview' | 'curation' | 'sellers' | 'settings';
 
 const VALID_OPERATOR_TABS = ['overview', 'curation', 'sellers', 'settings'] as const;
+
+function resolveSellerCandidateAvatarUrl(
+  candidate: MarketplaceSellerResolveCandidate
+): string | undefined {
+  const hash =
+    candidate.avatarHashes?.medium?.trim() ||
+    candidate.avatarHashes?.small?.trim() ||
+    candidate.avatarHashes?.tiny?.trim() ||
+    '';
+  return hash ? getImageUrl(hash, candidate.peerID) : undefined;
+}
 
 function resolveOperatorTab(tabParam: string | null): OperatorTab {
   if (tabParam && (VALID_OPERATOR_TABS as readonly string[]).includes(tabParam)) {
@@ -180,7 +196,18 @@ export default function MarketplaceOperatorDetailPage() {
     releasePublishing: canPublishReleases,
     attribution: canViewAttribution,
   });
-  const [peerID, setPeerID] = useState('');
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [sellerIdMode, setSellerIdMode] = useState(false);
+  const [sellerIdInput, setSellerIdInput] = useState('');
+  const [resolveCandidates, setResolveCandidates] = useState<MarketplaceSellerResolveCandidate[]>(
+    []
+  );
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<MarketplaceSellerResolveCandidate | null>(null);
+  const [resolveLoading, setResolveLoading] = useState(false);
+  const [resolveUnavailable, setResolveUnavailable] = useState(false);
+  const [resolveEmpty, setResolveEmpty] = useState(false);
+  const resolveRequestSeqRef = useRef(0);
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
   const [approveTarget, setApproveTarget] = useState<MarketplaceStoreMembership | null>(null);
   const [reasonTarget, setReasonTarget] = useState<MarketplaceStoreMembership | null>(null);
@@ -258,6 +285,84 @@ export default function MarketplaceOperatorDetailPage() {
     { key: 'suspended', labelKey: 'marketplace.operator.filterSuspended' },
   ];
 
+  const resetInviteState = useCallback(() => {
+    setInviteQuery('');
+    setSellerIdInput('');
+    setResolveCandidates([]);
+    setSelectedCandidate(null);
+    setResolveLoading(false);
+    setResolveUnavailable(false);
+    setResolveEmpty(false);
+  }, []);
+
+  useEffect(() => {
+    if (sellerIdMode) {
+      setResolveCandidates([]);
+      setSelectedCandidate(null);
+      setResolveLoading(false);
+      setResolveUnavailable(false);
+      setResolveEmpty(false);
+      return;
+    }
+
+    const query = inviteQuery.trim();
+    if (query.length < 2) {
+      setResolveCandidates([]);
+      setSelectedCandidate(null);
+      setResolveLoading(false);
+      setResolveUnavailable(false);
+      setResolveEmpty(false);
+      return;
+    }
+
+    let cancelled = false;
+    const requestSeq = ++resolveRequestSeqRef.current;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setResolveLoading(true);
+        setResolveUnavailable(false);
+        setResolveEmpty(false);
+        try {
+          const result = await resolveMarketplaceSellers(id, { query });
+          if (cancelled || requestSeq !== resolveRequestSeqRef.current) return;
+          const candidates = result.candidates ?? [];
+          setResolveCandidates(candidates);
+          setSelectedCandidate(prev =>
+            prev && candidates.some(c => c.peerID === prev.peerID) ? prev : null
+          );
+          setResolveEmpty(candidates.length === 0);
+        } catch (error) {
+          if (cancelled || requestSeq !== resolveRequestSeqRef.current) return;
+          const searchDown =
+            error instanceof ApiError &&
+            (error.status === 503 ||
+              error.code === 'SERVICE_UNAVAILABLE' ||
+              error.message === 'search_unavailable');
+          setResolveCandidates([]);
+          setSelectedCandidate(null);
+          setResolveEmpty(false);
+          setResolveUnavailable(searchDown);
+          if (!searchDown) {
+            toast({
+              variant: 'destructive',
+              title: t('marketplace.operator.inviteFailedTitle'),
+              description: error instanceof Error ? error.message : t('common.retry'),
+            });
+          }
+        } finally {
+          if (!cancelled && requestSeq === resolveRequestSeqRef.current) {
+            setResolveLoading(false);
+          }
+        }
+      })();
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [id, inviteQuery, sellerIdMode, t, toast]);
+
   function resetReasonDialog() {
     setReasonTarget(null);
     setReasonAction(null);
@@ -305,11 +410,12 @@ export default function MarketplaceOperatorDetailPage() {
   }
 
   async function handleInvite() {
-    const value = peerID.trim();
+    const value = sellerIdMode ? sellerIdInput.trim() : (selectedCandidate?.peerID ?? '').trim();
     if (!value) return;
     try {
       await invite(value);
-      setPeerID('');
+      resetInviteState();
+      setSellerIdMode(false);
       toast({
         title: t('marketplace.operator.inviteSuccess'),
         description: t('marketplace.operator.inviteSuccessDesc'),
@@ -872,23 +978,170 @@ export default function MarketplaceOperatorDetailPage() {
               </Card>
 
               {!isArchived ? (
-                <Card className="mt-6">
+                <Card className="mt-6" data-testid="operator-invite-store-card">
                   <CardHeader>
                     <CardTitle>{t('marketplace.operator.inviteStore')}</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex flex-col gap-3 sm:flex-row">
-                    <Input
-                      value={peerID}
-                      onChange={event => setPeerID(event.target.value)}
-                      placeholder={t('marketplace.operator.peerIdPlaceholder')}
-                    />
-                    <Button
-                      onClick={() => void handleInvite()}
-                      disabled={!peerID.trim() || Boolean(working)}
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      {t('marketplace.operator.inviteStoreHint')}
+                    </p>
+                    {!sellerIdMode ? (
+                      <>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <Input
+                            value={inviteQuery}
+                            onChange={event => {
+                              setInviteQuery(event.target.value);
+                              setSelectedCandidate(null);
+                            }}
+                            placeholder={t('marketplace.operator.inviteQueryPlaceholder')}
+                            data-testid="operator-invite-query"
+                          />
+                          <Button
+                            onClick={() => void handleInvite()}
+                            disabled={!selectedCandidate || Boolean(working) || resolveLoading}
+                            data-testid="operator-invite-send"
+                          >
+                            {resolveLoading ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="mr-2 h-4 w-4" />
+                            )}
+                            {selectedCandidate
+                              ? t('marketplace.operator.inviteConfirm')
+                              : t('marketplace.operator.sendInvite')}
+                          </Button>
+                        </div>
+                        {resolveLoading ? (
+                          <p className="text-sm text-muted-foreground">
+                            {t('marketplace.operator.inviteResolving')}
+                          </p>
+                        ) : null}
+                        {resolveUnavailable ? (
+                          <div
+                            className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm"
+                            data-testid="operator-invite-search-unavailable"
+                          >
+                            <p className="font-medium">
+                              {t('marketplace.operator.inviteSearchUnavailable')}
+                            </p>
+                            <p className="mt-1 text-muted-foreground">
+                              {t('marketplace.operator.inviteSearchUnavailableHint')}
+                            </p>
+                          </div>
+                        ) : null}
+                        {resolveEmpty && !resolveUnavailable && !resolveLoading ? (
+                          <div
+                            className="rounded-md border border-border bg-muted/40 p-3 text-sm"
+                            data-testid="operator-invite-no-matches"
+                          >
+                            <p className="font-medium">
+                              {t('marketplace.operator.inviteNoMatches')}
+                            </p>
+                            <p className="mt-1 text-muted-foreground">
+                              {t('marketplace.operator.inviteNoMatchesHint')}
+                            </p>
+                          </div>
+                        ) : null}
+                        {resolveCandidates.length > 0 ? (
+                          <div className="space-y-2" data-testid="operator-invite-candidates">
+                            <p className="text-xs text-muted-foreground">
+                              {t('marketplace.operator.invitePickCandidate')}
+                            </p>
+                            {resolveCandidates.map(candidate => {
+                              const selected = selectedCandidate?.peerID === candidate.peerID;
+                              const displayName = formatUserName(
+                                {
+                                  name: candidate.name || candidate.handle,
+                                  peerID: candidate.peerID,
+                                },
+                                {
+                                  fallback: t('marketplace.operator.storeNamePrefix'),
+                                  prefix: 'Store',
+                                }
+                              );
+                              const avatarUrl = resolveSellerCandidateAvatarUrl(candidate);
+                              return (
+                                <button
+                                  key={candidate.peerID}
+                                  type="button"
+                                  onClick={() => setSelectedCandidate(candidate)}
+                                  className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+                                    selected
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-border hover:border-primary/40'
+                                  }`}
+                                  data-testid={`operator-invite-candidate-${candidate.peerID}`}
+                                  aria-pressed={selected}
+                                >
+                                  <Avatar className="h-10 w-10">
+                                    {avatarUrl ? (
+                                      <AvatarImage src={avatarUrl} alt={displayName} />
+                                    ) : null}
+                                    <AvatarFallback>
+                                      {displayName.slice(0, 1).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate font-medium text-foreground">
+                                      {displayName}
+                                    </p>
+                                    {candidate.handle ? (
+                                      <p className="truncate text-xs text-muted-foreground">
+                                        @{candidate.handle}
+                                      </p>
+                                    ) : (
+                                      <p className="truncate text-xs text-muted-foreground">
+                                        {formatUserName(
+                                          { peerID: candidate.peerID },
+                                          { prefix: 'Store' }
+                                        )}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {selected ? <Check className="h-4 w-4 text-primary" /> : null}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <Input
+                          value={sellerIdInput}
+                          onChange={event => setSellerIdInput(event.target.value)}
+                          placeholder={t('marketplace.operator.sellerIdPlaceholder')}
+                          data-testid="operator-invite-seller-id"
+                        />
+                        <Button
+                          onClick={() => void handleInvite()}
+                          disabled={!sellerIdInput.trim() || Boolean(working)}
+                          data-testid="operator-invite-send-seller-id"
+                        >
+                          <Send className="mr-2 h-4 w-4" />
+                          {t('marketplace.operator.sendInvite')}
+                        </Button>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setSellerIdMode(prev => !prev);
+                        setSelectedCandidate(null);
+                        setResolveCandidates([]);
+                        setResolveEmpty(false);
+                        setResolveUnavailable(false);
+                      }}
+                      data-testid="operator-invite-advanced-toggle"
                     >
-                      <Send className="mr-2 h-4 w-4" />
-                      {t('marketplace.operator.sendInvite')}
-                    </Button>
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 transition-transform ${sellerIdMode ? 'rotate-180' : ''}`}
+                      />
+                      {t('marketplace.operator.sellerIdAdvanced')}
+                    </button>
                   </CardContent>
                 </Card>
               ) : null}

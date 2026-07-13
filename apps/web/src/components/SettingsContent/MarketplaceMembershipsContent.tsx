@@ -75,7 +75,11 @@ function MembershipCard({
       <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold">{marketplace.name}</h2>
+            <h2 className="text-lg font-semibold">
+              {isInvited
+                ? t('marketplace.memberships.inviteCardTitle', { name: marketplace.name })
+                : marketplace.name}
+            </h2>
             <Badge variant="outline">
               {t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[membership.status])}
             </Badge>
@@ -83,6 +87,11 @@ function MembershipCard({
               {t(MARKETPLACE_LIFECYCLE_STATUS_KEYS[marketplace.status])}
             </Badge>
           </div>
+          {isInvited ? (
+            <p className="text-sm text-muted-foreground">
+              {t('marketplace.memberships.inviteBenefit')}
+            </p>
+          ) : null}
           {marketplace.description ? (
             <p className="text-sm text-muted-foreground">{marketplace.description}</p>
           ) : null}

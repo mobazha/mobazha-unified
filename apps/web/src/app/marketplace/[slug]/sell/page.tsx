@@ -407,6 +407,12 @@ export default function MarketplaceSellPage() {
               <div className="mb-6">
                 <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">{pageTitle}</h1>
                 <p className="text-sm text-muted-foreground sm:text-base">{pageSubtitle}</p>
+                <p
+                  className="mt-2 text-sm text-muted-foreground"
+                  data-testid="sell-listing-boundary"
+                >
+                  {t('marketplace.sell.listingBoundaryHint', { name: marketplace.name })}
+                </p>
               </div>
 
               {error && (

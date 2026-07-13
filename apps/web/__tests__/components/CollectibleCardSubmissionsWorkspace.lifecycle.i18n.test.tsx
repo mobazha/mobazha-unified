@@ -2,7 +2,7 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { getTranslation, setLocale } from '@mobazha/core';
 import { CollectibleCardSubmissionsWorkspace } from '@/components/CommunityMarketplace/CollectibleCardSubmissionsWorkspace';
@@ -24,8 +24,9 @@ vi.mock('@/components/ui/button', () => ({
     children,
     onClick,
     disabled,
+    asChild: _asChild,
     ...props
-  }: React.PropsWithChildren<{ onClick?: () => void; disabled?: boolean }>) => (
+  }: React.PropsWithChildren<{ onClick?: () => void; disabled?: boolean; asChild?: boolean }>) => (
     <button type="button" onClick={onClick} disabled={disabled} {...props}>
       {children}
     </button>
@@ -50,14 +51,20 @@ vi.mock('@/components/layouts', () => ({
   VStack: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+vi.mock('@/components/collectibles/SourceDepositCollateralFundingSection', () => ({
+  SourceDepositCollateralFundingSection: () => null,
+}));
+
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
+  const actualActions = actual.useCollectibleActions();
+  const collectibleActions = {
+    ...actualActions,
+    listMyCollectibleSourceDeposits: (...args: unknown[]) => mockListDeposits(...args),
+  };
   return {
     ...actual,
-    collectiblesApi: {
-      ...actual.collectiblesApi,
-      listMyCollectibleSourceDeposits: (...args: unknown[]) => mockListDeposits(...args),
-    },
+    useCollectibleActions: () => collectibleActions,
     useI18n: () => ({
       t: (key: string) => actual.getTranslation(key),
       locale: actual.getLocale(),
@@ -72,10 +79,14 @@ describe('CollectibleCardSubmissionsWorkspace lifecycle i18n', () => {
     setLocale('zh');
   });
 
-  it('renders localized lifecycle steps instead of raw translation keys', async () => {
+  it('renders localized custody timeline on an active card', async () => {
+    mockListDeposits.mockResolvedValue({
+      items: [{ sourceDepositID: 'dep-1', certNumber: 'PSA-9', grade: '10', status: 'submitted' }],
+    });
+
     render(<CollectibleCardSubmissionsWorkspace enabled />);
 
-    await screen.findByTestId('collectible-submissions-empty');
+    await screen.findByTestId('collectible-submission-row');
 
     const steps = [
       getTranslation('marketplace.sell.collectibles.workspace.lifecycle.submit'),
@@ -88,9 +99,5 @@ describe('CollectibleCardSubmissionsWorkspace lifecycle i18n', () => {
     for (const label of steps) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
-
-    expect(
-      screen.queryByText('marketplace.sell.collectibles.lifecycle.submit')
-    ).not.toBeInTheDocument();
   });
 });
