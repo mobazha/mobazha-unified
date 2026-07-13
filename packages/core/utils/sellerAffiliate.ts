@@ -7,12 +7,14 @@ import type {
   SellerAffiliateAttribution,
   SellerAffiliateCommissionLine,
   SellerAffiliateDisplayStatus,
+  SellerAffiliateCapabilities,
   SellerAffiliateGroupedStatement,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateReferralSession,
   SellerAffiliateSettlementState,
   SellerAffiliateStatementLine,
+  SellerAffiliateStatementPage,
   SellerAffiliateSettlementOutput,
 } from '../types/sellerAffiliate';
 
@@ -42,15 +44,65 @@ function numberField(raw: Record<string, unknown>, key: string): number {
 }
 
 export function unwrapSellerAffiliateList(value: unknown): Record<string, unknown>[] {
-  const raw =
+  let raw =
     value && typeof value === 'object' && !Array.isArray(value) && 'data' in value
       ? (value as Record<string, unknown>).data
       : value;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw) && 'items' in raw) {
+    raw = (raw as Record<string, unknown>).items;
+  }
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (item): item is Record<string, unknown> =>
       item !== null && typeof item === 'object' && !Array.isArray(item)
   );
+}
+
+export function normalizeSellerAffiliateCapabilities(value: unknown): SellerAffiliateCapabilities {
+  const raw = data(value);
+  if (!Array.isArray(raw.rails)) throw new Error('Invalid seller affiliate capabilities');
+  return {
+    version: numberField(raw, 'version'),
+    rails: raw.rails.map(value => {
+      const rail = record(value);
+      const assetScope = stringField(rail, 'assetScope');
+      if (assetScope !== 'chain' && assetScope !== 'native' && assetScope !== 'exact')
+        throw new Error('Invalid seller affiliate asset scope');
+      if (!Array.isArray(rail.orderKinds) || !Array.isArray(rail.actions))
+        throw new Error('Invalid seller affiliate rail capability');
+      const orderKinds = rail.orderKinds.map(String);
+      if (orderKinds.some(kind => kind !== 'standard' && kind !== 'guest'))
+        throw new Error('Invalid seller affiliate order kind');
+      return {
+        railID: stringField(rail, 'railID'),
+        assetScope,
+        orderKinds: orderKinds as Array<'standard' | 'guest'>,
+        actions: rail.actions.map(String),
+        guestSupport: rail.guestSupport === true,
+      };
+    }),
+  };
+}
+
+export function normalizeSellerAffiliateStatementPage(
+  value: unknown
+): SellerAffiliateStatementPage {
+  const raw = data(value);
+  const items = unwrapSellerAffiliateList(raw).map(normalizeSellerAffiliateStatementLine);
+  const sourceErrors = Array.isArray(raw.sourceErrors)
+    ? raw.sourceErrors.map(value => {
+        const source = record(value);
+        return { linkID: stringField(source, 'linkID'), code: stringField(source, 'code') };
+      })
+    : [];
+  return {
+    items,
+    page: numberField(raw, 'page'),
+    pageSize: numberField(raw, 'pageSize'),
+    total: numberField(raw, 'total'),
+    partial: raw.partial === true,
+    sourceErrors,
+  };
 }
 
 export function normalizeSellerAffiliateProgram(value: unknown): SellerAffiliateProgram {

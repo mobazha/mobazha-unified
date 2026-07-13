@@ -2589,6 +2589,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/sellers/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Resolve store query to inviteable marketplace seller candidates */
+    post: operations['marketplaces-sellers-resolve'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces/{id}/sellers/{peerID}': {
     parameters: {
       query?: never;
@@ -3087,6 +3104,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/seller-affiliate/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List effective Affiliate settlement capabilities for this seller node */
+    get: operations['seller-affiliate-capabilities-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/seller-affiliate/program': {
     parameters: {
       query?: never;
@@ -3129,7 +3163,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List canonical affiliate commission lines attributed to the current promoter */
+    /** List paginated Affiliate lines for the current promoter with partial-source metadata */
     get: operations['seller-affiliate-statements-promoter'];
     put?: never;
     post?: never;
@@ -5969,7 +6003,11 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * List collateral accounts for a resource
+     * @description Returns only accounts bound to the selected tenant, local principal, provider, and resource.
+     */
+    get: operations['collateral-accounts-list'];
     put?: never;
     /**
      * Open a collateral account
@@ -6036,6 +6074,26 @@ export interface paths {
      * @description Polls the configured rail and applies only receipt-verified confirmed funding to the Core aggregate.
      */
     post: operations['collateral-funding-reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/collateral/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get collateral operator capabilities
+     * @description Returns the effective reviewed collateral rail for this node. Source presence does not make a rail available.
+     */
+    get: operations['collateral-capabilities-get'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -9997,6 +10055,8 @@ export interface components {
       coingecko_enabled?: boolean;
     };
     Platform_AdminPatchFiatProviderInputBody: {
+      delayed_disbursement?: boolean;
+      partner_attribution_id?: string;
       partner_id?: string;
       public_key?: string;
       secret_key?: string;
@@ -10042,13 +10102,18 @@ export interface components {
     Platform_AffiliateAttribution: {
       /** Format: date-time */
       attributedAt: string;
-      buyerPeerID: string;
+      buyerKind: string;
+      buyerPeerID?: string;
       /** Format: int32 */
       commissionRateBPSSnapshot: number;
       id: string;
       orderID: string;
       programID: string;
+      promoterPayoutAddress: string;
       promoterPeerID: string;
+      promoterUTXOPayoutAddresses: {
+        [key: string]: string;
+      };
       referralSessionID: string;
       sellerPeerID: string;
     };
@@ -10070,9 +10135,25 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
     };
+    Platform_AffiliateSettlementOutput: {
+      action: string;
+      actionId: string;
+      address: string;
+      amount: string;
+      coin: string;
+      /** Format: int64 */
+      confirmations?: number;
+      /** Format: date-time */
+      confirmedAt?: string;
+      state: string;
+      txHash?: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
     Platform_AffiliateStatementLine: {
       attribution: components['schemas']['Platform_AffiliateAttribution'];
       commissionLine: components['schemas']['Platform_AffiliateCommissionLine'];
+      settlement?: components['schemas']['Platform_AffiliateSettlementOutput'];
     };
     Platform_AiModelConfigPatchRequest: {
       api_key?: string;
@@ -10511,6 +10592,9 @@ export interface components {
     Platform_MarketplaceSellerInviteRequest: {
       peerID: string;
     };
+    Platform_MarketplaceSellerResolveRequest: {
+      query: string;
+    };
     Platform_MarketplaceSellerUpdateRequest: {
       reason?: string;
       status?: string;
@@ -10741,6 +10825,11 @@ export interface components {
       /** @description Wire-format scope name, e.g. listings:read. */
       name: string;
     };
+    Platform_SellerAffiliateCapabilitiesResponse: {
+      rails: components['schemas']['Platform_SellerAffiliateRailCapability'][] | null;
+      /** Format: int32 */
+      version: number;
+    };
     Platform_SellerAffiliateProgramRequest: {
       /** Format: int64 */
       attributionWindowSeconds: number;
@@ -10748,6 +10837,29 @@ export interface components {
       commissionRateBPS: number;
       /** @enum {string} */
       status: 'active' | 'paused';
+    };
+    Platform_SellerAffiliatePromoterStatementResponse: {
+      items: components['schemas']['Platform_AffiliateStatementLine'][] | null;
+      /** Format: int64 */
+      page: number;
+      /** Format: int64 */
+      pageSize: number;
+      partial: boolean;
+      sourceErrors?: components['schemas']['Platform_SellerAffiliateStatementSourceError'][] | null;
+      /** Format: int64 */
+      total: number;
+    };
+    Platform_SellerAffiliateRailCapability: {
+      actions: string[] | null;
+      /** @enum {string} */
+      assetScope: 'exact';
+      guestSupport: boolean;
+      orderKinds: string[] | null;
+      railID: string;
+    };
+    Platform_SellerAffiliateStatementSourceError: {
+      code: string;
+      linkID: string;
     };
     Platform_SetHandleRequest: {
       handle: string;
@@ -11351,6 +11463,13 @@ export interface components {
       revision: number;
       state: string;
     };
+    Node_CollateralAccountsView: {
+      items: components['schemas']['Node_CollateralAccountView'][] | null;
+    };
+    Node_CollateralCapabilitiesView: {
+      available: boolean;
+      rail?: components['schemas']['Node_RailDescriptor'];
+    };
     'Node_Digital-asset-create-license-keyRequest': {
       appId?: string;
       listingSlug: string;
@@ -11534,6 +11653,18 @@ export interface components {
       state: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    Node_RailDescriptor: {
+      assets: string[] | null;
+      custodyModel: string;
+      hasReceiptVerification: boolean;
+      id: string;
+      supportsClaimSlash: boolean;
+      supportsFundingObserve: boolean;
+      supportsFundingTargets: boolean;
+      supportsPrincipalRelease: boolean;
+      supportsReconciliation: boolean;
+      version: string;
     };
     Node_SkillRun: {
       acting_persona?: string;
@@ -17161,6 +17292,41 @@ export interface operations {
       };
     };
   };
+  'marketplaces-sellers-resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceSellerResolveRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'marketplaces-sellers-update': {
     parameters: {
       query?: never;
@@ -18256,6 +18422,35 @@ export interface operations {
       };
     };
   };
+  'seller-affiliate-capabilities-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_SellerAffiliateCapabilitiesResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'seller-affiliate-program-get': {
     parameters: {
       query?: never;
@@ -18351,7 +18546,10 @@ export interface operations {
   };
   'seller-affiliate-statements-promoter': {
     parameters: {
-      query?: never;
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -18364,7 +18562,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Platform_AffiliateStatementLine'][] | null;
+          'application/json': components['schemas']['Platform_SellerAffiliatePromoterStatementResponse'];
         };
       };
       /** @description Error */
@@ -24754,6 +24952,38 @@ export interface operations {
       };
     };
   };
+  'collateral-accounts-list': {
+    parameters: {
+      query?: {
+        providerID?: string;
+        resourceID?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_CollateralAccountsView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'collateral-accounts-open': {
     parameters: {
       query?: never;
@@ -24871,6 +25101,35 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['Node_CollateralAccountView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collateral-capabilities-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_CollateralCapabilitiesView'];
         };
       };
       /** @description Error */

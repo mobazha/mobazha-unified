@@ -157,6 +157,8 @@ export type {
   SellerAffiliateCommissionStatus,
   SellerAffiliateDisplayStatus,
   SellerAffiliateGroupedStatement,
+  SellerAffiliateCapabilities,
+  SellerAffiliateRailCapability,
   SellerAffiliateLink,
   SellerAffiliateProgram,
   SellerAffiliateProgramRequest,
@@ -164,6 +166,8 @@ export type {
   SellerAffiliateReferralSession,
   SellerAffiliateStatementAudience,
   SellerAffiliateStatementLine,
+  SellerAffiliateStatementPage,
+  SellerAffiliateStatementSourceError,
   SellerAffiliateSettlementOutput,
   SellerAffiliateSettlementState,
   PublicSellerAffiliateLink,
@@ -516,6 +520,11 @@ export type {
   SubmitMarketplaceAttributionEventRequest,
   SubmitMarketplaceAttributionEventResponse,
   MarketplaceAttributionSummary,
+  InviteMarketplaceSellerRequest,
+  ResolveMarketplaceSellerRequest,
+  MarketplaceSellerResolveMatchType,
+  MarketplaceSellerResolveCandidate,
+  MarketplaceSellerResolveResponse,
 } from './marketplace';
 
 export type {

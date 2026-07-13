@@ -270,6 +270,23 @@ describe('Marketplace API', () => {
       );
 
       mockHostingPost.mockResolvedValueOnce({
+        candidates: [
+          {
+            peerID: 'QmSeller1',
+            name: 'Cool Cards',
+            handle: 'cool',
+            avatarHashes: { medium: 'QmAvatar' },
+            matchType: 'name',
+          },
+        ],
+      });
+      await marketplaceApi.resolveMarketplaceSellers('mp1', { query: 'Cool Cards' });
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        HOSTING_API.MARKETPLACE_SELLER_RESOLVE('mp1'),
+        expect.objectContaining({ query: 'Cool Cards' })
+      );
+
+      mockHostingPost.mockResolvedValueOnce({
         ...mockSeller,
         status: 'accepted',
         isVisible: false,

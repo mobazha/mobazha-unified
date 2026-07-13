@@ -237,6 +237,8 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/${encodeURIComponent(peerID)}`,
   MARKETPLACES_SELLERS_INVITE: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/invite`,
+  MARKETPLACES_SELLERS_RESOLVE: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/resolve`,
   MARKETPLACES_SUSPEND: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/suspend`,
   MATRIX_CONFIG: '/platform/v1/matrix/config',
@@ -282,6 +284,7 @@ export const HOSTING_API_PATHS = {
   RELAY_GAS_WALLET: '/platform/v1/relay/gas-wallet',
   RELAY_GAS_WALLET_STATUS: '/platform/v1/relay/gas-wallet/status',
   RELAY_STATUS: '/platform/v1/relay/status',
+  SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',
   SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
   SELLER_AFFILIATE_PROGRAMS_LINKS: (id: string) =>
     `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
@@ -507,6 +510,7 @@ export const NODE_API_PATHS = {
     `/collateral/accounts/${encodeURIComponent(collateralID)}/funding/reconcile`,
   COLLATERAL_ACCOUNTS_FUNDING_TARGET: (collateralID: string) =>
     `/collateral/accounts/${encodeURIComponent(collateralID)}/funding-target`,
+  COLLATERAL_CAPABILITIES: '/collateral/capabilities',
   COLLECTIONS: '/collections',
   COLLECTIONS_BY_COLLECTION_ID: (collectionID: string) =>
     `/collections/${encodeURIComponent(collectionID)}`,

@@ -126,12 +126,34 @@ export interface CollectibleCatalogDisplay {
   displayName: string;
   grade: string;
   imageUrl?: string;
+  /** Shortened certification id when the raw value is hidden from the product title. */
+  certificationReference?: string;
+  /** Shortened serial when the raw value is hidden from the product title. */
+  serialReference?: string;
   custodyStatusKey: CollectibleCatalogCustodyStatusKey;
   validityStatusKey: CollectibleValidityDisplayKey;
   validityStatus: string;
   redeemable: boolean;
   credentialActionsBlocked: boolean;
   hasDemoMapping: boolean;
+  /** True only when item data includes an issued digital title (mint). */
+  hasDigitalTitle: boolean;
+}
+
+const SYNTHETIC_CATALOG_IDENTIFIER =
+  /^(?:e2e[-_]?seed|e2e[-_]|ser[-_](?:seed|collateral)|source[-_]|default[-_]|fixture[-_]|mock[-_])/i;
+
+/** True for E2E/seed/collateral fixture ids and other non-marketing catalog identifiers. */
+export function isCollectibleSyntheticCatalogIdentifier(value: string | undefined | null): boolean {
+  const trimmed = value?.trim();
+  if (!trimmed) return false;
+  return SYNTHETIC_CATALOG_IDENTIFIER.test(trimmed);
+}
+
+export function shortenCollectibleProofReference(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= 20) return trimmed;
+  return `${trimmed.slice(0, 12)}…${trimmed.slice(-4)}`;
 }
 
 function resolveCustodyStatusKey(
@@ -177,27 +199,83 @@ export function isCollectibleCatalogRedeemable(
 function fallbackDisplayName(
   slot: CollectibleHubSlot | undefined,
   hubSlotID: string | undefined,
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string | number>) => string
 ): string {
   const cert = slot?.certNumber?.trim();
-  if (cert) return cert;
+  if (cert && !isCollectibleSyntheticCatalogIdentifier(cert)) return cert;
+
+  const serial = slot?.serial?.trim();
+  if (serial && !isCollectibleSyntheticCatalogIdentifier(serial)) {
+    return t('collectibles.catalog.display.serialCard', { serial });
+  }
+
+  const grade = slot?.grade?.trim();
+  if (grade) {
+    return t('collectibles.catalog.display.gradedCollectible', { grade });
+  }
 
   const slotId = hubSlotID?.trim();
   if (slotId) {
-    return slotId
-      .split(/[-_]+/)
-      .filter(Boolean)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+    const tail = slotId.split(/[-_]+/).filter(Boolean).pop();
+    if (tail && tail.length >= 4 && tail.length <= 12 && /^[a-z0-9]+$/i.test(tail)) {
+      return t('collectibles.catalog.display.referenceCard', { reference: tail.toUpperCase() });
+    }
   }
 
-  return t('collectibles.tokenizedCard');
+  return t('collectibles.catalog.unnamedCard');
+}
+
+function resolveHasDigitalTitle(nft: Pick<CollectibleNFT, 'nftMint' | 'validityStatus'>): boolean {
+  const mint = nft.nftMint?.trim();
+  if (!mint) return false;
+  const validityStatus = resolveCollectibleNFTValidityStatus(nft);
+  return validityStatus !== 'voided';
+}
+
+function isSafeCollectibleCatalogImageUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+
+  if (trimmed.startsWith('/')) {
+    return !trimmed.startsWith('//') && !trimmed.includes('\\');
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** First safe custody evidence photo from hubSlot.photosJSON when no curated demo image exists. */
+function resolveFirstSafeCustodyEvidencePhotoUrl(
+  photosJSON: string | undefined | null
+): string | undefined {
+  if (!photosJSON?.trim()) return undefined;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(photosJSON);
+  } catch {
+    return undefined;
+  }
+
+  if (!Array.isArray(parsed)) return undefined;
+
+  for (const entry of parsed) {
+    if (typeof entry !== 'string') continue;
+    const url = entry.trim();
+    if (isSafeCollectibleCatalogImageUrl(url)) return url;
+  }
+
+  return undefined;
 }
 
 /** User-facing catalog card fields with demo mapping and API fallbacks. */
 export function resolveCollectibleCatalogDisplay(
   nft: Pick<CollectibleNFT, 'nftMint' | 'hubSlotID' | 'hubSlot' | 'burnAt' | 'validityStatus'>,
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string | number>) => string
 ): CollectibleCatalogDisplay {
   const demo = findCollectibleCatalogDemoEntry({
     hubSlotID: nft.hubSlotID,
@@ -209,8 +287,20 @@ export function resolveCollectibleCatalogDisplay(
   const displayName = demo ? t(demo.nameKey) : fallbackDisplayName(nft.hubSlot, nft.hubSlotID, t);
 
   const grade = nft.hubSlot?.grade?.trim() || demo?.grade?.trim() || '';
+  const rawCert = nft.hubSlot?.certNumber?.trim();
+  const rawSerial = nft.hubSlot?.serial?.trim();
+  const certificationReference =
+    rawCert && (isCollectibleSyntheticCatalogIdentifier(rawCert) || rawCert !== displayName)
+      ? shortenCollectibleProofReference(rawCert)
+      : undefined;
+  const serialReference =
+    rawSerial && isCollectibleSyntheticCatalogIdentifier(rawSerial) && rawSerial !== displayName
+      ? shortenCollectibleProofReference(rawSerial)
+      : undefined;
 
-  const imageUrl = demo ? getCollectibleDemoCardImageUrl(demo.listingSlug) : undefined;
+  const imageUrl = demo
+    ? getCollectibleDemoCardImageUrl(demo.listingSlug)
+    : resolveFirstSafeCustodyEvidencePhotoUrl(nft.hubSlot?.photosJSON);
   const validityStatus = resolveCollectibleNFTValidityStatus(nft);
   const validityStatusKey = resolveCollectibleValidityDisplayKey(validityStatus);
 
@@ -218,11 +308,14 @@ export function resolveCollectibleCatalogDisplay(
     displayName,
     grade,
     imageUrl,
+    certificationReference,
+    serialReference,
     custodyStatusKey: resolveCustodyStatusKey(nft.burnAt, nft.hubSlot),
     validityStatusKey,
     validityStatus,
     redeemable: isCollectibleCatalogRedeemable(nft),
     credentialActionsBlocked: isCollectibleNFTCredentialActionBlocked(nft),
     hasDemoMapping: Boolean(demo),
+    hasDigitalTitle: resolveHasDigitalTitle(nft),
   };
 }

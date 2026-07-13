@@ -3,6 +3,10 @@
 
 import { CHAINS, getChainFromCoin } from '../data/tokens';
 import { COLLECTIBLE_FULFILLMENT_NFT } from './metadata';
+import {
+  readCollectibleSignedOrderOptionalFeatures,
+  type CollectibleSignedListingOptionalFeature,
+} from './orderOptionalFeatures';
 import { parseCollectibleListingTag, parseCollectibleListingTagMap } from './listingTags';
 
 export interface CollectibleListingSource {
@@ -12,6 +16,11 @@ export interface CollectibleListingSource {
     tokenAddress?: string;
     tokenStandard?: string;
     tags?: string[];
+    optionalFeatures?: Array<
+      | string
+      | CollectibleSignedListingOptionalFeature
+      | { name?: string; surcharge?: string; description?: string; price?: number }
+    >;
   };
 }
 
@@ -24,6 +33,8 @@ export interface ParsedCollectibleListingMetadata {
   serial?: string;
   /** `source-custody` | `hub` | other hubLocation values from listing tags */
   hubLocation?: string;
+  orderOptionalFeatures?: string[];
+  orderOptionalFeaturesValid?: boolean;
 }
 
 /**
@@ -63,15 +74,23 @@ export function parseCollectibleListingMetadata(
   const fromTags = parseCollectibleListingTagMap(tags);
 
   const nftMint = fromTags.nft_mint?.trim() || product.item?.tokenAddress?.trim() || undefined;
+  const hubSlotID = fromTags.hub_slot_id?.trim() || undefined;
+  const certNumber = fromTags.cert_number?.trim() || undefined;
+  const signedFeatures = readCollectibleSignedOrderOptionalFeatures(
+    product.item?.optionalFeatures,
+    { hubSlotID, certNumber }
+  );
 
   return {
     fulfillment: fromTags.fulfillment?.trim() || COLLECTIBLE_FULFILLMENT_NFT,
-    hubSlotID: fromTags.hub_slot_id?.trim() || undefined,
+    hubSlotID,
     nftMint,
-    certNumber: fromTags.cert_number?.trim() || undefined,
+    certNumber,
     grade: fromTags.grade?.trim() || undefined,
     serial: fromTags.serial?.trim() || undefined,
     hubLocation: fromTags.hub_location?.trim() || undefined,
+    orderOptionalFeatures: signedFeatures.valid ? signedFeatures.features : undefined,
+    orderOptionalFeaturesValid: signedFeatures.valid,
   };
 }
 
@@ -129,6 +148,7 @@ export function hasAuthoritativeCollectibleTitleMetadata(
   if (!isCollectibleHubNftListing(product)) return false;
 
   const meta = parseCollectibleListingMetadata(product!);
+  if (meta.orderOptionalFeaturesValid === false) return false;
   if (meta.fulfillment !== COLLECTIBLE_FULFILLMENT_NFT) return false;
   if (!meta.certNumber?.trim()) return false;
   if (!meta.hubSlotID?.trim()) return false;

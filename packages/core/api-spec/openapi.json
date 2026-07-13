@@ -7895,6 +7895,60 @@
         "tags": ["marketplaces"]
       }
     },
+    "/platform/v1/marketplaces/{id}/sellers/resolve": {
+      "post": {
+        "operationId": "marketplaces-sellers-resolve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceSellerResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Resolve store query to inviteable marketplace seller candidates",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/marketplaces/{id}/sellers/{peerID}": {
       "put": {
         "operationId": "marketplaces-sellers-update",
@@ -9451,6 +9505,40 @@
         "tags": ["relay"]
       }
     },
+    "/platform/v1/seller-affiliate/capabilities": {
+      "get": {
+        "operationId": "seller-affiliate-capabilities-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_SellerAffiliateCapabilitiesResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List effective Affiliate settlement capabilities for this seller node",
+        "tags": ["seller-affiliate"]
+      }
+    },
     "/platform/v1/seller-affiliate/program": {
       "get": {
         "operationId": "seller-affiliate-program-get",
@@ -9574,15 +9662,35 @@
     "/platform/v1/seller-affiliate/statements/promoter": {
       "get": {
         "operationId": "seller-affiliate-statements-promoter",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Platform_AffiliateStatementLine"
-                  },
-                  "type": ["array", "null"]
+                  "$ref": "#/components/schemas/Platform_SellerAffiliatePromoterStatementResponse"
                 }
               }
             },
@@ -9604,7 +9712,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "List canonical affiliate commission lines attributed to the current promoter",
+        "summary": "List paginated Affiliate lines for the current promoter with partial-source metadata",
         "tags": ["seller-affiliate"]
       }
     },
@@ -19477,6 +19585,67 @@
       }
     },
     "/v1/collateral/accounts": {
+      "get": {
+        "description": "Returns only accounts bound to the selected tenant, local principal, provider, and resource.",
+        "operationId": "collateral-accounts-list",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "providerID",
+            "schema": {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "resourceID",
+            "schema": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_CollateralAccountsView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "adminSession": []
+          }
+        ],
+        "summary": "List collateral accounts for a resource",
+        "tags": ["collateral"]
+      },
       "post": {
         "description": "Creates or retrieves one tenant- and local-principal-bound collateral requirement. This does not prove funding.",
         "operationId": "collateral-accounts-open",
@@ -19693,6 +19862,47 @@
           }
         ],
         "summary": "Reconcile collateral funding",
+        "tags": ["collateral"]
+      }
+    },
+    "/v1/collateral/capabilities": {
+      "get": {
+        "description": "Returns the effective reviewed collateral rail for this node. Source presence does not make a rail available.",
+        "operationId": "collateral-capabilities-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_CollateralCapabilitiesView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "adminSession": []
+          }
+        ],
+        "summary": "Get collateral operator capabilities",
         "tags": ["collateral"]
       }
     },
@@ -34641,6 +34851,12 @@
       "Platform_AdminPatchFiatProviderInputBody": {
         "additionalProperties": false,
         "properties": {
+          "delayed_disbursement": {
+            "type": "boolean"
+          },
+          "partner_attribution_id": {
+            "type": "string"
+          },
           "partner_id": {
             "type": "string"
           },
@@ -34758,6 +34974,9 @@
             "format": "date-time",
             "type": "string"
           },
+          "buyerKind": {
+            "type": "string"
+          },
           "buyerPeerID": {
             "type": "string"
           },
@@ -34775,8 +34994,17 @@
           "programID": {
             "type": "string"
           },
+          "promoterPayoutAddress": {
+            "type": "string"
+          },
           "promoterPeerID": {
             "type": "string"
+          },
+          "promoterUTXOPayoutAddresses": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
           },
           "referralSessionID": {
             "type": "string"
@@ -34791,9 +35019,11 @@
           "referralSessionID",
           "programID",
           "sellerPeerID",
-          "buyerPeerID",
+          "buyerKind",
           "promoterPeerID",
           "commissionRateBPSSnapshot",
+          "promoterPayoutAddress",
+          "promoterUTXOPayoutAddresses",
           "attributedAt"
         ],
         "type": "object"
@@ -34857,6 +35087,46 @@
         ],
         "type": "object"
       },
+      "Platform_AffiliateSettlementOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actionId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "coin": {
+            "type": "string"
+          },
+          "confirmations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "confirmedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["actionId", "action", "state", "coin", "amount", "address", "updatedAt"],
+        "type": "object"
+      },
       "Platform_AffiliateStatementLine": {
         "additionalProperties": false,
         "properties": {
@@ -34865,6 +35135,9 @@
           },
           "commissionLine": {
             "$ref": "#/components/schemas/Platform_AffiliateCommissionLine"
+          },
+          "settlement": {
+            "$ref": "#/components/schemas/Platform_AffiliateSettlementOutput"
           }
         },
         "required": ["attribution", "commissionLine"],
@@ -36223,6 +36496,16 @@
         "required": ["peerID"],
         "type": "object"
       },
+      "Platform_MarketplaceSellerResolveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": ["query"],
+        "type": "object"
+      },
       "Platform_MarketplaceSellerUpdateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -36899,6 +37182,24 @@
         "required": ["name", "domain", "action"],
         "type": "object"
       },
+      "Platform_SellerAffiliateCapabilitiesResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "rails": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_SellerAffiliateRailCapability"
+            },
+            "type": ["array", "null"]
+          },
+          "version": {
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": ["version", "rails"],
+        "type": "object"
+      },
       "Platform_SellerAffiliateProgramRequest": {
         "additionalProperties": false,
         "properties": {
@@ -36919,6 +37220,82 @@
           }
         },
         "required": ["status", "commissionRateBPS", "attributionWindowSeconds"],
+        "type": "object"
+      },
+      "Platform_SellerAffiliatePromoterStatementResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_AffiliateStatementLine"
+            },
+            "type": ["array", "null"]
+          },
+          "page": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "sourceErrors": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_SellerAffiliateStatementSourceError"
+            },
+            "type": ["array", "null"]
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["items", "page", "pageSize", "total", "partial"],
+        "type": "object"
+      },
+      "Platform_SellerAffiliateRailCapability": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "assetScope": {
+            "enum": ["exact"],
+            "type": "string"
+          },
+          "guestSupport": {
+            "type": "boolean"
+          },
+          "orderKinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "railID": {
+            "type": "string"
+          }
+        },
+        "required": ["railID", "assetScope", "orderKinds", "actions", "guestSupport"],
+        "type": "object"
+      },
+      "Platform_SellerAffiliateStatementSourceError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "linkID": {
+            "type": "string"
+          }
+        },
+        "required": ["linkID", "code"],
         "type": "object"
       },
       "Platform_SetHandleRequest": {
@@ -38576,6 +38953,32 @@
         ],
         "type": "object"
       },
+      "Node_CollateralAccountsView": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Node_CollateralAccountView"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["items"],
+        "type": "object"
+      },
+      "Node_CollateralCapabilitiesView": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "rail": {
+            "$ref": "#/components/schemas/Node_RailDescriptor"
+          }
+        },
+        "required": ["available"],
+        "type": "object"
+      },
       "Node_Digital-asset-create-license-keyRequest": {
         "additionalProperties": false,
         "properties": {
@@ -39115,6 +39518,57 @@
           "attempts",
           "expiresAt",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Node_RailDescriptor": {
+        "additionalProperties": false,
+        "properties": {
+          "assets": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "custodyModel": {
+            "type": "string"
+          },
+          "hasReceiptVerification": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "supportsClaimSlash": {
+            "type": "boolean"
+          },
+          "supportsFundingObserve": {
+            "type": "boolean"
+          },
+          "supportsFundingTargets": {
+            "type": "boolean"
+          },
+          "supportsPrincipalRelease": {
+            "type": "boolean"
+          },
+          "supportsReconciliation": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "custodyModel",
+          "assets",
+          "supportsFundingTargets",
+          "supportsFundingObserve",
+          "supportsPrincipalRelease",
+          "supportsClaimSlash",
+          "supportsReconciliation",
+          "hasReceiptVerification"
         ],
         "type": "object"
       },

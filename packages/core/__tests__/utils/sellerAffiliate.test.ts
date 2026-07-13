@@ -6,7 +6,9 @@ import { errorTracker } from '../../services/monitoring/errorTracker';
 import {
   deriveSellerAffiliateDisplayStatus,
   groupSellerAffiliateStatementLines,
+  normalizeSellerAffiliateCapabilities,
   normalizeSellerAffiliateStatementLine,
+  normalizeSellerAffiliateStatementPage,
 } from '../../utils/sellerAffiliate';
 import type { SellerAffiliateStatementLine } from '../../types/sellerAffiliate';
 
@@ -53,6 +55,59 @@ function statement(
       : {}),
   });
 }
+
+describe('seller affiliate hosting envelopes', () => {
+  it('normalizes the effective rail capability envelope', () => {
+    expect(
+      normalizeSellerAffiliateCapabilities({
+        data: {
+          version: 2,
+          rails: [
+            {
+              railID: 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955',
+              assetScope: 'exact',
+              orderKinds: ['standard', 'guest'],
+              actions: ['complete', 'guest_affiliate_transfer'],
+              guestSupport: true,
+            },
+          ],
+        },
+      })
+    ).toEqual({
+      version: 2,
+      rails: [
+        {
+          railID: 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955',
+          assetScope: 'exact',
+          orderKinds: ['standard', 'guest'],
+          actions: ['complete', 'guest_affiliate_transfer'],
+          guestSupport: true,
+        },
+      ],
+    });
+  });
+
+  it('preserves partial-source metadata alongside valid statement lines', () => {
+    expect(
+      normalizeSellerAffiliateStatementPage({
+        data: {
+          items: [statement()],
+          page: 2,
+          pageSize: 20,
+          total: 21,
+          partial: true,
+          sourceErrors: [{ linkID: 'link-2', code: 'seller_unavailable' }],
+        },
+      })
+    ).toMatchObject({
+      page: 2,
+      pageSize: 20,
+      total: 21,
+      partial: true,
+      sourceErrors: [{ linkID: 'link-2', code: 'seller_unavailable' }],
+    });
+  });
+});
 
 describe('seller affiliate statement status', () => {
   afterEach(() => {

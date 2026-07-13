@@ -43,6 +43,15 @@ function hasCollectibleFeature(features: string[], key: CollectibleFeatureKey): 
   return features.some(feature => feature.trim().startsWith(prefix));
 }
 
+function removeCollectibleFeature(features: string[], key: CollectibleFeatureKey): void {
+  const prefix = `${COLLECTIBLE_FEATURE_PREFIX}${key}=`;
+  for (let index = features.length - 1; index >= 0; index -= 1) {
+    if (features[index]?.trim().startsWith(prefix)) {
+      features.splice(index, 1);
+    }
+  }
+}
+
 /** Merge explicit JSON fields into optionalFeatures without duplicating keys. */
 export function purchaseItemOptionalFeaturesWithCollectibleMetadata(
   fields: CollectiblePurchaseFields
@@ -59,7 +68,16 @@ export function purchaseItemOptionalFeaturesWithCollectibleMetadata(
   append(COLLECTIBLE_FEATURE_KEYS.hubSlotId, fields.hubSlotID);
   append(COLLECTIBLE_FEATURE_KEYS.nftMint, fields.nftMint);
   append(COLLECTIBLE_FEATURE_KEYS.certNumber, fields.certNumber);
-  append(COLLECTIBLE_FEATURE_KEYS.holderWallet, fields.holderWallet);
+
+  const buyerHolderWallet = fields.holderWallet?.trim();
+  if (buyerHolderWallet) {
+    removeCollectibleFeature(features, COLLECTIBLE_FEATURE_KEYS.holderWallet);
+    const entry = collectibleOptionalFeature(
+      COLLECTIBLE_FEATURE_KEYS.holderWallet,
+      buyerHolderWallet
+    );
+    if (entry) features.push(entry);
+  }
 
   return features;
 }

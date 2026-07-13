@@ -111,6 +111,9 @@ export * as marketplaceApi from './marketplace';
 // Collectibles Hub+NFT API (P1)
 export * as collectiblesApi from './collectibles';
 
+// Core-owned resource collateral operator API
+export * as collateralApi from './collateral';
+
 // 权限控制 API
 export * as accessApi from './access';
 
@@ -272,16 +275,20 @@ export * as sellerAffiliateApi from './sellerAffiliate';
 export type {
   PublicSellerAffiliateLink,
   SellerAffiliateLink,
+  SellerAffiliateCapabilities,
   SellerAffiliateProgram,
   SellerAffiliateProgramRequest,
   SellerAffiliateReferralSession,
   SellerAffiliateStatementLine,
+  SellerAffiliateStatementPage,
 } from '../../types/sellerAffiliate';
 export {
   createSellerAffiliateLink,
   createSellerAffiliateReferralSession,
   getPublicSellerAffiliateLink,
   getSellerAffiliateProgram,
+  getSellerAffiliateCapabilities,
+  listSellerAffiliateStatementPage,
   listSellerAffiliateStatements,
   putSellerAffiliateProgram,
 } from './sellerAffiliate';

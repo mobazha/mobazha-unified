@@ -418,6 +418,7 @@ export const HOSTING_API = {
   ...HOSTING_API_PATHS,
   // --- Seller Affiliate (automation-first; no review or settlement queue) ---
   SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
+  SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',
   SELLER_AFFILIATE_PROGRAM_LINKS: (id: string) =>
     `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
   PUBLIC_SELLER_AFFILIATE_LINK: (token: string) =>
@@ -528,6 +529,7 @@ export const HOSTING_API = {
   MARKETPLACE_CUSTOM_DOMAIN_VERIFY: (id: string) =>
     `/platform/v1/marketplaces/${id}/domains/custom/verify`,
   MARKETPLACE_SELLERS: (id: string) => `/platform/v1/marketplaces/${id}/sellers`,
+  MARKETPLACE_SELLER_RESOLVE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/resolve`,
   MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
   MARKETPLACE_SELLER: (marketplaceId: string, peerID: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}`,

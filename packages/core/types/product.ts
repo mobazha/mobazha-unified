@@ -191,6 +191,10 @@ export interface ProductItem {
   cryptoListingCurrencyCode?: string;
   minQuantity?: number;
   maxQuantity?: number;
+  /** Signed listing optional features (collectibles bindings or commercial upsells). */
+  optionalFeatures?: Array<
+    { name: string; surcharge?: string; description?: string; price?: number } | string
+  >;
   /** 视频相关字段 */
   introVideo?: string;
   altIntroVideoLinks?: string[];

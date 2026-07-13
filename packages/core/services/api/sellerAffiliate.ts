@@ -5,10 +5,12 @@ import { HOSTING_API } from '../../config/apiPaths';
 import type { SellerAffiliateProgramRequest } from '../../types/sellerAffiliate';
 import {
   normalizePublicSellerAffiliateLink,
+  normalizeSellerAffiliateCapabilities,
   normalizeSellerAffiliateLink,
   normalizeSellerAffiliateProgram,
   normalizeSellerAffiliateReferralSession,
   normalizeSellerAffiliateStatementLine,
+  normalizeSellerAffiliateStatementPage,
   unwrapSellerAffiliateList,
 } from '../../utils/sellerAffiliate';
 import { get, post } from './client';
@@ -18,6 +20,12 @@ import { hostingGet, hostingPost, hostingPut } from './helpers';
 export async function getSellerAffiliateProgram() {
   return normalizeSellerAffiliateProgram(
     await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM)
+  );
+}
+
+export async function getSellerAffiliateCapabilities() {
+  return normalizeSellerAffiliateCapabilities(
+    await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_CAPABILITIES)
   );
 }
 
@@ -52,5 +60,14 @@ export async function listSellerAffiliateStatements(audience: 'seller' | 'promot
       : HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER;
   return unwrapSellerAffiliateList(await hostingGet<unknown>(path)).map(
     normalizeSellerAffiliateStatementLine
+  );
+}
+
+export async function listSellerAffiliateStatementPage(page = 1, pageSize = 20) {
+  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  return normalizeSellerAffiliateStatementPage(
+    await hostingGet<unknown>(
+      `${HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER}?${query.toString()}`
+    )
   );
 }

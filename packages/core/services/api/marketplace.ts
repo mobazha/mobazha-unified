@@ -14,6 +14,7 @@ import type {
   InviteMarketplaceSellerRequest,
   MarketplaceAttributionSummary,
   MarketplaceCurationConfig,
+  MarketplaceSellerResolveResponse,
   MarketplaceSellerReviewEvent,
   MarketplaceShareLink,
   MarketplaceStoreMembership,
@@ -251,6 +252,16 @@ export async function inviteMarketplaceSeller(
 ): Promise<MarketplaceStoreMembership> {
   return hostingPost<MarketplaceStoreMembership>(
     HOSTING_API.MARKETPLACE_SELLER_INVITE(marketplaceId),
+    data
+  );
+}
+
+export async function resolveMarketplaceSellers(
+  marketplaceId: string,
+  data: { query: string }
+): Promise<MarketplaceSellerResolveResponse> {
+  return hostingPost<MarketplaceSellerResolveResponse>(
+    HOSTING_API.MARKETPLACE_SELLER_RESOLVE(marketplaceId),
     data
   );
 }

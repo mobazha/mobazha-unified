@@ -134,6 +134,25 @@ export interface OrderListItem {
   unreadChatMessages?: number;
 }
 
+/** Core-verified buyer-audience collateral allocation credential on order detail. */
+export interface OrderCollateralProtection {
+  status: 'verified-allocation';
+  providerID: string;
+  resourceID: string;
+  assetID: string;
+  amount: string;
+  policyID: string;
+  policyVersion: string;
+  issuerPeerID: string;
+  extensionID: string;
+  extensionRevision: number;
+  allocationRevision: number;
+  collateralRevision: number;
+  issuedAt: string;
+  expiresAt: string;
+  accountExpiresAt: string;
+}
+
 /**
  * 订单详情
  */
@@ -170,6 +189,8 @@ export interface Order {
   afterSaleDisputeReason?: string;
   afterSaleDisputeDesc?: string;
   afterSaleDisputeAt?: string;
+  /** Optional Core-verified buyer allocation credential (order detail API only). */
+  collateralProtection?: OrderCollateralProtection;
 }
 
 export interface OrderPricingBreakdown {
@@ -528,6 +549,8 @@ export interface OrderItem {
   paymentAddress?: string;
   couponCodes?: string[];
   quantity64?: string;
+  /** Authoritative signed order extension transport for collectibles bindings. */
+  optionalFeatures?: string[];
 }
 
 /**

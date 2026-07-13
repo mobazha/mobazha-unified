@@ -101,6 +101,33 @@ export interface SellerAffiliateStatementLine {
 
 export type SellerAffiliateStatementAudience = 'seller' | 'promoter';
 
+export interface SellerAffiliateRailCapability {
+  railID: string;
+  assetScope: 'chain' | 'native' | 'exact';
+  orderKinds: Array<'standard' | 'guest'>;
+  actions: string[];
+  guestSupport: boolean;
+}
+
+export interface SellerAffiliateCapabilities {
+  version: number;
+  rails: SellerAffiliateRailCapability[];
+}
+
+export interface SellerAffiliateStatementSourceError {
+  linkID: string;
+  code: string;
+}
+
+export interface SellerAffiliateStatementPage {
+  items: SellerAffiliateStatementLine[];
+  page: number;
+  pageSize: number;
+  total: number;
+  partial: boolean;
+  sourceErrors: SellerAffiliateStatementSourceError[];
+}
+
 /**
  * One order's commission lines for a single currency, collapsed so the same
  * settlement (and its tx) is not shown or summed once per underlying line.

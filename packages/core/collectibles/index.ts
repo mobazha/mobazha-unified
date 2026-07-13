@@ -3,6 +3,7 @@
 
 export * from './catalog';
 export * from './metadata';
+export * from './orderOptionalFeatures';
 export * from './types';
 export * from './listingTags';
 export * from './listing';
@@ -13,6 +14,9 @@ export * from './redemption';
 export * from './explorer';
 export * from './shipTo';
 export * from './sourceDeposit';
+export * from './sellerCustodyWorkspace';
+export * from './operatorCustodyWorkspace';
+export * from './orderCustodyAssurance';
 export * from './validity';
 export * from './walletBinding';
 export * from './transferTx';

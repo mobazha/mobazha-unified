@@ -32,6 +32,7 @@ export * from './utils';
 // Marketplace curation + native sub-market context
 export * from './curation';
 export * from './collectibles';
+export * from './collateral';
 export * from './verticals/modules';
 export * from './marketplace/subdomain';
 

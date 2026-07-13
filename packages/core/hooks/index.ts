@@ -99,6 +99,7 @@ export * from './useNativeMarketplaceSell';
 
 // RWA 资产相关
 export * from './useRwaAssets';
+export * from './useCollateralOperator';
 
 // 订单操作相关
 export * from './useOrderAction';

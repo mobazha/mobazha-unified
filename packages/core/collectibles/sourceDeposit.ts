@@ -3,10 +3,22 @@
 
 import type { CollectibleSourceDeposit } from './types';
 import {
+  hasCollateralDeclarationAttempt,
+  resolveGuaranteeAssetID,
+  validateCollectibleCollateralDeclaration,
+} from '../collateral/projection';
+import {
   buildCollectibleListingTagEntries,
   COLLECTIBLE_LISTING_TAG_MAX_COUNT,
   COLLECTIBLE_LISTING_TAG_MAX_LEN,
 } from './listingTags';
+import {
+  appendOrderOptionalFeaturesToSearchParams,
+  mapCollateralDeclarationIssueToOrderFeatureIssue,
+  readOrderOptionalFeaturesFromSearchParams,
+  type CollectibleOrderOptionalFeaturesIssue,
+  validateCollectibleOrderOptionalFeatures,
+} from './orderOptionalFeatures';
 
 export type SourceDepositLifecycleStep = 'submit' | 'review' | 'list' | 'listed' | 'redeem';
 
@@ -346,16 +358,25 @@ export function parseCollectibleSourceDepositPhotosJSON(
 export interface CollectibleSourceDepositSubmissionFields {
   certNumber: string;
   grade: string;
-  holderWallet: string;
   photoFrontUrl: string;
   photoBackUrl: string;
+  holderWallet?: string;
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
 }
 
 export interface CollectibleSourceDepositSubmissionValidation {
   valid: boolean;
   errors: Partial<
     Record<
-      'certNumber' | 'grade' | 'holderWallet' | 'photoFrontUrl' | 'photoBackUrl' | 'photosDistinct',
+      | 'certNumber'
+      | 'grade'
+      | 'holderWallet'
+      | 'photoFrontUrl'
+      | 'photoBackUrl'
+      | 'photosDistinct'
+      | 'guaranteeAmount'
+      | 'guaranteeCurrency',
       true
     >
   >;
@@ -366,7 +387,6 @@ export function validateCollectibleSourceDepositSubmission(
 ): CollectibleSourceDepositSubmissionValidation {
   const certNumber = fields.certNumber.trim();
   const grade = fields.grade.trim();
-  const holderWallet = fields.holderWallet.trim();
   const photoFrontUrl = fields.photoFrontUrl.trim();
   const photoBackUrl = fields.photoBackUrl.trim();
 
@@ -374,7 +394,7 @@ export function validateCollectibleSourceDepositSubmission(
 
   if (!certNumber) errors.certNumber = true;
   if (!grade) errors.grade = true;
-  if (!holderWallet) errors.holderWallet = true;
+  if (!fields.holderWallet?.trim()) errors.holderWallet = true;
   if (!isValidCollectibleEvidenceUrl(photoFrontUrl)) errors.photoFrontUrl = true;
   if (!isValidCollectibleEvidenceUrl(photoBackUrl)) errors.photoBackUrl = true;
   if (
@@ -383,6 +403,26 @@ export function validateCollectibleSourceDepositSubmission(
     photoFrontUrl === photoBackUrl
   ) {
     errors.photosDistinct = true;
+  }
+
+  const guaranteeAmount = fields.guaranteeAmount?.trim() ?? '';
+  const guaranteeCurrency = fields.guaranteeCurrency?.trim() ?? '';
+  if (guaranteeAmount || guaranteeCurrency) {
+    const declaration = validateCollectibleCollateralDeclaration({
+      guaranteeAmount,
+      guaranteeCurrency,
+    });
+    if (!declaration.valid) {
+      if (declaration.issue === 'missingAmount' || declaration.issue === 'invalidAmountFormat') {
+        errors.guaranteeAmount = true;
+      }
+      if (declaration.issue === 'missingAsset') {
+        errors.guaranteeCurrency = true;
+      }
+      if (declaration.issue === 'nonPositiveAmount') {
+        errors.guaranteeAmount = true;
+      }
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -423,6 +463,11 @@ export interface SourceDepositListingPrefillInput {
   hubSlotID: string;
   grade?: string;
   serial?: string;
+  /** Declared seller guarantee — required to fail closed when bindings are absent. */
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+  /** Canonical signed-order optional features from Hosting — not listing-form OptionalFeature[]. */
+  orderOptionalFeatures?: readonly string[];
 }
 
 export interface SourceDepositListingFormPrefill {
@@ -436,6 +481,116 @@ export interface SourceDepositListingFormPrefill {
   tokenAddress: '';
   tags: string[];
   productType: string;
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+  /** Locked signed-order bindings — distinct from commercial listing-form OptionalFeature[]. */
+  sourceDepositOrderOptionalFeatures?: string[];
+}
+
+export interface SourceDepositListingBindingInput {
+  sourceDepositID: string;
+  hubSlotID: string;
+  certNumber: string;
+  grade?: string;
+  serial?: string;
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+  orderOptionalFeatures?: readonly string[];
+}
+
+function normalizeSourceDepositListingIdentity(input: SourceDepositListingBindingInput): {
+  sourceDepositID: string;
+  hubSlotID: string;
+  certNumber: string;
+} {
+  return {
+    sourceDepositID: input.sourceDepositID?.trim() ?? '',
+    hubSlotID: input.hubSlotID?.trim() ?? '',
+    certNumber: input.certNumber?.trim() ?? '',
+  };
+}
+
+/** True when any source-deposit-specific listing URL param is present. */
+export function hasSourceDepositListingUrlContext(
+  params: Pick<URLSearchParams, 'get' | 'getAll'>
+): boolean {
+  const sourceDepositID = params.get('sourceDepositID')?.trim();
+  const certNumber = params.get('certNumber')?.trim();
+  const hubSlotID = params.get('hubSlotID')?.trim();
+  const guaranteeAmount = params.get('guaranteeAmount')?.trim();
+  const guaranteeCurrency = params.get('guaranteeCurrency')?.trim();
+  const orderFeatures = readOrderOptionalFeaturesFromSearchParams(params);
+
+  const coreSignals =
+    Boolean(sourceDepositID) ||
+    Boolean(certNumber) ||
+    Boolean(hubSlotID) ||
+    Boolean(guaranteeAmount) ||
+    Boolean(guaranteeCurrency) ||
+    orderFeatures.length > 0;
+
+  if (coreSignals) return true;
+
+  return false;
+}
+
+/** Fail closed when a guarantee is declared but signed order bindings are missing or invalid. */
+export function validateSourceDepositListingBindings(
+  input: SourceDepositListingBindingInput
+):
+  | { valid: true; orderOptionalFeatures?: string[] }
+  | { valid: false; issue: CollectibleOrderOptionalFeaturesIssue } {
+  const identity = normalizeSourceDepositListingIdentity(input);
+  if (!identity.sourceDepositID || !identity.hubSlotID || !identity.certNumber) {
+    return { valid: false, issue: 'incompleteSourceDepositContext' };
+  }
+
+  const normalizedInput: SourceDepositListingBindingInput = {
+    ...input,
+    ...identity,
+  };
+
+  const declarationAttempt = hasCollateralDeclarationAttempt(normalizedInput);
+  if (declarationAttempt) {
+    const declaration = validateCollectibleCollateralDeclaration(normalizedInput);
+    if (!declaration.valid) {
+      return {
+        valid: false,
+        issue: mapCollateralDeclarationIssueToOrderFeatureIssue(declaration.issue),
+      };
+    }
+  }
+
+  const collateralRequired = declarationAttempt;
+  const requiredCollateralAmount = collateralRequired
+    ? normalizedInput.guaranteeAmount!.trim()
+    : undefined;
+  const requiredCollateralAssetID = collateralRequired
+    ? resolveGuaranteeAssetID(normalizedInput.guaranteeCurrency)
+    : undefined;
+  const rawFeatures = normalizedInput.orderOptionalFeatures
+    ?.map(feature => feature.trim())
+    .filter(Boolean);
+
+  if (!rawFeatures?.length) {
+    if (collateralRequired) {
+      return { valid: false, issue: 'missingCollateralBindings' };
+    }
+    return { valid: true };
+  }
+
+  const validated = validateCollectibleOrderOptionalFeatures(rawFeatures, {
+    sourceDepositID: identity.sourceDepositID,
+    hubSlotID: identity.hubSlotID,
+    certNumber: identity.certNumber,
+    ...(requiredCollateralAmount && requiredCollateralAssetID
+      ? { requiredCollateralAmount, requiredCollateralAssetID }
+      : {}),
+  });
+  if (!validated.valid) {
+    return validated;
+  }
+  return { valid: true, orderOptionalFeatures: validated.features };
 }
 
 export { buildCollectibleListingTag, buildCollectibleListingTagEntries } from './listingTags';
@@ -474,7 +629,7 @@ function appendCollectibleListingTagsWithinBudget(
   return budget - entries.length;
 }
 
-export function buildSourceDepositListingTags(input: SourceDepositListingPrefillInput): string[] {
+function buildUnsecuredSourceDepositListingTags(input: SourceDepositListingPrefillInput): string[] {
   const requiredFields: Array<{ key: string; value: string | undefined; label: string }> = [
     { key: 'fulfillment', value: 'nft', label: 'fulfillment' },
     { key: 'hub_slot_id', value: input.hubSlotID, label: 'hub slot id' },
@@ -517,6 +672,27 @@ export function buildSourceDepositListingTags(input: SourceDepositListingPrefill
   return tags;
 }
 
+export function buildSourceDepositListingTags(input: SourceDepositListingPrefillInput): string[] {
+  const bindings = validateSourceDepositListingBindings(input);
+  if (!bindings.valid) {
+    throw new Error(
+      `Source-deposit listing tags: invalid order optional features (${bindings.issue}).`
+    );
+  }
+
+  return buildUnsecuredSourceDepositListingTags(input);
+}
+
+function resolveValidatedSourceDepositOrderOptionalFeatures(
+  input: SourceDepositListingPrefillInput
+): string[] | undefined {
+  const bindings = validateSourceDepositListingBindings(input);
+  if (!bindings.valid) {
+    throw new Error(`Invalid source-deposit order optional features (${bindings.issue}).`);
+  }
+  return bindings.orderOptionalFeatures;
+}
+
 export function getSourceDepositLockedTags(input: SourceDepositListingPrefillInput): string[] {
   return buildSourceDepositListingTags(input);
 }
@@ -524,6 +700,8 @@ export function getSourceDepositLockedTags(input: SourceDepositListingPrefillInp
 export function buildSourceDepositListingFormPrefill(
   input: SourceDepositListingPrefillInput
 ): SourceDepositListingFormPrefill {
+  const sourceDepositOrderOptionalFeatures =
+    resolveValidatedSourceDepositOrderOptionalFeatures(input);
   return {
     sourceDepositID: input.sourceDepositID,
     contractType: 'RWA_TOKEN',
@@ -535,36 +713,121 @@ export function buildSourceDepositListingFormPrefill(
     tokenAddress: '',
     tags: buildSourceDepositListingTags(input),
     productType: 'collectible-card',
+    ...(input.guaranteeAmount?.trim() ? { guaranteeAmount: input.guaranteeAmount.trim() } : {}),
+    ...(input.guaranteeCurrency?.trim()
+      ? { guaranteeCurrency: input.guaranteeCurrency.trim() }
+      : {}),
+    ...(sourceDepositOrderOptionalFeatures ? { sourceDepositOrderOptionalFeatures } : {}),
+  };
+}
+
+export type SourceDepositListingUrlState =
+  | { mode: false }
+  | {
+      mode: true;
+      prefill: SourceDepositListingPrefillInput;
+      orderFeaturesIssue: null;
+    }
+  | {
+      mode: true;
+      prefill: null;
+      orderFeaturesIssue: CollectibleOrderOptionalFeaturesIssue;
+      partial: {
+        sourceDepositID: string;
+        certNumber: string;
+        hubSlotID: string;
+        grade?: string;
+        serial?: string;
+      };
+    };
+
+export function resolveSourceDepositListingUrlState(
+  params: Pick<URLSearchParams, 'get' | 'getAll'>
+): SourceDepositListingUrlState {
+  if (!hasSourceDepositListingUrlContext(params)) {
+    return { mode: false };
+  }
+
+  const sourceDepositID = params.get('sourceDepositID')?.trim() ?? '';
+  const certNumber = params.get('certNumber')?.trim() ?? '';
+  const hubSlotID = params.get('hubSlotID')?.trim() ?? '';
+  const grade = params.get('grade')?.trim() || undefined;
+  const serial = params.get('serial')?.trim() || undefined;
+  const guaranteeAmount = params.get('guaranteeAmount')?.trim() || undefined;
+  const guaranteeCurrency = params.get('guaranteeCurrency')?.trim() || undefined;
+  const rawOrderFeatures = readOrderOptionalFeaturesFromSearchParams(params);
+  const partial = { sourceDepositID, certNumber, hubSlotID, grade, serial };
+
+  const bindings = validateSourceDepositListingBindings({
+    sourceDepositID,
+    hubSlotID,
+    certNumber,
+    grade,
+    serial,
+    guaranteeAmount,
+    guaranteeCurrency,
+    orderOptionalFeatures: rawOrderFeatures.length > 0 ? rawOrderFeatures : undefined,
+  });
+
+  if (!bindings.valid) {
+    return {
+      mode: true,
+      prefill: null,
+      orderFeaturesIssue: bindings.issue,
+      partial,
+    };
+  }
+
+  return {
+    mode: true,
+    prefill: {
+      sourceDepositID,
+      certNumber,
+      hubSlotID,
+      grade,
+      serial,
+      guaranteeAmount,
+      guaranteeCurrency,
+      ...(bindings.orderOptionalFeatures
+        ? { orderOptionalFeatures: bindings.orderOptionalFeatures }
+        : {}),
+    },
+    orderFeaturesIssue: null,
   };
 }
 
 export function parseSourceDepositListingSearchParams(
-  params: Pick<URLSearchParams, 'get'>
+  params: Pick<URLSearchParams, 'get' | 'getAll'>
 ): SourceDepositListingPrefillInput | null {
-  const sourceDepositID = params.get('sourceDepositID')?.trim();
-  const certNumber = params.get('certNumber')?.trim();
-  const hubSlotID = params.get('hubSlotID')?.trim();
-  if (!sourceDepositID || !certNumber || !hubSlotID) return null;
-
-  return {
-    sourceDepositID,
-    certNumber,
-    hubSlotID,
-    grade: params.get('grade')?.trim() || undefined,
-    serial: params.get('serial')?.trim() || undefined,
-  };
+  const state = resolveSourceDepositListingUrlState(params);
+  if (!state.mode || !state.prefill) return null;
+  return state.prefill;
 }
 
-export function isSourceDepositListingMode(params: Pick<URLSearchParams, 'get'>): boolean {
-  return parseSourceDepositListingSearchParams(params) !== null;
+export function isSourceDepositListingMode(
+  params: Pick<URLSearchParams, 'get' | 'getAll'>
+): boolean {
+  return resolveSourceDepositListingUrlState(params).mode;
 }
 
 export function buildSourceDepositListingUrl(input: SourceDepositListingPrefillInput): string {
+  const bindings = validateSourceDepositListingBindings(input);
+  if (!bindings.valid) {
+    throw new Error(`Invalid source-deposit order optional features (${bindings.issue}).`);
+  }
+
   const query = new URLSearchParams();
   query.set('sourceDepositID', input.sourceDepositID);
   query.set('certNumber', input.certNumber);
   query.set('hubSlotID', input.hubSlotID);
   if (input.grade) query.set('grade', input.grade);
   if (input.serial) query.set('serial', input.serial);
+  if (input.guaranteeAmount?.trim()) query.set('guaranteeAmount', input.guaranteeAmount.trim());
+  if (input.guaranteeCurrency?.trim()) {
+    query.set('guaranteeCurrency', input.guaranteeCurrency.trim());
+  }
+  if (bindings.orderOptionalFeatures?.length) {
+    appendOrderOptionalFeaturesToSearchParams(query, bindings.orderOptionalFeatures);
+  }
   return `/listing/new?${query.toString()}`;
 }

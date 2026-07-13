@@ -168,6 +168,9 @@ export interface CollectibleSourceDeposit {
   photosJSON?: string;
   guaranteeAmount?: string;
   guaranteeCurrency?: string;
+  /** Safe Hosting projection; a declaration is not proof of funded protection. */
+  collateralRequirementStatus?: string;
+  orderOptionalFeatures?: string[];
   nftMint?: string;
   firstSaleOrderID?: string;
   firstSaleEscrowID?: string;

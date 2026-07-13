@@ -3,6 +3,8 @@
  * 社区集市类型定义
  */
 
+import type { Image } from './common';
+
 // 集市状态
 export enum MarketplaceStatus {
   ACTIVE = 'active',
@@ -153,6 +155,24 @@ export interface MarketplaceSellerProductGroup {
 
 export interface InviteMarketplaceSellerRequest {
   peerID: string;
+}
+
+export interface ResolveMarketplaceSellerRequest {
+  query: string;
+}
+
+export type MarketplaceSellerResolveMatchType = 'peer_id' | 'handle' | 'store_path' | 'name';
+
+export interface MarketplaceSellerResolveCandidate {
+  peerID: string;
+  name?: string;
+  handle?: string;
+  avatarHashes?: Image;
+  matchType: MarketplaceSellerResolveMatchType | string;
+}
+
+export interface MarketplaceSellerResolveResponse {
+  candidates: MarketplaceSellerResolveCandidate[];
 }
 
 export interface UpdateMarketplaceSellerRequest {

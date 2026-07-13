@@ -2509,7 +2509,14 @@ export interface TranslationResource {
         m2Wilson001: {
           name: string;
         };
+        serialCard?: string;
+        gradedCard?: string;
+        gradedCollectible?: string;
+        referenceCard?: string;
+        certificationId?: string;
+        serialId?: string;
       };
+      unnamedCard?: string;
       custody: {
         inHub: string;
         sourceCustody: string;
@@ -2519,6 +2526,8 @@ export interface TranslationResource {
         unknown: string;
       };
     };
+    custody?: Record<string, unknown>;
+    collateral?: Record<string, unknown>;
     detailTitle: string;
     backToList: string;
     featureDisabled: string;

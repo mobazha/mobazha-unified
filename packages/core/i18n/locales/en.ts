@@ -3046,6 +3046,8 @@ export const en: TranslationResource = {
       pageTitleLeft: 'Seller application withdrawn',
       subtitle:
         'Submit your store to sell in this marketplace. Admission follows the marketplace policy shown below.',
+      listingBoundaryHint:
+        'Your listings can appear in {{name}}. Orders, payments, and fulfillment stay in your store.',
       subtitleAdmissionStatus:
         'Check your current seller-admission status and follow the marketplace guidance below.',
       subtitleApplied:
@@ -3374,8 +3376,20 @@ export const en: TranslationResource = {
         'Entered checkout means traffic was handed to a specific store. It does not indicate order creation or payment success.',
       attributionRateUnavailable: 'N/A',
       inviteStore: 'Invite store',
+      inviteStoreHint:
+        'Paste a store link or type a store name. Pick a match, then send the invite.',
+      inviteQueryPlaceholder: 'Store link or store name',
       peerIdPlaceholder: 'Store Peer ID',
+      sellerIdAdvanced: 'Use Seller ID instead',
+      sellerIdPlaceholder: 'Paste Seller ID',
       sendInvite: 'Send invitation',
+      inviteConfirm: 'Invite this store',
+      inviteResolving: 'Looking up stores…',
+      inviteNoMatches: 'No matching store found. They may not have opened a Mobazha store yet.',
+      inviteNoMatchesHint: 'Ask them to open a store first, then try again.',
+      inviteSearchUnavailable: 'Store search is temporarily unavailable. Please try again shortly.',
+      inviteSearchUnavailableHint: 'This is not the same as “store not found”. Retry in a moment.',
+      invitePickCandidate: 'Select a store to invite',
       inviteSuccess: 'Invitation sent',
       inviteSuccessDesc: 'The store must accept before you can approve catalog access.',
       inviteFailedTitle: 'Could not send invitation',
@@ -3552,6 +3566,9 @@ export const en: TranslationResource = {
       title: 'Marketplace invitations',
       subtitle:
         'Review operator invitations to join curated marketplaces. Accepting lets the operator continue review — it does not publish your store automatically.',
+      inviteCardTitle: '{{name}} invited you to join',
+      inviteBenefit:
+        'Reach buyers who already trust this marketplace. Your products stay in your store; orders, payments, and fulfillment stay yours.',
       emptyTitle: 'No marketplace memberships',
       emptyDesc: 'When an operator invites your store, the invitation appears here.',
       loadFailedTitle: 'Could not load invitations',
@@ -5800,6 +5817,165 @@ export const en: TranslationResource = {
         redeemed: 'Physical redemption started',
         pending: 'Hub intake in progress',
         unknown: 'Custody status pending',
+      },
+    },
+    custody: {
+      order: {
+        invalidTitle: 'Custody details could not be verified',
+        invalidBody:
+          'We could not verify the custody bindings on this order. Do not rely on a digital title until support confirms the order.',
+        cancelledUnpaidTitle: 'No digital title was issued',
+        cancelledUnpaidBody:
+          'This order was cancelled before payment completed. No buyer claim was created and the card remains with the custodian.',
+        cancelledPaidTitle: 'Order ended — claim is no longer active',
+        cancelledPaidBody:
+          'This order was cancelled or refunded. Any digital title from this purchase is no longer an active order benefit. Check your refund and order status for next steps.',
+        pendingPaymentTitle: 'Payment activates your custody-backed claim',
+        pendingPaymentBody:
+          'After payment is confirmed, a digital title may be minted to your wallet when this listing includes custody-backed fulfillment.',
+        activeTitle: 'Custody-backed purchase active',
+        activeBody:
+          'Your payment is confirmed. When this listing is custody-backed at a source custodian or Hub, the digital title records your claim until you redeem or transfer. Buyer protection is separate from grading or authentication.',
+        custodyBackedBadge: 'Custody-backed',
+        viewCardCta: 'View card in My cards',
+        technicalDetails: 'Technical details',
+        technicalMint: 'Digital title ID',
+      },
+    },
+    collateral: {
+      protection: {
+        title: 'Seller guarantee',
+        orderTitle: 'Seller guarantee on this order',
+        orderSubtitle:
+          'Shown alongside buyer protection. A signed listing declaration is not independent proof of funded backing.',
+        honestHint:
+          'A listing declaration does not prove funded protection. Only an active collateral account confirms backing.',
+        activeHint:
+          'This deposit has an active, funded seller guarantee on the configured collateral rail.',
+        buyerHint:
+          'This order includes a seller guarantee declaration. Only an active, funded collateral account confirms backing — not the listing text alone.',
+        sellerHint:
+          'Fund the guarantee deposit to activate protection. Declared amounts are not verified until collateral reconciliation succeeds.',
+        operatorHint:
+          'Compare declaration, signed order bindings, and live collateral account state. Hosting requirement status alone is not proof of funding.',
+        accountLookupFailed:
+          'Could not refresh live collateral account status. Declaration details below still apply.',
+        verifiedAllocationHint:
+          'Seller Core supplied a current signed allocation credential bound to you as the buyer. This confirms the allocated guarantee for this order — not the seller’s entire collateral account.',
+        status: {
+          unsecured: 'Not funded',
+          declared: 'Declared — not verified',
+          funding: 'Funding in progress',
+          active: 'Seller guarantee active',
+          'verified-allocation': 'Verified allocation',
+          impaired: 'Guarantee impaired',
+          expired: 'Guarantee expired',
+        },
+      },
+      fields: {
+        guaranteeAsset: 'Guarantee asset',
+        requiredAmount: 'Required guarantee',
+        allocatedAmount: 'Allocated guarantee',
+        fundedAmount: 'Funded amount',
+        unlistedAsset: 'Unlisted guarantee asset',
+        unlistedAssetOnChain: 'Unlisted guarantee asset on {{chain}}',
+        baseUnitAmount: '{{amount}} (base units)',
+        assetId: 'Asset ID',
+        requiredAmountBase: 'Required amount (base units)',
+        fundedAmountBase: 'Funded amount (base units)',
+        destination: 'Funding destination',
+        expiresAt: 'Expires',
+        credentialExpiresAt: 'Credential expires',
+        accountExpiresAt: 'Account expires',
+        issuerPeerId: 'Issuer',
+        extensionId: 'Extension ID',
+        extensionRevision: 'Extension revision',
+        allocationRevision: 'Allocation revision',
+        collateralRevision: 'Collateral revision',
+        issuedAt: 'Issued at',
+        allocatedAmountBase: 'Allocated amount (base units)',
+        accountState: 'Account state',
+        fundingState: 'Funding state',
+        fundingError: 'Funding error',
+        technicalDetail: 'Technical code:',
+      },
+      funding: {
+        stageTitle: 'Fund seller guarantee',
+        stageAria: 'Collateral funding stages',
+        stages: {
+          declare: 'Declaration',
+          open: 'Open account',
+          fund: 'Fund deposit',
+          active: 'Active protection',
+        },
+        solanaCustodyNote:
+          'Your Solana holder wallet is for digital-title custody only. Seller guarantee funding uses a separate EVM wallet.',
+        capabilitiesUnavailable:
+          'Collateral funding is unavailable on this node. Protection cannot be claimed from a declaration alone.',
+        openAccount: 'Open collateral account',
+        openSuccess: 'Collateral account opened',
+        openFailed: 'Could not open collateral account',
+        invalidDeclarationFallback:
+          'Guarantee amount and asset must be valid base-unit values before funding.',
+        missingCreatedAt:
+          'This deposit is missing a creation timestamp. Collateral account opening is blocked.',
+        invalidCreatedAt:
+          'This deposit has an invalid creation timestamp. Collateral account opening is blocked.',
+        accountBindingMismatch:
+          'An existing collateral account for this deposit does not match the current guarantee declaration. Funding is blocked until the mismatch is resolved.',
+        principalDepositOwnerMissing:
+          'This deposit has no seller identity on record. Collateral funding is blocked until the deposit owner is known.',
+        principalIdentityUnavailable:
+          'Your store identity is unavailable on this node. Collateral funding is blocked until you are signed in to the correct store.',
+        principalIdentityMismatch:
+          'This deposit belongs to a different store than the one selected on this node. Switch to the owning store before funding collateral.',
+        invalidDeclaration: {
+          missingAmount: 'Enter a positive guarantee amount in base units.',
+          missingAsset: 'Enter a valid guarantee asset ID.',
+          invalidAmountFormat: 'Guarantee amount must be a whole-number base-unit value.',
+          nonPositiveAmount: 'Guarantee amount must be greater than zero with no leading zeros.',
+        },
+        evmWalletTitle: 'EVM funding wallet',
+        evmWalletDesc:
+          'Connect the wallet that will approve and send the guarantee deposit. This is not your Solana title wallet.',
+        connectEvm: 'Connect EVM wallet',
+        connectEvmFailed: 'Could not connect EVM wallet',
+        evmConnected: 'EVM wallet connected',
+        principalDestination: 'Principal destination (EVM address)',
+        principalRequired: 'Enter the EVM address that will fund the guarantee.',
+        prepareTarget: 'Prepare funding instructions',
+        prepareFailed: 'Could not prepare funding instructions',
+        confirmTitle: 'Confirm guarantee funding',
+        confirmBody:
+          'Review the exact asset, base-unit amount, destination, and expiry before approving in your wallet.',
+        confirmFund: 'Approve and fund',
+        fundSuccess: 'Funding submitted — reconciling account',
+        fundFailed: 'Funding transaction failed',
+        signerUnavailable: 'Wallet signer is unavailable',
+        reconcile: 'Reconcile funding status',
+        reconcileSuccess: 'Funding status updated',
+        reconcileFailed: 'Could not reconcile funding',
+        refreshStatus: 'Refresh collateral status',
+        unsupportedAsset:
+          'This guarantee asset is not supported on the configured collateral rail. Funding is blocked until a supported asset is configured.',
+        invalidPrincipalAddress: 'Enter a valid EVM address for the funding wallet.',
+        principalMustMatchWallet:
+          'The principal destination must match your connected EVM funding wallet.',
+        validation: {
+          payloadUnavailable: 'Funding instructions are unavailable.',
+          unsupportedRail: 'This funding rail is not supported.',
+          unsupportedPayloadType: 'Funding instruction format is not supported.',
+          invalidChain: 'Funding requires the correct EVM network.',
+          invalidAmount: 'Funding amount is invalid.',
+          amountMismatch: 'Funding amount does not match the collateral account.',
+          vaultMismatch: 'Funding destination does not match the collateral account.',
+          invalidCalldata: 'Funding transaction data is invalid.',
+          invalidCollateralKey: 'Collateral binding key is invalid.',
+          invalidFundingKey: 'Funding binding key is invalid.',
+          assetMismatch: 'Funding asset does not match the collateral account.',
+          selectorMismatch: 'Funding contract method is not allowed.',
+          calldataArgumentMismatch: 'Funding transaction arguments do not match the account.',
+        },
       },
     },
     detailTitle: 'Card details',
