@@ -125,6 +125,9 @@ export function unwrapSellerAffiliateList(value: unknown): Record<string, unknow
     value && typeof value === 'object' && !Array.isArray(value) && 'data' in value
       ? (value as Record<string, unknown>).data
       : value;
+  // The statements endpoint returns a paginated envelope
+  // ({items, page, pageSize, total, partial}); a bare array is the legacy
+  // shape. Accepting only the array silently rendered every statement empty.
   if (raw && typeof raw === 'object' && !Array.isArray(raw) && 'items' in raw) {
     raw = (raw as Record<string, unknown>).items;
   }

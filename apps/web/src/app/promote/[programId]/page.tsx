@@ -17,6 +17,7 @@ import {
   useUserStore,
 } from '@mobazha/core';
 import { useRouter } from 'next/navigation';
+import { Header } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -123,171 +124,185 @@ export default function PromoteProgramPage() {
     await handleCopy();
   }, [handleCopy, link, shareHref, t]);
 
+  // A promoter-facing growth surface must render inside the full app shell —
+  // a bare card on a blank canvas reads as an unfinished widget, offers no
+  // navigation, and carries no brand trust for someone deciding to promote.
   if (!programId) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-8">
-        <p className="text-sm text-destructive">{t('promote.invalidProgram')}</p>
+      <div className="min-h-dvh bg-background">
+        <Header />
+        <div className="mx-auto max-w-2xl px-4 py-8">
+          <p className="text-sm text-destructive">{t('promote.invalidProgram')}</p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-8" data-testid="promote-auth-required">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('promote.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('promote.authRequired')}</p>
-        <Button type="button" className="min-h-11" onClick={handleRequireAuth}>
-          {t('promote.signInCta')}
-        </Button>
+      <div className="min-h-dvh bg-background">
+        <Header />
+        <div className="mx-auto max-w-2xl space-y-4 px-4 py-8" data-testid="promote-auth-required">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('promote.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('promote.authRequired')}</p>
+          <Button type="button" className="min-h-11" onClick={handleRequireAuth}>
+            {t('promote.signInCta')}
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8" data-testid="promote-program-page">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('promote.title')}</h1>
-        {sellerName && activeTerms ? (
-          <p className="text-sm font-medium" data-testid="promote-seller-name">
-            <Link
-              href={`/store/${encodeURIComponent(activeTerms.sellerPeerID)}`}
-              className="text-primary hover:underline"
-            >
-              {t('promote.promotingStore', { name: sellerName })}
-            </Link>
-          </p>
-        ) : null}
-        <p className="text-sm text-muted-foreground">{t('promote.subtitle')}</p>
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="space-y-2 p-4 text-sm leading-6">
-          <p className="font-medium">{t('promote.disclosureTitle')}</p>
-          <p className="text-muted-foreground">{t('promote.disclosureBody')}</p>
-          <p className="text-muted-foreground">{t('sellerAffiliate.programLinkDescription')}</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('promote.directLinkTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              {t('promote.loadingLink')}
-            </div>
-          ) : null}
-          {error ? (
-            <div className="space-y-3">
-              <p className="text-sm text-destructive">{t('promote.linkFailed')}</p>
-              <Button
-                type="button"
-                variant="outline"
-                className="min-h-11"
-                onClick={() => programId && void ensureLink(programId)}
+    <div className="min-h-dvh bg-background">
+      <Header />
+      <div className="mx-auto max-w-2xl space-y-6 px-4 py-8" data-testid="promote-program-page">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('promote.title')}</h1>
+          {sellerName && activeTerms ? (
+            <p className="text-sm font-medium" data-testid="promote-seller-name">
+              <Link
+                href={`/store/${encodeURIComponent(activeTerms.sellerPeerID)}`}
+                className="text-primary hover:underline"
               >
-                {t('promote.retry')}
-              </Button>
-            </div>
+                {t('promote.promotingStore', { name: sellerName })}
+              </Link>
+            </p>
           ) : null}
-          {link && shareHref ? (
-            <>
-              <p className="break-all rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                {shareHref}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t('promote.entryPathHint', {
-                  path: `/promo/${link.publicToken}`,
-                })}
-              </p>
-              {activeTerms ? (
-                <div
-                  className="space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3"
-                  data-testid="promote-earn-terms"
-                >
-                  <p className="text-sm font-medium">{t('promote.termsTitle')}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('promote.termsRate', { rate: String(activeTerms.rate) })}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {(() => {
-                      // Render the window in its exact unit ("1 hour", "7 days") —
-                      // rounding a sub-day window up to days would misstate terms.
-                      const copy = sellerAffiliateAttributionWindowCopy(activeTerms.windowSeconds);
-                      return t('promote.termsWindowExact', { window: t(copy.key, copy.params) });
-                    })()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t('promote.termsLastTouch')}</p>
-                </div>
-              ) : showTermsUnavailable ? (
-                <p className="text-xs text-muted-foreground">{t('promote.termsUnavailable')}</p>
-              ) : null}
-              {link.payoutRails?.length ? (
-                <div className="space-y-1" data-testid="promote-payout-rails">
-                  <p className="text-sm font-medium">{t('sellerAffiliate.payoutRailsTitle')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {link.payoutRails.map(rail => (
-                      <span
-                        key={rail.railID}
-                        className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
-                      >
-                        {rail.railLabel || getPaymentCoinDisplayLabel(rail.railID)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  className="min-h-11"
-                  onClick={() => void handleCopy()}
-                  data-testid="promote-copy-link"
-                >
-                  <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {t('promote.copyCta')}
-                </Button>
+          <p className="text-sm text-muted-foreground">{t('promote.subtitle')}</p>
+        </div>
+
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="space-y-2 p-4 text-sm leading-6">
+            <p className="font-medium">{t('promote.disclosureTitle')}</p>
+            <p className="text-muted-foreground">{t('promote.disclosureBody')}</p>
+            <p className="text-muted-foreground">{t('sellerAffiliate.programLinkDescription')}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('promote.directLinkTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                {t('promote.loadingLink')}
+              </div>
+            ) : null}
+            {error ? (
+              <div className="space-y-3">
+                <p className="text-sm text-destructive">{t('promote.linkFailed')}</p>
                 <Button
                   type="button"
                   variant="outline"
                   className="min-h-11"
-                  onClick={() => void handleShare()}
-                  data-testid="promote-share-link"
+                  onClick={() => programId && void ensureLink(programId)}
                 >
-                  <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {t('promote.shareCta')}
+                  {t('promote.retry')}
                 </Button>
               </div>
-            </>
-          ) : null}
-          {!loading && !error && !link ? (
-            <Button
-              type="button"
-              className="min-h-11"
-              onClick={() => programId && void ensureLink(programId)}
-            >
-              {t('sellerAffiliate.createLink')}
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
+            ) : null}
+            {link && shareHref ? (
+              <>
+                <p className="break-all rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                  {shareHref}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t('promote.entryPathHint', {
+                    path: `/promo/${link.publicToken}`,
+                  })}
+                </p>
+                {activeTerms ? (
+                  <div
+                    className="space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3"
+                    data-testid="promote-earn-terms"
+                  >
+                    <p className="text-sm font-medium">{t('promote.termsTitle')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('promote.termsRate', { rate: String(activeTerms.rate) })}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {(() => {
+                        // Render the window in its exact unit ("1 hour", "7 days") —
+                        // rounding a sub-day window up to days would misstate terms.
+                        const copy = sellerAffiliateAttributionWindowCopy(
+                          activeTerms.windowSeconds
+                        );
+                        return t('promote.termsWindowExact', { window: t(copy.key, copy.params) });
+                      })()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t('promote.termsLastTouch')}</p>
+                  </div>
+                ) : showTermsUnavailable ? (
+                  <p className="text-xs text-muted-foreground">{t('promote.termsUnavailable')}</p>
+                ) : null}
+                {link.payoutRails?.length ? (
+                  <div className="space-y-1" data-testid="promote-payout-rails">
+                    <p className="text-sm font-medium">{t('sellerAffiliate.payoutRailsTitle')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {link.payoutRails.map(rail => (
+                        <span
+                          key={rail.railID}
+                          className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
+                        >
+                          {rail.railLabel || getPaymentCoinDisplayLabel(rail.railID)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    className="min-h-11"
+                    onClick={() => void handleCopy()}
+                    data-testid="promote-copy-link"
+                  >
+                    <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t('promote.copyCta')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11"
+                    onClick={() => void handleShare()}
+                    data-testid="promote-share-link"
+                  >
+                    <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t('promote.shareCta')}
+                  </Button>
+                </div>
+              </>
+            ) : null}
+            {!loading && !error && !link ? (
+              <Button
+                type="button"
+                className="min-h-11"
+                onClick={() => programId && void ensureLink(programId)}
+              >
+                {t('sellerAffiliate.createLink')}
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
 
-      <Card data-testid="promote-commissions-link-card">
-        <CardHeader>
-          <CardTitle className="text-base">{t('promote.commissionsLinkTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">{t('promote.commissionsLinkBody')}</p>
-          <Button type="button" variant="outline" className="min-h-11" asChild>
-            <Link href="/promote/commissions" data-testid="promote-commissions-link">
-              <ScrollText className="mr-2 h-4 w-4" aria-hidden="true" />
-              {t('promote.commissionsLinkCta')}
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+        <Card data-testid="promote-commissions-link-card">
+          <CardHeader>
+            <CardTitle className="text-base">{t('promote.commissionsLinkTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('promote.commissionsLinkBody')}</p>
+            <Button type="button" variant="outline" className="min-h-11" asChild>
+              <Link href="/promote/commissions" data-testid="promote-commissions-link">
+                <ScrollText className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('promote.commissionsLinkCta')}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

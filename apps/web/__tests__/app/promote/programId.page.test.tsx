@@ -15,6 +15,10 @@ const copyToClipboardMock = vi.fn<(text: string) => Promise<boolean>>(async () =
 
 let isAuthenticated = true;
 
+vi.mock('@/components', () => ({
+  Header: () => <div data-testid="mock-header" />,
+}));
+
 vi.mock('next/navigation', () => ({
   useParams: () => paramsMock(),
   useRouter: () => ({ push: routerPushMock }),

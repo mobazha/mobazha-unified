@@ -79,6 +79,12 @@ test('2 · promoter 带货：登录 → 生成 rail-scoped 链接 → 看佣金'
   }
   await passAuthGate(page, 'promote-commissions-auth-required');
   await settle(page, 'promote-commissions-page', 4500);
+
+  // 佣金列表加载后向下滚动，把真实佣金条目（金额/状态/链上结算）展示出来。
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(2500);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(2500);
 });
 
 test('3 · guest 点开推广链接（referral saved）', async ({ page }) => {

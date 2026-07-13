@@ -11,6 +11,10 @@ const useSellerAffiliateStatementsMock = vi.fn();
 
 let isAuthenticated = true;
 
+vi.mock('@/components', () => ({
+  Header: () => <div data-testid="mock-header" />,
+}));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPushMock }),
 }));

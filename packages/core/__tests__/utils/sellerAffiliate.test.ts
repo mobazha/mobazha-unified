@@ -460,3 +460,20 @@ describe('normalizeSellerAffiliateLink payout rails', () => {
     expect(link.payoutRails).toBeUndefined();
   });
 });
+
+describe('unwrapSellerAffiliateList envelopes', () => {
+  it('unwraps the paginated statements envelope — the shape that silently emptied every statement', async () => {
+    const { unwrapSellerAffiliateList } = await import('../../utils/sellerAffiliate');
+    const paginated = {
+      data: { items: [{ a: 1 }, { b: 2 }], page: 1, pageSize: 20, total: 13, partial: false },
+    };
+    expect(unwrapSellerAffiliateList(paginated)).toEqual([{ a: 1 }, { b: 2 }]);
+  });
+
+  it('still accepts the legacy bare-array shape', async () => {
+    const { unwrapSellerAffiliateList } = await import('../../utils/sellerAffiliate');
+    expect(unwrapSellerAffiliateList({ data: [{ a: 1 }] })).toEqual([{ a: 1 }]);
+    expect(unwrapSellerAffiliateList([{ a: 1 }])).toEqual([{ a: 1 }]);
+    expect(unwrapSellerAffiliateList({ data: { page: 1 } })).toEqual([]);
+  });
+});
