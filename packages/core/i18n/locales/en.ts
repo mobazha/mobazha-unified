@@ -7631,6 +7631,7 @@ export const en: TranslationResource = {
       statusDraft: 'Draft',
       statusActive: 'Active',
       statusPaused: 'Paused',
+      statusExpired: 'Expired',
       statusUnknown: 'Unknown',
       activate: 'Activate',
       pause: 'Pause',
@@ -10010,6 +10011,7 @@ export const en: TranslationResource = {
     invalidProgram:
       'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
     invalidRate: 'Commission must be greater than 0 and at most 100.',
+    invalidWindow: 'Attribution days must be a valid number between 0.01 and 365.',
     pausedHint:
       'While paused, promoter links stop earning new commissions; existing commissions are unaffected.',
     noManualWorkflow:

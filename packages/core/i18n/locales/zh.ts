@@ -6943,6 +6943,7 @@ export const zh: PartialTranslationResource = {
       statusDraft: '草稿',
       statusActive: '已激活',
       statusPaused: '已暂停',
+      statusExpired: '已过期',
       statusUnknown: '未知',
       activate: '激活',
       pause: '暂停',
@@ -9216,6 +9217,7 @@ export const zh: PartialTranslationResource = {
     earningsOrders: '{{count}} 笔订单',
     invalidProgram: '请输入 0–100% 的佣金比例，以及不少于 0.01 天的归因窗口。',
     invalidRate: '佣金比例需大于 0 且不超过 100。',
+    invalidWindow: '归因天数需为 0.01–365 之间的有效数字。',
     pausedHint: '暂停期间推广链接不会产生新佣金；已产生的佣金不受影响。',
     noManualWorkflow:
       '订单资金释放时，佣金会经由下方结算通道自动付给推广者——没有审核队列、人工预算或申领流程。',

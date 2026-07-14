@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Copy, ExternalLink } from 'lucide-react';
 import {
   buildSellerDealLinkBrowseHref,
@@ -31,6 +31,29 @@ export const DealLinkRow = memo(function DealLinkRow({
   const href = buildSellerDealLinkBrowseHref(link);
   const absoluteHref = typeof window === 'undefined' ? href : `${window.location.origin}${href}`;
 
+  // A link past its expiry reads as expired even if hosting still reports it
+  // active. Only a genuinely live link resolves on the public deal page, so
+  // "Open" is offered for those alone — the rest would dead-end on a 404.
+  // Snapshot "now" once so the render stays pure; a refresh re-evaluates it.
+  const [renderedAt] = useState(() => Date.now());
+  const expired =
+    link.status === 'expired' ||
+    (link.expiresAt ? new Date(link.expiresAt).getTime() <= renderedAt : false);
+  const effectiveStatus = expired ? 'expired' : link.status;
+  const isLive = effectiveStatus === 'active';
+  const statusLabelKey: Record<string, string> = {
+    draft: 'admin.dealLinks.statusDraft',
+    active: 'admin.dealLinks.statusActive',
+    paused: 'admin.dealLinks.statusPaused',
+    expired: 'admin.dealLinks.statusExpired',
+  };
+  const statusClass: Record<string, string> = {
+    active: 'bg-emerald-500/10 text-emerald-600',
+    paused: 'bg-muted text-muted-foreground',
+    expired: 'bg-amber-500/10 text-amber-600',
+    draft: 'bg-muted text-muted-foreground',
+  };
+
   return (
     <div
       className={cn(
@@ -40,7 +63,19 @@ export const DealLinkRow = memo(function DealLinkRow({
       data-testid={`deal-link-row-${link.id}`}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{link.title}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium">{link.title}</p>
+          <span
+            className={cn(
+              'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
+              statusClass[effectiveStatus] ?? 'bg-muted text-muted-foreground'
+            )}
+            data-testid={`deal-link-status-${link.id}`}
+            data-status={effectiveStatus}
+          >
+            {t(statusLabelKey[effectiveStatus] ?? 'admin.dealLinks.statusUnknown')}
+          </span>
+        </div>
         <p className="text-xs text-muted-foreground">
           {formatPrice(link.priceAmount, link.priceCurrency)}
         </p>
@@ -56,17 +91,30 @@ export const DealLinkRow = memo(function DealLinkRow({
           <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
           {t('admin.dealLinks.copyDealCta')}
         </Button>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
-        >
-          <a href={href} target="_blank" rel="noreferrer">
+        {isLive ? (
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
+          >
+            <a href={href} target="_blank" rel="noreferrer">
+              <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {t('admin.dealLinks.openDealCta')}
+            </a>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
+            disabled
+          >
             <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {t('admin.dealLinks.openDealCta')}
-          </a>
-        </Button>
+          </Button>
+        )}
       </div>
       {manualCopyToken === link.publicToken ? (
         <div className="w-full basis-full space-y-1.5 border-t border-border pt-3">

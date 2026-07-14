@@ -67,6 +67,31 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
 
     expect(await screen.findByText('Premium onboarding call')).toBeInTheDocument();
     expect(screen.queryByText('admin.dealLinks.linksEmptyTitle')).not.toBeInTheDocument();
+    // A live link is badged active and can be opened.
+    expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'active');
+    expect(screen.getByRole('link', { name: /admin\.dealLinks\.openDealCta/ })).toBeInTheDocument();
+  });
+
+  it('badges a paused link and disables opening it', async () => {
+    listSellerDealLinksMock.mockResolvedValue([{ ...DEAL_LINK, status: 'paused' }]);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'paused');
+    // No live public page, so "Open" is a disabled button rather than a link.
+    expect(screen.queryByRole('link', { name: /admin\.dealLinks\.openDealCta/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /admin\.dealLinks\.openDealCta/ })).toBeDisabled();
+  });
+
+  it('treats a past-expiry link as expired even if hosting still reports it active', async () => {
+    listSellerDealLinksMock.mockResolvedValue([
+      { ...DEAL_LINK, status: 'active', expiresAt: '2020-01-01T00:00:00Z' },
+    ]);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'expired');
+    expect(screen.getByRole('button', { name: /admin\.dealLinks\.openDealCta/ })).toBeDisabled();
   });
 
   it('shows an empty state that routes to create when there are no links', async () => {

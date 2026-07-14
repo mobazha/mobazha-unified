@@ -181,7 +181,7 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
   });
 
-  it('validates the attribution window before saving', async () => {
+  it('flags an invalid attribution window inline and blocks saving', async () => {
     getSellerAffiliateProgramMock.mockResolvedValue(null);
     render(<SellerAffiliateProgramPanel />);
     await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
@@ -189,9 +189,28 @@ describe('SellerAffiliateProgramPanel', () => {
     fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
       target: { value: 'abc' },
     });
-    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('sellerAffiliate.invalidProgram');
+    expect(screen.getByTestId('affiliate-window-error')).toHaveTextContent(
+      'sellerAffiliate.invalidWindow'
+    );
+    expect(screen.getByTestId('seller-affiliate-program-save')).toBeDisabled();
+    expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks the enable/pause toggle while the window is invalid', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      status: 'paused' as const,
+    });
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() => expect(screen.getByTestId('affiliate-status-toggle')).toBeInTheDocument());
+
+    // A corrupted window must not let the toggle push an unsaveable config.
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
+      target: { value: '999' },
+    });
+    expect(screen.getByTestId('affiliate-status-toggle')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('affiliate-status-toggle'));
     expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
   });
 

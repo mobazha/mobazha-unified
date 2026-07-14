@@ -4049,6 +4049,7 @@ export interface TranslationResource {
       statusDraft?: string;
       statusActive?: string;
       statusPaused?: string;
+      statusExpired?: string;
       statusUnknown?: string;
       activate?: string;
       pause?: string;
@@ -5965,6 +5966,7 @@ export interface TranslationResource {
     earningsOrders?: string;
     invalidProgram?: string;
     invalidRate?: string;
+    invalidWindow?: string;
     pausedHint?: string;
     noManualWorkflow?: string;
     saveProgram?: string;

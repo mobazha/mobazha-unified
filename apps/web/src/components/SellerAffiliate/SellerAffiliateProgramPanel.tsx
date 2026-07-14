@@ -92,12 +92,18 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const rateNumber = Number(rate);
   const rateInvalid =
     rate.trim() !== '' && (!Number.isFinite(rateNumber) || rateNumber <= 0 || rateNumber > 100);
+  // A non-empty window that fails to parse into a valid duration. Kept separate
+  // from the "too short" advice, which flags a valid-but-weak window.
+  const windowInvalid = windowDays.trim() !== '' && effectiveWindowSeconds === null;
+  const formInvalid = rateInvalid || windowInvalid;
 
   // Save persists the form at an explicit status. First-time creation activates;
   // an existing program keeps its status on save and flips it only through the
   // dedicated enable/pause action — a save must never silently un-pause a program.
+  // Only the primary save button confirms with a transient "saved" state; the
+  // status toggle's own badge flip is its confirmation.
   const handleSave = useCallback(
-    async (nextStatus: 'active' | 'paused'): Promise<void> => {
+    async (nextStatus: 'active' | 'paused', options?: { confirm?: boolean }): Promise<void> => {
       const rateValue = Number(rate);
       if (
         !Number.isFinite(rateValue) ||
@@ -116,8 +122,10 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
           commissionRateBPS: Math.round(rateValue * 100),
           attributionWindowSeconds: effectiveWindowSeconds,
         });
-        setSavedRecently(true);
-        window.setTimeout(() => setSavedRecently(false), 2000);
+        if (options?.confirm) {
+          setSavedRecently(true);
+          window.setTimeout(() => setSavedRecently(false), 2000);
+        }
       } catch (cause) {
         setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
       } finally {
@@ -193,7 +201,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
                 size="sm"
                 className="min-h-11 sm:min-h-9"
                 onClick={() => void handleSave(program.status === 'active' ? 'paused' : 'active')}
-                disabled={loading || saving || rateInvalid}
+                disabled={loading || saving || formInvalid}
                 data-testid="affiliate-status-toggle"
               >
                 {t(
@@ -238,7 +246,16 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
               value={windowDays}
               onChange={event => setWindowDays(event.target.value)}
               disabled={loading}
+              aria-invalid={windowInvalid}
             />
+            {windowInvalid ? (
+              <p
+                className="text-xs font-medium text-destructive"
+                data-testid="affiliate-window-error"
+              >
+                {t('sellerAffiliate.invalidWindow')}
+              </p>
+            ) : null}
             {windowHint ? (
               <p className="text-xs text-muted-foreground" data-testid="affiliate-window-hint">
                 {windowHint}
@@ -335,8 +352,8 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
           <Button
             type="button"
             className="min-h-11"
-            onClick={() => void handleSave(program ? program.status : 'active')}
-            disabled={loading || saving || rateInvalid}
+            onClick={() => void handleSave(program ? program.status : 'active', { confirm: true })}
+            disabled={loading || saving || formInvalid}
             data-testid="seller-affiliate-program-save"
           >
             {savedRecently ? (
