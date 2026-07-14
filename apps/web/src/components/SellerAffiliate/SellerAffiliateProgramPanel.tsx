@@ -307,7 +307,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionDays')}</Label>
+            <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionWindowDays')}</Label>
             <Input
               id="affiliate-window"
               inputMode="decimal"
@@ -315,7 +315,15 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
               onChange={event => setWindowDays(event.target.value)}
               disabled={loading}
               aria-invalid={windowInvalid}
+              aria-describedby="affiliate-window-help"
             />
+            <p
+              id="affiliate-window-help"
+              className="text-xs text-muted-foreground"
+              data-testid="affiliate-window-help"
+            >
+              {t('sellerAffiliate.attributionWindowDaysHelp')}
+            </p>
             {windowInvalid ? (
               <p
                 className="text-xs font-medium text-destructive"

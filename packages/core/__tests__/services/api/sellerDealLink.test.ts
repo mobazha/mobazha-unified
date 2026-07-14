@@ -2,10 +2,12 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../../../services/api/client';
 import {
   activateSellerDealLink,
   closeSellerDealLink,
   createSellerDealLink,
+  createSellerDealLinkFeeQuote,
   listSellerDealLinkOrders,
   listSellerDealLinks,
 } from '../../../services/api/sellerDealLink';
@@ -148,28 +150,6 @@ describe('seller Deal Link API service', () => {
     expect(page.items[3]?.currencyDivisibility).toBeUndefined();
   });
 
-  it('falls back to a legacy `status` field for orders normalized before the rename', async () => {
-    vi.mocked(hostingGet).mockResolvedValue({
-      data: {
-        items: [
-          {
-            orderID: 'order-legacy',
-            status: 'processing',
-            buyerPeerID: 'buyer-peer',
-            createdAt: '2026-07-10T00:00:00Z',
-          },
-        ],
-        total: 1,
-        limit: 50,
-        offset: 0,
-      },
-    });
-
-    const page = await listSellerDealLinkOrders('deal-1');
-
-    expect(page.items[0]?.acceptanceStatus).toBe('processing');
-  });
-
   it('forwards pagination params when listing Deal Link orders', async () => {
     vi.mocked(hostingGet).mockResolvedValue({
       data: { items: [], total: 0, limit: 10, offset: 20 },
@@ -180,6 +160,53 @@ describe('seller Deal Link API service', () => {
     expect(hostingGet).toHaveBeenCalledWith(
       '/platform/v1/deal-links/deal-1/orders?limit=10&offset=20'
     );
+  });
+
+  it('creates/reuses the authoritative seller fee quote, normalizing seller fields', async () => {
+    vi.mocked(hostingPost).mockResolvedValue({
+      data: {
+        id: 'quote-1',
+        dealLinkID: 'deal-1',
+        dealRevision: 2,
+        termsHash: 'terms-hash',
+        schemaVersion: 1,
+        policyVersion: 'fees-2026-07',
+        priceCurrency: 'USD',
+        itemOrServiceAmount: '125',
+        buyerServiceCharge: '5',
+        paymentOrNetworkCost: '2',
+        taxOrExternalCost: '0',
+        buyerTotal: '132',
+        grossOrderAmount: '132',
+        discount: '0',
+        sellerServiceCharge: '4',
+        sellerPaymentCost: '1',
+        sellerDistributionBudget: '3',
+        estimatedSellerNet: '124',
+        expiresAt: '2026-07-14T01:00:00Z',
+        createdAt: '2026-07-14T00:00:00Z',
+      },
+    });
+
+    const quote = await createSellerDealLinkFeeQuote('deal-1');
+
+    expect(hostingPost).toHaveBeenCalledWith(
+      '/platform/v1/deal-links/deal-1/fee-quotes',
+      undefined
+    );
+    expect(quote.id).toBe('quote-1');
+    expect(quote.dealRevision).toBe(2);
+    expect(quote.buyerTotal).toBe('132');
+    expect(quote.estimatedSellerNet).toBe('124');
+    expect(quote.sellerServiceCharge).toBe('4');
+    expect(quote.policyVersion).toBe('fees-2026-07');
+  });
+
+  it('propagates a typed ApiError (409 inactive) from the fee-quote endpoint', async () => {
+    const apiError = new ApiError('deal link is not active', 409);
+    vi.mocked(hostingPost).mockRejectedValue(apiError);
+
+    await expect(createSellerDealLinkFeeQuote('deal-1')).rejects.toBe(apiError);
   });
 
   it('closes a Deal Link into its terminal state', async () => {

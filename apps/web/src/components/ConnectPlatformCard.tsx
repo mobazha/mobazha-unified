@@ -31,28 +31,28 @@ export function ConnectPlatformCard({
     try {
       const result = await acquireSaaSToken();
       if (!result.success || !result.token) {
-        setError(result.error || 'Failed to connect');
+        setError(result.error || t('connectPlatform.connectFailed'));
         return;
       }
 
-      try {
-        await systemApi.connectPlatform(result.token);
-      } catch (err) {
-        console.warn('connect-platform call failed (binding still works):', err);
-      }
-
+      // OAuth only authenticates the account. The store is connected only after
+      // the local backend confirms the platform claim; never convert a failed
+      // claim into a false-success UI state.
+      await systemApi.connectPlatform(result.token);
       onConnected();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect');
+      setError(
+        err instanceof Error && err.message ? err.message : t('connectPlatform.connectFailed')
+      );
     } finally {
       setConnecting(false);
     }
-  }, [onConnected]);
+  }, [onConnected, t]);
 
   const displayTitle =
     title ||
     t('connectPlatform.title', {
-      defaultValue: 'Connect to Mobazha Platform',
+      defaultValue: 'Add Mobazha platform services',
     });
   const displayDesc =
     description ||
@@ -91,7 +91,7 @@ export function ConnectPlatformCard({
               {t('common.connecting', { defaultValue: 'Connecting...' })}
             </>
           ) : (
-            t('connectPlatform.button', { defaultValue: 'Connect to Mobazha Platform' })
+            t('connectPlatform.button', { defaultValue: 'Connect optional services' })
           )}
         </Button>
 

@@ -305,6 +305,7 @@ export {
   activateSellerDealLink,
   closeSellerDealLink,
   createSellerDealLink,
+  createSellerDealLinkFeeQuote,
   getSellerDealLink,
   listSellerDealLinkOrders,
   listSellerDealLinks,

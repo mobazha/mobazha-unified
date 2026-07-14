@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useI18n, useSellerDealLink } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { CreateDealLinkForm } from '@/components/admin/deal-links/CreateDealLinkForm';
+import { SellerDealLinkFeeQuotePanel } from '@/components/admin/deal-links/SellerDealLinkFeeQuotePanel';
 
 function EditDealLinkPageContent() {
   const { t } = useI18n();
@@ -44,7 +45,10 @@ function EditDealLinkPageContent() {
           {t('admin.dealLinks.loadFailed')}
         </p>
       ) : (
-        <CreateDealLinkForm editLink={link} onSaved={handleSaved} showHeader={false} />
+        <>
+          <CreateDealLinkForm editLink={link} onSaved={handleSaved} showHeader={false} />
+          <SellerDealLinkFeeQuotePanel link={link} />
+        </>
       )}
     </div>
   );

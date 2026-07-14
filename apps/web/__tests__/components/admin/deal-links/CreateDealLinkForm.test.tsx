@@ -4,11 +4,17 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import type { SellerDealLink } from '@mobazha/core';
+import { ApiError, type SellerDealLink } from '@mobazha/core';
 
 const createSellerDealLinkMock = vi.fn();
 const activateSellerDealLinkMock = vi.fn();
+const updateSellerDealLinkMock = vi.fn();
 const toastMock = vi.fn();
+
+// The product-detail listing surfaced by the mocked `useListing`. Tests that
+// exercise variant options set this to a listing whose `item.options` should
+// render as pickers; by default no detail loads, matching a plain listing.
+let mockProductDetail: unknown = null;
 
 const LISTING = {
   slug: 'listing-1',
@@ -107,8 +113,10 @@ vi.mock('@mobazha/core', async importOriginal => {
       fromMinimalUnit: (amount: string) => amount,
     }),
     useMyListings: () => ({ listings: [LISTING], isLoading: false }),
+    useListing: () => ({ listing: mockProductDetail, isOffline: false, isLoading: false }),
     createSellerDealLink: (...args: unknown[]) => createSellerDealLinkMock(...args),
     activateSellerDealLink: (...args: unknown[]) => activateSellerDealLinkMock(...args),
+    updateSellerDealLink: (...args: unknown[]) => updateSellerDealLinkMock(...args),
   };
 });
 
@@ -131,6 +139,20 @@ const DRAFT: SellerDealLink = {
   updatedAt: '2026-07-01T00:00:00Z',
 };
 
+const EDIT_LINK: SellerDealLink = {
+  ...DRAFT,
+  status: 'active',
+  currentRevision: 3,
+  // 10 + 10 + 6 chars → truncates to '0123456789…UVWXYZ'.
+  termsHash: '0123456789abcdefghijklmnopqrstUVWXYZ',
+  purchaseTemplate: {
+    listingHash: 'QmABC',
+    quantity: '2',
+    options: [{ name: 'Tier', value: 'Pro' }],
+    optionalFeatures: [],
+  },
+};
+
 async function fillValidForm() {
   fireEvent.change(screen.getByLabelText('admin.dealLinks.productLabel'), {
     target: { value: 'listing-1' },
@@ -150,7 +172,9 @@ describe('CreateDealLinkForm', () => {
   beforeEach(() => {
     createSellerDealLinkMock.mockReset();
     activateSellerDealLinkMock.mockReset();
+    updateSellerDealLinkMock.mockReset();
     toastMock.mockClear();
+    mockProductDetail = null;
   });
 
   it('persists the draft and calls onCreated when both create and activate succeed', async () => {
@@ -280,6 +304,97 @@ describe('CreateDealLinkForm', () => {
     await waitFor(() =>
       expect(createSellerDealLinkMock).toHaveBeenCalledWith(
         expect.objectContaining({ priceAmount: '99.99' })
+      )
+    );
+  });
+
+  it('explains how a protected link differs from a normal product link', () => {
+    render(<CreateDealLinkForm onCreated={vi.fn()} />);
+    expect(screen.getByTestId('deal-link-what-is')).toHaveTextContent(
+      'admin.dealLinks.whatIsTitle'
+    );
+  });
+
+  it('freezes the chosen quantity and product options into the purchase template', async () => {
+    mockProductDetail = {
+      slug: 'listing-1',
+      item: { options: [{ name: 'Tier', variants: [{ name: 'Basic' }, { name: 'Pro' }] }] },
+    };
+    createSellerDealLinkMock.mockResolvedValue({ ...DRAFT, status: 'draft' });
+    activateSellerDealLinkMock.mockResolvedValue({ ...DRAFT, status: 'active' });
+    render(<CreateDealLinkForm onCreated={vi.fn()} />);
+
+    await fillValidForm();
+    fireEvent.change(screen.getByTestId('deal-quantity'), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText('Tier'), { target: { value: 'Pro' } });
+    fireEvent.click(screen.getByTestId('admin-deal-links-create-link'));
+
+    await waitFor(() =>
+      expect(createSellerDealLinkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          purchaseTemplate: expect.objectContaining({
+            quantity: '3',
+            options: [{ name: 'Tier', value: 'Pro' }],
+          }),
+        })
+      )
+    );
+  });
+
+  it('rejects a non-positive-integer quantity instead of sending it', async () => {
+    render(<CreateDealLinkForm onCreated={vi.fn()} />);
+
+    await fillValidForm();
+    fireEvent.change(screen.getByTestId('deal-quantity'), { target: { value: '0' } });
+    fireEvent.click(screen.getByTestId('admin-deal-links-create-link'));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'admin.dealLinks.dealCreateValidationError' })
+      )
+    );
+    expect(createSellerDealLinkMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the locked revision and truncated terms hash, and preserves the template on save', async () => {
+    updateSellerDealLinkMock.mockResolvedValue({ ...EDIT_LINK, currentRevision: 4 });
+    render(<CreateDealLinkForm editLink={EDIT_LINK} onSaved={vi.fn()} />);
+
+    expect(screen.getByTestId('deal-link-revision-summary')).toHaveTextContent(
+      'admin.dealLinks.revisionValue'
+    );
+    expect(screen.getByTestId('deal-link-terms-hash')).toHaveTextContent('0123456789…UVWXYZ');
+    expect(screen.getByTestId('deal-quantity')).toHaveValue('2');
+
+    fireEvent.change(screen.getByTestId('deal-quantity'), { target: { value: '5' } });
+    fireEvent.click(screen.getByTestId('admin-deal-links-create-link'));
+
+    await waitFor(() =>
+      expect(updateSellerDealLinkMock).toHaveBeenCalledWith(
+        'deal-1',
+        expect.objectContaining({
+          purchaseTemplate: expect.objectContaining({
+            listingHash: 'QmABC',
+            quantity: '5',
+            options: [{ name: 'Tier', value: 'Pro' }],
+          }),
+        })
+      )
+    );
+  });
+
+  it('surfaces a permission-denied message when the backend rejects an edit with 403', async () => {
+    updateSellerDealLinkMock.mockRejectedValue(new ApiError('forbidden', 403));
+    render(<CreateDealLinkForm editLink={EDIT_LINK} onSaved={vi.fn()} />);
+
+    fireEvent.click(screen.getByTestId('admin-deal-links-create-link'));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: 'admin.dealLinks.dealErrorDenied',
+        })
       )
     );
   });

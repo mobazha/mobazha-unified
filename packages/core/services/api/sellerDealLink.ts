@@ -6,11 +6,13 @@
  */
 
 import { HOSTING_API } from '../../config/apiPaths';
+import type { DealLinkFeeQuote } from '../../types/dealLink';
 import type {
   SellerDealLink,
   SellerDealLinkOrdersPage,
   SellerDealLinkRequest,
 } from '../../types/sellerDealLink';
+import { normalizeDealLinkFeeQuote } from '../../utils/dealLink';
 import {
   normalizeSellerDealLink,
   normalizeSellerDealLinkOrdersPage,
@@ -85,6 +87,24 @@ export async function updateSellerDealLink(
   const raw = await hostingPut<unknown>(HOSTING_API.DEAL_LINKS_BY_ID(dealLinkId), body);
   if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   return normalizeSellerDealLink(unwrapRecord(raw));
+}
+
+/**
+ * Creates — or reuses — the authoritative seller fee quote for an active Deal
+ * Link. The backend returns 201 when it mints a fresh quote and 200 when the
+ * current unexpired quote is still valid; both carry the same
+ * `dealFeeQuoteResponse` shape, so a single normalizer covers either case. The
+ * POST is deliberately user-triggered: only an active link can be quoted, and
+ * the backend answers 409 for a draft/paused/closed link and 404 for a
+ * foreign/missing one — both surfaced through the typed {@link ApiError}.
+ */
+export async function createSellerDealLinkFeeQuote(
+  dealLinkId: string,
+  options?: { signal?: AbortSignal }
+): Promise<DealLinkFeeQuote> {
+  const raw = await hostingPost<unknown>(HOSTING_API.DEAL_LINKS_FEE_QUOTES(dealLinkId), undefined);
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeDealLinkFeeQuote(unwrapRecord(raw));
 }
 
 export async function listSellerDealLinkOrders(

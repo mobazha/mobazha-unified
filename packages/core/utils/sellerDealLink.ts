@@ -63,7 +63,7 @@ export function normalizeSellerDealLink(raw: Record<string, unknown>): SellerDea
     id: readRequiredString(raw.id),
     publicToken: readRequiredString(raw.publicToken),
     publicPath: readRequiredString(raw.publicPath),
-    sellerPeerID: readString(raw.sellerPeerID) ?? readString(raw.sellerPeerId) ?? '',
+    sellerPeerID: readString(raw.sellerPeerID) ?? '',
     status: readString(raw.status) ?? 'draft',
     currentRevision: readRequiredNumber(raw.currentRevision, 1),
     title: readRequiredString(raw.title),
@@ -87,9 +87,7 @@ export function buildSellerDealLinkBrowseHref(link: Pick<SellerDealLink, 'public
 function normalizeSellerDealLinkOrder(raw: Record<string, unknown>): SellerDealLinkOrder {
   return {
     orderID: readRequiredString(raw.orderID),
-    // Prefer the unambiguous acceptanceStatus; fall back to a legacy `status`
-    // field for forward-compat with an older backend build.
-    acceptanceStatus: readString(raw.acceptanceStatus) ?? readString(raw.status) ?? 'unknown',
+    acceptanceStatus: readString(raw.acceptanceStatus) ?? 'unknown',
     buyerPeerID: readString(raw.buyerPeerID) ?? '',
     pricingCoin: readString(raw.pricingCoin),
     amount: readString(raw.amount),

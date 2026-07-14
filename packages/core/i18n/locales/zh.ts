@@ -6911,7 +6911,8 @@ export const zh: PartialTranslationResource = {
       dealCreateSuccess: '受保护的购买链接已就绪',
       dealCreateFailed: '无法创建受保护的购买链接',
       priceLabel: '成交价格',
-      priceHint: '默认为当前标价（{{currency}}），可改成本次约定的成交价。',
+      priceHint:
+        '默认为当前标价（{{currency}}）。这是整笔购买约定的总价，而非单价——因此当数量大于一件时，请填写合计总额，而不是单件的价格。',
       expiryLabel: '链接有效期',
       expiry24h: '24 小时后失效',
       expiry7d: '7 天后失效',
@@ -7057,6 +7058,47 @@ export const zh: PartialTranslationResource = {
       },
       navBadge: '{{count}} 条归因异常',
       attentionBadge: '{{count}} 条归因异常',
+      quantityLabel: '每次购买数量',
+      quantityHint: '通过此链接每次购买所购的单位数量。',
+      optionSelectPlaceholder: '选择一个选项',
+      optionsLockedNote: '此链接已保存的商品选项将被保留，商品重新加载后可修改。',
+      whatIsTitle: '与普通商品链接有何不同',
+      whatIsBody:
+        '普通商品链接会打开你的实时商品页：任何人都能按当前价格和条款购买，而这些会随你编辑商品而变化。受保护链接会将确切的商品版本、价格、数量、选项和买家保护条款冻结为一个带编号的修订版，每笔订单都会保留其下单时所依据的修订版。但新的购买仍要求绑定的商品版本是当前且已发布的：如果你修改或下架了该商品，链接将停止接受新的购买。此链接无法重新指向新版本——请为当前已发布的版本创建一个新的受保护链接。已下单的订单不受影响。',
+      revisionSummaryTitle: '锁定的修订版',
+      revisionLabel: '修订版',
+      revisionValue: '#{{revision}}',
+      termsHashLabel: '条款指纹',
+      revisionSummaryHint:
+        '每次保存编辑都会发布一个新的修订版。已下单的订单会保留其购买时的修订版。',
+      dealErrorDenied: '你没有管理此链接的权限。',
+      dealErrorGone: '此链接已不存在——请刷新列表。',
+      dealErrorConflict: '自你打开后此链接已发生变化。请刷新后重试。',
+      feeQuoteTitle: '权威费用报价',
+      feeQuoteSubtitle: '由服务器针对当前修订版计算的买家实付金额与你的预计净收入。',
+      feeQuoteInactiveNotice:
+        '需先激活此链接才能生成费用报价。草稿、已暂停和已关闭的链接无法报价。',
+      feeQuoteExpiredNotice:
+        '此链接已过期，因此不再接受新的购买，也无法生成报价。请延长有效期或保存新的修订版以重新激活它。',
+      feeQuoteEmpty: '尚无报价。生成一份即可查看买家总额、你的预计净收入以及费用明细。',
+      feeQuoteRequestCta: '生成费用报价',
+      feeQuoteRefreshCta: '刷新报价',
+      feeQuoteBuyerTotal: '买家实付',
+      feeQuoteSellerNet: '你的预计净收入',
+      feeQuoteComponentsTitle: '费用构成',
+      feeQuoteLine: {
+        grossOrderAmount: '订单总额',
+        discount: '折扣',
+        sellerServiceCharge: '平台服务费',
+        sellerPaymentCost: '支付处理费',
+        sellerDistributionBudget: '推广与分销预算',
+      },
+      feeQuotePolicyLabel: '费用政策',
+      feeQuoteExpiresLabel: '报价到期',
+      feeQuoteExpired: '已过期',
+      feeQuoteConflictError:
+        '服务器拒绝了此报价。可能是链接未激活或已过期、绑定的确切商品版本已下架或不再是当前版本、所选选项无效，或配送不可用。请检查该链接后重试。',
+      feeQuoteError: '无法生成费用报价，请稍后重试。',
     },
     collections: {
       title: '商品系列',
@@ -7952,9 +7994,9 @@ export const zh: PartialTranslationResource = {
       },
 
       standalone: {
-        connectTitle: '连接 Mobazha 平台',
+        connectTitle: '添加 Mobazha 平台服务',
         connectDesc:
-          '获取品牌子域名（{handle}.mymbz.org）、分享链接和 Telegram Bot —— 即使在 NAT 环境下也能使用。',
+          '店铺继续使用自己的 Peer 身份和核心交易能力；仅在需要品牌路由、分享短链或 Telegram Bot 等可选服务时连接账户。',
         featureBrandedDomain: '品牌子域名（{handle}.mymbz.org）',
         featureShortLinks: '短链接分享',
         featureTelegramBot: 'Telegram Bot 绑定',
@@ -9244,6 +9286,14 @@ export const zh: PartialTranslationResource = {
     },
   },
 
+  connectPlatform: {
+    title: '添加 Mobazha 平台服务',
+    description:
+      '店铺使用自己的身份独立运行。仅在需要品牌路由、聚合或社交集成等可选托管能力时连接账户。',
+    button: '连接可选服务',
+    connectFailed: '账户已登录，但店铺连接尚未完成。请重试；本地店铺身份不会因此改变。',
+  },
+
   sellerAffiliate: {
     adminTitle: '卖家推广佣金',
     adminSubtitle: '配置一个店铺范围的自动推荐计划，并查看由订单驱动的账单。',
@@ -9253,7 +9303,9 @@ export const zh: PartialTranslationResource = {
     active: '启用',
     paused: '暂停',
     commissionRate: '佣金比例 %',
-    attributionDays: '归因天数',
+    attributionWindowDays: '推广归因有效期（天）',
+    attributionWindowDaysHelp:
+      '买家打开有效推广链接后，在多少天内下单仍归功于该推广者。超过该窗口后再下单，不会产生推广佣金。',
     windowDay: '1 天',
     windowDays: '{{count}} 天',
     windowHour: '1 小时',
@@ -9273,7 +9325,7 @@ export const zh: PartialTranslationResource = {
     earningsReversedLabel: '已冲回',
     invalidProgram: '请输入 0–100% 的佣金比例，以及不少于 0.01 天的归因窗口。',
     invalidRate: '佣金比例需大于 0 且不超过 100。',
-    invalidWindow: '归因天数需为 0.01–365 之间的有效数字。',
+    invalidWindow: '推广归因有效期需为 0.01–365 天。',
     pausedHint: '暂停期间推广链接不会产生新佣金；已产生的佣金不受影响。',
     statusDirtyHint: '请先保存或放弃当前修改，再启用或暂停计划。',
     noManualWorkflow:
@@ -9285,7 +9337,7 @@ export const zh: PartialTranslationResource = {
     activateProgram: '启用',
     saveBeforeInvite: '保存计划后，即可复制推广者邀请链接分享给推广者。',
     railChainOther: '其他',
-    programLoadFailed: '无法加载当前计划；保存将创建一个新计划。',
+    programLoadFailed: '无法加载当前活动店铺的推广计划；系统未做任何修改，请检查所选店铺后重试。',
     saveFailed: '无法保存推广计划。',
     getPromoterLink: '获取推广者链接',
     copyPromoterInvite: '复制推广者邀请链接',

@@ -419,6 +419,10 @@ export const HOSTING_API = {
   // --- Deal Link orders + close (seller view; newer than the merged OpenAPI spec) ---
   DEAL_LINKS_ORDERS: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/orders`,
   DEAL_LINKS_CLOSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/close`,
+  // Seller-authenticated authoritative fee quote for an active link (201 created,
+  // 200 when reusing the current unexpired quote).
+  DEAL_LINKS_FEE_QUOTES: (id: string) =>
+    `/platform/v1/deal-links/${encodeURIComponent(id)}/fee-quotes`,
   // --- Seller Affiliate (automation-first; no review or settlement queue) ---
   SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
   SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',

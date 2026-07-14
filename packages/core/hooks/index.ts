@@ -30,6 +30,7 @@ export * from './useSellerAffiliateLinks';
 export * from './useSellerAffiliateLink';
 export * from './useSellerAffiliateStatements';
 export * from './useSellerDealLink';
+export * from './useSellerDealLinkFeeQuote';
 export * from './useSellerDealLinkOrders';
 export * from './useSellerDealLinks';
 

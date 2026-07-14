@@ -66,7 +66,7 @@ describe('SellerAffiliateProgramPanel', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
     );
-    expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('7');
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('7');
     expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'active');
     // An active program offers to pause, not enable.
     expect(screen.getByTestId('affiliate-status-toggle')).toHaveTextContent(
@@ -77,6 +77,9 @@ describe('SellerAffiliateProgramPanel', () => {
     // pre-hydration render comparing placeholder defaults against the server).
     expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
     expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
+    expect(screen.getByTestId('affiliate-window-help')).toHaveTextContent(
+      'sellerAffiliate.attributionWindowDaysHelp'
+    );
   });
 
   it('shows a load error without blocking the form for a first-time (no program) seller', async () => {
@@ -117,7 +120,7 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('0.04')
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('0.04')
     );
     expect(screen.getByTestId('affiliate-window-hint')).toHaveTextContent(
       'sellerAffiliate.attributionWindowExact'
@@ -151,7 +154,7 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('30')
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('30')
     );
     expect(screen.queryByTestId('affiliate-window-advice')).not.toBeInTheDocument();
   });
@@ -163,10 +166,10 @@ describe('SellerAffiliateProgramPanel', () => {
     // Before hydration the fields show placeholder defaults; editing them then
     // would either be clobbered or clobber the real program.
     expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toBeDisabled();
-    expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toBeDisabled();
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toBeDisabled();
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionDays')).not.toBeDisabled()
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).not.toBeDisabled()
     );
   });
 
@@ -191,7 +194,7 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
     await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
 
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindowDays'), {
       target: { value: 'abc' },
     });
 
@@ -254,7 +257,7 @@ describe('SellerAffiliateProgramPanel', () => {
     fireEvent.change(screen.getByLabelText('sellerAffiliate.commissionRate'), {
       target: { value: '7.5' },
     });
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindowDays'), {
       target: { value: '14' },
     });
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
@@ -413,7 +416,7 @@ describe('SellerAffiliateProgramPanel', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('20')
     );
-    expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('14');
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('14');
     expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
     expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
   });

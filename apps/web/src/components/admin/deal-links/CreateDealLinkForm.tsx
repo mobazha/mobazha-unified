@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Info, Loader2, ShieldCheck } from 'lucide-react';
 import {
+  ApiError,
   digitalAssetsApi,
   activateSellerDealLink,
   createSellerDealLink,
   updateSellerDealLink,
   useCurrency,
   useI18n,
+  useListing,
   useMyListings,
   type DealLinkDeliveryType,
+  type DealLinkPurchaseOption,
   type SellerDealLink,
   type SellerDealLinkRequest,
 } from '@mobazha/core';
@@ -55,6 +58,39 @@ function toDatetimeLocalValue(iso: string): string {
   if (Number.isNaN(date.getTime())) return '';
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** A positive integer quantity, as the purchase template stores it (a string). */
+const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/;
+
+/**
+ * A terms hash is a long opaque fingerprint; show enough of both ends to be
+ * verifiable without pretending the whole value fits or is meaningful to read.
+ */
+function truncateTermsHash(hash: string): string {
+  if (hash.length <= 20) return hash;
+  return `${hash.slice(0, 10)}…${hash.slice(-6)}`;
+}
+
+/**
+ * Map a typed hosting error to an honest, capability-specific message. Only the
+ * status carried by `ApiError` is authoritative here — anything else (a network
+ * failure, a plain Error) falls back to the generic operation message rather
+ * than inventing a reason the backend did not give.
+ */
+function describeDealLinkError(
+  error: unknown,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  fallbackKey: string
+): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) return t('admin.dealLinks.dealErrorDenied');
+    if (error.status === 404) return t('admin.dealLinks.dealErrorGone');
+    if (error.status === 409 || error.status === 422) {
+      return t('admin.dealLinks.dealErrorConflict');
+    }
+  }
+  return t(fallbackKey);
 }
 
 export interface CreateDealLinkFormProps {
@@ -106,6 +142,16 @@ export function CreateDealLinkForm({
   const [customExpiry, setCustomExpiry] = useState(
     editLink?.expiresAt ? toDatetimeLocalValue(editLink.expiresAt) : ''
   );
+  const [quantity, setQuantity] = useState(editLink?.purchaseTemplate?.quantity ?? '1');
+  // option name → chosen variant. Seeded from a saved template when editing, and
+  // (re)seeded from the product's option catalog once the listing detail loads.
+  const [optionSelections, setOptionSelections] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const option of editLink?.purchaseTemplate?.options ?? []) {
+      seed[option.name] = option.value;
+    }
+    return seed;
+  });
   const [saving, setSaving] = useState(false);
 
   const eligibleListings = useMemo(
@@ -124,6 +170,60 @@ export function CreateDealLinkForm({
     () => eligibleListings.find(item => item.slug === selectedProductSlug),
     [eligibleListings, selectedProductSlug]
   );
+
+  // When editing, the template is bound to a listing hash, not a slug; recover
+  // the slug from the seller's own index so we can load the option catalog.
+  const editListingSlug = useMemo(() => {
+    const hash = editLink?.purchaseTemplate?.listingHash;
+    if (!hash) return null;
+    return listings.find(item => item.cid === hash)?.slug ?? null;
+  }, [editLink, listings]);
+
+  // Load the full listing so we can offer its variant options. The list index
+  // (`useMyListings`) carries no options, so this is the only place they can be
+  // represented; when it is unavailable we preserve any saved options untouched.
+  const detailSlug = isEditing ? editListingSlug : selectedProductSlug || null;
+  const { listing: productDetail } = useListing(detailSlug);
+  const productOptions = useMemo(() => productDetail?.item.options ?? [], [productDetail]);
+
+  const optionSeedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = productDetail?.slug ?? null;
+    if (!key || key === optionSeedKeyRef.current) return;
+    optionSeedKeyRef.current = key;
+    const options = productDetail?.item.options ?? [];
+    if (!options.length) return;
+    // Keep a still-valid saved/prior choice; otherwise default to the first
+    // variant so a quick create stays one click, and edits stay pre-filled.
+    setOptionSelections(prev => {
+      const next: Record<string, string> = {};
+      for (const option of options) {
+        const prior = prev[option.name];
+        next[option.name] =
+          prior && option.variants.some(variant => variant.name === prior)
+            ? prior
+            : (option.variants[0]?.name ?? '');
+      }
+      return next;
+    });
+  }, [productDetail]);
+
+  const buildPurchaseOptions = useCallback((): DealLinkPurchaseOption[] => {
+    if (productOptions.length) {
+      return productOptions.map(option => ({
+        name: option.name,
+        value: optionSelections[option.name] ?? '',
+      }));
+    }
+    // No option catalog to edit against: preserve what the link already had
+    // (editing) or send none (creating). Never fabricate a selection.
+    return isEditing ? (editLink?.purchaseTemplate?.options ?? []) : [];
+  }, [editLink, isEditing, optionSelections, productOptions]);
+
+  // Saved options we cannot re-render as pickers (editing, but the catalog did
+  // not load). We still preserve them on save; surface that they are locked.
+  const lockedSavedOptions =
+    isEditing && !productOptions.length ? (editLink?.purchaseTemplate?.options ?? []) : [];
 
   const applyProductSlug = useCallback(
     (slug: string) => {
@@ -206,12 +306,19 @@ export function CreateDealLinkForm({
     const parsedReviewDays = Number(reviewDays);
     const minimumReviewDays = deliveryType === 'fixed_service' ? 7 : 3;
     const expiry = computeExpiresAt();
+    const trimmedQuantity = quantity.trim();
+    // Every rendered option must have a chosen variant before we can freeze it.
+    const optionsComplete = productOptions.every(
+      option => (optionSelections[option.name] ?? '').length > 0
+    );
 
     if (
       !isPositiveDecimalAmount(price) ||
       !Number.isInteger(parsedReviewDays) ||
       parsedReviewDays < minimumReviewDays ||
       parsedReviewDays > 365 ||
+      !POSITIVE_INTEGER_PATTERN.test(trimmedQuantity) ||
+      !optionsComplete ||
       expiry.invalid
     ) {
       toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateValidationError') });
@@ -237,7 +344,11 @@ export function CreateDealLinkForm({
               ? editLink.terms.deliverables
               : [editLink.title],
           },
-          purchaseTemplate: editLink.purchaseTemplate,
+          purchaseTemplate: {
+            ...editLink.purchaseTemplate,
+            quantity: trimmedQuantity,
+            options: buildPurchaseOptions(),
+          },
           expiresAt: expiry.value,
         };
         const saved = await updateSellerDealLink(editLink.id, body);
@@ -272,14 +383,17 @@ export function CreateDealLinkForm({
           },
           purchaseTemplate: {
             listingHash: listing.cid,
-            quantity: '1',
-            options: [],
+            quantity: trimmedQuantity,
+            options: buildPurchaseOptions(),
             optionalFeatures: [],
           },
           expiresAt: expiry.value,
         });
-      } catch {
-        toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateFailed') });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: describeDealLinkError(error, t, 'admin.dealLinks.dealCreateFailed'),
+        });
         return;
       }
       try {
@@ -293,15 +407,20 @@ export function CreateDealLinkForm({
         });
         onDraftSaved?.(draft);
       }
-    } catch {
+    } catch (error) {
       toast({
         variant: 'destructive',
-        title: t(isEditing ? 'admin.dealLinks.dealEditFailed' : 'admin.dealLinks.dealCreateFailed'),
+        title: describeDealLinkError(
+          error,
+          t,
+          isEditing ? 'admin.dealLinks.dealEditFailed' : 'admin.dealLinks.dealCreateFailed'
+        ),
       });
     } finally {
       setSaving(false);
     }
   }, [
+    buildPurchaseOptions,
     computeExpiresAt,
     deliveryType,
     digitalDeliveryReady,
@@ -312,7 +431,10 @@ export function CreateDealLinkForm({
     onCreated,
     onDraftSaved,
     onSaved,
+    optionSelections,
     price,
+    productOptions,
+    quantity,
     reviewDays,
     selectedProductSlug,
     t,
@@ -339,6 +461,49 @@ export function CreateDealLinkForm({
             {t(
               isEditing ? 'admin.dealLinks.dealEditSubtitle' : 'admin.dealLinks.dealCreateSubtitle'
             )}
+          </p>
+        </div>
+      ) : null}
+
+      <div
+        className="flex gap-2.5 rounded-lg border border-border bg-muted/30 p-3"
+        data-testid="deal-link-what-is"
+      >
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">{t('admin.dealLinks.whatIsTitle')}</p>
+          <p className="text-xs text-muted-foreground">{t('admin.dealLinks.whatIsBody')}</p>
+        </div>
+      </div>
+
+      {isEditing && editLink ? (
+        <div
+          className="space-y-1.5 rounded-lg border border-border p-3"
+          data-testid="deal-link-revision-summary"
+        >
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="text-sm font-medium">{t('admin.dealLinks.revisionSummaryTitle')}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('admin.dealLinks.revisionLabel')}:{' '}
+              <span className="font-medium text-foreground">
+                {t('admin.dealLinks.revisionValue', { revision: editLink.currentRevision })}
+              </span>
+            </span>
+            {editLink.termsHash ? (
+              <span className="text-xs text-muted-foreground">
+                {t('admin.dealLinks.termsHashLabel')}:{' '}
+                <span
+                  className="font-mono text-foreground"
+                  title={editLink.termsHash}
+                  data-testid="deal-link-terms-hash"
+                >
+                  {truncateTermsHash(editLink.termsHash)}
+                </span>
+              </span>
+            ) : null}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t('admin.dealLinks.revisionSummaryHint')}
           </p>
         </div>
       ) : null}
@@ -388,6 +553,20 @@ export function CreateDealLinkForm({
           <p className="text-xs text-muted-foreground">
             {t('admin.dealLinks.priceHint', { currency })}
           </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="deal-quantity">{t('admin.dealLinks.quantityLabel')}</Label>
+          <Input
+            id="deal-quantity"
+            inputMode="numeric"
+            value={quantity}
+            onChange={event => setQuantity(event.target.value)}
+            className="min-h-11"
+            disabled={!isEditing && !selectedListing}
+            data-testid="deal-quantity"
+          />
+          <p className="text-xs text-muted-foreground">{t('admin.dealLinks.quantityHint')}</p>
         </div>
 
         <div className="space-y-2">
@@ -448,6 +627,51 @@ export function CreateDealLinkForm({
             />
           ) : null}
         </div>
+
+        {productOptions.length ? (
+          <div className="space-y-3 md:col-span-2" data-testid="deal-link-options">
+            {productOptions.map(option => (
+              <div key={option.name} className="space-y-2">
+                <Label htmlFor={`deal-option-${option.name}`}>{option.name}</Label>
+                <Select
+                  value={optionSelections[option.name] ?? ''}
+                  onValueChange={value =>
+                    setOptionSelections(prev => ({ ...prev, [option.name]: value }))
+                  }
+                >
+                  <SelectTrigger id={`deal-option-${option.name}`} className="min-h-11">
+                    <SelectValue placeholder={t('admin.dealLinks.optionSelectPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {option.variants.map(variant => (
+                      <SelectItem key={variant.name} value={variant.name}>
+                        {variant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {lockedSavedOptions.length ? (
+          <div className="space-y-1.5 md:col-span-2" data-testid="deal-link-options-locked">
+            <p className="text-xs text-muted-foreground">
+              {t('admin.dealLinks.optionsLockedNote')}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {lockedSavedOptions.map(option => (
+                <span
+                  key={option.name}
+                  className="inline-flex items-center rounded-md border border-border bg-muted/30 px-2 py-1 text-xs text-foreground"
+                >
+                  {option.name}: {option.value}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="deal-note">{t('admin.dealLinks.noteLabel')}</Label>

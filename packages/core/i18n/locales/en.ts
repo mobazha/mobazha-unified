@@ -7600,7 +7600,7 @@ export const en: TranslationResource = {
       dealCreateFailed: 'Could not create the protected purchase link',
       priceLabel: 'Deal price',
       priceHint:
-        'Defaults to the current list price ({{currency}}). Adjust it to the price you agreed for this deal.',
+        'Defaults to the current list price ({{currency}}). This is the total agreed price for the whole purchase — not a per-unit price — so when the quantity is more than one, enter the combined total, not the cost of a single unit.',
       expiryLabel: 'Link expiry',
       expiry24h: 'Expires in 24 hours',
       expiry7d: 'Expires in 7 days',
@@ -7754,6 +7754,50 @@ export const en: TranslationResource = {
       },
       navBadge: '{{count}} attribution exceptions',
       attentionBadge: '{{count}} attribution exceptions',
+      quantityLabel: 'Quantity per purchase',
+      quantityHint: 'How many units each purchase through this link buys.',
+      optionSelectPlaceholder: 'Select an option',
+      optionsLockedNote:
+        'This link’s saved product options are preserved. They can be changed once the product reloads.',
+      whatIsTitle: 'How this differs from a normal product link',
+      whatIsBody:
+        'A normal product link opens your live listing: anyone can buy at whatever the current price and terms happen to be, and those change whenever you edit the product. A protected link freezes the exact product version, price, quantity, options, and buyer-protection terms into a numbered revision, and every order keeps the revision it was bought under. A new purchase still requires the bound product version to be the current, published one: if you change or unpublish that product, the link stops accepting new purchases. This link cannot be repointed to the new version — create a new protected link for the current published version instead. Orders already placed are unaffected.',
+      revisionSummaryTitle: 'Locked revision',
+      revisionLabel: 'Revision',
+      revisionValue: '#{{revision}}',
+      termsHashLabel: 'Terms fingerprint',
+      revisionSummaryHint:
+        'Every saved edit publishes a new revision. Orders already placed keep the revision they were bought under.',
+      dealErrorDenied: 'You do not have permission to manage this link.',
+      dealErrorGone: 'This link no longer exists — refresh the list.',
+      dealErrorConflict: 'This link changed since you opened it. Refresh and try again.',
+      feeQuoteTitle: 'Authoritative fee quote',
+      feeQuoteSubtitle:
+        'The exact amounts a buyer pays and you net for the current revision, computed by the server.',
+      feeQuoteInactiveNotice:
+        'Activate this link to generate a fee quote. Draft, paused, and closed links cannot be quoted.',
+      feeQuoteExpiredNotice:
+        'This link’s expiry has passed, so it accepts no new purchases and cannot be quoted. Extend the expiry or save a new revision to reactivate it.',
+      feeQuoteEmpty:
+        'No quote yet. Generate one to see the buyer total, your estimated net, and the fee breakdown.',
+      feeQuoteRequestCta: 'Generate fee quote',
+      feeQuoteRefreshCta: 'Refresh quote',
+      feeQuoteBuyerTotal: 'Buyer pays',
+      feeQuoteSellerNet: 'Your estimated net',
+      feeQuoteComponentsTitle: 'Fee components',
+      feeQuoteLine: {
+        grossOrderAmount: 'Gross order amount',
+        discount: 'Discount',
+        sellerServiceCharge: 'Platform service charge',
+        sellerPaymentCost: 'Payment processing cost',
+        sellerDistributionBudget: 'Affiliate & distribution budget',
+      },
+      feeQuotePolicyLabel: 'Fee policy',
+      feeQuoteExpiresLabel: 'Quote expires',
+      feeQuoteExpired: 'Expired',
+      feeQuoteConflictError:
+        'The server rejected this quote. The link may be inactive or expired, the exact bound product version may be unpublished or no longer current, the selected options may be invalid, or delivery may be unavailable. Review the link, then try again.',
+      feeQuoteError: 'We could not generate a fee quote. Try again in a moment.',
     },
     collections: {
       title: 'Collections',
@@ -8693,9 +8737,9 @@ export const en: TranslationResource = {
       },
 
       standalone: {
-        connectTitle: 'Connect to Mobazha Platform',
+        connectTitle: 'Add Mobazha platform services',
         connectDesc:
-          'Get a branded subdomain ({handle}.mymbz.org), share links, and Telegram Bot — works even behind NAT.',
+          'Your store keeps its own Peer identity and core commerce. Connect an account only for optional branded routing, share links, and Telegram Bot services.',
         featureBrandedDomain: 'Branded subdomain ({handle}.mymbz.org)',
         featureShortLinks: 'Short links for sharing',
         featureTelegramBot: 'Telegram Bot binding',
@@ -10039,6 +10083,15 @@ export const en: TranslationResource = {
     },
   },
 
+  connectPlatform: {
+    title: 'Add Mobazha platform services',
+    description:
+      'Your store works with its own identity. Connect an account only for optional hosted features such as branded routing, aggregation, or social integrations.',
+    button: 'Connect optional services',
+    connectFailed:
+      'The account signed in, but the store was not connected. Retry without changing your local store identity.',
+  },
+
   sellerAffiliate: {
     adminTitle: 'Seller affiliate',
     adminSubtitle:
@@ -10050,7 +10103,9 @@ export const en: TranslationResource = {
     active: 'Active',
     paused: 'Paused',
     commissionRate: 'Commission %',
-    attributionDays: 'Attribution days',
+    attributionWindowDays: 'Attribution window (days)',
+    attributionWindowDaysHelp:
+      'How long after a buyer opens a valid promoter link that promoter can receive credit for the buyer’s order. After this window expires, a later order earns no commission.',
     windowDay: '1 day',
     windowDays: '{{count}} days',
     windowHour: '1 hour',
@@ -10071,7 +10126,7 @@ export const en: TranslationResource = {
     invalidProgram:
       'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
     invalidRate: 'Commission must be greater than 0 and at most 100.',
-    invalidWindow: 'Attribution days must be a valid number between 0.01 and 365.',
+    invalidWindow: 'Attribution window must be between 0.01 and 365 days.',
     pausedHint:
       'While paused, promoter links stop earning new commissions; existing commissions are unaffected.',
     statusDirtyHint: 'Save or discard your changes before enabling or pausing the program.',
@@ -10084,7 +10139,8 @@ export const en: TranslationResource = {
     activateProgram: 'Activate',
     saveBeforeInvite: 'Save the program to get a promoter invite link you can share.',
     railChainOther: 'Other',
-    programLoadFailed: 'Unable to load the current program. Saving will create it.',
+    programLoadFailed:
+      'Unable to load the program for the active store. No changes were made; check the selected store and retry.',
     saveFailed: 'Unable to save the affiliate program.',
     getPromoterLink: 'Get promoter link',
     copyPromoterInvite: 'Copy promoter invite',

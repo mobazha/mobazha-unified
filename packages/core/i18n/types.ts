@@ -4161,6 +4161,42 @@ export interface TranslationResource {
       };
       navBadge?: string;
       attentionBadge?: string;
+      quantityLabel?: string;
+      quantityHint?: string;
+      optionSelectPlaceholder?: string;
+      optionsLockedNote?: string;
+      whatIsTitle?: string;
+      whatIsBody?: string;
+      revisionSummaryTitle?: string;
+      revisionLabel?: string;
+      revisionValue?: string;
+      termsHashLabel?: string;
+      revisionSummaryHint?: string;
+      dealErrorDenied?: string;
+      dealErrorGone?: string;
+      dealErrorConflict?: string;
+      feeQuoteTitle?: string;
+      feeQuoteSubtitle?: string;
+      feeQuoteInactiveNotice?: string;
+      feeQuoteExpiredNotice?: string;
+      feeQuoteEmpty?: string;
+      feeQuoteRequestCta?: string;
+      feeQuoteRefreshCta?: string;
+      feeQuoteBuyerTotal?: string;
+      feeQuoteSellerNet?: string;
+      feeQuoteComponentsTitle?: string;
+      feeQuoteLine?: {
+        grossOrderAmount?: string;
+        discount?: string;
+        sellerServiceCharge?: string;
+        sellerPaymentCost?: string;
+        sellerDistributionBudget?: string;
+      };
+      feeQuotePolicyLabel?: string;
+      feeQuoteExpiresLabel?: string;
+      feeQuoteExpired?: string;
+      feeQuoteConflictError?: string;
+      feeQuoteError?: string;
     };
     collections?: {
       title?: string;
@@ -5993,6 +6029,13 @@ export interface TranslationResource {
     deliveryType?: Record<string, string | undefined>;
   };
 
+  connectPlatform?: {
+    title?: string;
+    description?: string;
+    button?: string;
+    connectFailed?: string;
+  };
+
   sellerAffiliate?: {
     adminTitle?: string;
     adminSubtitle?: string;
@@ -6002,7 +6045,8 @@ export interface TranslationResource {
     active?: string;
     paused?: string;
     commissionRate?: string;
-    attributionDays?: string;
+    attributionWindowDays?: string;
+    attributionWindowDaysHelp?: string;
     windowDay?: string;
     windowDays?: string;
     windowHour?: string;

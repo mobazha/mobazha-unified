@@ -87,7 +87,7 @@ export const DealLinkRow = memo(function DealLinkRow({
   const canPause = effectiveStatus === 'active';
   const canActivateDraft = link.status === 'draft';
   const canReactivate = effectiveStatus === 'paused';
-  // Closing is a terminal, tenant-scoped transition allowed from any live or
+  // Closing is a terminal, Peer-scoped transition allowed from any live or
   // draft state; a closed link exposes only its order history.
   const canClose = link.status !== 'closed';
   // A closed link's public URL 404s, so copying it is pointless.
