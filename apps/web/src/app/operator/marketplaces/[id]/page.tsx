@@ -28,6 +28,7 @@ import { getImageUrl } from '@mobazha/core/services/api/config';
 import { Header, Footer } from '@/components';
 import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
+import { OperatorSharePanel } from '@/components/Operator/OperatorSharePanel';
 import { Container } from '@/components/layouts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -842,6 +843,15 @@ export default function MarketplaceOperatorDetailPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {marketplace.status === 'published' ? (
+                <div className="mt-6">
+                  <OperatorSharePanel
+                    marketplaceId={marketplace.id}
+                    slug={marketplace.slug || marketplace.id}
+                  />
+                </div>
+              ) : null}
 
               {canViewAttribution ? (
                 <Card className="mt-6" data-testid="operator-attribution-funnel-card">
