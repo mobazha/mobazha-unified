@@ -653,51 +653,49 @@ export default function AccountSettingsPage() {
               <AlertCircle className="w-5 h-5 text-destructive" />
               {t('settings.accountBinding.conflictTitle')}
             </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm">
-                <p>
-                  {t('settings.accountBinding.conflictDesc', {
+            <AlertDialogDescription>
+              {t('settings.accountBinding.conflictDesc', {
+                provider:
+                  SUPPORTED_PROVIDERS.find(p => p.id === linkConflict?.provider)?.name ??
+                  linkConflict?.provider ??
+                  '',
+              })}
+            </AlertDialogDescription>
+            <div className="space-y-3 text-sm">
+              <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {t('settings.accountBinding.conflictOtherAccount')}
+                  </span>
+                  <span className="font-mono">
+                    {linkConflict?.otherAccountName
+                      ? `${linkConflict.otherAccountName.slice(0, 4)}****${linkConflict.otherAccountName.slice(-4)}`
+                      : ''}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {t('settings.accountBinding.conflictProviderCount', {
+                      count: linkConflict?.otherAccountProviderCount ?? 0,
+                    })}
+                  </span>
+                </div>
+              </div>
+              {linkConflict?.otherAccountProviderCount === 1 ? (
+                <p className="text-muted-foreground">
+                  {t('settings.accountBinding.conflictMergeHint')}
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  {t('settings.accountBinding.conflictGuidance', {
                     provider:
                       SUPPORTED_PROVIDERS.find(p => p.id === linkConflict?.provider)?.name ??
                       linkConflict?.provider ??
                       '',
                   })}
                 </p>
-                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {t('settings.accountBinding.conflictOtherAccount')}
-                    </span>
-                    <span className="font-mono">
-                      {linkConflict?.otherAccountName
-                        ? `${linkConflict.otherAccountName.slice(0, 4)}****${linkConflict.otherAccountName.slice(-4)}`
-                        : ''}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {t('settings.accountBinding.conflictProviderCount', {
-                        count: linkConflict?.otherAccountProviderCount ?? 0,
-                      })}
-                    </span>
-                  </div>
-                </div>
-                {linkConflict?.otherAccountProviderCount === 1 ? (
-                  <p className="text-muted-foreground">
-                    {t('settings.accountBinding.conflictMergeHint')}
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {t('settings.accountBinding.conflictGuidance', {
-                      provider:
-                        SUPPORTED_PROVIDERS.find(p => p.id === linkConflict?.provider)?.name ??
-                        linkConflict?.provider ??
-                        '',
-                    })}
-                  </p>
-                )}
-              </div>
-            </AlertDialogDescription>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setLinkConflict(null)}>
@@ -755,57 +753,56 @@ export default function AccountSettingsPage() {
               <GitMerge className="w-5 h-5 text-primary" />
               {t('settings.accountBinding.mergePreviewTitle')}
             </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm">
-                <p>{t('settings.accountBinding.mergePreviewDesc')}</p>
-
-                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {t('settings.accountBinding.mergePreviewStores')}
-                  </p>
-                  {mergePreview && mergePreview.peerIds.length > 0 ? (
-                    mergePreview.peerIds.map(s => (
-                      <div key={s.peerId} className="flex items-center gap-2 text-xs">
-                        <Server className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span>
-                          {s.domain ||
-                            s.storeName ||
-                            `${s.peerId.slice(0, 8)}...${s.peerId.slice(-6)}`}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic">
-                      {t('settings.accountBinding.mergeNoStores')}
-                    </p>
-                  )}
-                </div>
-
-                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {t('settings.accountBinding.mergePreviewProvider')}
-                  </p>
-                  {mergePreview?.providers.map(p => (
-                    <div key={p} className="flex items-center gap-2 text-xs">
-                      <ProviderIcon provider={p as OAuthProvider} />
-                      <span>{SUPPORTED_PROVIDERS.find(sp => sp.id === p)?.name ?? p}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    {t('settings.accountBinding.mergeConfirmLabel')}
-                  </label>
-                  <Input
-                    value={mergeConfirmInput}
-                    onChange={e => setMergeConfirmInput(e.target.value)}
-                    placeholder={t('settings.accountBinding.mergeConfirmPlaceholder')}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
+            <AlertDialogDescription>
+              {t('settings.accountBinding.mergePreviewDesc')}
             </AlertDialogDescription>
+            <div className="space-y-3 text-sm">
+              <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {t('settings.accountBinding.mergePreviewStores')}
+                </p>
+                {mergePreview && mergePreview.peerIds.length > 0 ? (
+                  mergePreview.peerIds.map(s => (
+                    <div key={s.peerId} className="flex items-center gap-2 text-xs">
+                      <Server className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>
+                        {s.domain ||
+                          s.storeName ||
+                          `${s.peerId.slice(0, 8)}...${s.peerId.slice(-6)}`}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">
+                    {t('settings.accountBinding.mergeNoStores')}
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {t('settings.accountBinding.mergePreviewProvider')}
+                </p>
+                {mergePreview?.providers.map(p => (
+                  <div key={p} className="flex items-center gap-2 text-xs">
+                    <ProviderIcon provider={p as OAuthProvider} />
+                    <span>{SUPPORTED_PROVIDERS.find(sp => sp.id === p)?.name ?? p}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  {t('settings.accountBinding.mergeConfirmLabel')}
+                </label>
+                <Input
+                  value={mergeConfirmInput}
+                  onChange={e => setMergeConfirmInput(e.target.value)}
+                  placeholder={t('settings.accountBinding.mergeConfirmPlaceholder')}
+                  className="text-sm"
+                />
+              </div>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
