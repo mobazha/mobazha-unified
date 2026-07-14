@@ -68,7 +68,9 @@ export function CreateDealLinkForm({
 
   const [selectedProductSlug, setSelectedProductSlug] = useState(initialProductSlug);
   const [deliveryType, setDeliveryType] = useState<DealLinkDeliveryType>(
-    (editLink?.deliveryType as DealLinkDeliveryType) ?? 'digital_file'
+    // Only 'fixed_service' and 'digital_file' drive review-day minimums here;
+    // anything else (incl. the normalizer's 'unknown' fallback) reads as digital.
+    editLink?.deliveryType === 'fixed_service' ? 'fixed_service' : 'digital_file'
   );
   const [digitalDeliveryReady, setDigitalDeliveryReady] = useState<boolean | null>(null);
   const [digitalDeliveryChecking, setDigitalDeliveryChecking] = useState(false);
@@ -212,7 +214,9 @@ export function CreateDealLinkForm({
           priceCurrency: editLink.priceCurrency,
           terms: {
             acceptanceHours: parsedReviewDays * 24,
-            deliverables: editLink.terms.deliverables ?? [editLink.title],
+            deliverables: editLink.terms.deliverables?.length
+              ? editLink.terms.deliverables
+              : [editLink.title],
           },
           purchaseTemplate: editLink.purchaseTemplate,
           expiresAt: expiry.value,

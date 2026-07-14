@@ -7652,6 +7652,7 @@ export const en: TranslationResource = {
       statusActive: 'Active',
       statusPaused: 'Paused',
       statusExpired: 'Expired',
+      statusClosed: 'Closed',
       statusUnknown: 'Unknown',
       activate: 'Activate',
       pause: 'Pause',

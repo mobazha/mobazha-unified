@@ -55,7 +55,14 @@ export const DealLinkRow = memo(function DealLinkRow({
     (link.expiresAt ? new Date(link.expiresAt).getTime() <= renderedAt : false);
   const effectiveStatus = expired ? 'expired' : link.status;
   const isLive = effectiveStatus === 'active';
-  const canEdit = !expired && effectiveStatus !== 'draft';
+  // Editing appends a new revision and rewrites the expiry, so the backend
+  // allows it for any non-closed link — and it is the only way to revive an
+  // expired one. Gate on the raw status (not the expiry-derived one) so a
+  // closed link with a past expiry does not offer an edit that always fails.
+  const canEdit = link.status !== 'closed' && link.status !== 'draft';
+  // Pause/reactivate are true lifecycle transitions: pause only a live link,
+  // reactivate only a paused-and-unexpired one (activating an expired link is
+  // rejected — the seller must edit its expiry first).
   const canPause = effectiveStatus === 'active';
   const canReactivate = effectiveStatus === 'paused';
   const statusLabelKey: Record<string, string> = {
@@ -63,12 +70,14 @@ export const DealLinkRow = memo(function DealLinkRow({
     active: 'admin.dealLinks.statusActive',
     paused: 'admin.dealLinks.statusPaused',
     expired: 'admin.dealLinks.statusExpired',
+    closed: 'admin.dealLinks.statusClosed',
   };
   const statusClass: Record<string, string> = {
     active: 'bg-emerald-500/10 text-emerald-600',
     paused: 'bg-muted text-muted-foreground',
     expired: 'bg-amber-500/10 text-amber-600',
     draft: 'bg-muted text-muted-foreground',
+    closed: 'bg-muted text-muted-foreground',
   };
 
   return (

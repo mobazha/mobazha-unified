@@ -4067,6 +4067,7 @@ export interface TranslationResource {
       statusActive?: string;
       statusPaused?: string;
       statusExpired?: string;
+      statusClosed?: string;
       statusUnknown?: string;
       activate?: string;
       pause?: string;

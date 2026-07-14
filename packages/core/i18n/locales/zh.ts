@@ -6961,6 +6961,7 @@ export const zh: PartialTranslationResource = {
       statusActive: '已激活',
       statusPaused: '已暂停',
       statusExpired: '已过期',
+      statusClosed: '已关闭',
       statusUnknown: '未知',
       activate: '激活',
       pause: '暂停',
