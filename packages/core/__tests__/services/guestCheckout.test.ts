@@ -3,6 +3,7 @@ import {
   completeGuestOrder,
   createGuestOrder,
   getGuestCheckoutSettings,
+  getSellerGuestCheckoutSettings,
   getGuestOrderStatusWire,
   normalizeGuestOrderStatus,
   quoteGuestOrderSupply,
@@ -10,12 +11,13 @@ import {
 } from '../../services/api/guestCheckout';
 
 vi.mock('../../services/api/helpers', () => ({
+  authGet: vi.fn(),
   authPut: vi.fn(),
   anonymousGet: vi.fn(),
   anonymousPost: vi.fn(),
 }));
 
-import { anonymousGet, anonymousPost, authPut } from '../../services/api/helpers';
+import { anonymousGet, anonymousPost, authGet, authPut } from '../../services/api/helpers';
 
 const statusDto = {
   orderToken: 'tok',
@@ -85,6 +87,7 @@ describe('normalizeGuestOrderStatus', () => {
 
 describe('guest order mutations', () => {
   beforeEach(() => {
+    vi.mocked(authGet).mockReset();
     vi.mocked(authPut).mockReset();
     vi.mocked(anonymousGet).mockReset();
     vi.mocked(anonymousPost).mockReset();
@@ -127,6 +130,19 @@ describe('guest order mutations', () => {
       },
       undefined
     );
+  });
+
+  it('reads seller settings with authentication for admin management', async () => {
+    vi.mocked(authGet).mockResolvedValue({
+      enabled: true,
+      acceptedCoins: 'BTC',
+      availableCoins: 'BTC',
+      paymentTimeout: 30,
+    });
+
+    await getSellerGuestCheckoutSettings();
+
+    expect(authGet).toHaveBeenCalledWith('/settings/guest-checkout');
   });
 
   it('forwards order cancellation to the anonymous request boundary', async () => {

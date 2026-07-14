@@ -26,19 +26,16 @@ vi.mock('../../../services/api/config', () => ({
   })),
 }));
 
-import { get, post, request } from '../../../services/api/client';
+import { request } from '../../../services/api/client';
 import { anonymousGet, anonymousPost } from '../../../services/api/helpers';
 
 describe('anonymous API helpers', () => {
   beforeEach(() => {
-    vi.mocked(get).mockReset();
-    vi.mocked(post).mockReset();
     vi.mocked(request).mockReset();
   });
 
   it('removes credentials while preserving same-origin store routing context', async () => {
-    vi.mocked(get).mockResolvedValue({ ok: true });
-    vi.mocked(post).mockResolvedValue({ ok: true });
+    vi.mocked(request).mockResolvedValue({ ok: true });
 
     await anonymousGet('/settings/guest-checkout');
     await anonymousPost('/guest/orders', { paymentCoin: 'BTC' });
@@ -48,8 +45,17 @@ describe('anonymous API helpers', () => {
       'X-Store-PeerID': 'store-peer',
       'X-Storefront-Slug': 'shop',
     };
-    expect(get).toHaveBeenCalledWith('/v1/settings/guest-checkout', expectedHeaders);
-    expect(post).toHaveBeenCalledWith('/v1/guest/orders', { paymentCoin: 'BTC' }, expectedHeaders);
+    expect(request).toHaveBeenCalledWith('/v1/settings/guest-checkout', {
+      method: 'GET',
+      headers: expectedHeaders,
+      skipUnauthorizedHandler: true,
+    });
+    expect(request).toHaveBeenCalledWith('/v1/guest/orders', {
+      method: 'POST',
+      body: { paymentCoin: 'BTC' },
+      headers: expectedHeaders,
+      skipUnauthorizedHandler: true,
+    });
   });
 
   it('forwards cancellation without reintroducing credentials', async () => {
@@ -67,6 +73,7 @@ describe('anonymous API helpers', () => {
         'X-Storefront-Slug': 'shop',
       },
       signal: controller.signal,
+      skipUnauthorizedHandler: true,
     });
     expect(request).toHaveBeenCalledWith('/v1/guest/orders', {
       method: 'POST',
@@ -77,6 +84,7 @@ describe('anonymous API helpers', () => {
         'X-Storefront-Slug': 'shop',
       },
       signal: controller.signal,
+      skipUnauthorizedHandler: true,
     });
   });
 });

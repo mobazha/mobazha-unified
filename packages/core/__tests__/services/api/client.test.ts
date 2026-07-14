@@ -163,6 +163,17 @@ describe('client.request — 401 callback', () => {
     await expect(request('http://api/test')).rejects.toThrow();
     expect(callback).toHaveBeenCalled();
   });
+
+  it('does not invoke onUnauthorized for an expected anonymous 401', async () => {
+    const callback = vi.fn();
+    onUnauthorized(callback);
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      jsonResponse(401, { error: { code: 'UNAUTHORIZED', message: 'anonymous' } })
+    );
+
+    await expect(request('http://api/public', { skipUnauthorizedHandler: true })).rejects.toThrow();
+    expect(callback).not.toHaveBeenCalled();
+  });
 });
 
 describe('client.request — multipart body', () => {

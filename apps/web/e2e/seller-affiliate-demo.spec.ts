@@ -3,6 +3,8 @@ import { performCasdoorLogin } from './fixtures/auth';
 
 // Web-UI demo of the seller-affiliate 带货闭环, recorded against the local E2E
 // stack (frontend in `--mode e2e` → hosting :18080 / Casdoor :18000).
+// Round-5 surfaces highlighted: seller attribution-window guardrail, promoter
+// storefront with per-item "you earn ≈$X", and the earnings fiat + rollup.
 // Run:  DEMO_PROGRAM_ID=... DEMO_PROMO_TOKEN=... \
 //       npx playwright test e2e/seller-affiliate-demo.spec.ts --project=chromium --workers=1
 
@@ -25,6 +27,15 @@ async function settle(page: import('@playwright/test').Page, testId: string, ms 
   await page.waitForTimeout(ms);
 }
 
+// Bring a section into frame and pause on it so the recording lingers on the
+// feature being demonstrated. Never throws — the video must keep rolling.
+async function reveal(page: import('@playwright/test').Page, testId: string, ms = 3500) {
+  const el = page.getByTestId(testId).first();
+  await el.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
+  await el.scrollIntoViewIfNeeded().catch(() => {});
+  await page.waitForTimeout(ms);
+}
+
 // On a cold vite compile the auth store can still be rehydrating when the
 // page first renders, briefly showing the signed-out gate; one reload after
 // it settles lands on the authenticated view.
@@ -41,32 +52,53 @@ async function passAuthGate(page: import('@playwright/test').Page, gateTestId: s
   }
 }
 
-test('1 · seller 开 affiliate program (admin/deal-links)', async ({ page }) => {
+test('1 · seller 开 affiliate program + 归因窗口护栏', async ({ page }) => {
   test.setTimeout(180000);
   await performCasdoorLogin(page, 'testuser1', '123');
-  await page.goto('/admin/deal-links');
+  await page.goto('/admin/affiliate');
   await page.waitForLoadState('networkidle').catch(() => {});
-  await page.waitForTimeout(4500);
+  await page.waitForTimeout(3500);
+
+  // Seller affiliate panel: 5% commission, Active rails, and — because the
+  // program's window is 1 hour — the round-5 guardrail warning that a sub-day
+  // window silently discards promoter-driven sales.
+  await reveal(page, 'seller-affiliate-program-panel', 3000);
+  await reveal(page, 'affiliate-window-advice', 4500);
 });
 
-test('2 · promoter 带货：登录 → 生成 rail-scoped 链接 → 看佣金', async ({ page }) => {
-  test.setTimeout(180000);
+test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+汇总', async ({ page }) => {
+  test.setTimeout(200000);
   await performCasdoorLogin(page, 'testuser3', '123');
 
   // 打开推广程序页
   await page.goto(`/promote/${PROGRAM_ID}`);
   await passAuthGate(page, 'promote-auth-required');
-  await settle(page, 'promote-program-page', 2500);
+  await settle(page, 'promote-program-page', 2000);
 
-  // 点击「Create link」实际生成 rail-scoped 推广链接，停留展示生成结果
+  // The storefront and terms only exist once a link is created (they derive
+  // from the link's public token), so generate the link FIRST, then linger on
+  // the round-5 surfaces it unlocks.
   const createBtn = page
     .getByRole('button', { name: /create link|生成链接|create|copy link|复制/i })
     .first();
   if (await createBtn.isVisible().catch(() => false)) {
     await createBtn.click();
-    await page.waitForTimeout(3500);
+    // Wait for the created link to render (its URL box) before showcasing.
+    await page
+      .getByTestId('promote-earn-terms')
+      .first()
+      .waitFor({ timeout: 20000 })
+      .catch(() => {});
+    await page.waitForTimeout(1500);
   }
-  await page.waitForTimeout(2500);
+
+  // Round-5 storefront: the seller's live items with a concrete "you earn ≈$X"
+  // per sale, so the promoter sees what they're selling and the upside.
+  await reveal(page, 'promote-storefront', 3500);
+  await reveal(page, 'promote-storefront-earn', 4000);
+
+  // The rail-scoped link + "what you earn" terms (rate / attribution window).
+  await reveal(page, 'promote-earn-terms', 4000);
 
   // 进入「View affiliate earnings」查看佣金 / 结算明细
   const earningsBtn = page
@@ -78,9 +110,12 @@ test('2 · promoter 带货：登录 → 生成 rail-scoped 链接 → 看佣金'
     await page.goto('/promote/commissions');
   }
   await passAuthGate(page, 'promote-commissions-auth-required');
-  await settle(page, 'promote-commissions-page', 4500);
+  await settle(page, 'promote-commissions-page', 3000);
 
-  // 佣金列表加载后向下滚动，把真实佣金条目（金额/状态/链上结算）展示出来。
+  // Round-5 earnings rollup: paid total per currency + paid/in-progress counts.
+  await reveal(page, 'seller-affiliate-earnings-summary-promoter', 4500);
+
+  // 向下滚动展示真实佣金条目（法币等值 / 状态 / 链上结算）。
   await page.mouse.wheel(0, 500);
   await page.waitForTimeout(2500);
   await page.mouse.wheel(0, 600);

@@ -166,8 +166,12 @@ export function anonymousGet<T>(
 ): Promise<T> {
   const url = `${getGatewayUrl()}${path}`;
   const headers = anonymousHeadersWithContext();
-  if (!options) return get<T>(url, headers);
-  return request<T>(url, { ...options, method: 'GET', headers });
+  return request<T>(url, {
+    ...options,
+    method: 'GET',
+    headers,
+    skipUnauthorizedHandler: true,
+  });
 }
 
 /** Public buyer mutation that preserves routing context but never sends user/admin credentials. */
@@ -178,8 +182,13 @@ export function anonymousPost<T>(
 ): Promise<T> {
   const url = `${getGatewayUrl()}${path}`;
   const headers = anonymousHeadersWithContext();
-  if (!options) return post<T>(url, body, headers);
-  return request<T>(url, { ...options, method: 'POST', body, headers });
+  return request<T>(url, {
+    ...options,
+    method: 'POST',
+    body,
+    headers,
+    skipUnauthorizedHandler: true,
+  });
 }
 
 export function publicSafeGet<T>(

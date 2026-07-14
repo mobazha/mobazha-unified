@@ -10,7 +10,7 @@ import {
   useRuntimeConfig,
 } from '@mobazha/core';
 import {
-  getGuestCheckoutSettings,
+  getSellerGuestCheckoutSettings,
   updateGuestCheckoutSettings,
   type GuestCheckoutSettings,
 } from '@mobazha/core/services/api/guestCheckout';
@@ -57,7 +57,7 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   useEffect(() => {
     let cancelled = false;
 
-    getGuestCheckoutSettings()
+    getSellerGuestCheckoutSettings()
       .then(res => {
         const serverCoins = res.acceptedCoins ?? [];
         preservedHiddenCoinsRef.current = serverCoins.filter(

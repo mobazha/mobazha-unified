@@ -30,6 +30,8 @@ export interface RequestOptions {
   keepalive?: boolean;
   /** If true, return the raw JSON without unwrapping the data envelope. */
   raw?: boolean;
+  /** Do not treat an expected anonymous 401 as an expired signed-in session. */
+  skipUnauthorizedHandler?: boolean;
   /** @internal Prevent infinite 401 retry loops. */
   _retried?: boolean;
   /** @internal Prevent infinite transient network retry loops. */
@@ -102,6 +104,7 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     signal: externalSignal,
     keepalive = false,
     raw = false,
+    skipUnauthorizedHandler = false,
     _retried = false,
     _networkRetried = false,
   } = options;
@@ -147,7 +150,12 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     const response = await fetch(url, requestInit);
 
     if (!response.ok) {
-      if (response.status === 401 && onUnauthorizedCallback && !_retried) {
+      if (
+        response.status === 401 &&
+        !skipUnauthorizedHandler &&
+        onUnauthorizedCallback &&
+        !_retried
+      ) {
         const isLocalNodeReject = isStandaloneBuyerAuth() && !url.startsWith(getBuyerGatewayUrl());
         // Basic-auth admin hitting a platform/hosting endpoint that only
         // accepts JWTs — the 401 is expected, not a session expiry signal.

@@ -82,6 +82,27 @@ export async function performCasdoorLogin(
     await page.waitForTimeout(2000);
   }
 
+  // The final waitForURL above resolves the moment the URL leaves /login (the
+  // app lands on `/`), but the OAuth code→hosting-signin exchange can still be
+  // in flight. If the caller navigates away now, that exchange is aborted and
+  // the user store is never populated — every subsequent page renders its
+  // signed-out gate. Block until the persisted Zustand store actually reports
+  // isAuthenticated so callers can safely goto() an authenticated route.
+  await page
+    .waitForFunction(
+      () => {
+        try {
+          const raw = window.localStorage.getItem('mobazha-user-storage');
+          return !!raw && JSON.parse(raw)?.state?.isAuthenticated === true;
+        } catch {
+          return false;
+        }
+      },
+      null,
+      { timeout: 20000 }
+    )
+    .catch(() => {});
+
   await page.waitForTimeout(1000);
 }
 

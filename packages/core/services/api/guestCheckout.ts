@@ -276,6 +276,19 @@ export function getGuestCheckoutSettings(options?: {
   return request.then(fromGuestCheckoutSettingsDTO);
 }
 
+/**
+ * Seller settings read for the admin surface.
+ *
+ * The public getter above deliberately strips credentials for buyer checkout.
+ * Seller management must retain the current auth token so the SaaS gateway can
+ * resolve the seller's node when no storefront routing context is present.
+ */
+export function getSellerGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
+  return authGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS).then(
+    fromGuestCheckoutSettingsDTO
+  );
+}
+
 export function updateGuestCheckoutSettings(
   settings: GuestCheckoutSettings
 ): Promise<GuestCheckoutSettings> {
