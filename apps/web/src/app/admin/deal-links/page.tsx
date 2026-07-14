@@ -70,6 +70,13 @@ function DealLinksHomeContent() {
     [router]
   );
 
+  const handleViewOrders = useCallback(
+    (link: SellerDealLink): void => {
+      router.push(`/admin/deal-links/${encodeURIComponent(link.id)}/orders`);
+    },
+    [router]
+  );
+
   const handleCopy = useCallback(
     async (publicToken: string): Promise<void> => {
       const link = links.find(item => item.publicToken === publicToken);
@@ -150,6 +157,7 @@ function DealLinksHomeContent() {
               onEdit={handleEdit}
               onPause={l => void handlePause(l)}
               onReactivate={l => void handleReactivate(l)}
+              onViewOrders={handleViewOrders}
             />
           ))}
         </CardContent>

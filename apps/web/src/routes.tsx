@@ -442,6 +442,10 @@ if (!__SOVEREIGN__) {
               path: ':id/edit',
               element: lazyPage(() => import('./app/admin/deal-links/[id]/edit/page')),
             },
+            {
+              path: ':id/orders',
+              element: lazyPage(() => import('./app/admin/deal-links/[id]/orders/page')),
+            },
           ],
         },
         {

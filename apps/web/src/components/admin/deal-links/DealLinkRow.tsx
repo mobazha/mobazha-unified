@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { Copy, ExternalLink, Loader2, Pause, Pencil, Play } from 'lucide-react';
+import { Copy, ExternalLink, Loader2, Pause, Pencil, Play, ShoppingBag } from 'lucide-react';
 import {
   buildSellerDealLinkBrowseHref,
   useCurrency,
@@ -22,6 +22,7 @@ export interface DealLinkRowProps {
   onEdit?: (link: SellerDealLink) => void;
   onPause?: (link: SellerDealLink) => void;
   onReactivate?: (link: SellerDealLink) => void;
+  onViewOrders?: (link: SellerDealLink) => void;
 }
 
 function formatDate(iso: string): string {
@@ -39,6 +40,7 @@ export const DealLinkRow = memo(function DealLinkRow({
   onEdit,
   onPause,
   onReactivate,
+  onViewOrders,
 }: DealLinkRowProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -60,6 +62,8 @@ export const DealLinkRow = memo(function DealLinkRow({
   // expired one. Gate on the raw status (not the expiry-derived one) so a
   // closed link with a past expiry does not offer an edit that always fails.
   const canEdit = link.status !== 'closed' && link.status !== 'draft';
+  // A draft link never produced an order; every other state might have.
+  const canViewOrders = link.status !== 'draft';
   // Pause/reactivate are true lifecycle transitions: pause only a live link,
   // reactivate only a paused-and-unexpired one (activating an expired link is
   // rejected — the seller must edit its expiry first).
@@ -113,6 +117,19 @@ export const DealLinkRow = memo(function DealLinkRow({
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
+        {canViewOrders && onViewOrders ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onViewOrders(link)}
+            data-testid={`deal-link-orders-${link.id}`}
+          >
+            <ShoppingBag className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            {t('admin.dealLinks.viewOrdersCta')}
+          </Button>
+        ) : null}
         {canEdit && onEdit ? (
           <Button
             type="button"
