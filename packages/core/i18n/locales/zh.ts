@@ -6911,6 +6911,7 @@ export const zh: PartialTranslationResource = {
       dealCreateSuccess: '受保护的购买链接已就绪',
       dealCreateFailed: '无法创建受保护的购买链接',
       activeDealsTitle: '已启用的受保护链接',
+      allLinksTitle: '全部链接',
       copyDealCta: '复制',
       openDealCta: '打开',
       dealCopySuccess: '购买链接已复制',
@@ -9219,6 +9220,7 @@ export const zh: PartialTranslationResource = {
     invalidRate: '佣金比例需大于 0 且不超过 100。',
     invalidWindow: '归因天数需为 0.01–365 之间的有效数字。',
     pausedHint: '暂停期间推广链接不会产生新佣金；已产生的佣金不受影响。',
+    statusDirtyHint: '请先保存或放弃当前修改，再启用或暂停计划。',
     noManualWorkflow:
       '订单资金释放时，佣金会经由下方结算通道自动付给推广者——没有审核队列、人工预算或申领流程。',
     saveProgram: '保存计划',

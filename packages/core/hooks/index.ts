@@ -29,6 +29,7 @@ export * from './useSellerAffiliateCapabilities';
 export * from './useSellerAffiliateLinks';
 export * from './useSellerAffiliateLink';
 export * from './useSellerAffiliateStatements';
+export * from './useSellerDealLinks';
 
 // 用户资料相关
 export * from './useProfile';

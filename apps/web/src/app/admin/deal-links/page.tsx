@@ -3,15 +3,10 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, ShieldCheck } from 'lucide-react';
-import {
-  buildSellerDealLinkBrowseHref,
-  listSellerDealLinks,
-  useI18n,
-  type SellerDealLink,
-} from '@mobazha/core';
+import { buildSellerDealLinkBrowseHref, useI18n, useSellerDealLinks } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -23,27 +18,9 @@ function DealLinksHomeContent() {
   const { t } = useI18n();
   const router = useRouter();
   const { toast } = useToast();
-  const [links, setLinks] = useState<SellerDealLink[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { links, loading, error, reload } = useSellerDealLinks();
   // Token whose manual-copy input is revealed after an automatic copy failed.
   const [manualCopyToken, setManualCopyToken] = useState('');
-
-  const reload = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(false);
-    try {
-      setLinks(await listSellerDealLinks());
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
 
   const handleCopy = useCallback(
     async (publicToken: string): Promise<void> => {
@@ -85,7 +62,7 @@ function DealLinksHomeContent() {
 
       <Card aria-busy={loading}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base">{t('admin.dealLinks.activeDealsTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('admin.dealLinks.allLinksTitle')}</CardTitle>
           <Button
             type="button"
             variant="ghost"

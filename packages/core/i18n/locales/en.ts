@@ -7599,6 +7599,7 @@ export const en: TranslationResource = {
       dealCreateSuccess: 'Protected purchase link is ready',
       dealCreateFailed: 'Could not create the protected purchase link',
       activeDealsTitle: 'Active protected links',
+      allLinksTitle: 'All links',
       copyDealCta: 'Copy',
       openDealCta: 'Open',
       dealCopySuccess: 'Purchase link copied',
@@ -10014,6 +10015,7 @@ export const en: TranslationResource = {
     invalidWindow: 'Attribution days must be a valid number between 0.01 and 365.',
     pausedHint:
       'While paused, promoter links stop earning new commissions; existing commissions are unaffected.',
+    statusDirtyHint: 'Save or discard your changes before enabling or pausing the program.',
     noManualWorkflow:
       'When order funds release, commissions pay promoters automatically over the rails below — no review queue, manual budget, or claim process.',
     saveProgram: 'Save program',

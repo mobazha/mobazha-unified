@@ -4,6 +4,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
+import type { SellerDealLink } from '@mobazha/core';
 
 const routerPushMock = vi.fn();
 const listSellerDealLinksMock = vi.fn();
@@ -22,6 +23,16 @@ vi.mock('@/lib/clipboard', () => ({
   copyToClipboard: (...args: unknown[]) => copyToClipboardMock(...args),
 }));
 
+// Mock the service, not the hook, so the real useSellerDealLinks runs and its
+// loading/error/reload wiring is exercised through the page.
+vi.mock('@mobazha/core/services/api/sellerDealLink', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core/services/api/sellerDealLink')>();
+  return {
+    ...actual,
+    listSellerDealLinks: (...args: unknown[]) => listSellerDealLinksMock(...args),
+  };
+});
+
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
   return {
@@ -30,21 +41,20 @@ vi.mock('@mobazha/core', async importOriginal => {
     useCurrency: () => ({
       formatPrice: (amount: string, currency: string) => `${amount} ${currency}`,
     }),
-    listSellerDealLinks: (...args: unknown[]) => listSellerDealLinksMock(...args),
   };
 });
 
 import AdminDealLinksPage from '@/app/admin/deal-links/page';
 
-const DEAL_LINK = {
+const DEAL_LINK: SellerDealLink = {
   id: 'deal-1',
   publicToken: 'tok_abc',
   publicPath: '/deal/tok_abc',
   sellerPeerID: 'seller-1',
-  status: 'active' as const,
+  status: 'active',
   currentRevision: 1,
   title: 'Premium onboarding call',
-  deliveryType: 'fixed_service' as const,
+  deliveryType: 'fixed_service',
   priceAmount: '120',
   priceCurrency: 'USD',
   terms: { acceptanceHours: 168, deliverables: ['Premium onboarding call'] },
@@ -61,7 +71,7 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
     toastMock.mockClear();
   });
 
-  it('lists the seller deal links returned by hosting', async () => {
+  it('lists the seller deal links from the hook', async () => {
     listSellerDealLinksMock.mockResolvedValue([DEAL_LINK]);
     render(<AdminDealLinksPage />);
 
@@ -99,7 +109,6 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
     render(<AdminDealLinksPage />);
 
     expect(await screen.findByText('admin.dealLinks.linksEmptyTitle')).toBeInTheDocument();
-    // The empty-state action and the header button both start the create flow.
     fireEvent.click(screen.getByTestId('deal-links-create'));
     expect(routerPushMock).toHaveBeenCalledWith('/admin/deal-links/new');
   });

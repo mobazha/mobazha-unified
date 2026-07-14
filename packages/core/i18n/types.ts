@@ -4018,6 +4018,7 @@ export interface TranslationResource {
       dealCreateSuccess?: string;
       dealCreateFailed?: string;
       activeDealsTitle?: string;
+      allLinksTitle?: string;
       copyDealCta?: string;
       openDealCta?: string;
       dealCopySuccess?: string;
@@ -5968,6 +5969,7 @@ export interface TranslationResource {
     invalidRate?: string;
     invalidWindow?: string;
     pausedHint?: string;
+    statusDirtyHint?: string;
     noManualWorkflow?: string;
     saveProgram?: string;
     programSaved?: string;

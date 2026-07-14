@@ -197,21 +197,44 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
   });
 
-  it('blocks the enable/pause toggle while the window is invalid', async () => {
-    getSellerAffiliateProgramMock.mockResolvedValue({
-      ...EXISTING_PROGRAM,
-      status: 'paused' as const,
-    });
+  it('does not let the status toggle commit unsaved form edits', async () => {
+    // Editing the commission but clicking pause must not persist the edit; the
+    // toggle is a status-only action and is blocked until the form is saved or
+    // reset. This guards against pausing silently writing an unsaved rate.
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
     render(<SellerAffiliateProgramPanel />);
-    await waitFor(() => expect(screen.getByTestId('affiliate-status-toggle')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
+    );
 
-    // A corrupted window must not let the toggle push an unsaveable config.
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
-      target: { value: '999' },
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.commissionRate'), {
+      target: { value: '15' },
     });
+    expect(screen.getByTestId('affiliate-status-dirty-hint')).toHaveTextContent(
+      'sellerAffiliate.statusDirtyHint'
+    );
     expect(screen.getByTestId('affiliate-status-toggle')).toBeDisabled();
     fireEvent.click(screen.getByTestId('affiliate-status-toggle'));
     expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
+  });
+
+  it('toggles status using the persisted rate and window, not the form', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    putSellerAffiliateProgramMock.mockResolvedValue({ ...EXISTING_PROGRAM, status: 'paused' });
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() =>
+      expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'active')
+    );
+
+    fireEvent.click(screen.getByTestId('affiliate-status-toggle'));
+
+    await waitFor(() =>
+      expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith({
+        status: 'paused',
+        commissionRateBPS: EXISTING_PROGRAM.commissionRateBPS,
+        attributionWindowSeconds: EXISTING_PROGRAM.attributionWindowSeconds,
+      })
+    );
   });
 
   it('saves valid input and clears a previous validation error', async () => {

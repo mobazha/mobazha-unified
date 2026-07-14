@@ -96,6 +96,12 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   // from the "too short" advice, which flags a valid-but-weak window.
   const windowInvalid = windowDays.trim() !== '' && effectiveWindowSeconds === null;
   const formInvalid = rateInvalid || windowInvalid;
+  // The form differs from what is persisted. Compared against the exact strings
+  // the fields hydrate to, so an untouched form is never seen as dirty.
+  const dirty =
+    program !== null &&
+    (rate !== String(program.commissionRateBPS / 100) ||
+      windowDays !== sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
 
   // Save persists the form at an explicit status. First-time creation activates;
   // an existing program keeps its status on save and flips it only through the
@@ -134,6 +140,27 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     },
     [effectiveWindowSeconds, rate, save, t]
   );
+
+  // Enable/pause is a status-only action: it persists the program's stored rate
+  // and window, never the form's possibly-edited values, so pausing can't
+  // silently commit an unsaved commission change. The button is disabled while
+  // the form is dirty, so this path only ever runs on an untouched form.
+  const handleToggleStatus = useCallback(async (): Promise<void> => {
+    if (!program) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await save({
+        status: program.status === 'active' ? 'paused' : 'active',
+        commissionRateBPS: program.commissionRateBPS,
+        attributionWindowSeconds: program.attributionWindowSeconds,
+      });
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  }, [program, save, t]);
 
   const handleCopyPromoterInvite = useCallback(async (): Promise<void> => {
     if (!program || typeof window === 'undefined') return;
@@ -200,8 +227,8 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
                 variant="outline"
                 size="sm"
                 className="min-h-11 sm:min-h-9"
-                onClick={() => void handleSave(program.status === 'active' ? 'paused' : 'active')}
-                disabled={loading || saving || formInvalid}
+                onClick={() => void handleToggleStatus()}
+                disabled={loading || saving || dirty}
                 data-testid="affiliate-status-toggle"
               >
                 {t(
@@ -211,7 +238,14 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
                 )}
               </Button>
             </div>
-            {program.status === 'paused' ? (
+            {dirty ? (
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="affiliate-status-dirty-hint"
+              >
+                {t('sellerAffiliate.statusDirtyHint')}
+              </p>
+            ) : program.status === 'paused' ? (
               <p className="text-xs text-muted-foreground" data-testid="affiliate-paused-hint">
                 {t('sellerAffiliate.pausedHint')}
               </p>
