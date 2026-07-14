@@ -299,7 +299,10 @@ export type { SellerDealLink, SellerDealLinkRequest } from '../../types/sellerDe
 export {
   activateSellerDealLink,
   createSellerDealLink,
+  getSellerDealLink,
   listSellerDealLinks,
+  pauseSellerDealLink,
+  updateSellerDealLink,
 } from './sellerDealLink';
 
 // Store payment policy API

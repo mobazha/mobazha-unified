@@ -8,7 +8,7 @@
 import { HOSTING_API } from '../../config/apiPaths';
 import type { SellerDealLink, SellerDealLinkRequest } from '../../types/sellerDealLink';
 import { normalizeSellerDealLink } from '../../utils/sellerDealLink';
-import { hostingGet, hostingPost } from './helpers';
+import { hostingGet, hostingPost, hostingPut } from './helpers';
 
 function unwrapList(raw: unknown): Record<string, unknown>[] {
   if (Array.isArray(raw)) {
@@ -56,11 +56,44 @@ export async function createSellerDealLink(
   return normalizeSellerDealLink(unwrapRecord(raw));
 }
 
+export async function getSellerDealLink(
+  dealLinkId: string,
+  options?: { signal?: AbortSignal }
+): Promise<SellerDealLink> {
+  const raw = await hostingGet<unknown>(HOSTING_API.DEAL_LINKS_BY_ID(dealLinkId));
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeSellerDealLink(unwrapRecord(raw));
+}
+
+/**
+ * Persists an edit as a NEW revision (the backend increments currentRevision
+ * and keeps prior versions, so orders placed against an earlier revision keep
+ * their original terms). Rejected by the backend once a link is closed.
+ */
+export async function updateSellerDealLink(
+  dealLinkId: string,
+  body: SellerDealLinkRequest,
+  options?: { signal?: AbortSignal }
+): Promise<SellerDealLink> {
+  const raw = await hostingPut<unknown>(HOSTING_API.DEAL_LINKS_BY_ID(dealLinkId), body);
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeSellerDealLink(unwrapRecord(raw));
+}
+
 export async function activateSellerDealLink(
   dealLinkId: string,
   options?: { signal?: AbortSignal }
 ): Promise<SellerDealLink> {
   const raw = await hostingPost<unknown>(HOSTING_API.DEAL_LINKS_ACTIVATE(dealLinkId), undefined);
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeSellerDealLink(unwrapRecord(raw));
+}
+
+export async function pauseSellerDealLink(
+  dealLinkId: string,
+  options?: { signal?: AbortSignal }
+): Promise<SellerDealLink> {
+  const raw = await hostingPost<unknown>(HOSTING_API.DEAL_LINKS_PAUSE(dealLinkId), undefined);
   if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   return normalizeSellerDealLink(unwrapRecord(raw));
 }

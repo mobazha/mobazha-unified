@@ -1,8 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
+import type { DealLinkPurchaseTemplate } from '../types/dealLink';
 import type { SellerDealLink } from '../types/sellerDealLink';
 import { parseDealLinkTerms } from './dealLink';
+
+function parsePurchaseTemplate(value: unknown): DealLinkPurchaseTemplate | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const raw = value as Record<string, unknown>;
+  const listingHash = readString(raw.listingHash);
+  if (!listingHash) return undefined;
+  const options = Array.isArray(raw.options)
+    ? (raw.options as DealLinkPurchaseTemplate['options'])
+    : null;
+  const optionalFeatures = Array.isArray(raw.optionalFeatures)
+    ? (raw.optionalFeatures as string[])
+    : null;
+  return {
+    listingHash,
+    quantity: readRequiredString(raw.quantity, '1'),
+    options,
+    optionalFeatures,
+  };
+}
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
@@ -35,6 +55,7 @@ export function normalizeSellerDealLink(raw: Record<string, unknown>): SellerDea
     priceAmount: readRequiredString(raw.priceAmount, '0'),
     priceCurrency: readRequiredString(raw.priceCurrency, 'USD'),
     terms: parseDealLinkTerms(raw.terms),
+    purchaseTemplate: parsePurchaseTemplate(raw.purchaseTemplate),
     termsHash: readRequiredString(raw.termsHash),
     expiresAt: readString(raw.expiresAt),
     createdAt: readRequiredString(raw.createdAt),

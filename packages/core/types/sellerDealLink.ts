@@ -33,6 +33,8 @@ export interface SellerDealLink {
   priceAmount: string;
   priceCurrency: string;
   terms: DealLinkTerms;
+  /** The catalog-bound purchase template; needed to re-submit an edit (PUT). */
+  purchaseTemplate?: DealLinkPurchaseTemplate;
   termsHash: string;
   expiresAt?: string;
   createdAt: string;
