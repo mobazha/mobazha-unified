@@ -141,8 +141,14 @@ export interface SellerAffiliateEarningsSummary {
   paidOrders: number;
   /** Orders still in the pending/settling pipeline (not yet paid, not reversed). */
   pendingOrders: number;
+  /** Orders whose commission was reversed or is awaiting clawback. */
+  reversedOrders: number;
+  /** Distinct promoters credited with at least one attributed order. */
+  convertingPromoters: number;
   /** Confirmed-paid commission summed per currency, so mixed rails never cross-sum. */
   paidByCurrency: { currency: string; commissionAtomic: string }[];
+  /** In-flight (pending/settling) commission summed per currency; money not yet paid out. */
+  pendingByCurrency: { currency: string; commissionAtomic: string }[];
 }
 
 /**
@@ -155,17 +161,30 @@ export function summarizeSellerAffiliateEarnings(
 ): SellerAffiliateEarningsSummary {
   let paidOrders = 0;
   let pendingOrders = 0;
+  let reversedOrders = 0;
   const paidTotals = new Map<string, bigint>();
-  const currencyOrder: string[] = [];
+  const paidCurrencyOrder: string[] = [];
+  const pendingTotals = new Map<string, bigint>();
+  const pendingCurrencyOrder: string[] = [];
+  const promoters = new Set<string>();
 
   for (const group of groups) {
+    for (const groupLine of group.lines) {
+      const promoter = groupLine.attribution.promoterPeerID;
+      if (promoter) promoters.add(promoter);
+    }
     if (group.displayStatus === 'paid') {
       paidOrders += 1;
       const prior = paidTotals.get(group.currency);
-      if (prior === undefined) currencyOrder.push(group.currency);
+      if (prior === undefined) paidCurrencyOrder.push(group.currency);
       paidTotals.set(group.currency, (prior ?? BigInt(0)) + BigInt(group.commissionAtomic));
     } else if (group.displayStatus === 'pending' || group.displayStatus === 'settling') {
       pendingOrders += 1;
+      const prior = pendingTotals.get(group.currency);
+      if (prior === undefined) pendingCurrencyOrder.push(group.currency);
+      pendingTotals.set(group.currency, (prior ?? BigInt(0)) + BigInt(group.commissionAtomic));
+    } else if (group.displayStatus === 'reversed' || group.displayStatus === 'clawback_due') {
+      reversedOrders += 1;
     }
   }
 
@@ -173,9 +192,15 @@ export function summarizeSellerAffiliateEarnings(
     totalOrders: groups.length,
     paidOrders,
     pendingOrders,
-    paidByCurrency: currencyOrder.map(currency => ({
+    reversedOrders,
+    convertingPromoters: promoters.size,
+    paidByCurrency: paidCurrencyOrder.map(currency => ({
       currency,
       commissionAtomic: (paidTotals.get(currency) as bigint).toString(),
+    })),
+    pendingByCurrency: pendingCurrencyOrder.map(currency => ({
+      currency,
+      commissionAtomic: (pendingTotals.get(currency) as bigint).toString(),
     })),
   };
 }

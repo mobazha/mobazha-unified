@@ -9243,6 +9243,8 @@ export const zh: PartialTranslationResource = {
     earningsPaidLabel: '已到账',
     earningsInProgressLabel: '进行中',
     earningsOrders: '{{count}} 笔订单',
+    earningsPromotersLabel: '成交推广者',
+    earningsReversedLabel: '已冲回',
     invalidProgram: '请输入 0–100% 的佣金比例，以及不少于 0.01 天的归因窗口。',
     invalidRate: '佣金比例需大于 0 且不超过 100。',
     invalidWindow: '归因天数需为 0.01–365 之间的有效数字。',

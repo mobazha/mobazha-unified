@@ -10039,6 +10039,8 @@ export const en: TranslationResource = {
     earningsPaidLabel: 'Paid out',
     earningsInProgressLabel: 'In progress',
     earningsOrders: '{{count}} orders',
+    earningsPromotersLabel: 'Converting promoters',
+    earningsReversedLabel: 'Reversed',
     invalidProgram:
       'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
     invalidRate: 'Commission must be greater than 0 and at most 100.',

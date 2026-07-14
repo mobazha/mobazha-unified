@@ -5992,6 +5992,8 @@ export interface TranslationResource {
     earningsPaidLabel?: string;
     earningsInProgressLabel?: string;
     earningsOrders?: string;
+    earningsPromotersLabel?: string;
+    earningsReversedLabel?: string;
     invalidProgram?: string;
     invalidRate?: string;
     invalidWindow?: string;

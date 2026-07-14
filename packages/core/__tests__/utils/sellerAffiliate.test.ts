@@ -235,6 +235,7 @@ interface LineOverrides {
   currency?: string;
   commissionAtomic?: string;
   status?: string;
+  promoterPeerID?: string;
   settlement?: {
     actionId?: string;
     state?: 'planned' | 'submitted' | 'confirmed';
@@ -256,7 +257,7 @@ function line(overrides: LineOverrides = {}): SellerAffiliateStatementLine {
       sellerPeerID: 'seller-1',
       buyerKind: 'peer',
       buyerPeerID: 'buyer-1',
-      promoterPeerID: 'promoter-1',
+      promoterPeerID: overrides.promoterPeerID ?? 'promoter-1',
       commissionRateBPSSnapshot: 1000,
       attributedAt: '2026-07-11T00:00:00Z',
     },
@@ -544,6 +545,9 @@ describe('summarizeSellerAffiliateEarnings', () => {
     expect(summary.totalOrders).toBe(6);
     expect(summary.paidOrders).toBe(3);
     expect(summary.pendingOrders).toBe(2);
+    expect(summary.reversedOrders).toBe(1);
+    // All six orders were driven by the same promoter.
+    expect(summary.convertingPromoters).toBe(1);
     expect(summary.paidByCurrency).toEqual([
       { currency: 'crypto:eip155:1:native', commissionAtomic: '350' },
       {
@@ -551,6 +555,20 @@ describe('summarizeSellerAffiliateEarnings', () => {
         commissionAtomic: '77',
       },
     ]);
+    // The two in-flight ETH orders (settling o4 + pending o5) sum in-flight money.
+    expect(summary.pendingByCurrency).toEqual([
+      { currency: 'crypto:eip155:1:native', commissionAtomic: '200' },
+    ]);
+  });
+
+  it('counts distinct converting promoters', () => {
+    const groups = groupSellerAffiliateStatementLines([
+      line({ orderID: 'o1', promoterPeerID: 'promoter-a' }),
+      line({ orderID: 'o2', promoterPeerID: 'promoter-b' }),
+      line({ orderID: 'o3', promoterPeerID: 'promoter-a' }),
+    ]);
+
+    expect(summarizeSellerAffiliateEarnings(groups).convertingPromoters).toBe(2);
   });
 
   it('is all-zero for an empty statement', () => {
@@ -558,7 +576,10 @@ describe('summarizeSellerAffiliateEarnings', () => {
       totalOrders: 0,
       paidOrders: 0,
       pendingOrders: 0,
+      reversedOrders: 0,
+      convertingPromoters: 0,
       paidByCurrency: [],
+      pendingByCurrency: [],
     });
   });
 });
