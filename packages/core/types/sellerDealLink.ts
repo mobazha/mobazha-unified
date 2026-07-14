@@ -44,8 +44,12 @@ export interface SellerDealLink {
 /** One order produced by a Deal Link acceptance, for the seller's per-link order list. */
 export interface SellerDealLinkOrder {
   orderID: string;
-  /** Acceptance lifecycle status (e.g. completed, processing, manual_review). */
-  status: string;
+  /**
+   * The Deal Link *acceptance* lifecycle status (processing/completed/failed/
+   * manual_review) — NOT the order's own lifecycle. 'completed' means the Node
+   * order was created, not that it was paid, shipped, or fulfilled.
+   */
+  acceptanceStatus: string;
   buyerPeerID: string;
   pricingCoin?: string;
   /** Order amount in the pricing coin's minimal units. */

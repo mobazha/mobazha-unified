@@ -72,6 +72,11 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(screen.getByTestId('affiliate-status-toggle')).toHaveTextContent(
       'sellerAffiliate.pauseProgram'
     );
+    // On first load, once hydrated, the form must not read as dirty: the toggle
+    // stays enabled and no dirty hint appears (regression guard for the
+    // pre-hydration render comparing placeholder defaults against the server).
+    expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
+    expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
   });
 
   it('shows a load error without blocking the form for a first-time (no program) seller', async () => {
@@ -366,6 +371,76 @@ describe('SellerAffiliateProgramPanel', () => {
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('save_rejected');
+  });
+
+  it('re-hydrates without a false dirty state when the program prop switches to a different program', async () => {
+    // Simulates the parent page swapping in a different program's already-loaded
+    // state (e.g. navigating between sellers) rather than a fresh fetch.
+    const programA = {
+      ...EXISTING_PROGRAM,
+      id: 'program-a',
+      commissionRateBPS: 500,
+      attributionWindowSeconds: 3 * 86_400,
+    };
+    const programB = {
+      ...EXISTING_PROGRAM,
+      id: 'program-b',
+      commissionRateBPS: 2000,
+      attributionWindowSeconds: 14 * 86_400,
+    };
+    const stateA = {
+      program: programA,
+      loading: false,
+      error: null,
+      reload: vi.fn(),
+      save: vi.fn(),
+    };
+    const stateB = {
+      program: programB,
+      loading: false,
+      error: null,
+      reload: vi.fn(),
+      save: vi.fn(),
+    };
+
+    const { rerender } = render(<SellerAffiliateProgramPanel programState={stateA} />);
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('5')
+    );
+
+    rerender(<SellerAffiliateProgramPanel programState={stateB} />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('20')
+    );
+    expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('14');
+    expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
+    expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
+  });
+
+  it('clears the dirty state once a save persists the edited rate and window', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    putSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      commissionRateBPS: 1500,
+    });
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
+    );
+
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.commissionRate'), {
+      target: { value: '15' },
+    });
+    expect(screen.getByTestId('affiliate-status-toggle')).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('15')
+    );
+    expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
+    expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
   });
 
   it('pauses an active program through the dedicated toggle', async () => {

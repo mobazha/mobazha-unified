@@ -4104,6 +4104,8 @@ export interface TranslationResource {
       editDealCta?: string;
       pauseDealCta?: string;
       reactivateDealCta?: string;
+      activateDraftCta?: string;
+      closeDealCta?: string;
       createdLabel?: string;
       dealExpiresLabel?: string;
       noExpiryLabel?: string;
@@ -4111,6 +4113,12 @@ export interface TranslationResource {
       dealPauseFailed?: string;
       dealReactivateSuccess?: string;
       dealReactivateFailed?: string;
+      draftSavedActivateFailed?: string;
+      dealCloseSuccess?: string;
+      dealCloseFailed?: string;
+      closeConfirmTitle?: string;
+      closeConfirmBody?: string;
+      closeConfirmCta?: string;
       viewOrdersCta?: string;
       ordersTitle?: string;
       ordersSubtitle?: string;
@@ -4123,6 +4131,10 @@ export interface TranslationResource {
       orderStatusProcessing?: string;
       orderStatusManualReview?: string;
       orderStatusFailed?: string;
+      ordersStatusNote?: string;
+      ordersRangeLabel?: string;
+      ordersPrevPage?: string;
+      ordersNextPage?: string;
       programsEmptyTitle?: string;
       programsEmptyDescription?: string;
       programsFilterLabel?: string;

@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   activateSellerDealLink,
+  closeSellerDealLink,
   createSellerDealLink,
   listSellerDealLinkOrders,
   listSellerDealLinks,
@@ -75,13 +76,13 @@ describe('seller Deal Link API service', () => {
     expect(active.status).toBe('active');
   });
 
-  it('lists the orders placed through a Deal Link', async () => {
+  it('lists the orders placed through a Deal Link, reading the acceptanceStatus field', async () => {
     vi.mocked(hostingGet).mockResolvedValue({
       data: {
         items: [
           {
             orderID: 'order-1',
-            status: 'completed',
+            acceptanceStatus: 'completed',
             buyerPeerID: 'buyer-peer',
             pricingCoin: 'USD',
             amount: '12500',
@@ -100,7 +101,32 @@ describe('seller Deal Link API service', () => {
     expect(hostingGet).toHaveBeenCalledWith('/platform/v1/deal-links/deal-1/orders');
     expect(page.total).toBe(1);
     expect(page.items[0]?.orderID).toBe('order-1');
+    // Renamed from `status`: this reflects whether the Node order was created,
+    // not whether it was paid, shipped, or fulfilled — see sellerDealLink.ts.
+    expect(page.items[0]?.acceptanceStatus).toBe('completed');
     expect(page.items[0]?.currencyDivisibility).toBe(2);
+  });
+
+  it('falls back to a legacy `status` field for orders normalized before the rename', async () => {
+    vi.mocked(hostingGet).mockResolvedValue({
+      data: {
+        items: [
+          {
+            orderID: 'order-legacy',
+            status: 'processing',
+            buyerPeerID: 'buyer-peer',
+            createdAt: '2026-07-10T00:00:00Z',
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      },
+    });
+
+    const page = await listSellerDealLinkOrders('deal-1');
+
+    expect(page.items[0]?.acceptanceStatus).toBe('processing');
   });
 
   it('forwards pagination params when listing Deal Link orders', async () => {
@@ -113,5 +139,14 @@ describe('seller Deal Link API service', () => {
     expect(hostingGet).toHaveBeenCalledWith(
       '/platform/v1/deal-links/deal-1/orders?limit=10&offset=20'
     );
+  });
+
+  it('closes a Deal Link into its terminal state', async () => {
+    vi.mocked(hostingPost).mockResolvedValue({ data: { ...rawDealLink, status: 'closed' } });
+
+    const closed = await closeSellerDealLink('deal-1');
+
+    expect(hostingPost).toHaveBeenCalledWith('/platform/v1/deal-links/deal-1/close', undefined);
+    expect(closed.status).toBe('closed');
   });
 });

@@ -118,3 +118,17 @@ export async function pauseSellerDealLink(
   if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   return normalizeSellerDealLink(unwrapRecord(raw));
 }
+
+/**
+ * Retires a Deal Link into the terminal closed state. A closed link can no
+ * longer be purchased, activated, paused, or edited, but its historical orders
+ * remain. Closing an already-closed link is idempotent on the backend.
+ */
+export async function closeSellerDealLink(
+  dealLinkId: string,
+  options?: { signal?: AbortSignal }
+): Promise<SellerDealLink> {
+  const raw = await hostingPost<unknown>(HOSTING_API.DEAL_LINKS_CLOSE(dealLinkId), undefined);
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeSellerDealLink(unwrapRecord(raw));
+}

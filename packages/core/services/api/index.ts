@@ -303,6 +303,7 @@ export type {
 } from '../../types/sellerDealLink';
 export {
   activateSellerDealLink,
+  closeSellerDealLink,
   createSellerDealLink,
   getSellerDealLink,
   listSellerDealLinkOrders,

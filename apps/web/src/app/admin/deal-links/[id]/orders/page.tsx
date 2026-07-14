@@ -1,10 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Loader2, ShoppingBag } from 'lucide-react';
 import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  ShoppingBag,
+} from 'lucide-react';
+import {
+  getPaymentCoinDisplayLabel,
+  renderPairedPrice,
   truncateAddress,
+  useCurrencyFormat,
   useI18n,
   useSellerDealLink,
   useSellerDealLinkOrders,
@@ -14,6 +24,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 
+const PAGE_SIZE = 20;
+
+// Acceptance lifecycle → label. 'completed' deliberately reads "Order created"
+// (not "Completed"): it means the Node order was generated, not that it was
+// paid, shipped, or fulfilled.
 const STATUS_KEY: Record<string, string> = {
   completed: 'admin.dealLinks.orderStatusCompleted',
   processing: 'admin.dealLinks.orderStatusProcessing',
@@ -43,6 +58,8 @@ function formatDate(iso: string): string {
 function OrderRow({ order }: { order: SellerDealLinkOrder }) {
   const { t } = useI18n();
   const router = useRouter();
+  const { localCurrency } = useCurrencyFormat();
+  const hasAmount = Boolean(order.amount && order.pricingCoin);
   return (
     <div
       className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -55,17 +72,33 @@ function OrderRow({ order }: { order: SellerDealLinkOrder }) {
           </p>
           <span
             className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-              STATUS_CLASS[order.status] ?? 'bg-muted text-muted-foreground'
+              STATUS_CLASS[order.acceptanceStatus] ?? 'bg-muted text-muted-foreground'
             }`}
-            data-status={order.status}
+            data-status={order.acceptanceStatus}
           >
-            {t(STATUS_KEY[order.status] ?? 'admin.dealLinks.statusUnknown')}
+            {t(STATUS_KEY[order.acceptanceStatus] ?? 'admin.dealLinks.statusUnknown')}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
           {t('admin.dealLinks.orderBuyerLabel')}: {truncateAddress(order.buyerPeerID)}
           {' · '}
           {formatDate(order.createdAt)}
+          {hasAmount ? (
+            <>
+              {' · '}
+              <span className="font-medium text-foreground">
+                {getPaymentCoinDisplayLabel(order.pricingCoin as string)}{' '}
+                {renderPairedPrice(
+                  order.amount as string,
+                  order.pricingCoin as string,
+                  localCurrency,
+                  {
+                    isMinimalUnit: true,
+                  }
+                )}
+              </span>
+            </>
+          ) : null}
         </p>
       </div>
       <Button
@@ -88,7 +121,27 @@ function DealLinkOrdersPageContent() {
   const params = useParams();
   const dealLinkId = String(params?.id ?? '');
   const { link } = useSellerDealLink(dealLinkId);
-  const { orders, total, loading, error } = useSellerDealLinkOrders(dealLinkId);
+
+  // Order history is append-only, so total only grows: paging forward is gated
+  // by canNext (disabled once the last row is shown), which keeps the offset in
+  // range without any clamp/effect.
+  const [page, setPage] = useState(0);
+  const offset = page * PAGE_SIZE;
+
+  const {
+    orders,
+    total: fetchedTotal,
+    loading,
+    error,
+  } = useSellerDealLinkOrders(dealLinkId, {
+    limit: PAGE_SIZE,
+    offset,
+  });
+
+  const from = fetchedTotal === 0 ? 0 : offset + 1;
+  const to = offset + orders.length;
+  const canPrev = page > 0 && !loading;
+  const canNext = to < fetchedTotal && !loading;
 
   return (
     <div className="space-y-6" data-testid="admin-deal-links-orders-page">
@@ -115,13 +168,16 @@ function DealLinkOrdersPageContent() {
       <Card aria-busy={loading}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">{t('admin.dealLinks.ordersTitle')}</CardTitle>
-          {!loading && !error && total > 0 ? (
-            <span className="text-xs text-muted-foreground">
-              {t('admin.dealLinks.ordersCountLabel', { count: total })}
+          {!loading && !error && fetchedTotal > 0 ? (
+            <span className="text-xs text-muted-foreground" data-testid="deal-link-orders-range">
+              {t('admin.dealLinks.ordersRangeLabel', { from, to, total: fetchedTotal })}
             </span>
           ) : null}
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
+            {t('admin.dealLinks.ordersStatusNote')}
+          </p>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
@@ -137,7 +193,42 @@ function DealLinkOrdersPageContent() {
               description={t('admin.dealLinks.ordersSubtitle')}
             />
           ) : (
-            orders.map(order => <OrderRow key={order.orderID} order={order} />)
+            <>
+              {orders.map(order => (
+                <OrderRow key={order.orderID} order={order} />
+              ))}
+              {fetchedTotal > PAGE_SIZE ? (
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 sm:min-h-9"
+                    disabled={!canPrev}
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    data-testid="deal-link-orders-prev"
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+                    {t('admin.dealLinks.ordersPrevPage')}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {t('admin.dealLinks.ordersRangeLabel', { from, to, total: fetchedTotal })}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 sm:min-h-9"
+                    disabled={!canNext}
+                    onClick={() => setPage(p => p + 1)}
+                    data-testid="deal-link-orders-next"
+                  >
+                    {t('admin.dealLinks.ordersNextPage')}
+                    <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              ) : null}
+            </>
           )}
         </CardContent>
       </Card>

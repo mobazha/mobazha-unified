@@ -8,6 +8,7 @@ import type { SellerDealLink } from '@mobazha/core';
 
 const routerPushMock = vi.fn();
 const listSellerDealLinksMock = vi.fn();
+const closeSellerDealLinkMock = vi.fn();
 const copyToClipboardMock = vi.fn();
 const toastMock = vi.fn();
 
@@ -30,6 +31,7 @@ vi.mock('@mobazha/core/services/api/sellerDealLink', async importOriginal => {
   return {
     ...actual,
     listSellerDealLinks: (...args: unknown[]) => listSellerDealLinksMock(...args),
+    closeSellerDealLink: (...args: unknown[]) => closeSellerDealLinkMock(...args),
   };
 });
 
@@ -67,6 +69,7 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
   beforeEach(() => {
     routerPushMock.mockClear();
     listSellerDealLinksMock.mockReset();
+    closeSellerDealLinkMock.mockReset();
     copyToClipboardMock.mockReset();
     toastMock.mockClear();
   });
@@ -118,6 +121,75 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
     render(<AdminDealLinksPage />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('admin.dealLinks.loadFailed');
+  });
+
+  it('shows an activate CTA for a draft link so a failed activation can be retried', async () => {
+    listSellerDealLinksMock.mockResolvedValue([{ ...DEAL_LINK, status: 'draft' }]);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    expect(screen.getByTestId('deal-link-activate-deal-1')).toBeInTheDocument();
+    // A draft is still editable (it never produced an order) and closable.
+    expect(screen.getByTestId('deal-link-edit-deal-1')).toBeInTheDocument();
+    expect(screen.getByTestId('deal-link-close-deal-1')).toBeInTheDocument();
+  });
+
+  it('closes a link after confirming, and reloads the list', async () => {
+    listSellerDealLinksMock
+      .mockResolvedValueOnce([DEAL_LINK])
+      .mockResolvedValueOnce([{ ...DEAL_LINK, status: 'closed' }]);
+    closeSellerDealLinkMock.mockResolvedValue(undefined);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    fireEvent.click(screen.getByTestId('deal-link-close-deal-1'));
+
+    // The destructive action is gated behind a confirm dialog, not a native
+    // window.confirm.
+    const confirmButton = await screen.findByText('admin.dealLinks.closeConfirmCta');
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => expect(closeSellerDealLinkMock).toHaveBeenCalledWith('deal-1'));
+    await waitFor(() =>
+      expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'closed')
+    );
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'admin.dealLinks.dealCloseSuccess' })
+    );
+  });
+
+  it('surfaces a failure toast without closing the dialog’s target state when close fails', async () => {
+    listSellerDealLinksMock.mockResolvedValue([DEAL_LINK]);
+    closeSellerDealLinkMock.mockRejectedValue(new Error('boom'));
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    fireEvent.click(screen.getByTestId('deal-link-close-deal-1'));
+    fireEvent.click(await screen.findByText('admin.dealLinks.closeConfirmCta'));
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: 'admin.dealLinks.dealCloseFailed',
+        })
+      )
+    );
+    // The link is still shown as active — the failed close did not corrupt state.
+    expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'active');
+  });
+
+  it('a closed link only offers to view orders — no edit, activate, close, or copy', async () => {
+    listSellerDealLinksMock.mockResolvedValue([{ ...DEAL_LINK, status: 'closed' }]);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    expect(screen.getByTestId('deal-link-orders-deal-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('deal-link-edit-deal-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('deal-link-activate-deal-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('deal-link-reactivate-deal-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('deal-link-close-deal-1')).not.toBeInTheDocument();
+    expect(screen.queryByText('admin.dealLinks.copyDealCta')).not.toBeInTheDocument();
   });
 
   it('reveals the manual-copy input when clipboard access is blocked', async () => {

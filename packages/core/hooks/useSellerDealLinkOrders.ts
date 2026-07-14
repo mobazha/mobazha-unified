@@ -7,6 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { listSellerDealLinkOrders } from '../services/api/sellerDealLink';
 import type { SellerDealLinkOrder } from '../types/sellerDealLink';
 
+export interface UseSellerDealLinkOrdersOptions {
+  /** Page size (1–100). Defaults to the backend default when omitted. */
+  limit?: number;
+  /** Row offset into the full result set. */
+  offset?: number;
+}
+
 export interface UseSellerDealLinkOrdersReturn {
   orders: SellerDealLinkOrder[];
   total: number;
@@ -17,11 +24,17 @@ export interface UseSellerDealLinkOrdersReturn {
 
 /**
  * The orders a seller's Deal Link produced, for the admin per-link order view.
- * A monotonic request id guards against races: a slow in-flight load (or one
- * left in flight at unmount) never overwrites the result of a newer reload.
+ * limit/offset are part of the effect key, so changing the page re-fetches. A
+ * monotonic request id guards against races: a slow in-flight load (or one left
+ * in flight at unmount) never overwrites the result of a newer reload.
  */
-export function useSellerDealLinkOrders(dealLinkId: string): UseSellerDealLinkOrdersReturn {
+export function useSellerDealLinkOrders(
+  dealLinkId: string,
+  options?: UseSellerDealLinkOrdersOptions
+): UseSellerDealLinkOrdersReturn {
   const enabled = dealLinkId.trim() !== '';
+  const limit = options?.limit;
+  const offset = options?.offset;
   const [orders, setOrders] = useState<SellerDealLinkOrder[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(enabled);
@@ -40,7 +53,7 @@ export function useSellerDealLinkOrders(dealLinkId: string): UseSellerDealLinkOr
     setLoading(true);
     setError(null);
     try {
-      const page = await listSellerDealLinkOrders(dealLinkId);
+      const page = await listSellerDealLinkOrders(dealLinkId, { limit, offset });
       if (!mountedRef.current || requestRef.current !== requestID) return;
       setOrders(page.items);
       setTotal(page.total);
@@ -50,7 +63,7 @@ export function useSellerDealLinkOrders(dealLinkId: string): UseSellerDealLinkOr
     } finally {
       if (mountedRef.current && requestRef.current === requestID) setLoading(false);
     }
-  }, [dealLinkId, enabled]);
+  }, [dealLinkId, enabled, limit, offset]);
 
   useEffect(() => {
     mountedRef.current = true;

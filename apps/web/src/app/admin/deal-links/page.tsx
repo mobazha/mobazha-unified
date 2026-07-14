@@ -9,6 +9,7 @@ import { Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import {
   activateSellerDealLink,
   buildSellerDealLinkBrowseHref,
+  closeSellerDealLink,
   pauseSellerDealLink,
   useI18n,
   useSellerDealLinks,
@@ -16,6 +17,7 @@ import {
 } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/use-toast';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -28,8 +30,10 @@ function DealLinksHomeContent() {
   const { links, loading, error, reload } = useSellerDealLinks();
   // Token whose manual-copy input is revealed after an automatic copy failed.
   const [manualCopyToken, setManualCopyToken] = useState('');
-  // Id of the link whose pause/reactivate request is in flight.
+  // Id of the link whose pause/reactivate/close request is in flight.
   const [busyId, setBusyId] = useState('');
+  // Link awaiting close confirmation; drives the confirm dialog.
+  const [closeTarget, setCloseTarget] = useState<SellerDealLink | null>(null);
 
   const handlePause = useCallback(
     async (link: SellerDealLink): Promise<void> => {
@@ -76,6 +80,22 @@ function DealLinksHomeContent() {
     },
     [router]
   );
+
+  const handleConfirmClose = useCallback(async (): Promise<void> => {
+    const link = closeTarget;
+    if (!link) return;
+    setCloseTarget(null);
+    setBusyId(link.id);
+    try {
+      await closeSellerDealLink(link.id);
+      toast({ title: t('admin.dealLinks.dealCloseSuccess') });
+      await reload();
+    } catch {
+      toast({ variant: 'destructive', title: t('admin.dealLinks.dealCloseFailed') });
+    } finally {
+      setBusyId('');
+    }
+  }, [closeTarget, reload, t, toast]);
 
   const handleCopy = useCallback(
     async (publicToken: string): Promise<void> => {
@@ -158,10 +178,24 @@ function DealLinksHomeContent() {
               onPause={l => void handlePause(l)}
               onReactivate={l => void handleReactivate(l)}
               onViewOrders={handleViewOrders}
+              onClose={setCloseTarget}
             />
           ))}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={closeTarget !== null}
+        onOpenChange={open => {
+          if (!open) setCloseTarget(null);
+        }}
+        title={t('admin.dealLinks.closeConfirmTitle')}
+        description={t('admin.dealLinks.closeConfirmBody')}
+        confirmLabel={t('admin.dealLinks.closeConfirmCta')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        onConfirm={() => void handleConfirmClose()}
+      />
     </div>
   );
 }

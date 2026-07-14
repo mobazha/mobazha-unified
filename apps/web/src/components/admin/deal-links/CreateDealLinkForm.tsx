@@ -35,6 +35,20 @@ const PRESET_MS: Record<Exclude<ExpiryPreset, 'forever' | 'custom'>, number> = {
   '30d': 30 * 24 * 60 * 60 * 1000,
 };
 
+// Mirrors the hosting backend's decimal validation
+// (`^[0-9]+(?:\.[0-9]{1,18})?$`): a plain fixed-point positive decimal with at
+// most 18 fractional digits. Loose `Number()` would wave through scientific
+// (`1e3`), hex (`0x10`), signed, and over-precise inputs that the server then
+// rejects — so we gate on the same shape here to fail fast and consistently.
+const DECIMAL_AMOUNT_PATTERN = /^[0-9]+(?:\.[0-9]{1,18})?$/;
+
+function isPositiveDecimalAmount(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (!DECIMAL_AMOUNT_PATTERN.test(trimmed)) return false;
+  // The pattern admits all-zero strings ("0", "0.00"); the deal price must be > 0.
+  return /[1-9]/.test(trimmed);
+}
+
 /** ISO → the value a datetime-local input expects (local time, no seconds). */
 function toDatetimeLocalValue(iso: string): string {
   const date = new Date(iso);
@@ -48,6 +62,12 @@ export interface CreateDealLinkFormProps {
   /** When set, the form edits this link (product locked) and saves a revision. */
   editLink?: SellerDealLink;
   onCreated?: (link: SellerDealLink) => void;
+  /**
+   * Called when creation persisted a draft but activation failed. The draft is
+   * recoverable (editable / re-activatable) from the list, so the caller should
+   * route the seller there rather than treat it as a total failure.
+   */
+  onDraftSaved?: (link: SellerDealLink) => void;
   onSaved?: (link: SellerDealLink) => void;
   showHeader?: boolean;
 }
@@ -56,6 +76,7 @@ export function CreateDealLinkForm({
   initialProductSlug = '',
   editLink,
   onCreated,
+  onDraftSaved,
   onSaved,
   showHeader = true,
 }: CreateDealLinkFormProps) {
@@ -184,12 +205,10 @@ export function CreateDealLinkForm({
   const handleSubmit = useCallback(async () => {
     const parsedReviewDays = Number(reviewDays);
     const minimumReviewDays = deliveryType === 'fixed_service' ? 7 : 3;
-    const priceNumber = Number(price);
     const expiry = computeExpiresAt();
 
     if (
-      !Number.isFinite(priceNumber) ||
-      priceNumber <= 0 ||
+      !isPositiveDecimalAmount(price) ||
       !Number.isInteger(parsedReviewDays) ||
       parsedReviewDays < minimumReviewDays ||
       parsedReviewDays > 365 ||
@@ -235,27 +254,45 @@ export function CreateDealLinkForm({
         toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateValidationError') });
         return;
       }
-      const draft = await createSellerDealLink({
-        title: listing.title,
-        description: note.trim() || undefined,
-        deliveryType,
-        priceAmount: price,
-        priceCurrency: listing.price.currency.code,
-        terms: {
-          acceptanceHours: parsedReviewDays * 24,
-          deliverables: [listing.title],
-        },
-        purchaseTemplate: {
-          listingHash: listing.cid,
-          quantity: '1',
-          options: [],
-          optionalFeatures: [],
-        },
-        expiresAt: expiry.value,
-      });
-      const created = await activateSellerDealLink(draft.id);
-      toast({ title: t('admin.dealLinks.dealCreateSuccess') });
-      onCreated?.(created);
+      // Create and activate are two steps. Keep them separate so a failure in
+      // the second one is reported honestly: the draft is already persisted, so
+      // rather than a blank "create failed" we tell the seller it was saved and
+      // hand them back to the list, where the draft can be retried or edited.
+      let draft;
+      try {
+        draft = await createSellerDealLink({
+          title: listing.title,
+          description: note.trim() || undefined,
+          deliveryType,
+          priceAmount: price,
+          priceCurrency: listing.price.currency.code,
+          terms: {
+            acceptanceHours: parsedReviewDays * 24,
+            deliverables: [listing.title],
+          },
+          purchaseTemplate: {
+            listingHash: listing.cid,
+            quantity: '1',
+            options: [],
+            optionalFeatures: [],
+          },
+          expiresAt: expiry.value,
+        });
+      } catch {
+        toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateFailed') });
+        return;
+      }
+      try {
+        const created = await activateSellerDealLink(draft.id);
+        toast({ title: t('admin.dealLinks.dealCreateSuccess') });
+        onCreated?.(created);
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: t('admin.dealLinks.draftSavedActivateFailed'),
+        });
+        onDraftSaved?.(draft);
+      }
     } catch {
       toast({
         variant: 'destructive',
@@ -273,6 +310,7 @@ export function CreateDealLinkForm({
     isEditing,
     note,
     onCreated,
+    onDraftSaved,
     onSaved,
     price,
     reviewDays,

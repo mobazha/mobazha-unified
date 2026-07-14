@@ -1,7 +1,16 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { Copy, ExternalLink, Loader2, Pause, Pencil, Play, ShoppingBag } from 'lucide-react';
+import {
+  Archive,
+  Copy,
+  ExternalLink,
+  Loader2,
+  Pause,
+  Pencil,
+  Play,
+  ShoppingBag,
+} from 'lucide-react';
 import {
   buildSellerDealLinkBrowseHref,
   useCurrency,
@@ -21,8 +30,10 @@ export interface DealLinkRowProps {
   onCopy: (publicToken: string) => void;
   onEdit?: (link: SellerDealLink) => void;
   onPause?: (link: SellerDealLink) => void;
+  /** Makes a draft or paused link active (a draft that failed to activate can be retried here). */
   onReactivate?: (link: SellerDealLink) => void;
   onViewOrders?: (link: SellerDealLink) => void;
+  onClose?: (link: SellerDealLink) => void;
 }
 
 function formatDate(iso: string): string {
@@ -41,6 +52,7 @@ export const DealLinkRow = memo(function DealLinkRow({
   onPause,
   onReactivate,
   onViewOrders,
+  onClose,
 }: DealLinkRowProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -58,17 +70,25 @@ export const DealLinkRow = memo(function DealLinkRow({
   const effectiveStatus = expired ? 'expired' : link.status;
   const isLive = effectiveStatus === 'active';
   // Editing appends a new revision and rewrites the expiry, so the backend
-  // allows it for any non-closed link — and it is the only way to revive an
-  // expired one. Gate on the raw status (not the expiry-derived one) so a
-  // closed link with a past expiry does not offer an edit that always fails.
-  const canEdit = link.status !== 'closed' && link.status !== 'draft';
-  // A draft link never produced an order; every other state might have.
+  // allows it for any non-closed link — including a draft (so a link whose
+  // activation failed can be fixed) and an expired one (editing the expiry is
+  // the only way to revive it). Gate on the raw status so a closed link with a
+  // past expiry does not offer an edit that always fails.
+  const canEdit = link.status !== 'closed';
+  // A draft link never produced an order; every other state might have (closed
+  // links keep their history).
   const canViewOrders = link.status !== 'draft';
-  // Pause/reactivate are true lifecycle transitions: pause only a live link,
-  // reactivate only a paused-and-unexpired one (activating an expired link is
-  // rejected — the seller must edit its expiry first).
+  // Pause only a live link. Making active covers two paths: retrying a draft
+  // whose activation failed, and reactivating a paused-and-unexpired link
+  // (activating an expired link is rejected — edit its expiry first).
   const canPause = effectiveStatus === 'active';
+  const canActivateDraft = link.status === 'draft';
   const canReactivate = effectiveStatus === 'paused';
+  // Closing is a terminal, tenant-scoped transition allowed from any live or
+  // draft state; a closed link exposes only its order history.
+  const canClose = link.status !== 'closed';
+  // A closed link's public URL 404s, so copying it is pointless.
+  const canCopy = link.status !== 'closed';
   const statusLabelKey: Record<string, string> = {
     draft: 'admin.dealLinks.statusDraft',
     active: 'admin.dealLinks.statusActive',
@@ -162,6 +182,24 @@ export const DealLinkRow = memo(function DealLinkRow({
             {t('admin.dealLinks.pauseDealCta')}
           </Button>
         ) : null}
+        {canActivateDraft && onReactivate ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onReactivate(link)}
+            disabled={busy}
+            data-testid={`deal-link-activate-${link.id}`}
+          >
+            {busy ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Play className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            )}
+            {t('admin.dealLinks.activateDraftCta')}
+          </Button>
+        ) : null}
         {canReactivate && onReactivate ? (
           <Button
             type="button"
@@ -180,17 +218,33 @@ export const DealLinkRow = memo(function DealLinkRow({
             {t('admin.dealLinks.reactivateDealCta')}
           </Button>
         ) : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="min-h-11 sm:min-h-9"
-          onClick={() => onCopy(link.publicToken)}
-        >
-          <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          {t('admin.dealLinks.copyDealCta')}
-        </Button>
-        {isLive ? (
+        {canClose && onClose ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 text-destructive hover:text-destructive sm:min-h-9"
+            onClick={() => onClose(link)}
+            disabled={busy}
+            data-testid={`deal-link-close-${link.id}`}
+          >
+            <Archive className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            {t('admin.dealLinks.closeDealCta')}
+          </Button>
+        ) : null}
+        {canCopy ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onCopy(link.publicToken)}
+          >
+            <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            {t('admin.dealLinks.copyDealCta')}
+          </Button>
+        ) : null}
+        {link.status === 'closed' ? null : isLive ? (
           <Button asChild variant="outline" size="sm" className="min-h-11 sm:min-h-9">
             <a href={href} target="_blank" rel="noreferrer">
               <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />

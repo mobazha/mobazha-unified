@@ -28,6 +28,13 @@ function NewDealLinkPageContent() {
     [router, t, toast]
   );
 
+  // Creation saved a draft but activation failed. A draft has no live public
+  // URL to copy — send the seller to the list, where the draft is surfaced as
+  // editable and can be re-activated.
+  const handleDraftSaved = useCallback(() => {
+    router.push('/admin/deal-links');
+  }, [router]);
+
   return (
     <div className="space-y-6" data-testid="admin-deal-links-new-page">
       <div className="flex items-center gap-3">
@@ -47,6 +54,7 @@ function NewDealLinkPageContent() {
       <CreateDealLinkForm
         initialProductSlug={initialProductSlug}
         onCreated={link => void handleCreated(link)}
+        onDraftSaved={handleDraftSaved}
         showHeader={false}
       />
     </div>

@@ -55,6 +55,12 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   } = useSellerAffiliateLinks(program?.id);
   const [rate, setRate] = useState('5');
   const [windowDays, setWindowDays] = useState('30');
+  // The id of the program the form fields currently reflect. Hydration runs in
+  // an effect (after commit), so on the first render where a program arrives the
+  // fields still hold their placeholder defaults ('5'/'30'). Tracking which
+  // program the fields belong to lets `dirty` ignore that pre-hydration gap
+  // instead of misreading the defaults as unsaved edits.
+  const [hydratedProgramId, setHydratedProgramId] = useState<string | null>(null);
   // The exact stored window. While the input text still matches this value's
   // rendering, saving must send it back verbatim: the days input is lossy for
   // sub-day windows and must never silently rewrite an untouched setting.
@@ -73,6 +79,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     setRate(String(program.commissionRateBPS / 100));
     setSavedWindowSeconds(program.attributionWindowSeconds);
     setWindowDays(sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
+    setHydratedProgramId(program.id);
   }, [program]);
 
   // The window that would actually be saved: the untouched stored value, or
@@ -114,9 +121,12 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const windowInvalid = windowDays.trim() !== '' && effectiveWindowSeconds === null;
   const formInvalid = rateInvalid || windowInvalid;
   // The form differs from what is persisted. Compared against the exact strings
-  // the fields hydrate to, so an untouched form is never seen as dirty.
+  // the fields hydrate to, so an untouched form is never seen as dirty. Gated on
+  // hydratedProgramId === program.id so the brief pre-hydration render (fields
+  // still on their '5'/'30' defaults) never reads as a false dirty edit.
   const dirty =
     program !== null &&
+    hydratedProgramId === program.id &&
     (rate !== String(program.commissionRateBPS / 100) ||
       windowDays !== sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
 

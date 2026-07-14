@@ -75,7 +75,9 @@ function normalizeSellerDealLinkOrder(raw: Record<string, unknown>): SellerDealL
   const divisibility = readRequiredNumber(raw.currencyDivisibility, 0);
   return {
     orderID: readRequiredString(raw.orderID),
-    status: readString(raw.status) ?? 'unknown',
+    // Prefer the unambiguous acceptanceStatus; fall back to a legacy `status`
+    // field for forward-compat with an older backend build.
+    acceptanceStatus: readString(raw.acceptanceStatus) ?? readString(raw.status) ?? 'unknown',
     buyerPeerID: readString(raw.buyerPeerID) ?? '',
     pricingCoin: readString(raw.pricingCoin),
     amount: readString(raw.amount),
