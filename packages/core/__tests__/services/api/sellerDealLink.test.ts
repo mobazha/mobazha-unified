@@ -107,6 +107,47 @@ describe('seller Deal Link API service', () => {
     expect(page.items[0]?.currencyDivisibility).toBe(2);
   });
 
+  it('preserves the authoritative divisibility across precisions, including 0', async () => {
+    vi.mocked(hostingGet).mockResolvedValue({
+      data: {
+        items: [
+          {
+            orderID: 'order-6',
+            currencyDivisibility: 6,
+            buyerPeerID: 'b',
+            createdAt: '2026-07-10T00:00:00Z',
+          },
+          {
+            orderID: 'order-18',
+            currencyDivisibility: 18,
+            buyerPeerID: 'b',
+            createdAt: '2026-07-10T00:00:00Z',
+          },
+          {
+            orderID: 'order-0',
+            currencyDivisibility: 0,
+            buyerPeerID: 'b',
+            createdAt: '2026-07-10T00:00:00Z',
+          },
+          { orderID: 'order-absent', buyerPeerID: 'b', createdAt: '2026-07-10T00:00:00Z' },
+        ],
+        total: 4,
+        limit: 50,
+        offset: 0,
+      },
+    });
+
+    const page = await listSellerDealLinkOrders('deal-1');
+
+    expect(page.items[0]?.currencyDivisibility).toBe(6);
+    expect(page.items[1]?.currencyDivisibility).toBe(18);
+    // A whole-unit coin's 0 must survive (not be collapsed into undefined),
+    // otherwise the amount would fall back to a currency-registry guess.
+    expect(page.items[2]?.currencyDivisibility).toBe(0);
+    // A missing field is genuinely absent, distinct from an authoritative 0.
+    expect(page.items[3]?.currencyDivisibility).toBeUndefined();
+  });
+
   it('falls back to a legacy `status` field for orders normalized before the rename', async () => {
     vi.mocked(hostingGet).mockResolvedValue({
       data: {

@@ -94,6 +94,10 @@ function OrderRow({ order }: { order: SellerDealLinkOrder }) {
                   localCurrency,
                   {
                     isMinimalUnit: true,
+                    // Use the backend's authoritative divisibility; without it
+                    // renderPairedPrice guesses from the currency registry and
+                    // misrenders coins the registry does not know.
+                    divisibility: order.currencyDivisibility,
                   }
                 )}
               </span>

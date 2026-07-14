@@ -45,6 +45,19 @@ function readRequiredNumber(value: unknown, fallback = 0): number {
   return fallback;
 }
 
+// A non-negative integer that is genuinely present, or undefined when absent/
+// malformed. Unlike readRequiredNumber it preserves a real 0 (e.g. a 0-decimal
+// coin's divisibility) instead of collapsing it into a fallback — the caller
+// needs to tell "authoritative zero" apart from "not provided".
+function readOptionalNonNegativeInteger(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isInteger(parsed) && parsed >= 0) return parsed;
+  }
+  return undefined;
+}
+
 export function normalizeSellerDealLink(raw: Record<string, unknown>): SellerDealLink {
   return {
     id: readRequiredString(raw.id),
@@ -72,7 +85,6 @@ export function buildSellerDealLinkBrowseHref(link: Pick<SellerDealLink, 'public
 }
 
 function normalizeSellerDealLinkOrder(raw: Record<string, unknown>): SellerDealLinkOrder {
-  const divisibility = readRequiredNumber(raw.currencyDivisibility, 0);
   return {
     orderID: readRequiredString(raw.orderID),
     // Prefer the unambiguous acceptanceStatus; fall back to a legacy `status`
@@ -81,7 +93,11 @@ function normalizeSellerDealLinkOrder(raw: Record<string, unknown>): SellerDealL
     buyerPeerID: readString(raw.buyerPeerID) ?? '',
     pricingCoin: readString(raw.pricingCoin),
     amount: readString(raw.amount),
-    currencyDivisibility: divisibility > 0 ? divisibility : undefined,
+    // The backend's authoritative divisibility (0–18). 0 is a valid value for a
+    // whole-unit coin, so it must be preserved — dropping it would make the
+    // amount fall back to a currency-registry guess and misrender by orders of
+    // magnitude for a coin the registry does not know.
+    currencyDivisibility: readOptionalNonNegativeInteger(raw.currencyDivisibility),
     createdAt: readRequiredString(raw.createdAt),
   };
 }

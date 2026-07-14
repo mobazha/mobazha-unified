@@ -8,6 +8,9 @@ import type { SellerDealLinkOrder } from '@mobazha/core';
 
 const routerPushMock = vi.fn();
 const useSellerDealLinkOrdersMock = vi.fn();
+const renderPairedPriceMock = vi.fn(
+  (amount: string, _coin: string, _local: string, _opts?: unknown) => amount
+);
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPushMock }),
@@ -26,13 +29,18 @@ vi.mock('@mobazha/core', async importOriginal => {
     useSellerDealLink: () => ({ link: { title: 'Premium onboarding call' } }),
     useSellerDealLinkOrders: (...args: unknown[]) => useSellerDealLinkOrdersMock(...args),
     getPaymentCoinDisplayLabel: (coin: string) => coin,
-    renderPairedPrice: (amount: string) => amount,
+    renderPairedPrice: (...args: [string, string, string, unknown?]) =>
+      renderPairedPriceMock(...args),
   };
 });
 
 import AdminDealLinkOrdersPage from '@/app/admin/deal-links/[id]/orders/page';
 
-function order(orderID: string, acceptanceStatus: string): SellerDealLinkOrder {
+function order(
+  orderID: string,
+  acceptanceStatus: string,
+  extra?: Partial<SellerDealLinkOrder>
+): SellerDealLinkOrder {
   return {
     orderID,
     acceptanceStatus,
@@ -40,6 +48,7 @@ function order(orderID: string, acceptanceStatus: string): SellerDealLinkOrder {
     pricingCoin: 'USD',
     amount: '1000',
     createdAt: '2026-07-10T00:00:00Z',
+    ...extra,
   };
 }
 
@@ -47,6 +56,27 @@ describe('AdminDealLinkOrdersPage (/admin/deal-links/[id]/orders)', () => {
   beforeEach(() => {
     routerPushMock.mockClear();
     useSellerDealLinkOrdersMock.mockReset();
+    renderPairedPriceMock.mockClear();
+  });
+
+  it('renders the amount with the backend-provided divisibility, including 0', () => {
+    useSellerDealLinkOrdersMock.mockReturnValue({
+      orders: [order('order-0', 'completed', { currencyDivisibility: 0 })],
+      total: 1,
+      loading: false,
+      error: null,
+      reload: vi.fn(),
+    });
+    render(<AdminDealLinkOrdersPage />);
+
+    // The authoritative divisibility must be forwarded so renderPairedPrice does
+    // not fall back to a currency-registry guess.
+    expect(renderPairedPriceMock).toHaveBeenCalledWith(
+      '1000',
+      'USD',
+      'USD',
+      expect.objectContaining({ isMinimalUnit: true, divisibility: 0 })
+    );
   });
 
   it('shows the acceptance-status note and labels "completed" as order-created, not paid/fulfilled', async () => {

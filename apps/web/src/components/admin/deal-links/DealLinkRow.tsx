@@ -63,10 +63,13 @@ export const DealLinkRow = memo(function DealLinkRow({
   // active. Only a genuinely live link resolves on the public deal page, so
   // "Open" is offered for those alone — the rest would dead-end on a 404.
   // Snapshot "now" once so the render stays pure; a refresh re-evaluates it.
+  // closed is terminal and must win over expiry: a retired link is "closed",
+  // not "expired", regardless of whether its expiresAt has passed.
   const [renderedAt] = useState(() => Date.now());
   const expired =
-    link.status === 'expired' ||
-    (link.expiresAt ? new Date(link.expiresAt).getTime() <= renderedAt : false);
+    link.status !== 'closed' &&
+    (link.status === 'expired' ||
+      (link.expiresAt ? new Date(link.expiresAt).getTime() <= renderedAt : false));
   const effectiveStatus = expired ? 'expired' : link.status;
   const isLive = effectiveStatus === 'active';
   // Editing appends a new revision and rewrites the expiry, so the backend

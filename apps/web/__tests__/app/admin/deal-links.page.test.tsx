@@ -179,6 +179,18 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
     expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'active');
   });
 
+  it('shows a closed link as closed even when its expiresAt has already passed', async () => {
+    // closed is terminal and must win over the past-expiry computation, so the
+    // badge reads "closed", not "expired".
+    listSellerDealLinksMock.mockResolvedValue([
+      { ...DEAL_LINK, status: 'closed', expiresAt: '2020-01-01T00:00:00Z' },
+    ]);
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    expect(screen.getByTestId('deal-link-status-deal-1')).toHaveAttribute('data-status', 'closed');
+  });
+
   it('a closed link only offers to view orders — no edit, activate, close, or copy', async () => {
     listSellerDealLinksMock.mockResolvedValue([{ ...DEAL_LINK, status: 'closed' }]);
     render(<AdminDealLinksPage />);
