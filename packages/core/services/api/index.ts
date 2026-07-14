@@ -291,6 +291,7 @@ export {
   listSellerAffiliateStatementPage,
   listSellerAffiliateStatements,
   putSellerAffiliateProgram,
+  reissueSellerAffiliateLink,
 } from './sellerAffiliate';
 
 // Seller Deal Link API (authenticated hosting endpoints)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
-import { HOSTING_API } from '../../config/apiPaths';
+import { HOSTING_API, NODE_API } from '../../config/apiPaths';
 import type { SellerAffiliateProgramRequest } from '../../types/sellerAffiliate';
 import {
   normalizePublicSellerAffiliateLink,
@@ -15,23 +15,23 @@ import {
 } from '../../utils/sellerAffiliate';
 import { get, post } from './client';
 import { getHostingUrl } from './config';
-import { hostingDel, hostingGet, hostingPost, hostingPut } from './helpers';
+import { hostingGet, hostingPost, nodeAuthGet, nodeAuthPost, nodeAuthPut } from './helpers';
 
 export async function getSellerAffiliateProgram() {
   return normalizeSellerAffiliateProgram(
-    await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM)
+    await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_PROGRAM)
   );
 }
 
 export async function getSellerAffiliateCapabilities() {
   return normalizeSellerAffiliateCapabilities(
-    await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_CAPABILITIES)
+    await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_CAPABILITIES)
   );
 }
 
 export async function putSellerAffiliateProgram(body: SellerAffiliateProgramRequest) {
   return normalizeSellerAffiliateProgram(
-    await hostingPut<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM, body)
+    await nodeAuthPut<unknown>(NODE_API.SELLER_AFFILIATE_PROGRAM, body)
   );
 }
 
@@ -41,15 +41,21 @@ export async function createSellerAffiliateLink(programID: string) {
   );
 }
 
-export async function listSellerAffiliateLinks(programID: string) {
-  return unwrapSellerAffiliateList(
-    await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINKS(programID))
-  ).map(normalizeSellerAffiliateLink);
+export async function listSellerAffiliateLinks(_programID: string) {
+  return unwrapSellerAffiliateList(await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_LINKS)).map(
+    normalizeSellerAffiliateLink
+  );
 }
 
-export async function revokeSellerAffiliateLink(programID: string, linkID: string) {
+export async function revokeSellerAffiliateLink(_programID: string, linkID: string) {
   return normalizeSellerAffiliateLink(
-    await hostingDel<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINK(programID, linkID))
+    await nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_LINK_REVOKE(linkID))
+  );
+}
+
+export async function reissueSellerAffiliateLink(linkID: string) {
+  return normalizeSellerAffiliateLink(
+    await nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_LINK_REISSUE(linkID))
   );
 }
 
@@ -66,13 +72,11 @@ export async function createSellerAffiliateReferralSession(token: string) {
 }
 
 export async function listSellerAffiliateStatements(audience: 'seller' | 'promoter') {
-  const path =
+  const raw =
     audience === 'seller'
-      ? HOSTING_API.SELLER_AFFILIATE_STATEMENTS_SELLER
-      : HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER;
-  return unwrapSellerAffiliateList(await hostingGet<unknown>(path)).map(
-    normalizeSellerAffiliateStatementLine
-  );
+      ? await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_STATEMENTS_SELLER)
+      : await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER);
+  return unwrapSellerAffiliateList(raw).map(normalizeSellerAffiliateStatementLine);
 }
 
 export async function listSellerAffiliateStatementPage(page = 1, pageSize = 20) {

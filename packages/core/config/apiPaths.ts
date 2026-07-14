@@ -73,6 +73,16 @@ export const NODE_API = {
   EXPORTS_SALES: '/exports/sales',
   EXPORTS_CUSTOMERS: '/exports/customers',
 
+  // --- Seller Affiliate (store-local source of truth) ---
+  SELLER_AFFILIATE_PROGRAM: '/seller-affiliate/program',
+  SELLER_AFFILIATE_CAPABILITIES: '/seller-affiliate/capabilities',
+  SELLER_AFFILIATE_LINKS: '/seller-affiliate/links',
+  SELLER_AFFILIATE_LINK_REVOKE: (linkID: string) =>
+    `/seller-affiliate/links/${encodeURIComponent(linkID)}/revoke`,
+  SELLER_AFFILIATE_LINK_REISSUE: (linkID: string) =>
+    `/seller-affiliate/links/${encodeURIComponent(linkID)}/reissue`,
+  SELLER_AFFILIATE_STATEMENTS_SELLER: '/seller-affiliate/statements/seller',
+
   // --- Vendor migration (DG-1.9 — "Storefront creators can leave with") ---
   // Single endpoint handles both dry-run preview and actual import via the
   // request body's `dryRun` flag. SaaS / Standalone only — Sovereign build
