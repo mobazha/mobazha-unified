@@ -6,8 +6,15 @@
  */
 
 import { HOSTING_API } from '../../config/apiPaths';
-import type { SellerDealLink, SellerDealLinkRequest } from '../../types/sellerDealLink';
-import { normalizeSellerDealLink } from '../../utils/sellerDealLink';
+import type {
+  SellerDealLink,
+  SellerDealLinkOrdersPage,
+  SellerDealLinkRequest,
+} from '../../types/sellerDealLink';
+import {
+  normalizeSellerDealLink,
+  normalizeSellerDealLinkOrdersPage,
+} from '../../utils/sellerDealLink';
 import { hostingGet, hostingPost, hostingPut } from './helpers';
 
 function unwrapList(raw: unknown): Record<string, unknown>[] {
@@ -78,6 +85,20 @@ export async function updateSellerDealLink(
   const raw = await hostingPut<unknown>(HOSTING_API.DEAL_LINKS_BY_ID(dealLinkId), body);
   if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   return normalizeSellerDealLink(unwrapRecord(raw));
+}
+
+export async function listSellerDealLinkOrders(
+  dealLinkId: string,
+  options?: { signal?: AbortSignal; limit?: number; offset?: number }
+): Promise<SellerDealLinkOrdersPage> {
+  const params = new URLSearchParams();
+  if (options?.limit && options.limit > 0) params.set('limit', String(options.limit));
+  if (options?.offset && options.offset > 0) params.set('offset', String(options.offset));
+  const query = params.toString();
+  const path = `${HOSTING_API.DEAL_LINKS_ORDERS(dealLinkId)}${query ? `?${query}` : ''}`;
+  const raw = await hostingGet<unknown>(path);
+  if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  return normalizeSellerDealLinkOrdersPage(raw);
 }
 
 export async function activateSellerDealLink(

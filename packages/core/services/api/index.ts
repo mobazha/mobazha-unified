@@ -295,11 +295,17 @@ export {
 
 // Seller Deal Link API (authenticated hosting endpoints)
 export * as sellerDealLinkApi from './sellerDealLink';
-export type { SellerDealLink, SellerDealLinkRequest } from '../../types/sellerDealLink';
+export type {
+  SellerDealLink,
+  SellerDealLinkOrder,
+  SellerDealLinkOrdersPage,
+  SellerDealLinkRequest,
+} from '../../types/sellerDealLink';
 export {
   activateSellerDealLink,
   createSellerDealLink,
   getSellerDealLink,
+  listSellerDealLinkOrders,
   listSellerDealLinks,
   pauseSellerDealLink,
   updateSellerDealLink,

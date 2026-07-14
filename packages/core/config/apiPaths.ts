@@ -416,6 +416,8 @@ export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
 
 export const HOSTING_API = {
   ...HOSTING_API_PATHS,
+  // --- Deal Link orders (seller view; newer than the merged OpenAPI spec) ---
+  DEAL_LINKS_ORDERS: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/orders`,
   // --- Seller Affiliate (automation-first; no review or settlement queue) ---
   SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
   SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',

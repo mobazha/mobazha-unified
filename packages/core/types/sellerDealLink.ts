@@ -40,3 +40,24 @@ export interface SellerDealLink {
   createdAt: string;
   updatedAt: string;
 }
+
+/** One order produced by a Deal Link acceptance, for the seller's per-link order list. */
+export interface SellerDealLinkOrder {
+  orderID: string;
+  /** Acceptance lifecycle status (e.g. completed, processing, manual_review). */
+  status: string;
+  buyerPeerID: string;
+  pricingCoin?: string;
+  /** Order amount in the pricing coin's minimal units. */
+  amount?: string;
+  currencyDivisibility?: number;
+  createdAt: string;
+}
+
+/** A page of Deal Link orders from hosting `/deal-links/{id}/orders`. */
+export interface SellerDealLinkOrdersPage {
+  items: SellerDealLinkOrder[];
+  total: number;
+  limit: number;
+  offset: number;
+}

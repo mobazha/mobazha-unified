@@ -2,7 +2,11 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import type { DealLinkPurchaseTemplate } from '../types/dealLink';
-import type { SellerDealLink } from '../types/sellerDealLink';
+import type {
+  SellerDealLink,
+  SellerDealLinkOrder,
+  SellerDealLinkOrdersPage,
+} from '../types/sellerDealLink';
 import { parseDealLinkTerms } from './dealLink';
 
 function parsePurchaseTemplate(value: unknown): DealLinkPurchaseTemplate | undefined {
@@ -65,4 +69,42 @@ export function normalizeSellerDealLink(raw: Record<string, unknown>): SellerDea
 
 export function buildSellerDealLinkBrowseHref(link: Pick<SellerDealLink, 'publicToken'>): string {
   return `/deal/${encodeURIComponent(link.publicToken)}`;
+}
+
+function normalizeSellerDealLinkOrder(raw: Record<string, unknown>): SellerDealLinkOrder {
+  const divisibility = readRequiredNumber(raw.currencyDivisibility, 0);
+  return {
+    orderID: readRequiredString(raw.orderID),
+    status: readString(raw.status) ?? 'unknown',
+    buyerPeerID: readString(raw.buyerPeerID) ?? '',
+    pricingCoin: readString(raw.pricingCoin),
+    amount: readString(raw.amount),
+    currencyDivisibility: divisibility > 0 ? divisibility : undefined,
+    createdAt: readRequiredString(raw.createdAt),
+  };
+}
+
+export function normalizeSellerDealLinkOrdersPage(raw: unknown): SellerDealLinkOrdersPage {
+  const root =
+    raw && typeof raw === 'object' && !Array.isArray(raw) && 'data' in raw
+      ? (raw as Record<string, unknown>).data
+      : raw;
+  const record =
+    root && typeof root === 'object' && !Array.isArray(root)
+      ? (root as Record<string, unknown>)
+      : {};
+  const items = Array.isArray(record.items)
+    ? record.items
+        .filter(
+          (item): item is Record<string, unknown> =>
+            item !== null && typeof item === 'object' && !Array.isArray(item)
+        )
+        .map(normalizeSellerDealLinkOrder)
+    : [];
+  return {
+    items,
+    total: readRequiredNumber(record.total, items.length),
+    limit: readRequiredNumber(record.limit, items.length),
+    offset: readRequiredNumber(record.offset, 0),
+  };
 }

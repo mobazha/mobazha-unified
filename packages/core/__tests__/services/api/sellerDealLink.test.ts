@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   activateSellerDealLink,
   createSellerDealLink,
+  listSellerDealLinkOrders,
   listSellerDealLinks,
 } from '../../../services/api/sellerDealLink';
 
@@ -72,5 +73,45 @@ describe('seller Deal Link API service', () => {
       undefined
     );
     expect(active.status).toBe('active');
+  });
+
+  it('lists the orders placed through a Deal Link', async () => {
+    vi.mocked(hostingGet).mockResolvedValue({
+      data: {
+        items: [
+          {
+            orderID: 'order-1',
+            status: 'completed',
+            buyerPeerID: 'buyer-peer',
+            pricingCoin: 'USD',
+            amount: '12500',
+            currencyDivisibility: 2,
+            createdAt: '2026-07-10T00:00:00Z',
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      },
+    });
+
+    const page = await listSellerDealLinkOrders('deal-1');
+
+    expect(hostingGet).toHaveBeenCalledWith('/platform/v1/deal-links/deal-1/orders');
+    expect(page.total).toBe(1);
+    expect(page.items[0]?.orderID).toBe('order-1');
+    expect(page.items[0]?.currencyDivisibility).toBe(2);
+  });
+
+  it('forwards pagination params when listing Deal Link orders', async () => {
+    vi.mocked(hostingGet).mockResolvedValue({
+      data: { items: [], total: 0, limit: 10, offset: 20 },
+    });
+
+    await listSellerDealLinkOrders('deal-1', { limit: 10, offset: 20 });
+
+    expect(hostingGet).toHaveBeenCalledWith(
+      '/platform/v1/deal-links/deal-1/orders?limit=10&offset=20'
+    );
   });
 });

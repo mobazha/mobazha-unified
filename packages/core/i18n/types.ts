@@ -4111,6 +4111,18 @@ export interface TranslationResource {
       dealPauseFailed?: string;
       dealReactivateSuccess?: string;
       dealReactivateFailed?: string;
+      viewOrdersCta?: string;
+      ordersTitle?: string;
+      ordersSubtitle?: string;
+      ordersEmpty?: string;
+      ordersLoadFailed?: string;
+      ordersCountLabel?: string;
+      orderBuyerLabel?: string;
+      orderOpenCta?: string;
+      orderStatusCompleted?: string;
+      orderStatusProcessing?: string;
+      orderStatusManualReview?: string;
+      orderStatusFailed?: string;
       programsEmptyTitle?: string;
       programsEmptyDescription?: string;
       programsFilterLabel?: string;
