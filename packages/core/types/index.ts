@@ -148,6 +148,8 @@ export type {
   PaymentSessionProductMode,
   PaymentReadinessView,
   PaymentReadinessStatus,
+  OnrampFundingSourceView,
+  OnrampFundingState,
 } from './paymentSession';
 
 export type {

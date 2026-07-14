@@ -31,3 +31,4 @@ export type { ExternalWalletPaymentInfo } from './ExternalWalletPayment';
 export { PaymentRefundSection } from './PaymentRefundSection';
 export { PaymentSelectionQuoteReview } from './PaymentSelectionQuoteReview';
 export { ConfirmationProgress } from './ConfirmationProgress';
+export { OnrampFundingSection } from './OnrampFundingSection';

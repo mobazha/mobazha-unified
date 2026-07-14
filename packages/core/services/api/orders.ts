@@ -2,7 +2,7 @@
  * 订单 API 服务
  */
 
-import type { Order, OrderListItem, PaymentSession } from '../../types';
+import type { Order, OrderListItem, PaymentSession, OnrampFundingSourceView } from '../../types';
 import type { PaymentSelectionQuote } from '../../types/paymentSelectionQuote';
 import type {
   CheckoutSupplyQuoteResponse,
@@ -426,6 +426,53 @@ export async function getOrderPaymentSession(
     }
     throw err;
   }
+}
+
+export interface InitiateOrderOnrampFundingParams {
+  orderId: string;
+  providerID: string;
+  fiatCurrency: string;
+  /** Defaults to "primary" server-side: leave-and-resume returns the same purchase. */
+  idempotencyKey?: string;
+  deliverToBuyerWallet?: boolean;
+  buyerWalletAddress?: string;
+  vendorPeerID?: string;
+}
+
+/**
+ * Initiates (or idempotently resumes) an onramp purchase funding the order's
+ * current payable attempt (ADR-019). The settlement asset, network, and amount
+ * are fixed by the frozen attempt terms; funded/verified still come only from
+ * the on-chain funding observation.
+ */
+export async function initiateOrderOnrampFunding(
+  params: InitiateOrderOnrampFundingParams
+): Promise<OnrampFundingSourceView | null> {
+  const { orderId, vendorPeerID, ...body } = params;
+  const storeHeaders = vendorPeerID?.trim() ? { 'X-Store-PeerID': vendorPeerID.trim() } : undefined;
+  return await authPost<OnrampFundingSourceView | null>(
+    NODE_API.ORDER_PAYMENT_SESSION_ONRAMP(orderId),
+    body,
+    storeHeaders
+  );
+}
+
+/**
+ * Polls the onramp provider for the order's in-flight purchase and persists
+ * the transition. Returns the current onramp funding view, or null when
+ * nothing is in flight.
+ */
+export async function refreshOrderOnrampFunding(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<OnrampFundingSourceView | null> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+  return await authPost<OnrampFundingSourceView | null>(
+    NODE_API.ORDER_PAYMENT_SESSION_ONRAMP_REFRESH(orderId),
+    undefined,
+    storeHeaders
+  );
 }
 
 export interface CreateOrderPaymentSessionData {
@@ -1475,6 +1522,8 @@ export const ordersApi = {
   getSales,
   getOrderDetails,
   getOrderPaymentSession,
+  initiateOrderOnrampFunding,
+  refreshOrderOnrampFunding,
 
   // 创建
   createOrder,

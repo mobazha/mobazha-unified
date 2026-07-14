@@ -9168,6 +9168,26 @@ export const en: TranslationResource = {
     disconnectConfirmDesc:
       'After disconnecting, you will no longer be able to accept payments through {{provider}}. Orders already in progress will not be affected.',
   },
+  onramp: {
+    title: 'Buying crypto for this payment',
+    statusAwaitingPayment: 'Waiting for you to complete the purchase',
+    statusProcessing: 'Purchase received — converting to crypto',
+    statusDelivering: 'Crypto purchased — delivery in progress',
+    statusForwarding: 'Crypto in your wallet — moving it into escrow',
+    statusAwaitingChain: 'Delivered — waiting for on-chain confirmation',
+    statusFailed: 'Purchase failed — you can start a new one',
+    statusReversed: 'Purchase was reversed by the provider',
+    continuePayment: 'Continue purchase',
+    refresh: 'Refresh status',
+    refreshFailed: 'Could not check the latest status. Retrying…',
+    chainConfirmationNote:
+      'Your payment completes only when the funds are confirmed on-chain at the escrow address. Buying crypto is a separate step provided by the named provider.',
+    fundWithCard: 'Buy crypto with card',
+    fundWithCardHint:
+      "Don't have crypto? Buy it for this payment — a provider handles the fiat step and delivers to the escrow address.",
+    fundWithCardBusy: 'Starting…',
+    fundWithCardError: 'Buying crypto is not available for this payment right now.',
+  },
   help: {
     backToStore: 'Back to store',
     exchangeUsdtPayment: {

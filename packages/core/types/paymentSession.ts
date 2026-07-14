@@ -95,4 +95,47 @@ export interface PaymentSession {
     expiresAt?: string;
   } | null;
   paymentReadiness?: PaymentReadinessView;
+  /**
+   * Non-null only when an onramp purchase is the session's selected
+   * pre-observation funding source (ADR-019).
+   */
+  onrampFunding?: OnrampFundingSourceView | null;
+}
+
+/**
+ * Onramp funding-source view (ADR-019 / RFC-0012 Proposal 5).
+ *
+ * An onramp purchase is a funding SOURCE feeding the frozen on-chain funding
+ * target — never a settlement mode. The session's funded/verified status
+ * continues to come only from the on-chain funding observation; this view is
+ * descriptive progress for the pre-observation window.
+ */
+export interface OnrampFundingSourceView {
+  providerID: string;
+  onrampOrderID: string;
+  /** Mirrors the provider-neutral onramp status (created/awaiting_payment/processing/delivering/delivered/failed/reversed). */
+  status: string;
+  deliverToBuyerWallet: boolean;
+  buyerWalletAddress?: string;
+  /** Provider-hosted URL where the buyer completes the fiat step while awaiting payment. */
+  buyerActionURL?: string;
+  disclosure?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Pre-observation funding states contributed by an onramp funding source.
+ * They refine `awaiting_funds` only; any observed on-chain funds win.
+ */
+export const ONRAMP_FUNDING_STATES = [
+  'onramp_awaiting_payment',
+  'onramp_processing',
+  'onramp_delivering',
+  'onramp_forwarding',
+] as const;
+
+export type OnrampFundingState = (typeof ONRAMP_FUNDING_STATES)[number];
+
+export function isOnrampFundingState(state: string | undefined): state is OnrampFundingState {
+  return !!state && (ONRAMP_FUNDING_STATES as readonly string[]).includes(state);
 }

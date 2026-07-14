@@ -5536,6 +5536,25 @@ export interface TranslationResource {
     rateUpdated?: string;
   };
 
+  onramp?: {
+    title?: string;
+    statusAwaitingPayment?: string;
+    statusProcessing?: string;
+    statusDelivering?: string;
+    statusForwarding?: string;
+    statusAwaitingChain?: string;
+    statusFailed?: string;
+    statusReversed?: string;
+    continuePayment?: string;
+    refresh?: string;
+    refreshFailed?: string;
+    chainConfirmationNote?: string;
+    fundWithCard?: string;
+    fundWithCardHint?: string;
+    fundWithCardBusy?: string;
+    fundWithCardError?: string;
+  };
+
   help?: {
     backToStore: string;
     exchangeUsdtPayment: {

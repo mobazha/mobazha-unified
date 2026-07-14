@@ -9,6 +9,7 @@ import {
   CheckoutBottomBar,
   TransactionOverlay,
   FiatPaymentSection,
+  OnrampFundingSection,
   ExternalWalletPayment,
   PaymentRefundSection,
   PaymentSelectionQuoteReview,
@@ -70,7 +71,7 @@ import {
   isPaymentSelectionQuoteProvisioned,
   type WebSocketMessage,
 } from '@mobazha/core';
-import type { Order, PaymentSession } from '@mobazha/core';
+import type { Order, PaymentSession, OnrampFundingSourceView } from '@mobazha/core';
 import {
   buildFiatPaymentCancelUrl,
   buildFiatPaymentVerificationUrl,
@@ -316,6 +317,22 @@ export default function PaymentPage() {
   const [saveRefundAsDefault, setSaveRefundAsDefault] = useState(false);
   const [payFromCustodial, setPayFromCustodial] = useState(false);
   const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
+
+  // The onramp funding leg is buyer-side. The payment session may be re-fetched
+  // through vendor routing (whose view omits onrampFunding), so hold the source
+  // in resilient local state seeded from any session that carries it and kept
+  // fresh by the section's own refresh — a vendor-routed re-fetch must not
+  // unmount the card. (ADR-019)
+  const [onrampSource, setOnrampSource] = useState<OnrampFundingSourceView | null>(null);
+  useEffect(() => {
+    if (paymentSession?.onrampFunding) setOnrampSource(paymentSession.onrampFunding);
+  }, [paymentSession?.onrampFunding]);
+  // Buyer-side entry point to start onramp funding (ADR-019). Fail-closed:
+  // if the backend advertises no onramp provider for this rail the initiate
+  // call errors and the affordance hides itself, so a fail-closed node shows
+  // nothing. The provider id targets the dev mock onramp module.
+  const [onrampInitBusy, setOnrampInitBusy] = useState(false);
+  const [onrampInitHidden, setOnrampInitHidden] = useState(false);
 
   const paymentReadinessPollEnabled =
     Boolean(orderID) && Boolean(orderDetails) && isPaymentOpenState(orderDetails?.status);
@@ -1730,6 +1747,83 @@ export default function PaymentPage() {
                             />
                           </CardContent>
                         </Card>
+                      )}
+
+                      {/* Onramp funding entry point (ADR-019): lets a buyer with
+                          no crypto fund the frozen target by buying it. Shown only
+                          for a frozen, still-payable crypto attempt; hides itself
+                          if the backend has no onramp provider for this rail. */}
+                      {!onrampSource &&
+                        !onrampInitHidden &&
+                        !visibleFiatProvider &&
+                        paymentSession?.status === 'awaiting_funds' &&
+                        paymentSession.fundingTarget?.type === 'address' &&
+                        Boolean(paymentSession.fundingTarget?.address) && (
+                          <Card className="border-dashed">
+                            <CardContent className="flex flex-col gap-3 p-4">
+                              <p className="text-sm text-muted-foreground">
+                                {t('onramp.fundWithCardHint')}
+                              </p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="self-start"
+                                disabled={onrampInitBusy}
+                                onClick={async () => {
+                                  setOnrampInitBusy(true);
+                                  try {
+                                    const src = await ordersApi.initiateOrderOnrampFunding({
+                                      orderId: orderDetails.orderID,
+                                      providerID: 'mock-onramp',
+                                      fiatCurrency: 'USD',
+                                      deliverToBuyerWallet: true,
+                                      vendorPeerID: paymentVendorPeerID,
+                                    });
+                                    if (src) {
+                                      setOnrampSource(src);
+                                    } else {
+                                      setOnrampInitHidden(true);
+                                    }
+                                  } catch {
+                                    setOnrampInitHidden(true);
+                                    toast({
+                                      title: t('onramp.fundWithCardError'),
+                                      variant: 'destructive',
+                                    });
+                                  } finally {
+                                    setOnrampInitBusy(false);
+                                  }
+                                }}
+                              >
+                                {onrampInitBusy
+                                  ? t('onramp.fundWithCardBusy')
+                                  : t('onramp.fundWithCard')}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                      {/* Onramp funding leg (ADR-019): descriptive pre-observation
+                          progress; funded/verified still come only from the
+                          on-chain observation the page already gates on. */}
+                      {onrampSource && (
+                        <OnrampFundingSection
+                          orderID={orderDetails.orderID}
+                          source={onrampSource}
+                          vendorPeerID={paymentVendorPeerID}
+                          onUpdated={next => {
+                            // The section's own refresh is the source of truth for
+                            // the onramp leg; keep it even if the session re-fetch
+                            // (vendor-routed) omits onrampFunding.
+                            if (next) setOnrampSource(next);
+                            void ordersApi
+                              .getOrderPaymentSession(orderDetails.orderID, {
+                                vendorPeerID: paymentVendorPeerID,
+                              })
+                              .then(session => session && setPaymentSession(session))
+                              .catch(() => null);
+                          }}
+                        />
                       )}
 
                       {cryptoRefundSection}

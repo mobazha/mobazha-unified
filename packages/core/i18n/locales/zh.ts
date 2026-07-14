@@ -8407,6 +8407,25 @@ export const zh: PartialTranslationResource = {
     disconnectConfirmTitle: '断开 {{provider}}？',
     disconnectConfirmDesc: '断开后将无法通过 {{provider}} 接收付款。进行中的订单不受影响。',
   },
+  onramp: {
+    title: '正在为本次付款购买加密货币',
+    statusAwaitingPayment: '等待你完成购买',
+    statusProcessing: '已收到付款——正在兑换加密货币',
+    statusDelivering: '已购入——正在发送',
+    statusForwarding: '已到你的钱包——正在转入托管地址',
+    statusAwaitingChain: '已发送——等待链上确认',
+    statusFailed: '购买失败——可重新发起',
+    statusReversed: '该笔购买已被服务商撤销',
+    continuePayment: '继续完成购买',
+    refresh: '刷新状态',
+    refreshFailed: '暂时无法获取最新状态，正在重试…',
+    chainConfirmationNote:
+      '只有当资金在托管地址上完成链上确认，付款才算完成。购买加密货币是由该服务商提供的独立步骤。',
+    fundWithCard: '用银行卡购买加密货币',
+    fundWithCardHint: '没有加密货币？为本次付款购买——由服务商完成法币步骤并发送到托管地址。',
+    fundWithCardBusy: '正在发起…',
+    fundWithCardError: '本次付款暂不支持购买加密货币。',
+  },
   help: {
     backToStore: '返回店铺',
     exchangeUsdtPayment: {
