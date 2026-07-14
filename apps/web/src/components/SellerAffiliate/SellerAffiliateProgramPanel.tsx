@@ -7,7 +7,6 @@ import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Check, Copy, Save, Trash2 } from 'lucide-react';
 import {
   describeSellerAffiliateAttributionWindow,
-  getPaymentCoinDisplayLabel,
   sellerAffiliateAttributionDaysInput,
   sellerAffiliateAttributionWindowAdvice,
   sellerAffiliateAttributionSecondsFromDaysInput,
@@ -23,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { copyToClipboard } from '@/lib/clipboard';
+import { AffiliateRailChips } from './AffiliateRailChips';
 
 export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramPanel() {
   const { t } = useI18n();
@@ -46,6 +46,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   // sub-day windows and must never silently rewrite an untouched setting.
   const [savedWindowSeconds, setSavedWindowSeconds] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savedRecently, setSavedRecently] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [confirmRevokeID, setConfirmRevokeID] = useState<string | null>(null);
@@ -90,12 +91,16 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       ? sellerAffiliateAttributionWindowAdvice(effectiveWindowSeconds)
       : null;
 
+  const rateNumber = Number(rate);
+  const rateInvalid =
+    rate.trim() !== '' && (!Number.isFinite(rateNumber) || rateNumber <= 0 || rateNumber > 100);
+
   const handleSave = useCallback(async (): Promise<void> => {
-    const rateNumber = Number(rate);
+    const rateValue = Number(rate);
     if (
-      !Number.isFinite(rateNumber) ||
-      rateNumber <= 0 ||
-      rateNumber > 100 ||
+      !Number.isFinite(rateValue) ||
+      rateValue <= 0 ||
+      rateValue > 100 ||
       effectiveWindowSeconds === null
     ) {
       setSaveError(t('sellerAffiliate.invalidProgram'));
@@ -106,9 +111,11 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     try {
       await save({
         status,
-        commissionRateBPS: Math.round(rateNumber * 100),
+        commissionRateBPS: Math.round(rateValue * 100),
         attributionWindowSeconds: effectiveWindowSeconds,
       });
+      setSavedRecently(true);
+      window.setTimeout(() => setSavedRecently(false), 2000);
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
     } finally {
@@ -162,16 +169,22 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="affiliate-status">{t('sellerAffiliate.status')}</Label>
+            {/* Native select: unit tests drive it via fireEvent.change; styled to match Input. */}
             <select
               id="affiliate-status"
               value={status}
               onChange={event => setStatus(event.target.value as 'active' | 'paused')}
-              className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="flex h-11 w-full appearance-none rounded-md border border-border bg-surface px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading}
             >
               <option value="active">{t('sellerAffiliate.active')}</option>
               <option value="paused">{t('sellerAffiliate.paused')}</option>
             </select>
+            {status === 'paused' ? (
+              <p className="text-xs text-muted-foreground" data-testid="affiliate-paused-hint">
+                {t('sellerAffiliate.pausedHint')}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="affiliate-rate">{t('sellerAffiliate.commissionRate')}</Label>
@@ -181,7 +194,16 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
               value={rate}
               onChange={event => setRate(event.target.value)}
               disabled={loading}
+              aria-invalid={rateInvalid}
             />
+            {rateInvalid ? (
+              <p
+                className="text-xs font-medium text-destructive"
+                data-testid="affiliate-rate-error"
+              >
+                {t('sellerAffiliate.invalidRate')}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionDays')}</Label>
@@ -216,30 +238,18 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             ) : null}
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">{t('sellerAffiliate.noManualWorkflow')}</p>
         <div className="space-y-2" aria-busy={capabilitiesLoading}>
           <p className="text-sm font-medium">{t('sellerAffiliate.supportedRails')}</p>
+          <p className="text-xs text-muted-foreground">{t('sellerAffiliate.noManualWorkflow')}</p>
           {capabilitiesError ? (
             <p className="text-sm text-destructive" role="alert">
               {t('sellerAffiliate.capabilitiesLoadFailed')}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
-            {capabilities?.rails.map(rail => (
-              <span
-                key={rail.railID}
-                className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
-              >
-                {getPaymentCoinDisplayLabel(rail.railID)}
-                {rail.guestSupport ? ` · ${t('sellerAffiliate.guestSupported')}` : ''}
-              </span>
-            ))}
-            {!capabilitiesLoading && !capabilitiesError && !capabilities?.rails.length ? (
-              <span className="text-sm text-destructive">
-                {t('sellerAffiliate.noSupportedRails')}
-              </span>
-            ) : null}
-          </div>
+          <AffiliateRailChips rails={capabilities?.rails ?? []} />
+          {!capabilitiesLoading && !capabilitiesError && !capabilities?.rails.length ? (
+            <p className="text-sm text-destructive">{t('sellerAffiliate.noSupportedRails')}</p>
+          ) : null}
         </div>
         {program ? (
           <div className="space-y-2" aria-busy={linksLoading}>
@@ -301,11 +311,15 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             type="button"
             className="min-h-11"
             onClick={() => void handleSave()}
-            disabled={loading || saving}
+            disabled={loading || saving || rateInvalid}
             data-testid="seller-affiliate-program-save"
           >
-            <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-            {t('sellerAffiliate.saveProgram')}
+            {savedRecently ? (
+              <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+            )}
+            {t(savedRecently ? 'sellerAffiliate.programSaved' : 'sellerAffiliate.saveProgram')}
           </Button>
           {program ? (
             <Button
@@ -328,6 +342,11 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             </Button>
           ) : null}
         </div>
+        {!program && !loading ? (
+          <p className="text-xs text-muted-foreground" data-testid="affiliate-invite-hint">
+            {t('sellerAffiliate.saveBeforeInvite')}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

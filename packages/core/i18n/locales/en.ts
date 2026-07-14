@@ -10007,9 +10007,15 @@ export const en: TranslationResource = {
     earningsOrders: '{{count}} orders',
     invalidProgram:
       'Enter a commission from 0–100% and an attribution window of at least 0.01 days.',
+    invalidRate: 'Commission must be greater than 0 and at most 100.',
+    pausedHint:
+      'While paused, promoter links stop earning new commissions; existing commissions are unaffected.',
     noManualWorkflow:
-      'No review queue, manual budget, or claim process. Supported crypto rails pay promoters automatically when the order funds release, and paid always means a confirmed on-chain affiliate payment.',
+      'When order funds release, commissions pay promoters automatically over the rails below — no review queue, manual budget, or claim process.',
     saveProgram: 'Save program',
+    programSaved: 'Saved',
+    saveBeforeInvite: 'Save the program to get a promoter invite link you can share.',
+    railChainOther: 'Other',
     programLoadFailed: 'Unable to load the current program. Saving will create it.',
     saveFailed: 'Unable to save the affiliate program.',
     getPromoterLink: 'Get promoter link',
@@ -10031,7 +10037,7 @@ export const en: TranslationResource = {
     sellerStatementTitle: 'Affiliate commissions',
     promoterStatementTitle: 'Affiliate earnings',
     statementDescription:
-      'Status combines order eligibility with automatic on-chain settlement confirmation.',
+      'Status derives from order eligibility and on-chain settlement confirmation; "Paid" always means a confirmed on-chain payment.',
     refresh: 'Refresh affiliate statement',
     statementLoadFailed: 'Unable to load the affiliate statement.',
     statementEmpty: 'No affiliate commissions yet.',

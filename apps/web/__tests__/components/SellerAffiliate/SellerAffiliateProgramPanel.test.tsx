@@ -162,13 +162,29 @@ describe('SellerAffiliateProgramPanel', () => {
     );
   });
 
-  it('validates the commission rate and attribution window before saving', async () => {
+  it('flags an out-of-range commission rate inline and blocks saving', async () => {
     getSellerAffiliateProgramMock.mockResolvedValue(null);
     render(<SellerAffiliateProgramPanel />);
     await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
 
     fireEvent.change(screen.getByLabelText('sellerAffiliate.commissionRate'), {
       target: { value: '150' },
+    });
+
+    expect(screen.getByTestId('affiliate-rate-error')).toHaveTextContent(
+      'sellerAffiliate.invalidRate'
+    );
+    expect(screen.getByTestId('seller-affiliate-program-save')).toBeDisabled();
+    expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
+  });
+
+  it('validates the attribution window before saving', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(null);
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionDays'), {
+      target: { value: 'abc' },
     });
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
 
@@ -201,6 +217,55 @@ describe('SellerAffiliateProgramPanel', () => {
       })
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('confirms a successful save on the button', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    putSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
+    );
+
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('seller-affiliate-program-save')).toHaveTextContent(
+        'sellerAffiliate.programSaved'
+      )
+    );
+  });
+
+  it('warns that a paused program earns no new commissions', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      status: 'paused' as const,
+    });
+    render(<SellerAffiliateProgramPanel />);
+
+    await waitFor(() => expect(screen.getByLabelText('sellerAffiliate.status')).not.toBeDisabled());
+    expect(screen.getByTestId('affiliate-paused-hint')).toHaveTextContent(
+      'sellerAffiliate.pausedHint'
+    );
+
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.status'), {
+      target: { value: 'active' },
+    });
+    expect(screen.queryByTestId('affiliate-paused-hint')).not.toBeInTheDocument();
+  });
+
+  it('tells a first-time seller the invite link unlocks after saving', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(null);
+    render(<SellerAffiliateProgramPanel />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('affiliate-invite-hint')).toHaveTextContent(
+        'sellerAffiliate.saveBeforeInvite'
+      )
+    );
+    expect(
+      screen.queryByRole('button', { name: 'sellerAffiliate.copyPromoterInvite' })
+    ).not.toBeInTheDocument();
   });
 
   it('surfaces a save failure from the API', async () => {

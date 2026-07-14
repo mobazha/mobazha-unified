@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
 import {
-  getPaymentCoinDisplayLabel,
   getProfileDisplayInfo,
   getPublicSellerAffiliateLink,
   sellerAffiliateAttributionWindowCopy,
@@ -18,6 +17,7 @@ import {
 } from '@mobazha/core';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components';
+import { AffiliateRailChips } from '@/components/SellerAffiliate/AffiliateRailChips';
 import { PromoteStorefront } from '@/components/SellerAffiliate/PromoteStorefront';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -249,16 +249,7 @@ export default function PromoteProgramPage() {
                 {link.payoutRails?.length ? (
                   <div className="space-y-1" data-testid="promote-payout-rails">
                     <p className="text-sm font-medium">{t('sellerAffiliate.payoutRailsTitle')}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {link.payoutRails.map(rail => (
-                        <span
-                          key={rail.railID}
-                          className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
-                        >
-                          {rail.railLabel || getPaymentCoinDisplayLabel(rail.railID)}
-                        </span>
-                      ))}
-                    </div>
+                    <AffiliateRailChips rails={link.payoutRails} />
                   </div>
                 ) : null}
                 <div className="flex flex-wrap gap-2">

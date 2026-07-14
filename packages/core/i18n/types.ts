@@ -5963,8 +5963,13 @@ export interface TranslationResource {
     earningsInProgressLabel?: string;
     earningsOrders?: string;
     invalidProgram?: string;
+    invalidRate?: string;
+    pausedHint?: string;
     noManualWorkflow?: string;
     saveProgram?: string;
+    programSaved?: string;
+    saveBeforeInvite?: string;
+    railChainOther?: string;
     programLoadFailed?: string;
     saveFailed?: string;
     getPromoterLink?: string;
