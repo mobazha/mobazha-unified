@@ -257,33 +257,37 @@ async function fetchAndDiversifyListingFeed(
  * Primary: hot listings (rating_count across all stores, no time window).
  * Fallback: when hot pool has too few vendors (bulk-import skew), use fresh with max 1/store.
  */
-export async function fetchFeaturedListings(limit = 8): Promise<ProductListItem[]> {
+export async function fetchFeaturedListings(
+  limit = 8,
+  options: { strict?: boolean } = {}
+): Promise<ProductListItem[]> {
+  // strict: reject on transport failure instead of swallowing to []; the buyer
+  // home state machine (WP-C) needs failure distinguishable from empty. The
+  // adaptive over-fetch batching is preserved either way.
+  const fetchWindow = async (url: string): Promise<ProductListItem[]> =>
+    parseSearchResults(
+      options.strict
+        ? await searchGet<SearchApiResponse>(url)
+        : await searchSafeGet<SearchApiResponse>(url, {})
+    );
+
   try {
-    const hotPool = await fetchListingPoolWithBatches(async fetchLimit => {
-      const response = await searchSafeGet<SearchApiResponse>(
-        SEARCH_API.LISTINGS_HOT(fetchLimit),
-        {}
-      );
-      return parseSearchResults(response);
-    });
+    const hotPool = await fetchListingPoolWithBatches(fetchLimit =>
+      fetchWindow(SEARCH_API.LISTINGS_HOT(fetchLimit))
+    );
 
     if (countUniqueVendors(hotPool) >= HOMEPAGE_MIN_VENDORS_FOR_HOT) {
       return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
     }
 
     return fetchAndDiversifyListingFeed(
-      async fetchLimit => {
-        const response = await searchSafeGet<SearchApiResponse>(
-          SEARCH_API.LISTINGS_FRESH(fetchLimit),
-          {}
-        );
-        return parseSearchResults(response);
-      },
+      fetchLimit => fetchWindow(SEARCH_API.LISTINGS_FRESH(fetchLimit)),
       limit,
       1
     );
   } catch (error) {
     console.error('Failed to fetch featured listings:', error);
+    if (options.strict) throw error;
     return [];
   }
 }
@@ -778,35 +782,21 @@ export async function fetchRatings(ratingIDs: string[]): Promise<RatingDetail[]>
 /**
  * 获取最新商品列表（SaaS 首页 Network Activity）
  */
-export async function fetchLatestListings(limit = 12): Promise<ProductListItem[]> {
+export async function fetchLatestListings(
+  limit = 12,
+  options: { strict?: boolean } = {}
+): Promise<ProductListItem[]> {
   try {
-    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit), {});
+    const response = options.strict
+      ? await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit))
+      : await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit), {});
     return parseSearchResults(response);
   } catch (error) {
     console.error('Failed to fetch latest listings:', error);
+    // strict: reject so a failed feed is surfaced as `degraded` (WP-C), not [].
+    if (options.strict) throw error;
     return [];
   }
-}
-
-/**
- * Strict variant of {@link fetchLatestListings}: rejects on transport failure
- * instead of swallowing to []. Used by the buyer home state machine (WP-C) so a
- * failed feed is surfaced as `degraded`, not disguised as an empty shelf.
- */
-export async function fetchLatestListingsStrict(limit = 12): Promise<ProductListItem[]> {
-  const response = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit));
-  return parseSearchResults(response);
-}
-
-/** Strict variant of {@link fetchFeaturedListings} — rejects on transport failure. */
-export async function fetchFeaturedListingsStrict(limit = 8): Promise<ProductListItem[]> {
-  const hotResponse = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_HOT(limit));
-  const hotPool = parseSearchResults(hotResponse);
-  if (countUniqueVendors(hotPool) >= HOMEPAGE_MIN_VENDORS_FOR_HOT) {
-    return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
-  }
-  const freshResponse = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit));
-  return diversifyListingsByVendor(parseSearchResults(freshResponse), { limit, maxPerVendor: 1 });
 }
 
 /**

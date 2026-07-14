@@ -28,8 +28,8 @@ import {
 } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import {
-  fetchFeaturedListingsStrict,
-  fetchLatestListingsStrict,
+  fetchFeaturedListings,
+  fetchLatestListings,
   searchListings,
   searchProfiles,
 } from '@mobazha/core/services/api/products';
@@ -234,7 +234,7 @@ export function MarketplaceHomePage() {
     listingsLoading: curationListingsLoading,
     profilesLoading: curationProfilesLoading,
     listingsFetchFailed: curationListingsFetchFailed,
-  } = useCommunityMarketplaceEnrichment(curationListingRefs, curationSellerPeerIDs);
+  } = useCommunityMarketplaceEnrichment(curationListingRefs, curationSellerPeerIDs, feedReloadKey);
 
   const curationPreviewLookup = useMemo(() => {
     const lookup = new Map<string, (typeof curationPreviews)[number]>();
@@ -390,68 +390,72 @@ export function MarketplaceHomePage() {
         return;
       }
 
-      // Open catalog: use STRICT feeds so a transport failure rejects (→ degraded)
-      // instead of resolving to [] (→ falsely coldStart). allSettled keeps partial
-      // success: a failed source never discards the ones that loaded. The ternary
-      // only selects the promise array — the await stays unconditional.
+      // Open catalog: STRICT feeds reject on failure so it stays distinguishable
+      // from an empty result (→ degraded, not falsely coldStart). All three feeds
+      // run concurrently in one settle; allSettled keeps partial success so a
+      // failed source never discards the ones that loaded.
       const isSearchBranch = catalogQuery !== '*';
-      const listingResults = await Promise.allSettled(
+      const [latestR, popularR, storesR] = await Promise.allSettled([
         isSearchBranch
-          ? [
-              searchListings({
-                query: catalogQuery,
-                pageSize: 12,
-                sortBy: 'added-desc',
-                browse: 'all',
-                strict: true,
-              }).then(result => result.products),
-              searchListings({
-                query: catalogQuery,
-                pageSize: 8,
-                sortBy: 'online-desc',
-                browse: 'all',
-                strict: true,
-              }).then(result => result.products),
-            ]
-          : [fetchLatestListingsStrict(12), fetchFeaturedListingsStrict(8)]
-      );
-      const storesResults = await Promise.allSettled(
+          ? searchListings({
+              query: catalogQuery,
+              pageSize: 12,
+              sortBy: 'added-desc',
+              browse: 'all',
+              strict: true,
+            }).then(result => result.products)
+          : fetchLatestListings(12, { strict: true }),
         isSearchBranch
-          ? [searchProfiles({ query: catalogQuery, pageSize: 6, vendor: true }).then(r => r.users)]
-          : [productDataService.getFeaturedStores(6)]
-      );
+          ? searchListings({
+              query: catalogQuery,
+              pageSize: 8,
+              sortBy: 'online-desc',
+              browse: 'all',
+              strict: true,
+            }).then(result => result.products)
+          : fetchFeaturedListings(8, { strict: true }),
+        isSearchBranch
+          ? searchProfiles({ query: catalogQuery, pageSize: 6, vendor: true }).then(r => r.users)
+          : productDataService.getFeaturedStores(6),
+      ]);
 
       if (cancelled) return;
 
-      const [latestR, popularR] = listingResults;
-      const storesR = storesResults[0];
-      const latest = latestR.status === 'fulfilled' ? latestR.value : [];
-      const popular = popularR.status === 'fulfilled' ? popularR.value : [];
-      const stores = storesR.status === 'fulfilled' ? storesR.value : [];
+      try {
+        const latest = (latestR.status === 'fulfilled' ? latestR.value : []) as ProductListItem[];
+        const popular = (popularR.status === 'fulfilled' ? popularR.value : []) as ProductListItem[];
+        const stores = (storesR.status === 'fulfilled' ? storesR.value : []) as SearchedUser[];
 
-      // A listing feed rejecting is what distinguishes failure from empty. Stores
-      // failing alone is not enough to call the page degraded.
-      const listingFeedFailed = latestR.status === 'rejected' || popularR.status === 'rejected';
-      if (latestR.status === 'rejected') {
-        console.error('Failed to load latest marketplace feed:', latestR.reason);
-      }
-      if (popularR.status === 'rejected') {
-        console.error('Failed to load popular marketplace feed:', popularR.reason);
-      }
-      if (storesR.status === 'rejected') {
-        console.error('Failed to load marketplace stores feed:', storesR.reason);
-      }
+        if (latestR.status === 'rejected') {
+          console.error('Failed to load latest marketplace feed:', latestR.reason);
+        }
+        if (popularR.status === 'rejected') {
+          console.error('Failed to load popular marketplace feed:', popularR.reason);
+        }
+        if (storesR.status === 'rejected') {
+          console.error('Failed to load marketplace stores feed:', storesR.reason);
+        }
 
-      const latestFiltered = filterByCatalogMode(latest, activeConfig.catalogMode, allowedPeers);
-      const popularFiltered = filterByCatalogMode(popular, activeConfig.catalogMode, allowedPeers);
+        const latestFiltered = filterByCatalogMode(latest, activeConfig.catalogMode, allowedPeers);
+        const popularFiltered = filterByCatalogMode(popular, activeConfig.catalogMode, allowedPeers);
 
-      setLatestProducts(latestFiltered.map(convertToDisplayProduct));
-      setPopularProducts(popularFiltered.map(convertToDisplayProduct));
-      setFeaturedStores(stores);
-      setFeedsFailed(listingFeedFailed);
-      setIsLoadingProducts(false);
-      setIsLoadingPopular(false);
-      setIsLoadingStores(false);
+        setLatestProducts(latestFiltered.map(convertToDisplayProduct));
+        setPopularProducts(popularFiltered.map(convertToDisplayProduct));
+        setFeaturedStores(stores);
+        // Any feed rejecting is a real failure (not empty); consumed only when
+        // nothing renders, so a failed stores feed also blocks a false coldStart.
+        setFeedsFailed(
+          latestR.status === 'rejected' ||
+            popularR.status === 'rejected' ||
+            storesR.status === 'rejected'
+        );
+      } finally {
+        // Always clear loading, even if the synchronous mapping above throws —
+        // otherwise the state machine would be stuck on 'loading' forever.
+        setIsLoadingProducts(false);
+        setIsLoadingPopular(false);
+        setIsLoadingStores(false);
+      }
     }
 
     void loadFeeds();
@@ -540,9 +544,11 @@ export function MarketplaceHomePage() {
   const curatedRenderableCount =
     bannerProducts.length + curatedListingProducts.length + additionalListingProducts.length;
   const openRenderableCount = latestProducts.length + popularProducts.length;
-  const renderableStoresCount = useAuthorizedCurationFeeds
-    ? activeCuratedStores.length
-    : featuredStores.length;
+  // Mirror what the Featured Stores section actually renders (line ~726): curated
+  // stores take priority, otherwise the open-catalog featuredStores. Counting only
+  // featuredStores here would let a coldStart panel show above a populated grid.
+  const renderableStoresCount =
+    activeCuratedStores.length > 0 ? activeCuratedStores.length : featuredStores.length;
   const hasRenderableProducts =
     (useAuthorizedCurationFeeds ? curatedRenderableCount : openRenderableCount) > 0 ||
     renderableStoresCount > 0;

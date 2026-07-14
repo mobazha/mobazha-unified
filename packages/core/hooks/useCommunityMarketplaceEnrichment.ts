@@ -37,7 +37,10 @@ function listingKey(ref: PublicMarketplaceListingRef): string {
 
 export function useCommunityMarketplaceEnrichment(
   listingRefs: PublicMarketplaceListingRef[],
-  sellerPeerIDs: string[]
+  sellerPeerIDs: string[],
+  // Bumping reloadKey re-issues the listing/profile fetches even when the refs are
+  // unchanged — lets a "retry" recover from a transient enrichment failure (WP-C).
+  reloadKey = 0
 ) {
   const [listingPreviews, setListingPreviews] = useState<Record<string, CommunityListingPreview>>(
     {}
@@ -150,7 +153,7 @@ export function useCommunityMarketplaceEnrichment(
     return () => {
       cancelled = true;
     };
-  }, [listingKeys]);
+  }, [listingKeys, reloadKey]);
 
   useEffect(() => {
     if (!sellerKeys) {
@@ -193,7 +196,7 @@ export function useCommunityMarketplaceEnrichment(
     return () => {
       cancelled = true;
     };
-  }, [sellerKeys]);
+  }, [sellerKeys, reloadKey]);
 
   const orderedListingPreviews = useMemo(
     () =>
