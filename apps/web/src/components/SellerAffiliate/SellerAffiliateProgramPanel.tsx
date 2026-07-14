@@ -4,7 +4,7 @@
 'use client';
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Check, Copy, Save, Trash2 } from 'lucide-react';
+import { Check, Copy, Plus, Save, Trash2 } from 'lucide-react';
 import {
   describeSellerAffiliateAttributionWindow,
   sellerAffiliateAttributionDaysInput,
@@ -38,7 +38,6 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     error: linksError,
     revoke,
   } = useSellerAffiliateLinks(program?.id);
-  const [status, setStatus] = useState<'active' | 'paused'>('paused');
   const [rate, setRate] = useState('5');
   const [windowDays, setWindowDays] = useState('30');
   // The exact stored window. While the input text still matches this value's
@@ -54,7 +53,6 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
 
   useEffect(() => {
     if (!program) return;
-    setStatus(program.status);
     setRate(String(program.commissionRateBPS / 100));
     setSavedWindowSeconds(program.attributionWindowSeconds);
     setWindowDays(sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
@@ -95,33 +93,39 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const rateInvalid =
     rate.trim() !== '' && (!Number.isFinite(rateNumber) || rateNumber <= 0 || rateNumber > 100);
 
-  const handleSave = useCallback(async (): Promise<void> => {
-    const rateValue = Number(rate);
-    if (
-      !Number.isFinite(rateValue) ||
-      rateValue <= 0 ||
-      rateValue > 100 ||
-      effectiveWindowSeconds === null
-    ) {
-      setSaveError(t('sellerAffiliate.invalidProgram'));
-      return;
-    }
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await save({
-        status,
-        commissionRateBPS: Math.round(rateValue * 100),
-        attributionWindowSeconds: effectiveWindowSeconds,
-      });
-      setSavedRecently(true);
-      window.setTimeout(() => setSavedRecently(false), 2000);
-    } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
-    } finally {
-      setSaving(false);
-    }
-  }, [effectiveWindowSeconds, rate, save, status, t]);
+  // Save persists the form at an explicit status. First-time creation activates;
+  // an existing program keeps its status on save and flips it only through the
+  // dedicated enable/pause action — a save must never silently un-pause a program.
+  const handleSave = useCallback(
+    async (nextStatus: 'active' | 'paused'): Promise<void> => {
+      const rateValue = Number(rate);
+      if (
+        !Number.isFinite(rateValue) ||
+        rateValue <= 0 ||
+        rateValue > 100 ||
+        effectiveWindowSeconds === null
+      ) {
+        setSaveError(t('sellerAffiliate.invalidProgram'));
+        return;
+      }
+      setSaving(true);
+      setSaveError(null);
+      try {
+        await save({
+          status: nextStatus,
+          commissionRateBPS: Math.round(rateValue * 100),
+          attributionWindowSeconds: effectiveWindowSeconds,
+        });
+        setSavedRecently(true);
+        window.setTimeout(() => setSavedRecently(false), 2000);
+      } catch (cause) {
+        setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
+      } finally {
+        setSaving(false);
+      }
+    },
+    [effectiveWindowSeconds, rate, save, t]
+  );
 
   const handleCopyPromoterInvite = useCallback(async (): Promise<void> => {
     if (!program || typeof window === 'undefined') return;
@@ -166,26 +170,47 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
         {error ? (
           <p className="text-sm text-destructive">{t('sellerAffiliate.programLoadFailed')}</p>
         ) : null}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="affiliate-status">{t('sellerAffiliate.status')}</Label>
-            {/* Native select: unit tests drive it via fireEvent.change; styled to match Input. */}
-            <select
-              id="affiliate-status"
-              value={status}
-              onChange={event => setStatus(event.target.value as 'active' | 'paused')}
-              className="flex h-11 w-full appearance-none rounded-md border border-border bg-surface px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={loading}
-            >
-              <option value="active">{t('sellerAffiliate.active')}</option>
-              <option value="paused">{t('sellerAffiliate.paused')}</option>
-            </select>
-            {status === 'paused' ? (
+        {program ? (
+          <div className="space-y-2" data-testid="affiliate-status-row">
+            <p className="text-sm font-medium">{t('sellerAffiliate.status')}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={
+                  program.status === 'active'
+                    ? 'inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600'
+                    : 'inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground'
+                }
+                data-testid="affiliate-status-badge"
+                data-status={program.status}
+              >
+                {t(
+                  program.status === 'active' ? 'sellerAffiliate.active' : 'sellerAffiliate.paused'
+                )}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-11 sm:min-h-9"
+                onClick={() => void handleSave(program.status === 'active' ? 'paused' : 'active')}
+                disabled={loading || saving || rateInvalid}
+                data-testid="affiliate-status-toggle"
+              >
+                {t(
+                  program.status === 'active'
+                    ? 'sellerAffiliate.pauseProgram'
+                    : 'sellerAffiliate.activateProgram'
+                )}
+              </Button>
+            </div>
+            {program.status === 'paused' ? (
               <p className="text-xs text-muted-foreground" data-testid="affiliate-paused-hint">
                 {t('sellerAffiliate.pausedHint')}
               </p>
             ) : null}
           </div>
+        ) : null}
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="affiliate-rate">{t('sellerAffiliate.commissionRate')}</Label>
             <Input
@@ -310,16 +335,24 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
           <Button
             type="button"
             className="min-h-11"
-            onClick={() => void handleSave()}
+            onClick={() => void handleSave(program ? program.status : 'active')}
             disabled={loading || saving || rateInvalid}
             data-testid="seller-affiliate-program-save"
           >
             {savedRecently ? (
               <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-            ) : (
+            ) : program ? (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            {t(savedRecently ? 'sellerAffiliate.programSaved' : 'sellerAffiliate.saveProgram')}
+            {t(
+              savedRecently
+                ? 'sellerAffiliate.programSaved'
+                : program
+                  ? 'sellerAffiliate.saveProgram'
+                  : 'sellerAffiliate.createAndActivate'
+            )}
           </Button>
           {program ? (
             <Button

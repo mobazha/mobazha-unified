@@ -3240,6 +3240,7 @@ export interface TranslationResource {
       funds?: string;
       analytics?: string;
       discounts?: string;
+      affiliate?: string;
       dealLinks?: string;
       settings?: string;
       system?: string;
@@ -5968,6 +5969,9 @@ export interface TranslationResource {
     noManualWorkflow?: string;
     saveProgram?: string;
     programSaved?: string;
+    createAndActivate?: string;
+    pauseProgram?: string;
+    activateProgram?: string;
     saveBeforeInvite?: string;
     railChainOther?: string;
     programLoadFailed?: string;

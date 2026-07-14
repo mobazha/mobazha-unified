@@ -32,6 +32,7 @@ import {
   Wallet,
   WandSparkles,
   Link2,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -75,6 +76,7 @@ const baseNavItems: NavItem[] = [
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
   storePaymentsNavItem,
   { id: 'discounts', labelKey: 'admin.nav.discounts', href: '/admin/discounts', icon: Tag },
+  { id: 'affiliate', labelKey: 'admin.nav.affiliate', href: '/admin/affiliate', icon: Megaphone },
   {
     id: 'deal-links',
     labelKey: 'admin.nav.dealLinks',

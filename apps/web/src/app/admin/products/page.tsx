@@ -109,7 +109,9 @@ function ProductActions({
         </DropdownMenuItem>
         {canCreateDealLink && (
           <DropdownMenuItem
-            onClick={() => router.push(`/admin/deal-links?dealProduct=${encodeURIComponent(slug)}`)}
+            onClick={() =>
+              router.push(`/admin/deal-links/new?dealProduct=${encodeURIComponent(slug)}`)
+            }
           >
             <ShieldCheck className="mr-2 h-4 w-4" />
             {t('admin.products.createProtectedLink')}

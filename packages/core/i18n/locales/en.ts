@@ -6816,7 +6816,8 @@ export const en: TranslationResource = {
       funds: 'Funds',
       analytics: 'Analytics',
       discounts: 'Discounts',
-      dealLinks: 'Seller Affiliate',
+      affiliate: 'Seller Affiliate',
+      dealLinks: 'Protected links',
       collections: 'Collections',
       sourcing: 'Sourcing',
       storefront: 'Storefront',
@@ -7576,8 +7577,9 @@ export const en: TranslationResource = {
       codeDeleteError: 'Failed to delete code',
     },
     dealLinks: {
-      title: 'Protected links & promotion',
-      subtitle: 'Create a protected purchase link first, then optionally let partners share it.',
+      title: 'Protected links',
+      subtitle:
+        'Create shareable purchase links that lock the product version, price, and buyer-protection terms for a deal you agreed on.',
       dealCreateTitle: 'Create a protected purchase link',
       dealCreateSubtitle:
         'Choose a published digital product or service. The price and product version are locked into this link.',
@@ -10014,6 +10016,9 @@ export const en: TranslationResource = {
       'When order funds release, commissions pay promoters automatically over the rails below — no review queue, manual budget, or claim process.',
     saveProgram: 'Save program',
     programSaved: 'Saved',
+    createAndActivate: 'Create & activate program',
+    pauseProgram: 'Pause',
+    activateProgram: 'Activate',
     saveBeforeInvite: 'Save the program to get a promoter invite link you can share.',
     railChainOther: 'Other',
     programLoadFailed: 'Unable to load the current program. Saving will create it.',

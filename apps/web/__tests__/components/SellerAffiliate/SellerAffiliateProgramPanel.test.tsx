@@ -67,7 +67,11 @@ describe('SellerAffiliateProgramPanel', () => {
       expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
     );
     expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toHaveValue('7');
-    expect(screen.getByLabelText('sellerAffiliate.status')).toHaveValue('active');
+    expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'active');
+    // An active program offers to pause, not enable.
+    expect(screen.getByTestId('affiliate-status-toggle')).toHaveTextContent(
+      'sellerAffiliate.pauseProgram'
+    );
   });
 
   it('shows a load error without blocking the form for a first-time (no program) seller', async () => {
@@ -153,7 +157,6 @@ describe('SellerAffiliateProgramPanel', () => {
 
     // Before hydration the fields show placeholder defaults; editing them then
     // would either be clobbered or clobber the real program.
-    expect(screen.getByLabelText('sellerAffiliate.status')).toBeDisabled();
     expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toBeDisabled();
     expect(screen.getByLabelText('sellerAffiliate.attributionDays')).toBeDisabled();
 
@@ -209,14 +212,28 @@ describe('SellerAffiliateProgramPanel', () => {
     });
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
 
+    // First-time creation activates the program in one action.
     await waitFor(() =>
       expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith({
-        status: 'paused',
+        status: 'active',
         commissionRateBPS: 750,
         attributionWindowSeconds: 14 * 86_400,
       })
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('creates a first-time program with the create-and-activate CTA', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(null);
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
+
+    // A first-time seller sees no status control and no pause/enable toggle —
+    // only a single create-and-activate action.
+    expect(screen.getByTestId('seller-affiliate-program-save')).toHaveTextContent(
+      'sellerAffiliate.createAndActivate'
+    );
+    expect(screen.queryByTestId('affiliate-status-toggle')).not.toBeInTheDocument();
   });
 
   it('confirms a successful save on the button', async () => {
@@ -236,22 +253,52 @@ describe('SellerAffiliateProgramPanel', () => {
     );
   });
 
-  it('warns that a paused program earns no new commissions', async () => {
+  it('warns that a paused program earns no new commissions and offers to enable it', async () => {
     getSellerAffiliateProgramMock.mockResolvedValue({
       ...EXISTING_PROGRAM,
       status: 'paused' as const,
     });
     render(<SellerAffiliateProgramPanel />);
 
-    await waitFor(() => expect(screen.getByLabelText('sellerAffiliate.status')).not.toBeDisabled());
+    await waitFor(() =>
+      expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'paused')
+    );
     expect(screen.getByTestId('affiliate-paused-hint')).toHaveTextContent(
       'sellerAffiliate.pausedHint'
     );
+    // A paused program offers to activate.
+    expect(screen.getByTestId('affiliate-status-toggle')).toHaveTextContent(
+      'sellerAffiliate.activateProgram'
+    );
+  });
 
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.status'), {
-      target: { value: 'active' },
+  it('enables a paused program through the dedicated toggle, not a plain save', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      status: 'paused' as const,
     });
-    expect(screen.queryByTestId('affiliate-paused-hint')).not.toBeInTheDocument();
+    // Plain save keeps it paused (so the program stays paused); the toggle then activates.
+    putSellerAffiliateProgramMock
+      .mockResolvedValueOnce({ ...EXISTING_PROGRAM, status: 'paused' })
+      .mockResolvedValueOnce(EXISTING_PROGRAM);
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() => expect(screen.getByTestId('affiliate-status-toggle')).toBeInTheDocument());
+
+    // A plain save keeps the program paused; only the toggle activates it.
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+    await waitFor(() =>
+      expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'paused' })
+      )
+    );
+
+    putSellerAffiliateProgramMock.mockClear();
+    fireEvent.click(screen.getByTestId('affiliate-status-toggle'));
+    await waitFor(() =>
+      expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'active' })
+      )
+    );
   });
 
   it('tells a first-time seller the invite link unlocks after saving', async () => {
@@ -279,18 +326,15 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('save_rejected');
   });
 
-  it('toggles between active and paused', async () => {
+  it('pauses an active program through the dedicated toggle', async () => {
     getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
     putSellerAffiliateProgramMock.mockResolvedValue({ ...EXISTING_PROGRAM, status: 'paused' });
     render(<SellerAffiliateProgramPanel />);
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.status')).toHaveValue('active')
+      expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'active')
     );
 
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.status'), {
-      target: { value: 'paused' },
-    });
-    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+    fireEvent.click(screen.getByTestId('affiliate-status-toggle'));
 
     await waitFor(() =>
       expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith(

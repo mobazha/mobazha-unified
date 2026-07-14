@@ -23,7 +23,7 @@ function NewDealLinkPageContent() {
       if (copied) {
         toast({ title: t('admin.dealLinks.dealCopySuccess') });
       }
-      router.push('/admin/deal-links?tab=links');
+      router.push('/admin/deal-links');
     },
     [router, t, toast]
   );

@@ -428,6 +428,7 @@ if (!__SOVEREIGN__) {
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
+        { path: 'affiliate', element: lazyPage(() => import('./app/admin/affiliate/page')) },
         {
           path: 'deal-links',
           element: lazyPage(() => import('./app/admin/deal-links/DealLinksLayoutVite')),
