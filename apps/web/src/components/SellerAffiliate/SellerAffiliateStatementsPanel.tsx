@@ -184,7 +184,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
         ) : null}
         {groups.length ? (
           <div
-            className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/20 p-3"
+            className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-4"
             data-testid={`seller-affiliate-earnings-summary-${audience}`}
           >
             <div className="space-y-0.5">
@@ -212,10 +212,45 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {t('sellerAffiliate.earningsInProgressLabel')}
               </p>
-              <p className="text-sm font-semibold">
+              {summary.pendingByCurrency.length ? (
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  {summary.pendingByCurrency.map(entry => (
+                    <span key={entry.currency} className="text-sm font-semibold">
+                      {renderPairedPrice(entry.commissionAtomic, entry.currency, localCurrency, {
+                        isMinimalUnit: true,
+                      })}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-muted-foreground">—</p>
+              )}
+              <p className="text-xs text-muted-foreground">
                 {t('sellerAffiliate.earningsOrders', { count: summary.pendingOrders })}
               </p>
             </div>
+            {audience === 'seller' ? (
+              <div className="space-y-0.5" data-testid="seller-affiliate-converting-promoters">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('sellerAffiliate.earningsPromotersLabel')}
+                </p>
+                <p className="text-sm font-semibold">{summary.convertingPromoters}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('sellerAffiliate.earningsOrders', { count: summary.totalOrders })}
+                </p>
+              </div>
+            ) : null}
+            {summary.reversedOrders > 0 ? (
+              <div className="space-y-0.5" data-testid="seller-affiliate-reversed">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('sellerAffiliate.earningsReversedLabel')}
+                </p>
+                <p className="text-sm font-semibold text-destructive">{summary.reversedOrders}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('sellerAffiliate.earningsOrders', { count: summary.reversedOrders })}
+                </p>
+              </div>
+            ) : null}
           </div>
         ) : null}
         {groups.map(group => (
