@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { Copy, ExternalLink } from 'lucide-react';
+import { Copy, ExternalLink, Loader2, Pause, Pencil, Play } from 'lucide-react';
 import {
   buildSellerDealLinkBrowseHref,
   useCurrency,
@@ -17,14 +17,28 @@ export interface DealLinkRowProps {
   link: SellerDealLink;
   highlighted?: boolean;
   manualCopyToken: string;
+  busy?: boolean;
   onCopy: (publicToken: string) => void;
+  onEdit?: (link: SellerDealLink) => void;
+  onPause?: (link: SellerDealLink) => void;
+  onReactivate?: (link: SellerDealLink) => void;
+}
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export const DealLinkRow = memo(function DealLinkRow({
   link,
   highlighted,
   manualCopyToken,
+  busy = false,
   onCopy,
+  onEdit,
+  onPause,
+  onReactivate,
 }: DealLinkRowProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -41,6 +55,9 @@ export const DealLinkRow = memo(function DealLinkRow({
     (link.expiresAt ? new Date(link.expiresAt).getTime() <= renderedAt : false);
   const effectiveStatus = expired ? 'expired' : link.status;
   const isLive = effectiveStatus === 'active';
+  const canEdit = !expired && effectiveStatus !== 'draft';
+  const canPause = effectiveStatus === 'active';
+  const canReactivate = effectiveStatus === 'paused';
   const statusLabelKey: Record<string, string> = {
     draft: 'admin.dealLinks.statusDraft',
     active: 'admin.dealLinks.statusActive',
@@ -79,25 +96,76 @@ export const DealLinkRow = memo(function DealLinkRow({
         <p className="text-xs text-muted-foreground">
           {formatPrice(link.priceAmount, link.priceCurrency)}
         </p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          {t('admin.dealLinks.createdLabel')}: {formatDate(link.createdAt)}
+          {' · '}
+          {t('admin.dealLinks.dealExpiresLabel')}:{' '}
+          {link.expiresAt ? formatDate(link.expiresAt) : t('admin.dealLinks.noExpiryLabel')}
+        </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        {canEdit && onEdit ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onEdit(link)}
+            disabled={busy}
+            data-testid={`deal-link-edit-${link.id}`}
+          >
+            <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            {t('admin.dealLinks.editDealCta')}
+          </Button>
+        ) : null}
+        {canPause && onPause ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onPause(link)}
+            disabled={busy}
+            data-testid={`deal-link-pause-${link.id}`}
+          >
+            {busy ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Pause className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            )}
+            {t('admin.dealLinks.pauseDealCta')}
+          </Button>
+        ) : null}
+        {canReactivate && onReactivate ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => onReactivate(link)}
+            disabled={busy}
+            data-testid={`deal-link-reactivate-${link.id}`}
+          >
+            {busy ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Play className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            )}
+            {t('admin.dealLinks.reactivateDealCta')}
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
+          className="min-h-11 sm:min-h-9"
           onClick={() => onCopy(link.publicToken)}
         >
           <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
           {t('admin.dealLinks.copyDealCta')}
         </Button>
         {isLive ? (
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
-          >
+          <Button asChild variant="outline" size="sm" className="min-h-11 sm:min-h-9">
             <a href={href} target="_blank" rel="noreferrer">
               <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
               {t('admin.dealLinks.openDealCta')}
@@ -108,7 +176,7 @@ export const DealLinkRow = memo(function DealLinkRow({
             type="button"
             variant="outline"
             size="sm"
-            className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
+            className="min-h-11 sm:min-h-9"
             disabled
           >
             <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />

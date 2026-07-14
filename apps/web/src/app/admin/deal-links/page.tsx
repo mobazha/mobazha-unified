@@ -6,7 +6,14 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, ShieldCheck } from 'lucide-react';
-import { buildSellerDealLinkBrowseHref, useI18n, useSellerDealLinks } from '@mobazha/core';
+import {
+  activateSellerDealLink,
+  buildSellerDealLinkBrowseHref,
+  pauseSellerDealLink,
+  useI18n,
+  useSellerDealLinks,
+  type SellerDealLink,
+} from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -21,6 +28,47 @@ function DealLinksHomeContent() {
   const { links, loading, error, reload } = useSellerDealLinks();
   // Token whose manual-copy input is revealed after an automatic copy failed.
   const [manualCopyToken, setManualCopyToken] = useState('');
+  // Id of the link whose pause/reactivate request is in flight.
+  const [busyId, setBusyId] = useState('');
+
+  const handlePause = useCallback(
+    async (link: SellerDealLink): Promise<void> => {
+      setBusyId(link.id);
+      try {
+        await pauseSellerDealLink(link.id);
+        toast({ title: t('admin.dealLinks.dealPauseSuccess') });
+        await reload();
+      } catch {
+        toast({ variant: 'destructive', title: t('admin.dealLinks.dealPauseFailed') });
+      } finally {
+        setBusyId('');
+      }
+    },
+    [reload, t, toast]
+  );
+
+  const handleReactivate = useCallback(
+    async (link: SellerDealLink): Promise<void> => {
+      setBusyId(link.id);
+      try {
+        await activateSellerDealLink(link.id);
+        toast({ title: t('admin.dealLinks.dealReactivateSuccess') });
+        await reload();
+      } catch {
+        toast({ variant: 'destructive', title: t('admin.dealLinks.dealReactivateFailed') });
+      } finally {
+        setBusyId('');
+      }
+    },
+    [reload, t, toast]
+  );
+
+  const handleEdit = useCallback(
+    (link: SellerDealLink): void => {
+      router.push(`/admin/deal-links/${encodeURIComponent(link.id)}/edit`);
+    },
+    [router]
+  );
 
   const handleCopy = useCallback(
     async (publicToken: string): Promise<void> => {
@@ -97,7 +145,11 @@ function DealLinksHomeContent() {
               key={link.id}
               link={link}
               manualCopyToken={manualCopyToken}
+              busy={busyId === link.id}
               onCopy={publicToken => void handleCopy(publicToken)}
+              onEdit={handleEdit}
+              onPause={l => void handlePause(l)}
+              onReactivate={l => void handleReactivate(l)}
             />
           ))}
         </CardContent>

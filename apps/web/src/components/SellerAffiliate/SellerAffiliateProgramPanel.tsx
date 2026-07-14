@@ -16,6 +16,7 @@ import {
   useSellerAffiliateLinks,
   useSellerAffiliateProgram,
   truncateAddress,
+  type UseSellerAffiliateProgramReturn,
 } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,9 +25,23 @@ import { Label } from '@/components/ui/label';
 import { copyToClipboard } from '@/lib/clipboard';
 import { AffiliateRailChips } from './AffiliateRailChips';
 
-export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramPanel() {
+export interface SellerAffiliateProgramPanelProps {
+  /**
+   * Lifts program state to the page so a sibling (the statements panel) can gate
+   * on program existence and stay in sync with a save here. When omitted, the
+   * panel owns the state through its own hook instance.
+   */
+  programState?: UseSellerAffiliateProgramReturn;
+}
+
+export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramPanel({
+  programState,
+}: SellerAffiliateProgramPanelProps = {}) {
   const { t } = useI18n();
-  const { program, loading, error, save } = useSellerAffiliateProgram();
+  // Always call the hook (rules of hooks); disable its fetch when the page owns
+  // the state and passes it in, so there is exactly one request in flight.
+  const ownProgramState = useSellerAffiliateProgram(programState === undefined);
+  const { program, loading, error, save } = programState ?? ownProgramState;
   const {
     capabilities,
     loading: capabilitiesLoading,
@@ -50,6 +65,8 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const [inviteCopied, setInviteCopied] = useState(false);
   const [confirmRevokeID, setConfirmRevokeID] = useState<string | null>(null);
   const [revokingID, setRevokingID] = useState<string | null>(null);
+  // Rails settle automatically, so the full list stays folded behind a summary.
+  const [railsExpanded, setRailsExpanded] = useState(false);
 
   useEffect(() => {
     if (!program) return;
@@ -102,6 +119,13 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     program !== null &&
     (rate !== String(program.commissionRateBPS / 100) ||
       windowDays !== sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
+
+  // Worked commission cost on a 100-unit net-merchandise sale (base 100 makes
+  // the payout equal the rate). Only shown when the rate parses to a valid %.
+  const commissionExample =
+    !rateInvalid && rate.trim() !== '' && Number.isFinite(rateNumber)
+      ? Number(rateNumber.toFixed(2)).toString()
+      : null;
 
   // Save persists the form at an explicit status. First-time creation activates;
   // an existing program keeps its status on save and flips it only through the
@@ -314,15 +338,59 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             ) : null}
           </div>
         </div>
+        {commissionExample ? (
+          <div
+            className="space-y-1 rounded-lg border border-border bg-muted/30 p-3"
+            data-testid="affiliate-cost-preview"
+          >
+            <p className="text-sm font-medium">{t('sellerAffiliate.costPreviewTitle')}</p>
+            <p className="text-xs text-muted-foreground">{t('sellerAffiliate.costPreviewBody')}</p>
+            <p className="text-xs font-medium text-foreground" data-testid="affiliate-cost-example">
+              {t('sellerAffiliate.costPreviewExample', {
+                percent: rate.trim(),
+                commission: commissionExample,
+              })}
+            </p>
+          </div>
+        ) : null}
         <div className="space-y-2" aria-busy={capabilitiesLoading}>
-          <p className="text-sm font-medium">{t('sellerAffiliate.supportedRails')}</p>
-          <p className="text-xs text-muted-foreground">{t('sellerAffiliate.noManualWorkflow')}</p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{t('sellerAffiliate.supportedRails')}</p>
+              <p className="text-xs text-muted-foreground">{t('sellerAffiliate.railsSummary')}</p>
+            </div>
+            {(capabilities?.rails.length ?? 0) > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="min-h-9 shrink-0"
+                onClick={() => setRailsExpanded(value => !value)}
+                aria-expanded={railsExpanded}
+                data-testid="affiliate-rails-toggle"
+              >
+                {t(railsExpanded ? 'sellerAffiliate.railsHide' : 'sellerAffiliate.railsShow')}
+              </Button>
+            ) : null}
+          </div>
+          {(capabilities?.rails.length ?? 0) > 0 && !railsExpanded ? (
+            <p className="text-xs text-muted-foreground" data-testid="affiliate-rails-count">
+              {t('sellerAffiliate.railsReadyCount', { count: capabilities?.rails.length ?? 0 })}
+            </p>
+          ) : null}
           {capabilitiesError ? (
             <p className="text-sm text-destructive" role="alert">
               {t('sellerAffiliate.capabilitiesLoadFailed')}
             </p>
           ) : null}
-          <AffiliateRailChips rails={capabilities?.rails ?? []} />
+          {railsExpanded ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {t('sellerAffiliate.noManualWorkflow')}
+              </p>
+              <AffiliateRailChips rails={capabilities?.rails ?? []} />
+            </div>
+          ) : null}
           {!capabilitiesLoading && !capabilitiesError && !capabilities?.rails.length ? (
             <p className="text-sm text-destructive">{t('sellerAffiliate.noSupportedRails')}</p>
           ) : null}
