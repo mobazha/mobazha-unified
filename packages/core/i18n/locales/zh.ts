@@ -9303,6 +9303,38 @@ export const zh: PartialTranslationResource = {
     connectFailed: '账户已登录，但店铺连接尚未完成。请重试；本地店铺身份不会因此改变。',
   },
 
+  storeCredential: {
+    storeCredentialInvalidTitle: '本店铺的连接需要重新建立',
+    storeCredentialInvalidBody:
+      '本店铺与平台的连接被拒绝。请点击重新连接，由本地节点安全地替换本店铺的平台凭证——本店铺稳定的 Peer 身份及其数据将保持不变，且无需登录任何账户。此操作不是账户登录。',
+    accountStoreMismatchTitle: '本店铺关联的账户属于其他店铺',
+    accountStoreMismatchBody:
+      '本店铺可选的平台账户关联指向另一家店铺，因此该账户无法管理本店铺。请切换到与本店铺关联的账户，或解除本店铺的账户关联以继续。解除仅移除本店铺可选的平台账户关联——不会移除或登出任何账户——本店铺的 Peer 身份、数据、交易链接与订单历史都会保留，店铺可继续独立运行。',
+    accountStoreMismatchSwitch: '切换账户',
+    accountStoreMismatchDisconnect: '解除店铺账户关联',
+    accountStoreMismatchDisconnectConfirmTitle: '解除本店铺的账户关联？',
+    accountStoreMismatchDisconnectConfirmBody:
+      '此操作仅移除本店铺可选的平台账户关联。本店铺的 Peer 身份、数据、交易链接与订单历史将保持原样，也不会登出任何账户。',
+    accountStoreMismatchDisconnectConfirmCta: '解除店铺账户关联',
+    accountStoreMismatchDisconnectCancelCta: '取消',
+    accountSessionRequiredTitle: '该功能需要连接账户',
+    accountSessionRequiredBody:
+      '此操作使用的是可选的平台账户功能。对于店铺的本地功能，连接账户始终是可选的；但此项操作需要已连接的账户。请连接一个账户以继续——其余功能无需连接即可正常使用。',
+    accountSessionRequiredCta: '连接账户',
+    accountSessionRequiredOptionalNote: '本地店铺功能无需连接账户，仅此平台账户操作需要。',
+    rateLimitedTitle: '当前请求过于频繁',
+    rateLimitedBody: '你已触发临时请求限制。请稍候几秒后重试——系统未做任何更改。',
+    retryCta: '重试',
+    reconnectCta: '重新连接店铺',
+    reconnecting: '正在重新连接…',
+    refreshFailed: '无法重新连接店铺，请重试。',
+    disconnecting: '正在断开…',
+    disconnectFailed: '无法断开账户，请重试。',
+    connecting: '正在连接…',
+    connectActionFailed: '无法连接平台账户，请重试。',
+    actionFailed: '操作未能完成，请重试。',
+  },
+
   sellerAffiliate: {
     adminTitle: '卖家推广佣金',
     adminSubtitle: '配置一个店铺范围的自动推荐计划，并查看由订单驱动的账单。',

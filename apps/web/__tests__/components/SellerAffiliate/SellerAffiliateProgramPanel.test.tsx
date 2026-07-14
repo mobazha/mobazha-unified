@@ -92,6 +92,19 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(screen.getByTestId('seller-affiliate-program-save')).not.toBeDisabled();
   });
 
+  it('renders the store-credential recovery state when the program load is denied', async () => {
+    getSellerAffiliateProgramMock.mockRejectedValue(
+      Object.assign(new Error('mismatch'), { code: 'ACCOUNT_STORE_MISMATCH' })
+    );
+    render(<SellerAffiliateProgramPanel />);
+
+    const notice = await screen.findByTestId('store-credential-notice');
+    expect(notice).toHaveAttribute('data-kind', 'accountStoreMismatch');
+    expect(screen.queryByText('sellerAffiliate.programLoadFailed')).not.toBeInTheDocument();
+    // The affiliate surface offers both account switch and reconnect.
+    expect(screen.getByTestId('store-credential-action-switchAccount')).toBeInTheDocument();
+  });
+
   it('treats a not-found program as a fresh seller instead of an error', async () => {
     getSellerAffiliateProgramMock.mockRejectedValue(new Error('program not found'));
     render(<SellerAffiliateProgramPanel />);
@@ -376,6 +389,20 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('save_rejected');
   });
 
+  it('renders the rate-limit recovery state when a save is throttled', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(null);
+    putSellerAffiliateProgramMock.mockRejectedValue(
+      Object.assign(new Error('slow down'), { code: 'RATE_LIMITED', status: 429 })
+    );
+    render(<SellerAffiliateProgramPanel />);
+    await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+
+    const notice = await screen.findByTestId('store-credential-notice');
+    expect(notice).toHaveAttribute('data-kind', 'rateLimited');
+  });
+
   it('re-hydrates without a false dirty state when the program prop switches to a different program', async () => {
     // Simulates the parent page swapping in a different program's already-loaded
     // state (e.g. navigating between sellers) rather than a fresh fetch.
@@ -395,6 +422,7 @@ describe('SellerAffiliateProgramPanel', () => {
       program: programA,
       loading: false,
       error: null,
+      errorCause: null,
       reload: vi.fn(),
       save: vi.fn(),
     };
@@ -402,6 +430,7 @@ describe('SellerAffiliateProgramPanel', () => {
       program: programB,
       loading: false,
       error: null,
+      errorCause: null,
       reload: vi.fn(),
       save: vi.fn(),
     };

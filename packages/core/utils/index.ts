@@ -87,6 +87,7 @@ export * from './guestOrderKind';
 export * from './guestSupplyQuote';
 export * from './guestOrderRequest';
 export * from './dealLink';
+export * from './storeCredentialDenial';
 export * from './sellerAffiliate';
 export * from './sellerAffiliateReferral';
 export * from './sellerDealLink';

@@ -15,6 +15,7 @@ import {
   useSellerAffiliateCapabilities,
   useSellerAffiliateLinks,
   useSellerAffiliateProgram,
+  useStoreCredentialRecovery,
   truncateAddress,
   type UseSellerAffiliateProgramReturn,
 } from '@mobazha/core';
@@ -23,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { copyToClipboard } from '@/lib/clipboard';
+import { StoreCredentialNotice } from '@/components/common/StoreCredentialNotice';
 import { AffiliateRailChips } from './AffiliateRailChips';
 
 export interface SellerAffiliateProgramPanelProps {
@@ -41,7 +43,13 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   // Always call the hook (rules of hooks); disable its fetch when the page owns
   // the state and passes it in, so there is exactly one request in flight.
   const ownProgramState = useSellerAffiliateProgram(programState === undefined);
-  const { program, loading, error, save } = programState ?? ownProgramState;
+  const { program, loading, error, errorCause, reload, save } = programState ?? ownProgramState;
+  // Recovery differs by denial kind: STORE_CREDENTIAL_INVALID re-registers the
+  // store's OWN signed credential via the local node (never OAuth), while
+  // ACCOUNT_STORE_MISMATCH switches/disconnects and ACCOUNT_SESSION_REQUIRED
+  // connects the optional platform account. Each reloads only after it succeeds;
+  // connecting an account never grants the store's own key authority.
+  const recovery = useStoreCredentialRecovery(reload);
   const {
     capabilities,
     loading: capabilitiesLoading,
@@ -68,6 +76,9 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const [saving, setSaving] = useState(false);
   const [savedRecently, setSavedRecently] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // The raw cause behind saveError, kept so a typed store-credential denial can
+  // render its recovery state instead of a bare message.
+  const [saveErrorCause, setSaveErrorCause] = useState<unknown>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [confirmRevokeID, setConfirmRevokeID] = useState<string | null>(null);
   const [revokingID, setRevokingID] = useState<string | null>(null);
@@ -152,10 +163,12 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
         effectiveWindowSeconds === null
       ) {
         setSaveError(t('sellerAffiliate.invalidProgram'));
+        setSaveErrorCause(null);
         return;
       }
       setSaving(true);
       setSaveError(null);
+      setSaveErrorCause(null);
       try {
         await save({
           status: nextStatus,
@@ -168,6 +181,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
         }
       } catch (cause) {
         setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
+        setSaveErrorCause(cause);
       } finally {
         setSaving(false);
       }
@@ -183,6 +197,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     if (!program) return;
     setSaving(true);
     setSaveError(null);
+    setSaveErrorCause(null);
     try {
       await save({
         status: program.status === 'active' ? 'paused' : 'active',
@@ -191,6 +206,7 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       });
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.saveFailed'));
+      setSaveErrorCause(cause);
     } finally {
       setSaving(false);
     }
@@ -202,9 +218,11 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     const copied = await copyToClipboard(inviteURL.toString());
     if (!copied) {
       setSaveError(t('sellerAffiliate.copyInviteFailed'));
+      setSaveErrorCause(null);
       return;
     }
     setSaveError(null);
+    setSaveErrorCause(null);
     setInviteCopied(true);
     window.setTimeout(() => setInviteCopied(false), 2000);
   }, [program, t]);
@@ -217,11 +235,13 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       }
       setRevokingID(linkID);
       setSaveError(null);
+      setSaveErrorCause(null);
       try {
         await revoke(linkID);
         setConfirmRevokeID(null);
       } catch (cause) {
         setSaveError(cause instanceof Error ? cause.message : t('sellerAffiliate.revokeFailed'));
+        setSaveErrorCause(cause);
       } finally {
         setRevokingID(null);
       }
@@ -237,7 +257,21 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
       </CardHeader>
       <CardContent className="space-y-4">
         {error ? (
-          <p className="text-sm text-destructive">{t('sellerAffiliate.programLoadFailed')}</p>
+          <StoreCredentialNotice
+            error={errorCause}
+            onRefreshCredential={() => void recovery.refreshCredential()}
+            onSwitchAccount={() => void recovery.switchAccount()}
+            onDisconnect={() => void recovery.disconnect()}
+            onConnect={() => void recovery.connect()}
+            onRetry={() => void recovery.retry()}
+            busyAction={recovery.busyAction}
+            failedAction={recovery.failedAction}
+            fallback={
+              <p className="text-sm text-destructive" role="alert">
+                {t('sellerAffiliate.programLoadFailed')}
+              </p>
+            }
+          />
         ) : null}
         {program ? (
           <div className="space-y-2" data-testid="affiliate-status-row">
@@ -464,9 +498,21 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
           </div>
         ) : null}
         {saveError ? (
-          <p className="text-sm text-destructive" role="alert">
-            {saveError}
-          </p>
+          <StoreCredentialNotice
+            error={saveErrorCause}
+            onRefreshCredential={() => void recovery.refreshCredential()}
+            onSwitchAccount={() => void recovery.switchAccount()}
+            onDisconnect={() => void recovery.disconnect()}
+            onConnect={() => void recovery.connect()}
+            onRetry={() => void recovery.retry()}
+            busyAction={recovery.busyAction}
+            failedAction={recovery.failedAction}
+            fallback={
+              <p className="text-sm text-destructive" role="alert">
+                {saveError}
+              </p>
+            }
+          />
         ) : null}
         <div className="flex flex-wrap gap-2">
           <Button

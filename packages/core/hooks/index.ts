@@ -33,6 +33,7 @@ export * from './useSellerDealLink';
 export * from './useSellerDealLinkFeeQuote';
 export * from './useSellerDealLinkOrders';
 export * from './useSellerDealLinks';
+export * from './useStoreCredentialRecovery';
 
 // 用户资料相关
 export * from './useProfile';

@@ -10101,6 +10101,40 @@ export const en: TranslationResource = {
       'The account signed in, but the store was not connected. Retry without changing your local store identity.',
   },
 
+  storeCredential: {
+    storeCredentialInvalidTitle: 'This store’s connection needs reconnecting',
+    storeCredentialInvalidBody:
+      'This store’s connection to the platform was declined. Reconnect to have the local node securely replace this store’s platform credential — your store’s stable Peer identity and its data remain, and you do not need to sign in to any account. This is not an account sign-in.',
+    accountStoreMismatchTitle: 'This store is linked to a different store’s account',
+    accountStoreMismatchBody:
+      'This store’s optional platform-account association points at a different store, so that account can’t manage this one. Switch to the account linked to this store, or disconnect this store’s account association to continue. Disconnecting removes only this store’s optional platform-account association — it does not remove or sign out any account — and your store’s Peer identity, data, deal links, and order history all remain, with the store working on its own.',
+    accountStoreMismatchSwitch: 'Switch account',
+    accountStoreMismatchDisconnect: 'Disconnect store account',
+    accountStoreMismatchDisconnectConfirmTitle: 'Disconnect this store’s account?',
+    accountStoreMismatchDisconnectConfirmBody:
+      'This removes only this store’s optional platform-account association. Your store’s Peer identity, data, deal links, and order history stay exactly as they are, and no account is signed out.',
+    accountStoreMismatchDisconnectConfirmCta: 'Disconnect store account',
+    accountStoreMismatchDisconnectCancelCta: 'Cancel',
+    accountSessionRequiredTitle: 'Connect an account for this feature',
+    accountSessionRequiredBody:
+      'This action uses an optional platform-account feature. Connecting stays optional for your store’s local tools, but this particular operation needs a connected account. Connect one to continue — everything else keeps working without it.',
+    accountSessionRequiredCta: 'Connect account',
+    accountSessionRequiredOptionalNote:
+      'Connecting is optional for local store features and only required for this platform-account action.',
+    rateLimitedTitle: 'Too many requests right now',
+    rateLimitedBody:
+      'You’ve reached a temporary request limit. Wait a few seconds, then try again — nothing was changed.',
+    retryCta: 'Try again',
+    reconnectCta: 'Reconnect store',
+    reconnecting: 'Reconnecting…',
+    refreshFailed: 'Couldn’t reconnect the store. Please try again.',
+    disconnecting: 'Disconnecting…',
+    disconnectFailed: 'Couldn’t disconnect the account. Please try again.',
+    connecting: 'Connecting…',
+    connectActionFailed: 'Couldn’t connect the platform account. Please try again.',
+    actionFailed: 'Couldn’t complete that action. Please try again.',
+  },
+
   sellerAffiliate: {
     adminTitle: 'Seller affiliate',
     adminSubtitle:

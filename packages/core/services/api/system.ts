@@ -5,7 +5,14 @@
  *          mobazha/internal/api/system_admin_handlers.go
  */
 
-import { publicGet, publicPost, nodeAuthGet, nodeAuthPost, nodeAuthPut } from './helpers';
+import {
+  publicGet,
+  publicPost,
+  nodeAuthGet,
+  nodeAuthPost,
+  nodeAuthPut,
+  nodeAuthDel,
+} from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 // --- Setup types ---
@@ -123,6 +130,53 @@ export interface ConnectPlatformResponse {
 
 export async function connectPlatform(token: string): Promise<ConnectPlatformResponse> {
   return nodeAuthPost<ConnectPlatformResponse>(NODE_API.SYSTEM_CONNECT_PLATFORM, { token });
+}
+
+/**
+ * Result of re-registering / rotating the store's own signed platform credential.
+ *
+ * The node performs a serialized Peer-signed store-credential registration and
+ * hot-updates the reverse proxy. The signed key never leaves the node, so the
+ * response only confirms completion — never key material.
+ */
+export interface RefreshPlatformCredentialResponse {
+  refreshed: boolean;
+}
+
+/**
+ * Re-register or rotate this store's signed platform credential (local admin
+ * auth). This is the recovery for a `STORE_CREDENTIAL_INVALID` denial: it
+ * re-establishes the *store's own* Peer credential with the platform. It is not
+ * an OAuth flow and touches no platform *account* — only the store's key
+ * authority, which never leaves the node.
+ */
+export async function refreshPlatformCredential(): Promise<RefreshPlatformCredentialResponse> {
+  return nodeAuthPost<RefreshPlatformCredentialResponse>(
+    NODE_API.SYSTEM_REFRESH_PLATFORM_CREDENTIAL
+  );
+}
+
+/**
+ * Result of disconnecting the optional platform account from this store.
+ *
+ * The node first clears the Hosting owner association, then the local
+ * `owner_user_id`. The store's Peer ID, store data, deal links, orders, and its
+ * own signed credential authority are all preserved — only the optional account
+ * ownership is removed; the response only confirms completion.
+ */
+export interface DisconnectPlatformResponse {
+  disconnected: boolean;
+}
+
+/**
+ * Disconnect the optional platform account associated with this store (local
+ * admin auth). Removes only the optional account ownership — the store's Peer
+ * identity, data, deal links, order history, and credential authority all
+ * remain. This is the recovery for an `ACCOUNT_STORE_MISMATCH` denial when the
+ * user chooses to drop the mismatched account rather than switch to another.
+ */
+export async function disconnectPlatform(): Promise<DisconnectPlatformResponse> {
+  return nodeAuthDel<DisconnectPlatformResponse>(NODE_API.SYSTEM_CONNECT_PLATFORM);
 }
 
 // --- System admin API (standalone only, requires auth) ---

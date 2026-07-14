@@ -802,6 +802,7 @@ export const NODE_API_PATHS = {
     `/system/mcp/disconnect/${encodeURIComponent(client)}`,
   SYSTEM_NETWORK: '/system/network',
   SYSTEM_PUBLISH: '/system/publish',
+  SYSTEM_REFRESH_PLATFORM_CREDENTIAL: '/system/refresh-platform-credential',
   SYSTEM_SETUP: '/system/setup',
   SYSTEM_SHUTDOWN: '/system/shutdown',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',

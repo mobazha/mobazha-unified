@@ -10,9 +10,11 @@ import {
   activateSellerDealLink,
   buildSellerDealLinkBrowseHref,
   closeSellerDealLink,
+  isStoreCredentialDenial,
   pauseSellerDealLink,
   useI18n,
   useSellerDealLinks,
+  useStoreCredentialRecovery,
   type SellerDealLink,
 } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
@@ -22,49 +24,76 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/use-toast';
 import { copyToClipboard } from '@/lib/clipboard';
 import { DealLinkRow } from '@/components/admin/deal-links/DealLinkRow';
+import { StoreCredentialNotice } from '@/components/common/StoreCredentialNotice';
 
 function DealLinksHomeContent() {
   const { t } = useI18n();
   const router = useRouter();
   const { toast } = useToast();
-  const { links, loading, error, reload } = useSellerDealLinks();
+  const { links, loading, error, errorCause, reload } = useSellerDealLinks();
   // Token whose manual-copy input is revealed after an automatic copy failed.
   const [manualCopyToken, setManualCopyToken] = useState('');
   // Id of the link whose pause/reactivate/close request is in flight.
   const [busyId, setBusyId] = useState('');
   // Link awaiting close confirmation; drives the confirm dialog.
   const [closeTarget, setCloseTarget] = useState<SellerDealLink | null>(null);
+  // The raw cause behind a failed pause/reactivate/close, kept only when it is a
+  // typed store-credential denial so its recovery notice can render. Non-denial
+  // mutation failures keep the existing per-action toast.
+  const [mutationErrorCause, setMutationErrorCause] = useState<unknown>(null);
+
+  // Recovery for a typed denial. STORE_CREDENTIAL_INVALID re-registers the
+  // store's OWN signed credential via the local node (never OAuth); an ACCOUNT_*
+  // denial switches, disconnects, or connects the optional platform account. Any
+  // action reloads only after it succeeds — clearing the mutation notice too.
+  const clearRecoveryAndReload = useCallback(async (): Promise<void> => {
+    setMutationErrorCause(null);
+    await reload();
+  }, [reload]);
+  const recovery = useStoreCredentialRecovery(clearRecoveryAndReload);
+
+  // Route a mutation failure: a typed store-credential denial gets the shared
+  // recovery notice; anything else keeps its plain per-action failure toast.
+  const handleMutationError = useCallback(
+    (cause: unknown, failedTitleKey: string): void => {
+      if (isStoreCredentialDenial(cause)) setMutationErrorCause(cause);
+      else toast({ variant: 'destructive', title: t(failedTitleKey) });
+    },
+    [t, toast]
+  );
 
   const handlePause = useCallback(
     async (link: SellerDealLink): Promise<void> => {
       setBusyId(link.id);
+      setMutationErrorCause(null);
       try {
         await pauseSellerDealLink(link.id);
         toast({ title: t('admin.dealLinks.dealPauseSuccess') });
         await reload();
-      } catch {
-        toast({ variant: 'destructive', title: t('admin.dealLinks.dealPauseFailed') });
+      } catch (cause) {
+        handleMutationError(cause, 'admin.dealLinks.dealPauseFailed');
       } finally {
         setBusyId('');
       }
     },
-    [reload, t, toast]
+    [handleMutationError, reload, t, toast]
   );
 
   const handleReactivate = useCallback(
     async (link: SellerDealLink): Promise<void> => {
       setBusyId(link.id);
+      setMutationErrorCause(null);
       try {
         await activateSellerDealLink(link.id);
         toast({ title: t('admin.dealLinks.dealReactivateSuccess') });
         await reload();
-      } catch {
-        toast({ variant: 'destructive', title: t('admin.dealLinks.dealReactivateFailed') });
+      } catch (cause) {
+        handleMutationError(cause, 'admin.dealLinks.dealReactivateFailed');
       } finally {
         setBusyId('');
       }
     },
-    [reload, t, toast]
+    [handleMutationError, reload, t, toast]
   );
 
   const handleEdit = useCallback(
@@ -86,16 +115,17 @@ function DealLinksHomeContent() {
     if (!link) return;
     setCloseTarget(null);
     setBusyId(link.id);
+    setMutationErrorCause(null);
     try {
       await closeSellerDealLink(link.id);
       toast({ title: t('admin.dealLinks.dealCloseSuccess') });
       await reload();
-    } catch {
-      toast({ variant: 'destructive', title: t('admin.dealLinks.dealCloseFailed') });
+    } catch (cause) {
+      handleMutationError(cause, 'admin.dealLinks.dealCloseFailed');
     } finally {
       setBusyId('');
     }
-  }, [closeTarget, reload, t, toast]);
+  }, [closeTarget, handleMutationError, reload, t, toast]);
 
   const handleCopy = useCallback(
     async (publicToken: string): Promise<void> => {
@@ -152,9 +182,33 @@ function DealLinksHomeContent() {
         </CardHeader>
         <CardContent className="space-y-3">
           {error ? (
-            <p className="text-sm text-destructive" role="alert">
-              {t('admin.dealLinks.loadFailed')}
-            </p>
+            <StoreCredentialNotice
+              error={errorCause}
+              onRefreshCredential={() => void recovery.refreshCredential()}
+              onSwitchAccount={() => void recovery.switchAccount()}
+              onDisconnect={() => void recovery.disconnect()}
+              onConnect={() => void recovery.connect()}
+              onRetry={() => void recovery.retry()}
+              busyAction={recovery.busyAction}
+              failedAction={recovery.failedAction}
+              fallback={
+                <p className="text-sm text-destructive" role="alert">
+                  {t('admin.dealLinks.loadFailed')}
+                </p>
+              }
+            />
+          ) : null}
+          {mutationErrorCause ? (
+            <StoreCredentialNotice
+              error={mutationErrorCause}
+              onRefreshCredential={() => void recovery.refreshCredential()}
+              onSwitchAccount={() => void recovery.switchAccount()}
+              onDisconnect={() => void recovery.disconnect()}
+              onConnect={() => void recovery.connect()}
+              onRetry={() => void recovery.retry()}
+              busyAction={recovery.busyAction}
+              failedAction={recovery.failedAction}
+            />
           ) : null}
           {!loading && !error && !links.length ? (
             <EmptyState

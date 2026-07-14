@@ -6036,6 +6036,35 @@ export interface TranslationResource {
     connectFailed?: string;
   };
 
+  // Store-credential / platform-account denial states (hosting Phase 1).
+  storeCredential?: {
+    storeCredentialInvalidTitle?: string;
+    storeCredentialInvalidBody?: string;
+    accountStoreMismatchTitle?: string;
+    accountStoreMismatchBody?: string;
+    accountStoreMismatchSwitch?: string;
+    accountStoreMismatchDisconnect?: string;
+    accountStoreMismatchDisconnectConfirmTitle?: string;
+    accountStoreMismatchDisconnectConfirmBody?: string;
+    accountStoreMismatchDisconnectConfirmCta?: string;
+    accountStoreMismatchDisconnectCancelCta?: string;
+    accountSessionRequiredTitle?: string;
+    accountSessionRequiredBody?: string;
+    accountSessionRequiredCta?: string;
+    accountSessionRequiredOptionalNote?: string;
+    rateLimitedTitle?: string;
+    rateLimitedBody?: string;
+    retryCta?: string;
+    reconnectCta?: string;
+    reconnecting?: string;
+    refreshFailed?: string;
+    disconnecting?: string;
+    disconnectFailed?: string;
+    connecting?: string;
+    connectActionFailed?: string;
+    actionFailed?: string;
+  };
+
   sellerAffiliate?: {
     adminTitle?: string;
     adminSubtitle?: string;

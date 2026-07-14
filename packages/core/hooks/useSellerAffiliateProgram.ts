@@ -17,6 +17,12 @@ export interface UseSellerAffiliateProgramReturn {
   program: SellerAffiliateProgram | null;
   loading: boolean;
   error: string | null;
+  /**
+   * The raw thrown value behind {@link error}, kept so a caller can classify a
+   * typed store-credential denial (`error.code`) rather than only show a
+   * generic message. `null` when there is no error.
+   */
+  errorCause: unknown;
   reload: () => Promise<void>;
   save: (input: SellerAffiliateProgramRequest) => Promise<SellerAffiliateProgram>;
 }
@@ -25,6 +31,7 @@ export function useSellerAffiliateProgram(enabled = true): UseSellerAffiliatePro
   const [program, setProgram] = useState<SellerAffiliateProgram | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const [errorCause, setErrorCause] = useState<unknown>(null);
 
   const reload = useCallback(async (): Promise<void> => {
     if (!enabled) {
@@ -34,13 +41,17 @@ export function useSellerAffiliateProgram(enabled = true): UseSellerAffiliatePro
     }
     setLoading(true);
     setError(null);
+    setErrorCause(null);
     try {
       setProgram(await getSellerAffiliateProgram());
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'load_failed';
       // A seller without a program configures one through save; do not surface a 404 as a page failure.
       if (message.toLowerCase().includes('not found')) setProgram(null);
-      else setError(message);
+      else {
+        setError(message);
+        setErrorCause(cause);
+      }
     } finally {
       setLoading(false);
     }
@@ -55,13 +66,14 @@ export function useSellerAffiliateProgram(enabled = true): UseSellerAffiliatePro
       const next = await putSellerAffiliateProgram(input);
       setProgram(next);
       setError(null);
+      setErrorCause(null);
       return next;
     },
     []
   );
 
   return useMemo(
-    () => ({ program, loading, error, reload, save }),
-    [program, loading, error, reload, save]
+    () => ({ program, loading, error, errorCause, reload, save }),
+    [program, loading, error, errorCause, reload, save]
   );
 }

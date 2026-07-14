@@ -11,6 +11,12 @@ export interface UseSellerDealLinksReturn {
   links: SellerDealLink[];
   loading: boolean;
   error: string | null;
+  /**
+   * The raw thrown value behind {@link error}, kept so a caller can classify a
+   * typed store-credential denial (`error.code`) rather than only show a
+   * generic message. `null` when there is no error.
+   */
+  errorCause: unknown;
   reload: () => Promise<void>;
 }
 
@@ -23,6 +29,7 @@ export function useSellerDealLinks(enabled = true): UseSellerDealLinksReturn {
   const [links, setLinks] = useState<SellerDealLink[]>([]);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const [errorCause, setErrorCause] = useState<unknown>(null);
   const requestRef = useRef(0);
   const mountedRef = useRef(true);
 
@@ -35,6 +42,7 @@ export function useSellerDealLinks(enabled = true): UseSellerDealLinksReturn {
     const requestID = ++requestRef.current;
     setLoading(true);
     setError(null);
+    setErrorCause(null);
     try {
       const result = await listSellerDealLinks();
       // Drop a stale result: superseded by a newer reload, or unmounted.
@@ -43,6 +51,7 @@ export function useSellerDealLinks(enabled = true): UseSellerDealLinksReturn {
     } catch (cause) {
       if (!mountedRef.current || requestRef.current !== requestID) return;
       setError(cause instanceof Error ? cause.message : 'load_failed');
+      setErrorCause(cause);
     } finally {
       if (mountedRef.current && requestRef.current === requestID) setLoading(false);
     }
@@ -56,5 +65,8 @@ export function useSellerDealLinks(enabled = true): UseSellerDealLinksReturn {
     };
   }, [reload]);
 
-  return useMemo(() => ({ links, loading, error, reload }), [links, loading, error, reload]);
+  return useMemo(
+    () => ({ links, loading, error, errorCause, reload }),
+    [links, loading, error, errorCause, reload]
+  );
 }

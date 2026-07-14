@@ -123,6 +123,45 @@ describe('AdminDealLinksPage (/admin/deal-links)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('admin.dealLinks.loadFailed');
   });
 
+  it('renders the store-credential recovery state when the load is denied', async () => {
+    // A typed STORE_CREDENTIAL_INVALID denial gets its own recovery state instead
+    // of the generic load-failed line. Recovery re-registers the store's own
+    // signed credential via the local node — never OAuth.
+    listSellerDealLinksMock.mockRejectedValue(
+      Object.assign(new Error('credential invalid'), { code: 'STORE_CREDENTIAL_INVALID' })
+    );
+    render(<AdminDealLinksPage />);
+
+    const notice = await screen.findByTestId('store-credential-notice');
+    expect(notice).toHaveAttribute('data-kind', 'storeCredentialInvalid');
+    expect(screen.queryByText('admin.dealLinks.loadFailed')).not.toBeInTheDocument();
+    // The honest action re-registers the credential; no OAuth affordance shows.
+    expect(screen.getByTestId('store-credential-action-refreshCredential')).toBeInTheDocument();
+    expect(screen.queryByTestId('store-credential-action-switchAccount')).not.toBeInTheDocument();
+  });
+
+  it('renders the store-credential recovery notice when a close mutation is denied', async () => {
+    // A typed denial from a pause/reactivate/close mutation must classify too,
+    // rendering the actionable recovery notice instead of the generic toast.
+    listSellerDealLinksMock.mockResolvedValue([DEAL_LINK]);
+    closeSellerDealLinkMock.mockRejectedValue(
+      Object.assign(new Error('credential invalid'), { code: 'STORE_CREDENTIAL_INVALID' })
+    );
+    render(<AdminDealLinksPage />);
+
+    await screen.findByText('Premium onboarding call');
+    fireEvent.click(screen.getByTestId('deal-link-close-deal-1'));
+    fireEvent.click(await screen.findByText('admin.dealLinks.closeConfirmCta'));
+
+    const notice = await screen.findByTestId('store-credential-notice');
+    expect(notice).toHaveAttribute('data-kind', 'storeCredentialInvalid');
+    // Honest recovery: re-register the credential, not the generic close-failed toast.
+    expect(screen.getByTestId('store-credential-action-refreshCredential')).toBeInTheDocument();
+    expect(toastMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'admin.dealLinks.dealCloseFailed' })
+    );
+  });
+
   it('shows an activate CTA for a draft link so a failed activation can be retried', async () => {
     listSellerDealLinksMock.mockResolvedValue([{ ...DEAL_LINK, status: 'draft' }]);
     render(<AdminDealLinksPage />);

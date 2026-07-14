@@ -51,7 +51,11 @@ export type ApiErrorCode =
   | 'SERVICE_UNAVAILABLE'
   | 'RATE_LIMITED'
   | 'PROVIDER_ERROR'
-  | 'REFUND_ADDRESS_REQUIRED';
+  | 'REFUND_ADDRESS_REQUIRED'
+  // Store-credential / platform-account denials (hosting Phase 1).
+  | 'STORE_CREDENTIAL_INVALID'
+  | 'ACCOUNT_STORE_MISMATCH'
+  | 'ACCOUNT_SESSION_REQUIRED';
 
 /**
  * @deprecated Use DataEnvelope<T> instead. Kept for backward compatibility during migration.

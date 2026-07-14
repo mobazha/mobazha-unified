@@ -297,6 +297,7 @@ export const NODE_API = {
   // --- System ---
   SYSTEM_SETUP: '/system/setup',
   SYSTEM_CONNECT_PLATFORM: '/system/connect-platform',
+  SYSTEM_REFRESH_PLATFORM_CREDENTIAL: '/system/refresh-platform-credential',
   SYSTEM_CLAIM_STORE: '/system/claim-store',
   SYSTEM_HEALTH: '/system/health',
   SYSTEM_RPC_STATUS: '/system/rpc-status',

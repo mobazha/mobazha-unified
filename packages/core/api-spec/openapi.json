@@ -32846,6 +32846,86 @@
         ],
         "summary": "Bind standalone store owner to SaaS identity",
         "tags": ["system"]
+      },
+      "delete": {
+        "description": "Removes the account association while preserving the store Peer identity, platform credential, and commerce history.",
+        "operationId": "system-connect-platform-delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "adminSession": []
+          }
+        ],
+        "summary": "Disconnect the optional platform owner account",
+        "tags": ["system"]
+      }
+    },
+    "/v1/system/refresh-platform-credential": {
+      "post": {
+        "description": "Re-registers the local store with its libp2p identity. This does not connect or switch a Casdoor account.",
+        "operationId": "system-refresh-platform-credential-post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "adminSession": []
+          }
+        ],
+        "summary": "Refresh the Peer-signed platform credential",
+        "tags": ["system"]
       }
     },
     "/v1/system/diagnostics": {
