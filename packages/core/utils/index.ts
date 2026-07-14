@@ -54,6 +54,9 @@ export * from './orderContract';
 export * from './communityMarketplace';
 export * from './nativeMarketplaceSell';
 
+// 买家首页状态机（coldStart/sparse/degraded — WP-C）
+export * from './marketplaceHomeState';
+
 // 商品链接
 export * from './productUrl';
 export * from './homepageFeeds';

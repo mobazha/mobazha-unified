@@ -213,10 +213,28 @@ export function useCommunityMarketplaceEnrichment(
     [listingRefs, listingPreviews, listingsLoading]
   );
 
+  // Overall failure signal for the home state machine (WP-C): callers must be able
+  // to tell "every curated listing failed to load" apart from "there were no
+  // curated listings", so a failed enrichment is never mistaken for a cold start.
+  const listingsFailedCount = useMemo(
+    () => orderedListingPreviews.filter(preview => !preview.loading && preview.failed).length,
+    [orderedListingPreviews]
+  );
+
+  const listingsFetchFailed = useMemo(
+    () =>
+      orderedListingPreviews.length > 0 &&
+      orderedListingPreviews.every(preview => !preview.loading) &&
+      listingsFailedCount === orderedListingPreviews.length,
+    [orderedListingPreviews, listingsFailedCount]
+  );
+
   return {
     listingPreviews: orderedListingPreviews,
     sellerProfiles,
     listingsLoading,
     profilesLoading,
+    listingsFailedCount,
+    listingsFetchFailed,
   };
 }

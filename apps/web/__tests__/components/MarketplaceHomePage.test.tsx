@@ -572,3 +572,165 @@ describe('MarketplaceHomePage attribution', () => {
     ).toBeNull();
   });
 });
+
+describe('MarketplaceHomePage buyer state machine (WP-C)', () => {
+  const emptyCuratedDetail = () => ({
+    detail: {
+      marketplace: {
+        id: 'mp-1',
+        name: 'Curated Market',
+        slug: 'curated-market',
+        buyerAccessMode: 'open',
+        sellerReviewMode: 'manual',
+        catalogMode: 'curated',
+        discoverability: 'public',
+        sellerEntryMode: 'operator_invited',
+        vertical: 'collectibles',
+        sellerCount: 0,
+        productCount: 0,
+      },
+      sellers: [],
+      featured: [],
+      banners: [],
+      listings: { listings: [], total: 0 },
+    },
+    loading: false,
+    error: null,
+    refresh: vi.fn(),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseCuration.mockReturnValue({
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+      config: curatedMarketplaceConfig,
+    });
+    mockSearchProfiles.mockResolvedValue({ users: [] });
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: null,
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [],
+      sellerProfiles: {},
+      listingsLoading: false,
+      profilesLoading: false,
+    });
+  });
+
+  it('shows cold start with invite-only copy and NO self-serve CTA for an empty invite marketplace', async () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue(emptyCuratedDetail());
+
+    render(<MarketplaceHomePage />);
+
+    expect(await screen.findByTestId('marketplace-cold-start')).toBeInTheDocument();
+    expect(screen.getByTestId('marketplace-cold-start-invite-only')).toBeInTheDocument();
+    expect(screen.queryByTestId('marketplace-cold-start-sell-cta')).toBeNull();
+    expect(screen.queryByTestId('marketplace-degraded')).toBeNull();
+  });
+
+  it('shows a self-serve apply CTA on cold start for a self-serve marketplace', async () => {
+    mockUseCuration.mockReturnValue({
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+      config: { ...curatedMarketplaceConfig, sellerEntryMode: 'seller_self_serve' },
+    });
+    mockUsePublicMarketplaceDetail.mockReturnValue(emptyCuratedDetail());
+
+    render(<MarketplaceHomePage />);
+
+    const cta = await screen.findByTestId('marketplace-cold-start-sell-cta');
+    expect(cta).toBeInTheDocument();
+    expect(cta).toHaveAttribute('href', expect.stringContaining('/sell'));
+    expect(screen.queryByTestId('marketplace-cold-start-invite-only')).toBeNull();
+  });
+
+  it('shows degraded — NOT cold start — when curated enrichment fully fails despite refs', async () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue(buildPublicDetail());
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'QmCurated:curated-listing',
+          slug: 'curated-listing',
+          peerID: 'QmCurated',
+          title: 'Curated Listing',
+          loading: false,
+          failed: true,
+        },
+        {
+          key: 'QmCurated:fallback-listing',
+          slug: 'fallback-listing',
+          peerID: 'QmCurated',
+          title: 'Fallback Listing',
+          loading: false,
+          failed: true,
+        },
+      ],
+      sellerProfiles: {},
+      listingsLoading: false,
+      profilesLoading: false,
+      listingsFailedCount: 2,
+      listingsFetchFailed: true,
+    });
+
+    render(<MarketplaceHomePage />);
+
+    expect(await screen.findByTestId('marketplace-degraded')).toBeInTheDocument();
+    expect(screen.queryByTestId('marketplace-cold-start')).toBeNull();
+  });
+
+  it('shows degraded — NOT cold start — when open-catalog feeds fail entirely', async () => {
+    mockUseCuration.mockReturnValue({
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+      config: openMarketplaceConfig,
+    });
+    mockSearchListings.mockRejectedValue(new Error('search down'));
+    mockSearchProfiles.mockResolvedValue({ users: [] });
+
+    render(<MarketplaceHomePage />);
+
+    expect(await screen.findByTestId('marketplace-degraded')).toBeInTheDocument();
+    expect(screen.queryByTestId('marketplace-cold-start')).toBeNull();
+  });
+
+  it('shows a sparse notice — NOT cold start — when only fallback products exist without curation', async () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue(
+      buildPublicDetail({
+        featured: [],
+        listings: [{ peerID: 'QmCurated', slug: 'fallback-listing' }],
+      })
+    );
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'QmCurated:fallback-listing',
+          slug: 'fallback-listing',
+          peerID: 'QmCurated',
+          title: 'Fallback Listing',
+          vendorName: 'Curated Store',
+          loading: false,
+          failed: false,
+        },
+      ],
+      sellerProfiles: {},
+      listingsLoading: false,
+      profilesLoading: false,
+    });
+
+    render(<MarketplaceHomePage />);
+
+    expect(await screen.findByTestId('marketplace-sparse-notice')).toBeInTheDocument();
+    expect(screen.queryByTestId('marketplace-cold-start')).toBeNull();
+    expect(screen.queryByTestId('marketplace-degraded')).toBeNull();
+    expect(
+      screen.getByTestId('product-click-marketplaceStarter.latestTitle-fallback-listing')
+    ).toBeInTheDocument();
+  });
+});

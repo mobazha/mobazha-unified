@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input-compat';
 import { MarketplaceTrustFooter } from '@/components/CommunityMarketplace';
 import {
   derivePublicMarketplaceCurationRefs,
+  deriveMarketplaceHomeState,
   filterPublicMarketplaceCurationRefsByAllowedPeers,
   formatUserName,
   getImageUrl,
@@ -27,12 +28,17 @@ import {
 } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import {
-  fetchFeaturedListings,
-  fetchLatestListings,
+  fetchFeaturedListingsStrict,
+  fetchLatestListingsStrict,
   searchListings,
   searchProfiles,
 } from '@mobazha/core/services/api/products';
 import { Search, ShieldCheck, Store } from 'lucide-react';
+import {
+  MarketplaceColdStartPanel,
+  MarketplaceDegradedPanel,
+  MarketplaceSparseNotice,
+} from './MarketplaceColdStartPanel';
 
 interface DisplayProduct {
   id: string;
@@ -181,13 +187,15 @@ export function MarketplaceHomePage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
+  const [feedsFailed, setFeedsFailed] = useState(false);
+  const [feedReloadKey, setFeedReloadKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
   const publicCurationRefs = useMemo(() => {
     const refs = derivePublicMarketplaceCurationRefs(publicDetail);
     if (config?.catalogMode !== 'curated') return refs;
     return filterPublicMarketplaceCurationRefsByAllowedPeers(refs, config.allowedPeers ?? []);
-  }, [publicDetail, config?.catalogMode, config?.allowedPeers]);
+  }, [publicDetail, config]);
 
   const curationListingRefs = useMemo<PublicMarketplaceListingRef[]>(() => {
     const seen = new Set<string>();
@@ -225,6 +233,7 @@ export function MarketplaceHomePage() {
     sellerProfiles: curationSellerProfiles,
     listingsLoading: curationListingsLoading,
     profilesLoading: curationProfilesLoading,
+    listingsFetchFailed: curationListingsFetchFailed,
   } = useCommunityMarketplaceEnrichment(curationListingRefs, curationSellerPeerIDs);
 
   const curationPreviewLookup = useMemo(() => {
@@ -363,86 +372,98 @@ export function MarketplaceHomePage() {
       setIsLoadingProducts(true);
       setIsLoadingPopular(true);
       setIsLoadingStores(true);
+      setFeedsFailed(false);
 
-      try {
-        const allowedPeers = activeConfig.allowedPeers ?? [];
-        const catalogQuery = activeConfig.catalogQuery?.trim() || '*';
-        const isCurated = activeConfig.catalogMode === 'curated';
+      const allowedPeers = activeConfig.allowedPeers ?? [];
+      const catalogQuery = activeConfig.catalogQuery?.trim() || '*';
+      const isCurated = activeConfig.catalogMode === 'curated';
 
-        if (isCurated) {
-          setLatestProducts([]);
-          setPopularProducts([]);
-          setFeaturedStores([]);
-          return;
-        }
-
-        if (catalogQuery !== '*') {
-          const [latestResult, popularResult, storesResult] = await Promise.all([
-            searchListings({
-              query: catalogQuery,
-              pageSize: 12,
-              sortBy: 'added-desc',
-              browse: 'all',
-            }),
-            searchListings({
-              query: catalogQuery,
-              pageSize: 8,
-              sortBy: 'online-desc',
-              browse: 'all',
-            }),
-            searchProfiles({
-              query: catalogQuery,
-              pageSize: 6,
-              vendor: true,
-            }),
-          ]);
-
-          if (cancelled) return;
-
-          setLatestProducts(latestResult.products.map(convertToDisplayProduct));
-          setPopularProducts(popularResult.products.map(convertToDisplayProduct));
-          setFeaturedStores(storesResult.users);
-          return;
-        }
-
-        const [latest, popular, stores] = await Promise.all([
-          fetchLatestListings(12),
-          fetchFeaturedListings(8),
-          productDataService.getFeaturedStores(6),
-        ]);
-
-        if (cancelled) return;
-
-        const latestFiltered = filterByCatalogMode(latest, activeConfig.catalogMode, allowedPeers);
-        const popularFiltered = filterByCatalogMode(
-          popular,
-          activeConfig.catalogMode,
-          allowedPeers
-        );
-        const storesFiltered =
-          activeConfig.catalogMode === 'curated'
-            ? stores.filter(store => store.peerID && allowedPeers.includes(store.peerID))
-            : stores;
-
-        setLatestProducts(latestFiltered.map(convertToDisplayProduct));
-        setPopularProducts(popularFiltered.map(convertToDisplayProduct));
-        setFeaturedStores(storesFiltered);
-      } catch (loadError) {
-        console.error('Failed to load marketplace feeds:', loadError);
-      } finally {
-        if (!cancelled) {
-          setIsLoadingProducts(false);
-          setIsLoadingPopular(false);
-          setIsLoadingStores(false);
-        }
+      if (isCurated) {
+        // Curated catalogs render from the enrichment layer, not these feeds;
+        // failure is surfaced via curationListingsFetchFailed instead.
+        setLatestProducts([]);
+        setPopularProducts([]);
+        setFeaturedStores([]);
+        setIsLoadingProducts(false);
+        setIsLoadingPopular(false);
+        setIsLoadingStores(false);
+        return;
       }
+
+      // Open catalog: use STRICT feeds so a transport failure rejects (→ degraded)
+      // instead of resolving to [] (→ falsely coldStart). allSettled keeps partial
+      // success: a failed source never discards the ones that loaded. The ternary
+      // only selects the promise array — the await stays unconditional.
+      const isSearchBranch = catalogQuery !== '*';
+      const listingResults = await Promise.allSettled(
+        isSearchBranch
+          ? [
+              searchListings({
+                query: catalogQuery,
+                pageSize: 12,
+                sortBy: 'added-desc',
+                browse: 'all',
+                strict: true,
+              }).then(result => result.products),
+              searchListings({
+                query: catalogQuery,
+                pageSize: 8,
+                sortBy: 'online-desc',
+                browse: 'all',
+                strict: true,
+              }).then(result => result.products),
+            ]
+          : [fetchLatestListingsStrict(12), fetchFeaturedListingsStrict(8)]
+      );
+      const storesResults = await Promise.allSettled(
+        isSearchBranch
+          ? [searchProfiles({ query: catalogQuery, pageSize: 6, vendor: true }).then(r => r.users)]
+          : [productDataService.getFeaturedStores(6)]
+      );
+
+      if (cancelled) return;
+
+      const [latestR, popularR] = listingResults;
+      const storesR = storesResults[0];
+      const latest = latestR.status === 'fulfilled' ? latestR.value : [];
+      const popular = popularR.status === 'fulfilled' ? popularR.value : [];
+      const stores = storesR.status === 'fulfilled' ? storesR.value : [];
+
+      // A listing feed rejecting is what distinguishes failure from empty. Stores
+      // failing alone is not enough to call the page degraded.
+      const listingFeedFailed = latestR.status === 'rejected' || popularR.status === 'rejected';
+      if (latestR.status === 'rejected') {
+        console.error('Failed to load latest marketplace feed:', latestR.reason);
+      }
+      if (popularR.status === 'rejected') {
+        console.error('Failed to load popular marketplace feed:', popularR.reason);
+      }
+      if (storesR.status === 'rejected') {
+        console.error('Failed to load marketplace stores feed:', storesR.reason);
+      }
+
+      const latestFiltered = filterByCatalogMode(latest, activeConfig.catalogMode, allowedPeers);
+      const popularFiltered = filterByCatalogMode(popular, activeConfig.catalogMode, allowedPeers);
+
+      setLatestProducts(latestFiltered.map(convertToDisplayProduct));
+      setPopularProducts(popularFiltered.map(convertToDisplayProduct));
+      setFeaturedStores(stores);
+      setFeedsFailed(listingFeedFailed);
+      setIsLoadingProducts(false);
+      setIsLoadingPopular(false);
+      setIsLoadingStores(false);
     }
 
     void loadFeeds();
     return () => {
       cancelled = true;
     };
-  }, [config]);
+  }, [config, feedReloadKey]);
+
+  const retryFeeds = useCallback(() => {
+    refreshPublicDetail();
+    setFeedReloadKey(key => key + 1);
+  }, [refreshPublicDetail]);
 
   useEffect(() => {
     if (!marketplaceID || !config) return;
@@ -514,6 +535,37 @@ export function MarketplaceHomePage() {
     !useAuthorizedCurationFeeds && (isLoadingPopular || discoveryPopularProducts.length > 0);
   const showLatestSection = discoveryLatestLoading || discoveryLatestProducts.length > 0;
 
+  // Buyer home state machine (WP-C). coldStart is reachable ONLY when nothing is
+  // loading, nothing failed, and the renderable set is genuinely empty.
+  const curatedRenderableCount =
+    bannerProducts.length + curatedListingProducts.length + additionalListingProducts.length;
+  const openRenderableCount = latestProducts.length + popularProducts.length;
+  const renderableStoresCount = useAuthorizedCurationFeeds
+    ? activeCuratedStores.length
+    : featuredStores.length;
+  const hasRenderableProducts =
+    (useAuthorizedCurationFeeds ? curatedRenderableCount : openRenderableCount) > 0 ||
+    renderableStoresCount > 0;
+  const hasExplicitCuration =
+    !isCuratedCatalog || bannerProducts.length > 0 || curatedListingProducts.length > 0;
+  const bodyLoading = useAuthorizedCurationFeeds
+    ? curatedFeedsLoading
+    : isLoadingProducts || isLoadingPopular || isLoadingStores;
+  const dataFailed = useAuthorizedCurationFeeds
+    ? curationListingRefs.length > 0 && curatedRenderableCount === 0 && curationListingsFetchFailed
+    : feedsFailed;
+  const homeState = deriveMarketplaceHomeState({
+    loading: bodyLoading,
+    fatalError: false,
+    dataFailed,
+    hasRenderableProducts,
+    hasExplicitCuration,
+  });
+  const showColdStart = homeState === 'coldStart';
+  const showDegraded = homeState === 'degraded';
+  const showDiscoveryBody = !showColdStart && !showDegraded;
+  const sellHref = `/marketplace/${encodeURIComponent(config.subdomain || config.id)}/sell`;
+
   return (
     <div className="min-h-dvh flex flex-col bg-background">
       <Header />
@@ -567,7 +619,15 @@ export function MarketplaceHomePage() {
           </Container>
         </section>
 
-        {showDiscoveryTaxonomy ? (
+        {showColdStart ? (
+          <MarketplaceColdStartPanel sellerEntryMode={config.sellerEntryMode} sellHref={sellHref} />
+        ) : null}
+
+        {showDegraded ? <MarketplaceDegradedPanel onRetry={retryFeeds} /> : null}
+
+        {showDiscoveryBody && homeState === 'sparse' ? <MarketplaceSparseNotice /> : null}
+
+        {showDiscoveryBody && showDiscoveryTaxonomy ? (
           <section className="py-4 border-b border-border">
             <Container size="xl">
               <div className="flex gap-2 overflow-x-auto pb-1">

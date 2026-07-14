@@ -22,6 +22,7 @@ import {
   publicGet,
   publicSafeGet,
   publicPost,
+  searchGet,
   searchSafeGet,
   searchRawGet,
   searchPost,
@@ -93,6 +94,12 @@ export interface SearchListingsParams {
   browse?: 'discover' | 'all';
   /** Restrict results to these vendor peer IDs (search `id` param). */
   peerIDs?: string[];
+  /**
+   * When true, a transport/search failure REJECTS instead of resolving to an
+   * empty result. Opt-in so existing callers keep their empty-array convention;
+   * the buyer home state machine (WP-C) uses it to tell failure from empty.
+   */
+  strict?: boolean;
 }
 
 // 搜索商品的响应
@@ -782,6 +789,27 @@ export async function fetchLatestListings(limit = 12): Promise<ProductListItem[]
 }
 
 /**
+ * Strict variant of {@link fetchLatestListings}: rejects on transport failure
+ * instead of swallowing to []. Used by the buyer home state machine (WP-C) so a
+ * failed feed is surfaced as `degraded`, not disguised as an empty shelf.
+ */
+export async function fetchLatestListingsStrict(limit = 12): Promise<ProductListItem[]> {
+  const response = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit));
+  return parseSearchResults(response);
+}
+
+/** Strict variant of {@link fetchFeaturedListings} — rejects on transport failure. */
+export async function fetchFeaturedListingsStrict(limit = 8): Promise<ProductListItem[]> {
+  const hotResponse = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_HOT(limit));
+  const hotPool = parseSearchResults(hotResponse);
+  if (countUniqueVendors(hotPool) >= HOMEPAGE_MIN_VENDORS_FOR_HOT) {
+    return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
+  }
+  const freshResponse = await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit));
+  return diversifyListingsByVendor(parseSearchResults(freshResponse), { limit, maxPerVendor: 1 });
+}
+
+/**
  * 获取精选店铺（SaaS 首页 Featured Stores）
  * 客户端排序：综合活跃度 + 品牌化完成度
  */
@@ -904,6 +932,7 @@ export async function searchListings(
     nsfw = false,
     browse,
     peerIDs,
+    strict = false,
   } = params;
 
   // 构建查询参数
@@ -965,6 +994,7 @@ export async function searchListings(
     };
   } catch (error) {
     console.error('Failed to search listings:', error);
+    if (strict) throw error;
     return {
       products: [],
       total: 0,
