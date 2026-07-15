@@ -1,0 +1,40 @@
+---
+description: 新增源文件必须带 SPDX 许可头 — CI 的 Attribution job 会因此失败
+alwaysApply: false
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.mjs"
+  - "**/*.cjs"
+  - "**/*.sh"
+  - "**/*.py"
+---
+
+# 新增源文件的 SPDX 许可头
+
+**只对新建文件生效**，改动既有文件不需要补。
+
+新建 `.ts/.tsx/.js/.jsx/.mjs/.cjs/.sh/.py` 时，文件**开头**放：
+
+```ts
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+```
+
+`.sh`/`.py` 用 `#` 注释。注释不是语句，所以 `'use client'` 放在许可头之后仍是第一条指令，这也是仓库既有文件的排布。
+
+## 为什么
+
+`scripts/check-attribution.sh` 会扫本次新增的源文件，缺头就 fail，CI 的 **Attribution** job 直接红。
+本地 `pre-commit` 已接入 `./scripts/check-attribution.sh --staged`，提交时就会拦下来——
+但知道规则能省掉一次「提交被拒→补头→重来」。
+
+## 不需要加的情况
+
+- 前 20 行含 `code generated` / `generated file` / `do not edit` 的生成物
+- `vendor/`、`third_party/`、`public/vendor/`
+- 非源文件（`.md`、`.json`、`.yaml` 等）
+
+第三方独立贡献的文件**不要**套用上面那行 copyright；权威说明见 `docs/legal/ATTRIBUTION.md`。
