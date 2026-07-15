@@ -58,6 +58,10 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    # A test that loops forever blocks the event loop, so vitest's own
+    # testTimeout never fires and the run hangs until the job's ceiling —
+    # 6 hours by default. Only a wall clock outside the process catches that.
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,8 +80,11 @@ jobs:
       - name: Install dependencies
         run: HUSKY=0 pnpm install --frozen-lockfile
 
+      # Every package, not just core. apps/web's 134 files ran only in the
+      # local pre-push hook until now, so a test that hung forever sat here
+      # unnoticed while CI stayed green.
       - name: Run unit tests
-        run: pnpm --filter @mobazha/core test:unit
+        run: pnpm test:unit
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
