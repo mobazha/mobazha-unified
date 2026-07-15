@@ -96,17 +96,27 @@ test('buyer funds an order through the onramp leg', async ({ page }) => {
     timeout: 30_000,
   });
 
-  // 4. Wait for the provider to reach "delivering", then the onramp actually
+  // 4. Wait for the purchase to finish its fiat leg, then the onramp actually
   //    sends the crypto on chain. Nothing inside the node moves this money.
   //    Gate on the provider's own state rather than the rendered label: the card
   //    polls on its own interval and can skip straight past a short-lived state,
   //    which would make the demo miss its delivery window.
+  //
+  //    A settled purchase reads as *absent*, not as "delivered": the session
+  //    projection runs SelectOnrampFundingSource, which only surfaces a source
+  //    that still wants the buyer's attention — in flight, or delivered and
+  //    awaiting a wallet forward. Delivered straight to the escrow target is
+  //    neither, so onrampFunding drops to null. Treat that as terminal;
+  //    requiring the literal string would wait out the timeout on success.
   await expect
-    .poll(async () => (await readSession(page)).onrampFunding?.status, {
-      timeout: 120_000,
-      intervals: [2000],
-    })
-    .toMatch(/delivering|delivered/);
+    .poll(
+      async () => {
+        const session = await readSession(page);
+        return session.onrampFunding ? session.onrampFunding.status : 'settled';
+      },
+      { timeout: 120_000, intervals: [2000] },
+    )
+    .toMatch(/delivering|delivered|settled/);
   try {
     const out = execFileSync('bash', [DELIVER_SCRIPT, TARGET_ADDR, TARGET_AMOUNT], {
       encoding: 'utf8',

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, ArrowUpRight, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n, ordersApi } from '@mobazha/core';
@@ -69,14 +69,26 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
     }
   }, [orderID, vendorPeerID, onUpdated, initialSource.status]);
 
+  // The interval must not depend on refresh's identity. refresh closes over
+  // onUpdated, which the payment page passes as an inline arrow — a new
+  // identity on every one of its renders. Depending on it here tore the timer
+  // down and rebuilt it on each parent render, and the page re-renders (its
+  // own session poll, countdowns) far more often than every 10s, so the tick
+  // never fired: the purchase sat at awaiting_payment forever in a real
+  // browser even though the endpoint works. Route through a ref instead.
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
+
   // Poll the provider while the purchase is progressing toward delivery.
   useEffect(() => {
     if (!isActive) return;
     const interval = window.setInterval(() => {
-      void refresh();
+      void refreshRef.current();
     }, 10_000);
     return () => window.clearInterval(interval);
-  }, [isActive, refresh]);
+  }, [isActive]);
 
   const statusLabel = (() => {
     switch (source.status) {
