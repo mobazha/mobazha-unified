@@ -113,6 +113,8 @@ export const NODE_API = {
   ORDER_PAYMENT: (orderId: string) => `/orders/${orderId}/payment`,
   ORDER_PAYMENT_SESSION: (orderId: string) => `/orders/${orderId}/payment-session`,
   ORDER_PAYMENT_SESSION_ONRAMP: (orderId: string) => `/orders/${orderId}/payment-session/onramp`,
+  ORDER_PAYMENT_SESSION_ONRAMP_PROVIDERS: (orderId: string) =>
+    `/orders/${orderId}/payment-session/onramp/providers`,
   ORDER_PAYMENT_SESSION_ONRAMP_REFRESH: (orderId: string) =>
     `/orders/${orderId}/payment-session/onramp/refresh`,
   ORDER_PAYMENT_SELECTION_QUOTES: (orderId: string) =>

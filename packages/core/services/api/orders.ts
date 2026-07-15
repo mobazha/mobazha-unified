@@ -457,6 +457,32 @@ export async function initiateOrderOnrampFunding(
   );
 }
 
+/** One provider a buyer may fund this order through (discovery view). */
+export interface OnrampProviderOption {
+  providerID: string;
+  railID: string;
+  deliverToTarget: boolean;
+  fiatCurrencies?: string[];
+}
+
+/**
+ * Lists the onramp providers whose capability gate is open for the order's
+ * frozen settlement rail. Empty means the affordance must not render; the
+ * client never assumes a specific vendor (RFC-0012 Proposal 4).
+ */
+export async function getOrderOnrampProviders(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<OnrampProviderOption[]> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+  const list = await authGet<OnrampProviderOption[]>(
+    NODE_API.ORDER_PAYMENT_SESSION_ONRAMP_PROVIDERS(orderId),
+    storeHeaders
+  );
+  return Array.isArray(list) ? list : [];
+}
+
 /**
  * Polls the onramp provider for the order's in-flight purchase and persists
  * the transition. Returns the current onramp funding view, or null when

@@ -10,6 +10,12 @@ import type { OnrampFundingSourceView } from '@mobazha/core';
 // (mirrors the backend contract's Active set).
 const ACTIVE_STATUSES = new Set(['created', 'awaiting_payment', 'processing', 'delivering']);
 
+// Mount-refresh throttle, deliberately OUTSIDE the component: the payment
+// page remounts this section when session refetches swap its subtree, and a
+// per-instance guard dies with the instance. Keyed by order id.
+const lastMountRefreshAt = new Map<string, number>();
+const MOUNT_REFRESH_MIN_GAP_MS = 5_000;
+
 export interface OnrampFundingSectionProps {
   orderID: string;
   /** The session's onramp funding source (session.onrampFunding). */
@@ -50,15 +56,25 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
 
   const isActive = ACTIVE_STATUSES.has(source.status);
 
+  const sourceStatusRef = useRef(source.status);
+  useEffect(() => {
+    sourceStatusRef.current = source.status;
+  }, [source.status]);
+
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const next = await ordersApi.refreshOrderOnrampFunding(orderID, { vendorPeerID });
       setRefreshError(false);
-      if (next) {
-        setSource(prev => (next.status !== prev.status ? next : prev));
-      }
-      if (next?.status !== initialSource.status) {
+      // Only a REAL provider transition propagates. A null refresh means
+      // settled-or-nothing-in-flight; pushing that upward on every poll made
+      // the page refetch the session unconditionally, and combined with
+      // remount-driven mount refreshes that closed a response-paced request
+      // loop (observed live at 19-34 req/s, rendered as page flicker). The
+      // page's own status poll owns the endgame once the chain observation
+      // verifies the session.
+      if (next && next.status !== sourceStatusRef.current) {
+        setSource(next);
         onUpdated?.(next);
       }
     } catch {
@@ -67,7 +83,7 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
     } finally {
       setRefreshing(false);
     }
-  }, [orderID, vendorPeerID, onUpdated, initialSource.status]);
+  }, [orderID, vendorPeerID, onUpdated]);
 
   // The interval must not depend on refresh's identity. refresh closes over
   // onUpdated, which the payment page passes as an inline arrow — a new
@@ -90,12 +106,17 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
   // the poll, with the interval as the steady-state backstop.
   useEffect(() => {
     if (!isActive) return;
-    void refreshRef.current();
+    const last = lastMountRefreshAt.get(orderID) ?? 0;
+    if (Date.now() - last >= MOUNT_REFRESH_MIN_GAP_MS) {
+      lastMountRefreshAt.set(orderID, Date.now());
+      void refreshRef.current();
+    }
     const interval = window.setInterval(() => {
+      lastMountRefreshAt.set(orderID, Date.now());
       void refreshRef.current();
     }, 10_000);
     return () => window.clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, orderID]);
 
   const statusLabel = (() => {
     switch (source.status) {
