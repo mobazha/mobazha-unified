@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
-import { HOSTING_API, NODE_API } from '../../config/apiPaths';
-import type { SellerAffiliateProgramRequest } from '../../types/sellerAffiliate';
+import { NODE_API } from '../../config/apiPaths';
+import type {
+  SellerAffiliateProgramRequest,
+  SellerAffiliatePromoterStatementTarget,
+} from '../../types/sellerAffiliate';
 import {
   normalizePublicSellerAffiliateLink,
   normalizeSellerAffiliateCapabilities,
@@ -10,13 +13,11 @@ import {
   normalizeSellerAffiliateProgram,
   normalizeSellerAffiliateReferralSession,
   normalizeSellerAffiliateStatementLine,
-  normalizeSellerAffiliateStatementPage,
   unwrapSellerAffiliateList,
 } from '../../utils/sellerAffiliate';
 import {
   crossStoreAnonymousGet,
   crossStoreAnonymousPost,
-  hostingGet,
   nodeAuthGet,
   nodeAuthPost,
   nodeAuthPut,
@@ -47,10 +48,7 @@ export async function getPublicSellerAffiliateProgram(sellerPeerID: string) {
 }
 
 export async function createSellerAffiliateLink(sellerPeerID: string, programID: string) {
-  const evidence = await nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_PROMOTER_ENROLLMENTS, {
-    sellerPeerID,
-    programID,
-  });
+  const evidence = await issueSellerAffiliatePromoterEvidence(sellerPeerID, programID);
   return normalizeSellerAffiliateLink(
     await crossStoreAnonymousPost<unknown>(
       NODE_API.PUBLIC_SELLER_AFFILIATE_PROGRAM_LINKS(programID),
@@ -58,6 +56,13 @@ export async function createSellerAffiliateLink(sellerPeerID: string, programID:
       { evidence }
     )
   );
+}
+
+async function issueSellerAffiliatePromoterEvidence(sellerPeerID: string, programID: string) {
+  return nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_PROMOTER_ENROLLMENTS, {
+    sellerPeerID,
+    programID,
+  });
 }
 
 export async function listSellerAffiliateLinks(_programID: string) {
@@ -96,19 +101,24 @@ export async function createSellerAffiliateReferralSession(sellerPeerID: string,
   );
 }
 
-export async function listSellerAffiliateStatements(audience: 'seller' | 'promoter') {
-  const raw =
-    audience === 'seller'
-      ? await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_STATEMENTS_SELLER)
-      : await hostingGet<unknown>(HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER);
+export async function listSellerAffiliateStatements(
+  audience: 'seller' | 'promoter',
+  promoterTarget?: SellerAffiliatePromoterStatementTarget
+) {
+  let raw: unknown;
+  if (audience === 'seller') {
+    raw = await nodeAuthGet<unknown>(NODE_API.SELLER_AFFILIATE_STATEMENTS_SELLER);
+  } else {
+    if (!promoterTarget) throw new Error('promoter statement target is required');
+    const evidence = await issueSellerAffiliatePromoterEvidence(
+      promoterTarget.sellerPeerID,
+      promoterTarget.programID
+    );
+    raw = await crossStoreAnonymousPost<unknown>(
+      NODE_API.PUBLIC_SELLER_AFFILIATE_STATEMENTS_PROMOTER,
+      promoterTarget.sellerPeerID,
+      { evidence }
+    );
+  }
   return unwrapSellerAffiliateList(raw).map(normalizeSellerAffiliateStatementLine);
-}
-
-export async function listSellerAffiliateStatementPage(page = 1, pageSize = 20) {
-  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  return normalizeSellerAffiliateStatementPage(
-    await hostingGet<unknown>(
-      `${HOSTING_API.SELLER_AFFILIATE_STATEMENTS_PROMOTER}?${query.toString()}`
-    )
-  );
 }

@@ -8,6 +8,7 @@ import { listSellerAffiliateStatements } from '../services/api/sellerAffiliate';
 import type {
   SellerAffiliateStatementAudience,
   SellerAffiliateStatementLine,
+  SellerAffiliatePromoterStatementTarget,
 } from '../types/sellerAffiliate';
 
 export interface UseSellerAffiliateStatementsReturn {
@@ -28,7 +29,8 @@ function hasInFlightSettlement(statements: SellerAffiliateStatementLine[]): bool
 
 export function useSellerAffiliateStatements(
   audience: SellerAffiliateStatementAudience,
-  enabled = true
+  enabled = true,
+  promoterTarget?: SellerAffiliatePromoterStatementTarget
 ): UseSellerAffiliateStatementsReturn {
   const [statements, setStatements] = useState<SellerAffiliateStatementLine[]>([]);
   const [loading, setLoading] = useState(enabled);
@@ -63,7 +65,7 @@ export function useSellerAffiliateStatements(
     setLoading(true);
     setError(null);
     try {
-      const next = await listSellerAffiliateStatements(audience);
+      const next = await listSellerAffiliateStatements(audience, promoterTarget);
       if (mountedRef.current && requestSequenceRef.current === requestID) setStatements(next);
     } catch (cause) {
       if (mountedRef.current && requestSequenceRef.current === requestID) {
@@ -76,7 +78,7 @@ export function useSellerAffiliateStatements(
         if (mountedRef.current) setLoading(false);
       }
     }
-  }, [audience, enabled]);
+  }, [audience, enabled, promoterTarget?.programID, promoterTarget?.sellerPeerID]);
 
   useEffect(() => {
     void reload();

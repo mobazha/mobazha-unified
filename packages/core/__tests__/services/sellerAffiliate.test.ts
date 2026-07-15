@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../services/api/helpers', () => ({
   crossStoreAnonymousGet: vi.fn(),
   crossStoreAnonymousPost: vi.fn(),
-  hostingGet: vi.fn(),
   nodeAuthGet: vi.fn(),
   nodeAuthPost: vi.fn(),
   nodeAuthPut: vi.fn(),
@@ -25,7 +24,6 @@ import {
 import {
   crossStoreAnonymousGet,
   crossStoreAnonymousPost,
-  hostingGet,
   nodeAuthGet,
   nodeAuthPost,
   nodeAuthPut,
@@ -64,7 +62,6 @@ describe('seller Affiliate API routing', () => {
   beforeEach(() => {
     vi.mocked(crossStoreAnonymousGet).mockReset();
     vi.mocked(crossStoreAnonymousPost).mockReset();
-    vi.mocked(hostingGet).mockReset();
     vi.mocked(nodeAuthGet).mockReset();
     vi.mocked(nodeAuthPost).mockReset();
     vi.mocked(nodeAuthPut).mockReset();
@@ -152,14 +149,36 @@ describe('seller Affiliate API routing', () => {
     expect(nodeAuthPost).toHaveBeenNthCalledWith(2, '/seller-affiliate/links/link-1/reissue');
   });
 
-  it('reads seller statements locally while retaining the hosted promoter aggregation boundary', async () => {
+  it('reads seller statements locally and promoter statements from the selected seller Peer', async () => {
+    const evidence = { domain: 'mobazha:seller-affiliate-promoter-enrollment:v1' };
     vi.mocked(nodeAuthGet).mockResolvedValue({ items: [] });
-    vi.mocked(hostingGet).mockResolvedValue([]);
+    vi.mocked(nodeAuthPost).mockResolvedValue(evidence);
+    vi.mocked(crossStoreAnonymousPost).mockResolvedValue({ items: [] });
 
     await listSellerAffiliateStatements('seller');
-    await listSellerAffiliateStatements('promoter');
+    await listSellerAffiliateStatements('promoter', {
+      sellerPeerID: 'seller-peer',
+      programID: 'program-1',
+    });
 
     expect(nodeAuthGet).toHaveBeenCalledWith('/seller-affiliate/statements/seller');
-    expect(hostingGet).toHaveBeenCalledWith('/platform/v1/seller-affiliate/statements/promoter');
+    expect(nodeAuthPost).toHaveBeenCalledWith('/seller-affiliate/promoter-enrollments', {
+      sellerPeerID: 'seller-peer',
+      programID: 'program-1',
+    });
+    expect(crossStoreAnonymousPost).toHaveBeenCalledWith(
+      '/public/seller-affiliate/statements/promoter',
+      'seller-peer',
+      { evidence }
+    );
+  });
+
+  it('rejects a promoter statement read without an explicit seller and program target', async () => {
+    await expect(listSellerAffiliateStatements('promoter')).rejects.toThrow(
+      'promoter statement target is required'
+    );
+
+    expect(nodeAuthPost).not.toHaveBeenCalled();
+    expect(crossStoreAnonymousPost).not.toHaveBeenCalled();
   });
 });

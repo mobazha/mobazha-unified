@@ -203,8 +203,8 @@ if (!__SOVEREIGN__) {
       element: lazyPage(() => import('./app/promo/[sellerPeerID]/[token]/page')),
     },
     {
-      path: '/promote/commissions',
-      element: lazyPage(() => import('./app/promote/commissions/page')),
+      path: '/promote/:sellerPeerID/:programId/commissions',
+      element: lazyPage(() => import('./app/promote/[sellerPeerID]/[programId]/commissions/page')),
     },
     {
       path: '/promote/:sellerPeerID/:programId',
@@ -770,8 +770,8 @@ if (__SOVEREIGN__ && !__ROUTED_TMA__) {
       element: lazyPage(() => import('./app/promo/[sellerPeerID]/[token]/page')),
     },
     {
-      path: '/promote/commissions',
-      element: lazyPage(() => import('./app/promote/commissions/page')),
+      path: '/promote/:sellerPeerID/:programId/commissions',
+      element: lazyPage(() => import('./app/promote/[sellerPeerID]/[programId]/commissions/page')),
     },
     {
       path: '/promote/:sellerPeerID/:programId',

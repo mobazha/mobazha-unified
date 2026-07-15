@@ -19,6 +19,7 @@ import type {
   SellerAffiliateDisplayStatus,
   SellerAffiliateGroupedStatement,
   SellerAffiliateStatementAudience,
+  SellerAffiliatePromoterStatementTarget,
 } from '@mobazha/core';
 import { copyToClipboard } from '@/lib/clipboard';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface SellerAffiliateStatementsPanelProps {
   /** Selects the seller or promoter statement endpoint and title. */
   audience: SellerAffiliateStatementAudience;
+  /** Required for promoter reads; the local promoter Peer signs for this seller/program. */
+  promoterTarget?: SellerAffiliatePromoterStatementTarget;
 }
 
 function statusClass(status: SellerAffiliateDisplayStatus): string {
@@ -127,10 +130,15 @@ const SettlementDetail = memo(function SettlementDetail({ settlement }: Settleme
 
 export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateStatementsPanel({
   audience,
+  promoterTarget,
 }: SellerAffiliateStatementsPanelProps) {
   const { t } = useI18n();
   const { localCurrency } = useCurrencyFormat();
-  const { statements, loading, error, reload } = useSellerAffiliateStatements(audience);
+  const { statements, loading, error, reload } = useSellerAffiliateStatements(
+    audience,
+    true,
+    promoterTarget
+  );
   const title = t(
     audience === 'seller'
       ? 'sellerAffiliate.sellerStatementTitle'

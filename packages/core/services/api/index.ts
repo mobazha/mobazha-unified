@@ -289,7 +289,6 @@ export {
   getSellerAffiliateProgram,
   getSellerAffiliateCapabilities,
   getPublicSellerAffiliateProgram,
-  listSellerAffiliateStatementPage,
   listSellerAffiliateStatements,
   putSellerAffiliateProgram,
   reissueSellerAffiliateLink,

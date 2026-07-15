@@ -165,6 +165,7 @@ export type {
   SellerAffiliateProgram,
   SellerAffiliateProgramRequest,
   SellerAffiliateProgramStatus,
+  SellerAffiliatePromoterStatementTarget,
   SellerAffiliateReferralSession,
   SellerAffiliateStatementAudience,
   SellerAffiliateStatementLine,

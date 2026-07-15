@@ -322,7 +322,10 @@ export default function PromoteProgramPage() {
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">{t('promote.commissionsLinkBody')}</p>
             <Button type="button" variant="outline" className="min-h-11" asChild>
-              <Link href="/promote/commissions" data-testid="promote-commissions-link">
+              <Link
+                href={`/promote/${encodeURIComponent(sellerPeerID)}/${encodeURIComponent(programId)}/commissions`}
+                data-testid="promote-commissions-link"
+              >
                 <ScrollText className="mr-2 h-4 w-4" aria-hidden="true" />
                 {t('promote.commissionsLinkCta')}
               </Link>

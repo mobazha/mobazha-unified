@@ -5,9 +5,10 @@ import { performCasdoorLogin } from './fixtures/auth';
 // stack (frontend in `--mode e2e` → hosting :18080 / Casdoor :18000).
 // Round-5 surfaces highlighted: seller attribution-window guardrail, promoter
 // storefront with per-item "you earn ≈$X", and the earnings fiat + rollup.
-// Run:  DEMO_PROGRAM_ID=... DEMO_PROMO_TOKEN=... \
+// Run:  DEMO_SELLER_PEER_ID=... DEMO_PROGRAM_ID=... DEMO_PROMO_TOKEN=... \
 //       npx playwright test e2e/seller-affiliate-demo.spec.ts --project=chromium --workers=1
 
+const SELLER_PEER_ID = process.env.DEMO_SELLER_PEER_ID || 'QmDemoSellerPeer';
 const PROGRAM_ID = process.env.DEMO_PROGRAM_ID || '66828577-dbd7-4bdf-9093-c791e35e06ca';
 const PROMO_TOKEN = process.env.DEMO_PROMO_TOKEN || '6-1BiZxCrKVDBdFHBeAs5bkgNX_dM1NF';
 
@@ -71,7 +72,7 @@ test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+�
   await performCasdoorLogin(page, 'testuser3', '123');
 
   // 打开推广程序页
-  await page.goto(`/promote/${PROGRAM_ID}`);
+  await page.goto(`/promote/${SELLER_PEER_ID}/${PROGRAM_ID}`);
   await passAuthGate(page, 'promote-auth-required');
   await settle(page, 'promote-program-page', 2000);
 
@@ -107,7 +108,7 @@ test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+�
   if (await earningsBtn.isVisible().catch(() => false)) {
     await earningsBtn.click();
   } else {
-    await page.goto('/promote/commissions');
+    await page.goto(`/promote/${SELLER_PEER_ID}/${PROGRAM_ID}/commissions`);
   }
   await passAuthGate(page, 'promote-commissions-auth-required');
   await settle(page, 'promote-commissions-page', 3000);
@@ -124,6 +125,6 @@ test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+�
 
 test('3 · guest 点开推广链接（referral saved）', async ({ page }) => {
   test.setTimeout(90000);
-  await page.goto(`/promo/${PROMO_TOKEN}`);
+  await page.goto(`/promo/${SELLER_PEER_ID}/${PROMO_TOKEN}`);
   await settle(page, 'seller-affiliate-entry-ready', 4000);
 });

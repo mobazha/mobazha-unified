@@ -7,11 +7,18 @@ import { normalizeSellerAffiliateStatementLine, useSellerAffiliateStatements } f
 import type { SellerAffiliateStatementLine } from '@mobazha/core';
 
 const listSellerAffiliateStatementsMock =
-  vi.fn<(audience: 'seller' | 'promoter') => Promise<SellerAffiliateStatementLine[]>>();
+  vi.fn<
+    (
+      audience: 'seller' | 'promoter',
+      target?: { sellerPeerID: string; programID: string }
+    ) => Promise<SellerAffiliateStatementLine[]>
+  >();
 
 vi.mock('@mobazha/core/services/api/sellerAffiliate', () => ({
-  listSellerAffiliateStatements: (audience: 'seller' | 'promoter') =>
-    listSellerAffiliateStatementsMock(audience),
+  listSellerAffiliateStatements: (
+    audience: 'seller' | 'promoter',
+    target?: { sellerPeerID: string; programID: string }
+  ) => listSellerAffiliateStatementsMock(audience, target),
 }));
 
 function line(
@@ -208,11 +215,11 @@ describe('useSellerAffiliateStatements polling', () => {
       ({ audience }: { audience: 'seller' | 'promoter' }) => useSellerAffiliateStatements(audience),
       { initialProps }
     );
-    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('seller');
+    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('seller', undefined);
 
     rerender({ audience: 'promoter' });
     await flush();
-    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter');
+    expect(listSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter', undefined);
     expect(result.current.statements).toEqual([promoterLine]);
 
     await act(async () => {

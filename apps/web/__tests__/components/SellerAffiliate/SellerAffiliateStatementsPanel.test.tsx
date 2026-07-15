@@ -139,6 +139,15 @@ describe('SellerAffiliateStatementsPanel', () => {
     expect(screen.getByText('sellerAffiliate.statementEmptyPromoter')).toBeInTheDocument();
   });
 
+  it('passes the selected seller and program to promoter statement reads', () => {
+    mockStatements([]);
+    const promoterTarget = { sellerPeerID: 'seller-1', programID: 'program-1' };
+
+    render(<SellerAffiliateStatementsPanel audience="promoter" promoterTarget={promoterTarget} />);
+
+    expect(useSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter', true, promoterTarget);
+  });
+
   it('renders pending when there is no settlement', () => {
     mockStatements([buildLine({ status: 'pending' })]);
     render(<SellerAffiliateStatementsPanel audience="seller" />);

@@ -116,6 +116,11 @@ export interface SellerAffiliateStatementLine {
 
 export type SellerAffiliateStatementAudience = 'seller' | 'promoter';
 
+export interface SellerAffiliatePromoterStatementTarget {
+  sellerPeerID: string;
+  programID: string;
+}
+
 export interface SellerAffiliateRailCapability {
   railID: string;
   assetScope: 'chain' | 'native' | 'exact';

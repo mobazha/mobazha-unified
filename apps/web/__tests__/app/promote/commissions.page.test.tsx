@@ -10,6 +10,7 @@ const setLoginRedirectPathMock = vi.fn();
 const useSellerAffiliateStatementsMock = vi.fn();
 
 let isAuthenticated = true;
+let routeParams = { sellerPeerID: 'seller-1', programId: 'program-1' };
 
 vi.mock('@/components', () => ({
   Header: () => <div data-testid="mock-header" />,
@@ -17,6 +18,7 @@ vi.mock('@/components', () => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPushMock }),
+  useParams: () => routeParams,
 }));
 
 vi.mock('@mobazha/core', async importOriginal => {
@@ -31,11 +33,12 @@ vi.mock('@mobazha/core', async importOriginal => {
   };
 });
 
-import PromoteCommissionsPage from '@/app/promote/commissions/page';
+import PromoteCommissionsPage from '@/app/promote/[sellerPeerID]/[programId]/commissions/page';
 
-describe('PromoteCommissionsPage (/promote/commissions)', () => {
+describe('PromoteCommissionsPage (/promote/:sellerPeerID/:programId/commissions)', () => {
   beforeEach(() => {
     isAuthenticated = true;
+    routeParams = { sellerPeerID: 'seller-1', programId: 'program-1' };
     routerPushMock.mockClear();
     setLoginRedirectPathMock.mockClear();
     useSellerAffiliateStatementsMock.mockReset().mockReturnValue({
@@ -53,9 +56,10 @@ describe('PromoteCommissionsPage (/promote/commissions)', () => {
     expect(screen.getByTestId('promote-commissions-auth-required')).toBeInTheDocument();
     fireEvent.click(screen.getByText('promote.signInCta'));
 
-    expect(setLoginRedirectPathMock).toHaveBeenCalledWith('/promote/commissions');
+    const returnPath = '/promote/seller-1/program-1/commissions';
+    expect(setLoginRedirectPathMock).toHaveBeenCalledWith(returnPath);
     expect(routerPushMock).toHaveBeenCalledWith(
-      `/login?redirect=${encodeURIComponent('/promote/commissions')}`
+      `/login?redirect=${encodeURIComponent(returnPath)}`
     );
   });
 
@@ -64,6 +68,9 @@ describe('PromoteCommissionsPage (/promote/commissions)', () => {
 
     expect(screen.getByTestId('promote-commissions-page')).toBeInTheDocument();
     expect(screen.getByTestId('seller-affiliate-statements-promoter')).toBeInTheDocument();
-    expect(useSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter');
+    expect(useSellerAffiliateStatementsMock).toHaveBeenCalledWith('promoter', true, {
+      sellerPeerID: 'seller-1',
+      programID: 'program-1',
+    });
   });
 });

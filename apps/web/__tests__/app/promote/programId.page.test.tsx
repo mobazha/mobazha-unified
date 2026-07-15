@@ -106,6 +106,13 @@ describe('PromoteProgramPage (/promote/:sellerPeerID/:programId)', () => {
     );
   });
 
+  it('keeps the earnings view scoped to the selected seller and program', async () => {
+    render(<PromoteProgramPage />);
+
+    const link = await screen.findByTestId('promote-commissions-link');
+    expect(link).toHaveAttribute('href', '/promote/seller-1/program-1/commissions');
+  });
+
   it('creates (or reuses) the promoter link idempotently across repeated clicks', async () => {
     createSellerAffiliateLinkMock.mockResolvedValue({
       id: 'link-1',
