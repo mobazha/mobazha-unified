@@ -1,0 +1,72 @@
+---
+description: effect 里不要把 state 赋成新引用 —— 这是无限重渲染的一半，另一半是任意一个不稳定依赖
+alwaysApply: false
+globs:
+  - "**/*.tsx"
+  - "**/*.ts"
+---
+
+# effect 里不要把 state 赋成新引用
+
+在 `useEffect` 里清空/重置 state 时，用**模块级常量**，不要写新字面量：
+
+```ts
+// ✅ 稳定引用：重复清空对 React 是 no-op
+const NO_CANDIDATES: readonly Candidate[] = [];
+
+const [candidates, setCandidates] = useState<readonly Candidate[]>(NO_CANDIDATES);
+
+useEffect(() => {
+  if (!query) {
+    setCandidates(NO_CANDIDATES);   // 已经是空的 → React 自动 bail out
+    return;
+  }
+  // ...
+}, [query, t]);
+
+// ❌ 每次都是新数组 → 必定重渲染 → effect 若重跑就成环
+setCandidates([]);
+```
+
+同理 `{}`、`new Map()`、`new Set()`。原始值（`null` / `false` / 数字 / 字符串）**不用管**，
+React 用 `Object.is` 比较，值没变就不会重渲染。
+
+需要保留旧值时也可以用函数式更新兜底：`setX(prev => (prev.length ? [] : prev))`。
+
+## 为什么
+
+**一个 effect 里的新引用赋值 = 每次运行都必定触发一次重渲染。** 这本身只是浪费；
+但只要**任意一个依赖的引用每次渲染都变**，两者就凑成无限循环：
+渲染 → 依赖变 → effect 重跑 → 设新引用 → 状态"变了" → 渲染 → ……
+
+而依赖不稳定是很容易发生的：
+
+- `t`、`toast` 这类函数进依赖数组是本仓库的常见写法（src 里 ~186 处）。真实 `useI18n` 用
+  `useCallback([locale])` memo 了 `t`，所以**生产环境**目前不炸——但 `useCallback` 在 React 官方文档里
+  是**性能提示，不是语义保证**，React Compiler 就会改变记忆化行为。**靠它保正确性是脆的。**
+- 测试里更容易炸：mock 写成 `useI18n: () => ({ t: key => key })` 就每次返回新 `t`。
+  这些 mock 的 `t` 签名/行为/locale 各不相同（有 6 种以上写法），**没法统一抽一个共享 stable mock**，
+  所以别指望在 mock 侧堵——**要在组件侧堵**。
+
+2026-07-15 `MarketplaceOperatorDetailPage` 就是这么炸的：
+effect 同步路径上一句 `setResolveCandidates([])` + 依赖里的 `t`。改成模块级常量后，
+即使继续用那个不稳定的 mock，27 个测试也全过。
+
+## 这个循环有多难查
+
+它**不报错，只空转**，而且是同步的，会把事件循环堵死 ——
+连 vitest 自己的 `testTimeout` 都触发不了，表现为进程永不退出。
+上面那次把整个 pre-push hook 拖到 GitHub 掐断 SSH，被误判成「vitest 跑完不退出」。
+
+测试跑不完时先分流：
+
+```bash
+pgrep -f vitest | xargs ps -o pid,%cpu,rss,command -p
+```
+
+**100% CPU** = 死循环（查 effect 依赖 + 新引用赋值）；**0% CPU** = open handle（查没清的定时器/连接）。
+
+## 与 eslint 的关系
+
+`react-hooks/set-state-in-effect` 会标记 effect 里的 setState，正是冲着这类级联渲染来的。
+**要 disable 它，先确认赋的是稳定引用**，并把理由写在 disable 注释里。

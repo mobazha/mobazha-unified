@@ -55,6 +55,13 @@ function formatBytes(bytes?: number): string {
   return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(1))} ${units[Math.min(i, units.length - 1)]}`;
 }
 
+// Shared, so clearing assets twice is a no-op to React rather than a fresh
+// array that compares unequal and forces another render. The effect below
+// clears on its synchronous path and lists t among its dependencies, which is
+// the combination that turns into an unbounded render loop the moment t stops
+// being memoised.
+const NO_ASSETS: readonly DigitalAssetInfo[] = [];
+
 const TYPE_META: Record<
   DigitalAssetType,
   { icon: React.ElementType; labelKey: string; defaultLabel: string }
@@ -85,7 +92,7 @@ export function DigitalAssetsManagerSection({
   const { t } = useI18n();
   const { toast } = useToast();
 
-  const [assets, setAssets] = useState<DigitalAssetInfo[]>([]);
+  const [assets, setAssets] = useState<readonly DigitalAssetInfo[]>(NO_ASSETS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -106,7 +113,7 @@ export function DigitalAssetsManagerSection({
   useEffect(() => {
     if (!persisted) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAssets([]);
+      setAssets(NO_ASSETS);
       return;
     }
 
@@ -119,13 +126,13 @@ export function DigitalAssetsManagerSection({
       .listAssets(listingSlug as string, variantSku)
       .then(data => {
         if (cancelled) return;
-        setAssets(Array.isArray(data) ? data : []);
+        setAssets(Array.isArray(data) ? data : NO_ASSETS);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
         const status = (err as { status?: number })?.status;
         if (status === 404) {
-          setAssets([]);
+          setAssets(NO_ASSETS);
           return;
         }
         setError(

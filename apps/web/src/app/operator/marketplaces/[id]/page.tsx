@@ -103,6 +103,13 @@ const PENDING_STATUSES: ReadonlySet<MarketplaceStoreMembership['status']> = new 
   'accepted',
 ]);
 
+// One shared empty array, so clearing candidates twice is a no-op to React.
+// A fresh [] would compare unequal every time and force a re-render on every
+// run of the effect below, which is one unstable dependency away from an
+// unbounded render loop — and that loop blocks the event loop, so it spins the
+// CPU rather than surfacing as a timeout.
+const NO_CANDIDATES: readonly MarketplaceSellerResolveCandidate[] = [];
+
 const STORE_STATUS_PRIORITY: Record<MarketplaceStoreMembership['status'], number> = {
   applied: 0,
   accepted: 1,
@@ -200,9 +207,8 @@ export default function MarketplaceOperatorDetailPage() {
   const [inviteQuery, setInviteQuery] = useState('');
   const [sellerIdMode, setSellerIdMode] = useState(false);
   const [sellerIdInput, setSellerIdInput] = useState('');
-  const [resolveCandidates, setResolveCandidates] = useState<MarketplaceSellerResolveCandidate[]>(
-    []
-  );
+  const [resolveCandidates, setResolveCandidates] =
+    useState<readonly MarketplaceSellerResolveCandidate[]>(NO_CANDIDATES);
   const [selectedCandidate, setSelectedCandidate] =
     useState<MarketplaceSellerResolveCandidate | null>(null);
   const [resolveLoading, setResolveLoading] = useState(false);
@@ -289,7 +295,7 @@ export default function MarketplaceOperatorDetailPage() {
   const resetInviteState = useCallback(() => {
     setInviteQuery('');
     setSellerIdInput('');
-    setResolveCandidates([]);
+    setResolveCandidates(NO_CANDIDATES);
     setSelectedCandidate(null);
     setResolveLoading(false);
     setResolveUnavailable(false);
@@ -298,7 +304,7 @@ export default function MarketplaceOperatorDetailPage() {
 
   useEffect(() => {
     if (sellerIdMode) {
-      setResolveCandidates([]);
+      setResolveCandidates(NO_CANDIDATES);
       setSelectedCandidate(null);
       setResolveLoading(false);
       setResolveUnavailable(false);
@@ -308,7 +314,7 @@ export default function MarketplaceOperatorDetailPage() {
 
     const query = inviteQuery.trim();
     if (query.length < 2) {
-      setResolveCandidates([]);
+      setResolveCandidates(NO_CANDIDATES);
       setSelectedCandidate(null);
       setResolveLoading(false);
       setResolveUnavailable(false);
@@ -339,7 +345,7 @@ export default function MarketplaceOperatorDetailPage() {
             (error.status === 503 ||
               error.code === 'SERVICE_UNAVAILABLE' ||
               error.message === 'search_unavailable');
-          setResolveCandidates([]);
+          setResolveCandidates(NO_CANDIDATES);
           setSelectedCandidate(null);
           setResolveEmpty(false);
           setResolveUnavailable(searchDown);
@@ -1141,7 +1147,7 @@ export default function MarketplaceOperatorDetailPage() {
                       onClick={() => {
                         setSellerIdMode(prev => !prev);
                         setSelectedCandidate(null);
-                        setResolveCandidates([]);
+                        setResolveCandidates(NO_CANDIDATES);
                         setResolveEmpty(false);
                         setResolveUnavailable(false);
                       }}
