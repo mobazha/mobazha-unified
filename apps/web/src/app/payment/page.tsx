@@ -1772,11 +1772,18 @@ export default function PaymentPage() {
                                 onClick={async () => {
                                   setOnrampInitBusy(true);
                                   try {
+                                    // Deliver straight to the frozen escrow target. Routing
+                                    // through a buyer wallet requires an embedded-wallet
+                                    // address to bind the purchase to, and nothing here
+                                    // provisions one — asking for it makes the backend
+                                    // reject every purchase ("a purchase must bind a
+                                    // delivery target or the buyer wallet"), which this
+                                    // button then swallows as "unavailable".
                                     const src = await ordersApi.initiateOrderOnrampFunding({
                                       orderId: orderDetails.orderID,
                                       providerID: 'mock-onramp',
                                       fiatCurrency: 'USD',
-                                      deliverToBuyerWallet: true,
+                                      deliverToBuyerWallet: false,
                                       vendorPeerID: paymentVendorPeerID,
                                     });
                                     if (src) {
