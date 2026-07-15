@@ -1885,6 +1885,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/deal-links/{id}/close': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Close (retire) a Deal Link into its terminal state */
+    post: operations['deal-links-close'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-links/{id}/fee-quotes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or reuse the current seller-owned Deal Link Fee Quote */
+    post: operations['deal-links-fee-quotes-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-links/{id}/orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the orders placed through a seller-owned Deal Link */
+    get: operations['deal-links-orders'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/deal-links/{id}/pause': {
     parameters: {
       query?: never;
@@ -3002,40 +3053,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/public/seller-affiliate-links/{token}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Resolve an active direct affiliate link */
-    get: operations['public-seller-affiliate-links-get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/public/seller-affiliate-links/{token}/sessions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create an expiring seller-scoped referral session */
-    post: operations['public-seller-affiliate-sessions-create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/platform/v1/relay/execute': {
     parameters: {
       query?: never;
@@ -3096,92 +3113,6 @@ export interface paths {
     };
     /** Relay service configuration snapshot */
     get: operations['relay-status'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/seller-affiliate/capabilities': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List effective Affiliate settlement capabilities for this seller node */
-    get: operations['seller-affiliate-capabilities-get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/seller-affiliate/program': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get the current seller's affiliate program */
-    get: operations['seller-affiliate-program-get'];
-    /** Create or update the seller's storefront-wide affiliate program */
-    put: operations['seller-affiliate-program-put'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/seller-affiliate/programs/{id}/links': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create or return the current promoter's direct link */
-    post: operations['seller-affiliate-links-create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/seller-affiliate/statements/promoter': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List paginated Affiliate lines for the current promoter with partial-source metadata */
-    get: operations['seller-affiliate-statements-promoter'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/seller-affiliate/statements/seller': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List canonical affiliate commission lines for the current seller */
-    get: operations['seller-affiliate-statements-seller'];
     put?: never;
     post?: never;
     delete?: never;
@@ -3654,7 +3585,10 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Register or update a standalone store (API-key rotation on renewal) */
+    /**
+     * Register or update a standalone store with Peer proof
+     * @description Requires a fresh libp2p identity signature. Re-registration rotates the platform API key; a presented current key is checked for continuity.
+     */
     post: operations['stores-register'];
     delete?: never;
     options?: never;
@@ -3671,9 +3605,29 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Standalone node API-key claim of Casdoor ownership */
+    /** Standalone node and account claim of Casdoor ownership */
     post: operations['stores-claim-peer'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/stores/{peerID}/credentials/current': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke the current standalone store API key
+     * @description Revokes only the current platform credential. Store and commercial history are retained; a fresh signed Peer registration may issue a replacement.
+     */
+    delete: operations['stores-credentials-revoke-current'];
     options?: never;
     head?: never;
     patch?: never;
@@ -3710,6 +3664,26 @@ export interface paths {
     /** Provision Matrix account for a standalone store */
     post: operations['stores-matrix-provision'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/stores/{peerID}/owner': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Disconnect the optional platform owner account
+     * @description Clears only the Casdoor owner association. Store Peer identity, credential, Deal Links, orders, and commercial history are retained.
+     */
+    delete: operations['stores-owner-disconnect'];
     options?: never;
     head?: never;
     patch?: never;
@@ -8413,6 +8387,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/{orderID}/payment-session/onramp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Initiate or resume onramp funding
+     * @description Initiates (or idempotently resumes) an onramp purchase funding the order's current payable attempt. The settlement asset, network, and amount are fixed by the frozen attempt terms; the purchase is a funding source, not a settlement mode, and funded/verified still come only from the on-chain funding observation.
+     */
+    post: operations['orders-post-payment-session-onramp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/payment-session/onramp/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh onramp funding status
+     * @description Polls the onramp provider for the order's in-flight purchase, persists the transition, and returns the current onramp funding view (null when nothing is in flight).
+     */
+    post: operations['orders-post-payment-session-onramp-refresh'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}/payment/cancel-partial': {
     parameters: {
       query?: never;
@@ -8823,6 +8837,106 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/public/seller-affiliate-links/{token}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Resolve a store affiliate link
+     * @description Resolves an active token against the selected seller Node. The response contains no account identity.
+     */
+    get: operations['seller-affiliate-public-link-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/seller-affiliate-links/{token}/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create a store affiliate referral session
+     * @description Freezes the active program, link, and promoter payout facts on the selected seller Node for later checkout attribution.
+     */
+    post: operations['seller-affiliate-public-session-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/seller-affiliate/program': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Discover the active store affiliate program
+     * @description Returns the active program owned by the selected store Peer so promoter discovery does not depend on an account-scoped platform route.
+     */
+    get: operations['seller-affiliate-public-program-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/seller-affiliate/programs/{programID}/links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Enroll a promoter link with Peer evidence
+     * @description Creates an idempotent promoter link only when the promoter Peer signed a fresh, network- and seller-bound payout snapshot. Replays never reactivate revoked links.
+     */
+    post: operations['seller-affiliate-public-link-enroll'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/seller-affiliate/statements/promoter': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * List a promoter statement with Peer evidence
+     * @description Returns only the requesting promoter Peer's statement after verifying fresh seller-, network-, and program-bound evidence.
+     */
+    post: operations['seller-affiliate-public-promoter-statement-list'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/purchases': {
     parameters: {
       query?: never;
@@ -8955,6 +9069,150 @@ export interface paths {
     put?: never;
     /** Seller sales POST filter */
     post: operations['sales-post-query'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get store affiliate settlement capabilities
+     * @description Returns only reviewed settlement rails supported by the active Node's effective payment and wallet capabilities.
+     */
+    get: operations['seller-affiliate-capabilities-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List store affiliate links
+     * @description Returns promoter links from the active store's tenant-local affiliate database.
+     */
+    get: operations['seller-affiliate-links-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/links/{linkID}/reissue': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reissue a store affiliate link
+     * @description Rotates the public token while retaining the promoter's frozen payout destinations. Existing sessions and accepted orders are unchanged.
+     */
+    post: operations['seller-affiliate-link-reissue'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/links/{linkID}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revoke a store affiliate link
+     * @description Prevents the link from issuing new referral sessions without changing accepted orders or historical statements.
+     */
+    post: operations['seller-affiliate-link-revoke'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/program': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get the store affiliate program
+     * @description Returns the single affiliate program owned by the active store Peer.
+     */
+    get: operations['seller-affiliate-program-get'];
+    /**
+     * Create or update the store affiliate program
+     * @description Writes program policy under the active store Peer. Seller identity is derived from the Node and cannot be supplied by the client.
+     */
+    put: operations['seller-affiliate-program-put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/promoter-enrollments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Issue promoter Peer enrollment evidence
+     * @description Signs this Node's published payout destinations for one seller Peer and program. The evidence is short-lived and contains no account identity.
+     */
+    post: operations['seller-affiliate-promoter-enrollment-issue'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/seller-affiliate/statements/seller': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List the store affiliate statement
+     * @description Returns commission facts and canonical settlement evidence from the active store Node.
+     */
+    get: operations['seller-affiliate-statements-seller-list'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -9472,7 +9730,11 @@ export interface paths {
     put?: never;
     /** Bind standalone store owner to SaaS identity */
     post: operations['system-connect-platform-post'];
-    delete?: never;
+    /**
+     * Disconnect the optional platform owner account
+     * @description Removes the account association while preserving the store Peer identity, platform credential, and commerce history.
+     */
+    delete: operations['system-connect-platform-delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -9732,6 +9994,26 @@ export interface paths {
     put?: never;
     /** Publish store data */
     post: operations['system-publish-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/system/refresh-platform-credential': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh the Peer-signed platform credential
+     * @description Re-registers the local store with its libp2p identity. This does not connect or switch a Casdoor account.
+     */
+    post: operations['system-refresh-platform-credential-post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -10098,62 +10380,6 @@ export interface components {
       relay_gas_daily_quota?: number;
       /** Format: int64 */
       webhook_retention_days?: number;
-    };
-    Platform_AffiliateAttribution: {
-      /** Format: date-time */
-      attributedAt: string;
-      buyerKind: string;
-      buyerPeerID?: string;
-      /** Format: int32 */
-      commissionRateBPSSnapshot: number;
-      id: string;
-      orderID: string;
-      programID: string;
-      promoterPayoutAddress: string;
-      promoterPeerID: string;
-      promoterUTXOPayoutAddresses: {
-        [key: string]: string;
-      };
-      referralSessionID: string;
-      sellerPeerID: string;
-    };
-    Platform_AffiliateCommissionLine: {
-      attributionID: string;
-      commissionAtomic: string;
-      /** Format: int32 */
-      commissionRateBPSSnapshot: number;
-      /** Format: date-time */
-      createdAt: string;
-      currency: string;
-      netMerchandiseAtomic: string;
-      orderID: string;
-      orderLineID: string;
-      reversalReason?: string;
-      /** Format: date-time */
-      reversedAt?: string;
-      status: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    Platform_AffiliateSettlementOutput: {
-      action: string;
-      actionId: string;
-      address: string;
-      amount: string;
-      coin: string;
-      /** Format: int64 */
-      confirmations?: number;
-      /** Format: date-time */
-      confirmedAt?: string;
-      state: string;
-      txHash?: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    Platform_AffiliateStatementLine: {
-      attribution: components['schemas']['Platform_AffiliateAttribution'];
-      commissionLine: components['schemas']['Platform_AffiliateCommissionLine'];
-      settlement?: components['schemas']['Platform_AffiliateSettlementOutput'];
     };
     Platform_AiModelConfigPatchRequest: {
       api_key?: string;
@@ -10825,42 +11051,6 @@ export interface components {
       /** @description Wire-format scope name, e.g. listings:read. */
       name: string;
     };
-    Platform_SellerAffiliateCapabilitiesResponse: {
-      rails: components['schemas']['Platform_SellerAffiliateRailCapability'][] | null;
-      /** Format: int32 */
-      version: number;
-    };
-    Platform_SellerAffiliateProgramRequest: {
-      /** Format: int64 */
-      attributionWindowSeconds: number;
-      /** Format: int32 */
-      commissionRateBPS: number;
-      /** @enum {string} */
-      status: 'active' | 'paused';
-    };
-    Platform_SellerAffiliatePromoterStatementResponse: {
-      items: components['schemas']['Platform_AffiliateStatementLine'][] | null;
-      /** Format: int64 */
-      page: number;
-      /** Format: int64 */
-      pageSize: number;
-      partial: boolean;
-      sourceErrors?: components['schemas']['Platform_SellerAffiliateStatementSourceError'][] | null;
-      /** Format: int64 */
-      total: number;
-    };
-    Platform_SellerAffiliateRailCapability: {
-      actions: string[] | null;
-      /** @enum {string} */
-      assetScope: 'exact';
-      guestSupport: boolean;
-      orderKinds: string[] | null;
-      railID: string;
-    };
-    Platform_SellerAffiliateStatementSourceError: {
-      code: string;
-      linkID: string;
-    };
     Platform_SetHandleRequest: {
       handle: string;
     };
@@ -10941,7 +11131,11 @@ export interface components {
       connectivity?: string;
       domain?: string;
       endpoint_url?: string;
+      nonce: string;
       peer_id: string;
+      signature: string;
+      /** Format: int64 */
+      timestamp: number;
     };
     Platform_StoreRoomInviteRequest: {
       roomID: string;
@@ -11125,6 +11319,76 @@ export interface components {
       csrfToken?: string;
       /** Format: date-time */
       expiresAt?: string;
+    };
+    Node_AffiliateAttribution: {
+      /** Format: date-time */
+      attributedAt: string;
+      buyerKind: string;
+      buyerPeerID?: string;
+      /** Format: int32 */
+      commissionRateBPSSnapshot: number;
+      id: string;
+      orderID: string;
+      programID: string;
+      promoterPayoutAddress: string;
+      promoterPayoutDestinations: components['schemas']['Node_PayoutDestinationSet'];
+      promoterPeerID: string;
+      promoterUTXOPayoutAddresses: {
+        [key: string]: string;
+      };
+      referralSessionID: string;
+      sellerPeerID: string;
+    };
+    Node_AffiliateCommissionLine: {
+      attributionID: string;
+      commissionAtomic: string;
+      /** Format: int32 */
+      commissionRateBPSSnapshot: number;
+      /** Format: date-time */
+      createdAt: string;
+      currency: string;
+      netMerchandiseAtomic: string;
+      orderID: string;
+      orderLineID: string;
+      reversalReason?: string;
+      /** Format: date-time */
+      reversedAt?: string;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Node_AffiliateProgram: {
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int32 */
+      commissionRateBPS: number;
+      /** Format: date-time */
+      createdAt: string;
+      id: string;
+      sellerPeerID: string;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Node_AffiliateSettlementOutput: {
+      action: string;
+      actionId: string;
+      address: string;
+      amount: string;
+      coin: string;
+      /** Format: int64 */
+      confirmations?: number;
+      /** Format: date-time */
+      confirmedAt?: string;
+      state: string;
+      txHash?: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Node_AffiliateStatementLine: {
+      attribution: components['schemas']['Node_AffiliateAttribution'];
+      commissionLine: components['schemas']['Node_AffiliateCommissionLine'];
+      settlement?: components['schemas']['Node_AffiliateSettlementOutput'];
     };
     Node_AgentProductImportAdvanceCounts: {
       /** Format: int64 */
@@ -11654,6 +11918,38 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
     };
+    Node_PayoutDestination: {
+      address: string;
+      railID: string;
+      tag?: string;
+      /** Format: int32 */
+      version: number;
+    };
+    Node_PayoutDestinationSet: {
+      destinations?: components['schemas']['Node_PayoutDestination'][] | null;
+    };
+    Node_PublicSellerAffiliateLinkEnrollmentInputBody: {
+      evidence: components['schemas']['Node_SellerAffiliatePromoterEnrollmentEvidence'];
+    };
+    Node_PublicSellerAffiliateLinkView: {
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int32 */
+      commissionRateBPS: number;
+      programID: string;
+      sellerPeerID: string;
+      status: string;
+    };
+    Node_PublicSellerAffiliatePromoterStatementInputBody: {
+      evidence: components['schemas']['Node_SellerAffiliatePromoterEnrollmentEvidence'];
+    };
+    Node_PublicSellerAffiliateSessionView: {
+      evidence: components['schemas']['Node_SellerAffiliateReferralEvidence'];
+      /** Format: date-time */
+      expiresAt: string;
+      referralSessionID: string;
+      sellerPeerID: string;
+    };
     Node_RailDescriptor: {
       assets: string[] | null;
       custodyModel: string;
@@ -11665,6 +11961,105 @@ export interface components {
       supportsPrincipalRelease: boolean;
       supportsReconciliation: boolean;
       version: string;
+    };
+    Node_SellerAffiliateCapabilitiesView: {
+      rails: components['schemas']['Node_SellerAffiliateRailCapability'][] | null;
+      /** Format: int32 */
+      version: number;
+    };
+    Node_SellerAffiliateLinkView: {
+      /** Format: date-time */
+      createdAt: string;
+      id: string;
+      payoutRails: components['schemas']['Node_SellerAffiliatePayoutRailView'][] | null;
+      programID: string;
+      promoterPayoutAddress: string;
+      promoterPayoutDestinations: components['schemas']['Node_PayoutDestinationSet'];
+      promoterPeerID: string;
+      promoterUTXOPayoutAddresses: {
+        [key: string]: string;
+      };
+      publicPath: string;
+      publicToken: string;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Node_SellerAffiliateLinksView: {
+      items: components['schemas']['Node_SellerAffiliateLinkView'][] | null;
+    };
+    Node_SellerAffiliatePayoutRailView: {
+      address: string;
+      railID: string;
+      railLabel: string;
+    };
+    Node_SellerAffiliateProgramInputBody: {
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int32 */
+      commissionRateBPS: number;
+      /** @enum {string} */
+      status: 'active' | 'paused';
+    };
+    Node_SellerAffiliatePromoterEnrollmentEvidence: {
+      audienceSellerPeerID: string;
+      /** @enum {string} */
+      domain: 'mobazha:seller-affiliate-promoter-enrollment:v1';
+      evidenceID: string;
+      /** Format: int64 */
+      expiresAtUnix: number;
+      /** Format: int64 */
+      issuedAtUnix: number;
+      issuerPromoterPeerID: string;
+      issuerPublicKey: string;
+      /** @enum {string} */
+      network: 'mainnet' | 'testnet';
+      programID: string;
+      promoterPayoutDestinations: components['schemas']['Node_PayoutDestinationSet'];
+      signature: string;
+      /** @enum {string} */
+      version: '1';
+    };
+    Node_SellerAffiliatePromoterEnrollmentInputBody: {
+      programID: string;
+      sellerPeerID: string;
+    };
+    Node_SellerAffiliateRailCapability: {
+      actions: string[] | null;
+      /** @enum {string} */
+      assetScope: 'exact';
+      guestSupport: boolean;
+      orderKinds: string[] | null;
+      railID: string;
+      railLabel: string;
+    };
+    Node_SellerAffiliateReferralEvidence: {
+      affiliateLinkID: string;
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int32 */
+      commissionRateBPS: number;
+      /** @enum {string} */
+      domain: 'mobazha:seller-affiliate-referral:v1';
+      /** Format: int64 */
+      expiresAtUnix: number;
+      /** Format: int64 */
+      issuedAtUnix: number;
+      issuerPublicKey: string;
+      /** @enum {string} */
+      network: 'mainnet' | 'testnet';
+      policyVersion: string;
+      programID: string;
+      promoterPayoutDestinations: components['schemas']['Node_PayoutDestinationSet'];
+      promoterPeerID: string;
+      referralSessionID: string;
+      sellerPeerID: string;
+      signature: string;
+      /** @enum {string} */
+      version: '1';
+    };
+    Node_SellerAffiliateStatementsView: {
+      items: components['schemas']['Node_AffiliateStatementLine'][] | null;
     };
     Node_SkillRun: {
       acting_persona?: string;
@@ -15849,6 +16244,102 @@ export interface operations {
       };
     };
   };
+  'deal-links-close': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-fee-quotes-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-orders': {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'deal-links-pause': {
     parameters: {
       query?: never;
@@ -18237,68 +18728,6 @@ export interface operations {
       };
     };
   };
-  'public-seller-affiliate-links-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        token: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'public-seller-affiliate-sessions-create': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        token: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
   'relay-execute': {
     parameters: {
       query?: never;
@@ -18409,189 +18838,6 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-capabilities-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_SellerAffiliateCapabilitiesResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-program-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-program-put': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_SellerAffiliateProgramRequest'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-links-create': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-statements-promoter': {
-    parameters: {
-      query?: {
-        page?: number;
-        pageSize?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_SellerAffiliatePromoterStatementResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'seller-affiliate-statements-seller': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_AffiliateStatementLine'][] | null;
         };
       };
       /** @description Error */
@@ -19530,7 +19776,10 @@ export interface operations {
   'stores-heartbeat': {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        /** @description Current standalone store API key. */
+        'X-Standalone-Store-Key': string;
+      };
       path?: never;
       cookie?: never;
     };
@@ -19651,7 +19900,10 @@ export interface operations {
   'stores-register': {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        /** @description Optional current API key checked during credential rotation. */
+        'X-Standalone-Store-Key'?: string;
+      };
       path?: never;
       cookie?: never;
     };
@@ -19684,7 +19936,10 @@ export interface operations {
   'stores-claim-peer': {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        /** @description Current standalone store API key. */
+        'X-Standalone-Store-Key': string;
+      };
       path: {
         peerID: string;
       };
@@ -19704,6 +19959,39 @@ export interface operations {
         content: {
           'application/json': unknown;
         };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'stores-credentials-revoke-current': {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Current standalone store API key. */
+        'X-Standalone-Store-Key': string;
+      };
+      path: {
+        /** @description Store peer ID. */
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -19836,6 +20124,39 @@ export interface operations {
         content: {
           'application/json': unknown;
         };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'stores-owner-disconnect': {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Current standalone store API key. */
+        'X-Standalone-Store-Key': string;
+      };
+      path: {
+        /** @description Store peer ID. */
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -30307,6 +30628,74 @@ export interface operations {
       };
     };
   };
+  'orders-post-payment-session-onramp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-payment-session-onramp-refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-post-payment-cancel-partial': {
     parameters: {
       query?: never;
@@ -31328,6 +31717,165 @@ export interface operations {
       };
     };
   };
+  'seller-affiliate-public-link-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_PublicSellerAffiliateLinkView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-public-session-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_PublicSellerAffiliateSessionView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-public-program-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_PublicSellerAffiliateLinkView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-public-link-enroll': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        programID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_PublicSellerAffiliateLinkEnrollmentInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateLinkView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-public-promoter-statement-list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_PublicSellerAffiliatePromoterStatementInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateStatementsView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'purchases-get-query': {
     parameters: {
       query?: {
@@ -31647,6 +32195,250 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-capabilities-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateCapabilitiesView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-links-list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateLinksView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-link-reissue': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        linkID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateLinkView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-link-revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        linkID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateLinkView'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-program-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AffiliateProgram'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-program-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_SellerAffiliateProgramInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AffiliateProgram'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-promoter-enrollment-issue': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_SellerAffiliatePromoterEnrollmentInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliatePromoterEnrollmentEvidence'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'seller-affiliate-statements-seller-list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_SellerAffiliateStatementsView'];
         };
       };
       /** @description Error */
@@ -33053,6 +33845,35 @@ export interface operations {
       };
     };
   };
+  'system-connect-platform-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'system-diagnostics-get': {
     parameters: {
       query?: never;
@@ -33544,6 +34365,35 @@ export interface operations {
     };
   };
   'system-publish-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'system-refresh-platform-credential-post': {
     parameters: {
       query?: never;
       header?: never;

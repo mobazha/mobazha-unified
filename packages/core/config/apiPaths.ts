@@ -439,27 +439,13 @@ export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
 
 export const HOSTING_API = {
   ...HOSTING_API_PATHS,
-  // --- Deal Link orders + close (seller view; newer than the merged OpenAPI spec) ---
+  // --- Deal Link seller view helpers ---
   DEAL_LINKS_ORDERS: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/orders`,
   DEAL_LINKS_CLOSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/close`,
   // Seller-authenticated authoritative fee quote for an active link (201 created,
   // 200 when reusing the current unexpired quote).
   DEAL_LINKS_FEE_QUOTES: (id: string) =>
     `/platform/v1/deal-links/${encodeURIComponent(id)}/fee-quotes`,
-  // --- Seller Affiliate (automation-first; no review or settlement queue) ---
-  SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
-  SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',
-  SELLER_AFFILIATE_PROGRAM_LINKS: (id: string) =>
-    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
-  SELLER_AFFILIATE_PROGRAM_LINK: (id: string, linkID: string) =>
-    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links/${encodeURIComponent(linkID)}`,
-  PUBLIC_SELLER_AFFILIATE_LINK: (token: string) =>
-    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}`,
-  PUBLIC_SELLER_AFFILIATE_SESSIONS: (token: string) =>
-    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
-  SELLER_AFFILIATE_STATEMENTS_SELLER: '/platform/v1/seller-affiliate/statements/seller',
-  SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/platform/v1/seller-affiliate/statements/promoter',
-
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',
   AUTH_TELEGRAM_SIGNIN: '/platform/v1/auth/telegram/signin',

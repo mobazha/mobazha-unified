@@ -168,6 +168,10 @@ export const HOSTING_API_PATHS = {
   DEAL_LINKS: '/platform/v1/deal-links',
   DEAL_LINKS_ACTIVATE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/activate`,
   DEAL_LINKS_BY_ID: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}`,
+  DEAL_LINKS_CLOSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/close`,
+  DEAL_LINKS_FEE_QUOTES: (id: string) =>
+    `/platform/v1/deal-links/${encodeURIComponent(id)}/fee-quotes`,
+  DEAL_LINKS_ORDERS: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/orders`,
   DEAL_LINKS_PAUSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/pause`,
   ENCRYPTION_LISTINGS_KEY: (peerID: string, slug: string) =>
     `/platform/v1/encryption/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}/key`,
@@ -276,20 +280,10 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
   PUBLIC_MARKETPLACES_SELLER_APPLICATIONS_MINE: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
-  PUBLIC_SELLER_AFFILIATE_LINKS: (token: string) =>
-    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}`,
-  PUBLIC_SELLER_AFFILIATE_LINKS_SESSIONS: (token: string) =>
-    `/platform/v1/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
   RELAY_EXECUTE: '/platform/v1/relay/execute',
   RELAY_GAS_WALLET: '/platform/v1/relay/gas-wallet',
   RELAY_GAS_WALLET_STATUS: '/platform/v1/relay/gas-wallet/status',
   RELAY_STATUS: '/platform/v1/relay/status',
-  SELLER_AFFILIATE_CAPABILITIES: '/platform/v1/seller-affiliate/capabilities',
-  SELLER_AFFILIATE_PROGRAM: '/platform/v1/seller-affiliate/program',
-  SELLER_AFFILIATE_PROGRAMS_LINKS: (id: string) =>
-    `/platform/v1/seller-affiliate/programs/${encodeURIComponent(id)}/links`,
-  SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/platform/v1/seller-affiliate/statements/promoter',
-  SELLER_AFFILIATE_STATEMENTS_SELLER: '/platform/v1/seller-affiliate/statements/seller',
   SELLERS_MARKETPLACES: (userID: string) =>
     `/platform/v1/sellers/${encodeURIComponent(userID)}/marketplaces`,
   SELLERS_VISIBILITY: (userID: string, platform: string, instanceID: string) =>
@@ -319,12 +313,15 @@ export const HOSTING_API_PATHS = {
   STORES_CLAIM: '/platform/v1/stores/claim',
   STORES_CLAIM_BY_PEER_ID: (peerID: string) =>
     `/platform/v1/stores/${encodeURIComponent(peerID)}/claim`,
+  STORES_CREDENTIALS_CURRENT: (peerID: string) =>
+    `/platform/v1/stores/${encodeURIComponent(peerID)}/credentials/current`,
   STORES_DOMAIN: (peerID: string) => `/platform/v1/stores/${encodeURIComponent(peerID)}/domain`,
   STORES_HEARTBEAT: '/platform/v1/stores/heartbeat',
   STORES_MATRIX_PROVISION: (peerID: string) =>
     `/platform/v1/stores/${encodeURIComponent(peerID)}/matrix/provision`,
   STORES_MY: '/platform/v1/stores/my',
   STORES_MY_STORES: '/platform/v1/stores/my-stores',
+  STORES_OWNER: (peerID: string) => `/platform/v1/stores/${encodeURIComponent(peerID)}/owner`,
   STORES_OWNER_REPUTATION: '/platform/v1/stores/owner-reputation',
   STORES_REGISTER: '/platform/v1/stores/register',
   STORES_STATUS: (peerID: string) => `/platform/v1/stores/${encodeURIComponent(peerID)}/status`,
@@ -707,6 +704,10 @@ export const NODE_API_PATHS = {
     `/orders/${encodeURIComponent(orderID)}/payment-selection-quotes`,
   ORDERS_PAYMENT_SESSION: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment-session`,
+  ORDERS_PAYMENT_SESSION_ONRAMP: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/payment-session/onramp`,
+  ORDERS_PAYMENT_SESSION_ONRAMP_REFRESH: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/payment-session/onramp/refresh`,
   ORDERS_PAYMENT_WATCH: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment/watch`,
   ORDERS_RATE: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/rate`,
   ORDERS_REFUND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/refund`,
@@ -736,6 +737,14 @@ export const NODE_API_PATHS = {
   PROFILES_BY_PEER_ID: (peerID: string) => `/profiles/${encodeURIComponent(peerID)}`,
   PROFILES_HEADER: (peerID: string, size: string) =>
     `/profiles/${encodeURIComponent(peerID)}/header/${encodeURIComponent(size)}`,
+  PUBLIC_SELLER_AFFILIATE_LINKS: (token: string) =>
+    `/public/seller-affiliate-links/${encodeURIComponent(token)}`,
+  PUBLIC_SELLER_AFFILIATE_LINKS_SESSIONS: (token: string) =>
+    `/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
+  PUBLIC_SELLER_AFFILIATE_PROGRAM: '/public/seller-affiliate/program',
+  PUBLIC_SELLER_AFFILIATE_PROGRAMS_LINKS: (programID: string) =>
+    `/public/seller-affiliate/programs/${encodeURIComponent(programID)}/links`,
+  PUBLIC_SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/public/seller-affiliate/statements/promoter',
   PURCHASES: '/purchases',
   RATINGS: (ratingID: string) => `/ratings/${encodeURIComponent(ratingID)}`,
   RATINGS_BATCH: '/ratings/batch',
@@ -746,6 +755,15 @@ export const NODE_API_PATHS = {
     `/ratings/index/${encodeURIComponent(peerIDOrSlug)}`,
   RUNTIME_CONFIG: '/runtime-config',
   SALES: '/sales',
+  SELLER_AFFILIATE_CAPABILITIES: '/seller-affiliate/capabilities',
+  SELLER_AFFILIATE_LINKS: '/seller-affiliate/links',
+  SELLER_AFFILIATE_LINKS_REISSUE: (linkID: string) =>
+    `/seller-affiliate/links/${encodeURIComponent(linkID)}/reissue`,
+  SELLER_AFFILIATE_LINKS_REVOKE: (linkID: string) =>
+    `/seller-affiliate/links/${encodeURIComponent(linkID)}/revoke`,
+  SELLER_AFFILIATE_PROGRAM: '/seller-affiliate/program',
+  SELLER_AFFILIATE_PROMOTER_ENROLLMENTS: '/seller-affiliate/promoter-enrollments',
+  SELLER_AFFILIATE_STATEMENTS_SELLER: '/seller-affiliate/statements/seller',
   SETTINGS_AI: '/settings/ai',
   SETTINGS_AI_PROVIDERS: '/settings/ai/providers',
   SETTINGS_AI_TEST: '/settings/ai/test',
