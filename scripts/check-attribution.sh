@@ -32,17 +32,35 @@ require_text README.md "https://github.com/mobazha/mobazha-unified"
 require_text TRADEMARKS.md "This condition governs"
 require_text docs/legal/ATTRIBUTION.md "SPDX-License-Identifier: MPL-2.0"
 
+staged_mode=0
+if [[ "${1:-}" == "--staged" ]]; then
+  staged_mode=1
+  shift
+fi
+
 base="${ATTRIBUTION_BASE:-${1:-}}"
 zero_sha="0000000000000000000000000000000000000000"
 
-if [[ -z "$base" || "$base" == "$zero_sha" ]]; then
-  exit 0
+if (( ! staged_mode )); then
+  if [[ -z "$base" || "$base" == "$zero_sha" ]]; then
+    exit 0
+  fi
+
+  if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+    echo "attribution check: base commit $base is unavailable; root notices verified" >&2
+    exit 0
+  fi
 fi
 
-if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
-  echo "attribution check: base commit $base is unavailable; root notices verified" >&2
-  exit 0
-fi
+# --staged inspects the index so a missing header is caught at commit time
+# rather than by CI after the push.
+list_new_source() {
+  if (( staged_mode )); then
+    git diff --cached --diff-filter=A --name-only
+  else
+    git diff --diff-filter=A --name-only "$base"...HEAD
+  fi
+}
 
 while IFS= read -r file; do
   [[ -n "$file" && -f "$file" ]] || continue
@@ -67,4 +85,4 @@ while IFS= read -r file; do
 
   head -n 20 "$file" | grep -Fq 'SPDX-License-Identifier:' ||
     fail "new source file lacks an SPDX license header: $file"
-done < <(git diff --diff-filter=A --name-only "$base"...HEAD)
+done < <(list_new_source)

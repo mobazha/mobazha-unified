@@ -3,6 +3,9 @@ echo "🔍 Pre-commit validation..."
 # 运行 lint-staged
 pnpm lint-staged
 
+# 新源文件的 SPDX 头：CI 的 Attribution job 会卡这个，本地先拦下来
+./scripts/check-attribution.sh --staged
+
 echo ""
 echo "💡 提示: 提交前请确认已完成 Code Review"
 echo "   运行: pnpm review"
