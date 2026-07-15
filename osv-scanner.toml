@@ -1,0 +1,22 @@
+# Advisories that scripts/security-audit.sh should not block on.
+#
+# Keep this list short and dated. Every entry needs a reason someone can
+# re-check, not just an ID — an undocumented ignore is how a real finding gets
+# waved through later.
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+ignoreUntil = 2026-10-15
+reason = """
+uuid: missing bounds check in v3/v5/v6 when an external buf is passed.
+
+The only affected copy left is uuid@8.3.2, reached through
+web-ext-run > node-notifier@10.0.1, which is an OPTIONAL dependency of a
+browser-extension dev tool — it never ships to users. The prod path
+(rpc-websockets > uuid@11) is pinned to the patched ^11.1.1 via
+pnpm.overrides, and we call v4 anyway, which was never affected.
+
+Bumping uuid@8 to 11 across node-notifier is a major API jump for a package
+we only pull in optionally; not worth the breakage. Re-check when web-ext-run
+updates node-notifier.
+"""

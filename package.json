@@ -41,7 +41,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",
     "prettier": "^3.4.2",
-    "turbo": "^2.3.4",
+    "turbo": "^2.10.5",
     "typescript": "^5.7.2"
   },
   "packageManager": "pnpm@9.15.4",
@@ -67,7 +67,8 @@
       "picomatch@4.0.3": "4.0.4",
       "rollup@4.55.1": "4.59.0",
       "shell-quote@1.7.3": "1.8.4",
-      "tmp@0.2.5": "0.2.7"
+      "tmp@0.2.5": "0.2.7",
+      "uuid@^11.0.0": "^11.1.1"
     }
   },
   "dependencies": {

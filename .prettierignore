@@ -1,0 +1,3 @@
+# Generated lockfile — pnpm owns this format; reformatting it produces a huge
+# spurious diff and desyncs it from what pnpm writes.
+pnpm-lock.yaml
