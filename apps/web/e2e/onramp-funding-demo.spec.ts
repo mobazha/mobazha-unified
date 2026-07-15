@@ -134,6 +134,14 @@ test('buyer funds an order through the onramp leg', async ({ page }) => {
     .poll(async () => (await readSession(page)).status, { timeout: 120_000, intervals: [2000] })
     .toMatch(/verified|fully_funded|funded/);
 
-  await page.reload();
-  await page.waitForTimeout(4000); // let the settled payment state paint for the recording
+  // 6. The page must notice on its own: while the onramp leg is live it polls
+  //    the order status and flips to its success step once the session
+  //    verifies. No reload — a real buyer never presses F5. This is the
+  //    regression check for the success-detection gate that used to require
+  //    externalWalletInfo (never set on the onramp path), which left the page
+  //    showing the payment countdown after the money had landed.
+  await expect(
+    page.getByRole('heading', { name: /Order Placed Successfully/i }),
+  ).toBeVisible({ timeout: 90_000 });
+  await page.waitForTimeout(4000); // let the success step paint for the recording
 });

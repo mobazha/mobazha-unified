@@ -82,8 +82,15 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
   }, [refresh]);
 
   // Poll the provider while the purchase is progressing toward delivery.
+  // Refresh IMMEDIATELY on mount, then on the interval: the payment page can
+  // remount this section (session refetches swap the subtree), and a poll
+  // that only ever fires after a full quiet interval can be starved by that
+  // churn — observed live as refreshes minutes apart while the purchase sat
+  // at awaiting_payment. Refreshing on mount makes remounting itself drive
+  // the poll, with the interval as the steady-state backstop.
   useEffect(() => {
     if (!isActive) return;
+    void refreshRef.current();
     const interval = window.setInterval(() => {
       void refreshRef.current();
     }, 10_000);

@@ -1181,10 +1181,14 @@ export default function PaymentPage() {
   }, [paymentStep, syncOrderStatus]);
 
   useEffect(() => {
+    // The onramp funding leg has no externalWalletInfo — the buyer never opens
+    // the external-wallet pane. Success detection must poll whenever ANY
+    // funding leg is live, or an onramp-funded order pays on chain while this
+    // page keeps showing the countdown forever.
     if (
       !orderID ||
       !orderDetails ||
-      !externalWalletInfo ||
+      !(externalWalletInfo || onrampSource) ||
       !isPaymentOpenState(orderDetails.status)
     ) {
       return;
@@ -1201,7 +1205,7 @@ export default function PaymentPage() {
     }, 10_000);
 
     return () => window.clearInterval(intervalID);
-  }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
+  }, [externalWalletInfo, onrampSource, orderDetails, orderID, syncOrderStatus]);
 
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
   const totalWithFee = orderDetails?.total || 0;
