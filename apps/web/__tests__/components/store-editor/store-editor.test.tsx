@@ -7,7 +7,27 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import {
+  render as rtlRender,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+  type RenderOptions,
+} from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Editor components use react-query (owner catalog for pickers / AI builder),
+// so every render needs a QueryClientProvider.
+function QueryWrapper({ children }: { children: React.ReactNode }) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
+const render = (ui: React.ReactElement, options?: RenderOptions) =>
+  rtlRender(ui, { wrapper: QueryWrapper, ...options });
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -15,6 +35,9 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 
 const mockT = (key: string) => key;
 const mockSave = vi.fn();
+const mockSaveDraft = vi.fn();
+const mockPublish = vi.fn();
+const mockDiscardDraft = vi.fn();
 const mockToast = vi.fn();
 
 vi.mock('@mobazha/core', async () => {
@@ -24,10 +47,14 @@ vi.mock('@mobazha/core', async () => {
     useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
     useStorefrontConfig: () => ({
       config: null,
+      draft: null,
       isLoading: false,
       isSaving: false,
       error: null,
       save: mockSave,
+      saveDraft: mockSaveDraft,
+      publish: mockPublish,
+      discardDraft: mockDiscardDraft,
     }),
     useGatewayUrl: () => 'http://localhost:4002',
     usePeerID: () => 'QmTest123',
@@ -49,29 +76,56 @@ vi.mock('@/components/ui/dialog', () => ({
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('@/components/ui/alert-dialog', () => ({
-  AlertDialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
-    open ? <div data-testid="alert-dialog">{children}</div> : null,
-  AlertDialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-  AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogAction: ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick: () => void;
-  }) => <button onClick={onClick}>{children}</button>,
-  AlertDialogCancel: ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick: () => void;
-  }) => <button onClick={onClick}>{children}</button>,
-}));
+// Mirrors Radix's two usage modes: `open` drives it when supplied (PresetPicker),
+// otherwise the trigger owns the state (publish / reset-classic confirmations).
+vi.mock('@/components/ui/alert-dialog', async () => {
+  const R = await vi.importActual<typeof import('react')>('react');
+  const Ctx = R.createContext<{ open: boolean; setOpen: (v: boolean) => void }>({
+    open: false,
+    setOpen: () => {},
+  });
+
+  return {
+    AlertDialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) => {
+      const [internal, setInternal] = R.useState(false);
+      const value = R.useMemo(
+        () => ({ open: open ?? internal, setOpen: setInternal }),
+        [open, internal]
+      );
+      return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+    },
+    AlertDialogTrigger: ({ children }: { children: React.ReactNode }) => {
+      const { setOpen } = R.useContext(Ctx);
+      return R.cloneElement(children as React.ReactElement<{ onClick?: () => void }>, {
+        onClick: () => setOpen(true),
+      });
+    },
+    AlertDialogContent: ({ children }: { children: React.ReactNode }) => {
+      const { open } = R.useContext(Ctx);
+      return open ? <div data-testid="alert-dialog">{children}</div> : null;
+    },
+    AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+    AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+    AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    AlertDialogAction: ({
+      children,
+      onClick,
+      ...rest
+    }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+      <button onClick={onClick} {...rest}>
+        {children}
+      </button>
+    ),
+    AlertDialogCancel: ({
+      children,
+      onClick,
+    }: {
+      children: React.ReactNode;
+      onClick?: () => void;
+    }) => <button onClick={onClick}>{children}</button>,
+  };
+});
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({
@@ -334,8 +388,21 @@ describe('ThemeEditor', () => {
     const onUpdate = vi.fn();
     render(<ThemeEditor theme={baseTheme} onUpdate={onUpdate} />);
 
+    // Typography is collapsed until asked for — only one group is open at a time.
+    fireEvent.click(screen.getByTestId('theme-group-typography'));
     fireEvent.click(screen.getByText('Poppins'));
     expect(onUpdate).toHaveBeenCalledWith({ fontFamily: 'poppins' });
+  });
+
+  it('opens one theme group at a time', () => {
+    render(<ThemeEditor theme={baseTheme} onUpdate={vi.fn()} />);
+
+    expect(screen.queryByText('Poppins')).toBeNull();
+    fireEvent.click(screen.getByTestId('theme-group-typography'));
+    expect(screen.getByText('Poppins')).toBeTruthy();
+    // Opening Layout closes Typography.
+    fireEvent.click(screen.getByTestId('theme-group-layout'));
+    expect(screen.queryByText('Poppins')).toBeNull();
   });
 
   it('has data-testid attribute', () => {
@@ -368,10 +435,13 @@ describe('SectionListEditor', () => {
     render(
       <SectionListEditor
         sections={baseSections}
+        expandedId={null}
+        onExpandedChange={vi.fn()}
         onToggle={vi.fn()}
         onRemove={vi.fn()}
         onMove={vi.fn()}
         onUpdateProps={vi.fn()}
+        onRename={vi.fn()}
         onAddClick={vi.fn()}
       />
     );
@@ -384,10 +454,13 @@ describe('SectionListEditor', () => {
     render(
       <SectionListEditor
         sections={baseSections}
+        expandedId={null}
+        onExpandedChange={vi.fn()}
         onToggle={vi.fn()}
         onRemove={vi.fn()}
         onMove={vi.fn()}
         onUpdateProps={vi.fn()}
+        onRename={vi.fn()}
         onAddClick={onAddClick}
       />
     );
@@ -402,10 +475,13 @@ describe('SectionListEditor', () => {
     render(
       <SectionListEditor
         sections={baseSections}
+        expandedId={null}
+        onExpandedChange={vi.fn()}
         onToggle={onToggle}
         onRemove={vi.fn()}
         onMove={vi.fn()}
         onUpdateProps={vi.fn()}
+        onRename={vi.fn()}
         onAddClick={vi.fn()}
       />
     );
@@ -536,11 +612,13 @@ describe('StoreBrandingEditor', () => {
     expect(screen.getByText(/admin\.storeBranding\.tabSections/)).toBeTruthy();
   });
 
-  it('save button is disabled when no changes', () => {
+  it('publish and save-draft buttons are disabled when no changes', () => {
     render(<StoreBrandingEditor />);
 
-    const saveBtn = screen.getByText('common.save');
-    expect(saveBtn.closest('button')?.disabled).toBe(true);
+    const publishBtn = screen.getByTestId('publish');
+    expect((publishBtn as HTMLButtonElement).disabled).toBe(true);
+    const saveDraftBtn = screen.getByTestId('save-draft');
+    expect((saveDraftBtn as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('switches between theme and sections tabs', () => {
@@ -553,8 +631,8 @@ describe('StoreBrandingEditor', () => {
     expect(screen.getByTestId('section-list-editor')).toBeTruthy();
   });
 
-  it('shows save success toast after save', async () => {
-    mockSave.mockResolvedValueOnce({});
+  it('publishes edits through the publish action', async () => {
+    mockPublish.mockResolvedValueOnce({});
 
     render(<StoreBrandingEditor />);
 
@@ -565,11 +643,31 @@ describe('StoreBrandingEditor', () => {
     if (visibilityBtns.length > 0) {
       fireEvent.click(visibilityBtns[0]);
 
-      const saveBtn = screen.getByText('common.save');
-      fireEvent.click(saveBtn.closest('button')!);
+      fireEvent.click(screen.getByTestId('publish'));
+      fireEvent.click(screen.getByTestId('publish-confirm'));
 
       await waitFor(() => {
-        expect(mockSave).toHaveBeenCalled();
+        expect(mockPublish).toHaveBeenCalled();
+      });
+    }
+  });
+
+  it('saves edits as a draft through the save-draft action', async () => {
+    mockSaveDraft.mockResolvedValueOnce({});
+
+    render(<StoreBrandingEditor />);
+
+    const sectionsTab = screen.getByText(/admin\.storeBranding\.tabSections/);
+    fireEvent.click(sectionsTab);
+
+    const visibilityBtns = screen.getAllByLabelText(/Hide section|Show section/);
+    if (visibilityBtns.length > 0) {
+      fireEvent.click(visibilityBtns[0]);
+
+      fireEvent.click(screen.getByTestId('save-draft'));
+
+      await waitFor(() => {
+        expect(mockSaveDraft).toHaveBeenCalled();
       });
     }
   });
@@ -583,9 +681,9 @@ describe('StoreBrandingEditor', () => {
   it('renders viewport toggle buttons (desktop, tablet, mobile)', () => {
     render(<StoreBrandingEditor />);
 
-    const desktopBtn = screen.getByLabelText('Desktop');
-    const tabletBtn = screen.getByLabelText('Tablet');
-    const mobileBtn = screen.getByLabelText('Mobile');
+    const desktopBtn = screen.getByLabelText('admin.storeBranding.viewportDesktop');
+    const tabletBtn = screen.getByLabelText('admin.storeBranding.viewportTablet');
+    const mobileBtn = screen.getByLabelText('admin.storeBranding.viewportMobile');
 
     expect(desktopBtn).toBeTruthy();
     expect(tabletBtn).toBeTruthy();
@@ -595,21 +693,21 @@ describe('StoreBrandingEditor', () => {
   it('desktop viewport is active by default', () => {
     render(<StoreBrandingEditor />);
 
-    const desktopBtn = screen.getByLabelText('Desktop');
+    const desktopBtn = screen.getByLabelText('admin.storeBranding.viewportDesktop');
     expect(desktopBtn.getAttribute('aria-pressed')).toBe('true');
 
-    const tabletBtn = screen.getByLabelText('Tablet');
+    const tabletBtn = screen.getByLabelText('admin.storeBranding.viewportTablet');
     expect(tabletBtn.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('clicking viewport button updates active state', () => {
     render(<StoreBrandingEditor />);
 
-    const tabletBtn = screen.getByLabelText('Tablet');
+    const tabletBtn = screen.getByLabelText('admin.storeBranding.viewportTablet');
     fireEvent.click(tabletBtn);
     expect(tabletBtn.getAttribute('aria-pressed')).toBe('true');
 
-    const desktopBtn = screen.getByLabelText('Desktop');
+    const desktopBtn = screen.getByLabelText('admin.storeBranding.viewportDesktop');
     expect(desktopBtn.getAttribute('aria-pressed')).toBe('false');
   });
 });

@@ -8,18 +8,21 @@
  * Responsive: stacked on mobile, side-by-side on md+.
  */
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useI18n, useStorefrontConfig } from '@mobazha/core';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useI18n, useStorefrontConfig, useUserStore } from '@mobazha/core';
 import type { StoreConfig, StoreTheme, StoreSection, SectionType } from '@mobazha/core';
 import {
   ChevronLeft,
   Loader2,
   Undo2,
+  Redo2,
   Monitor,
   Tablet,
   Smartphone,
   Sparkles,
   RotateCcw,
+  Maximize2,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,12 +44,13 @@ import {
   STORE_PRESETS,
   StoreThemeProvider,
 } from '@/components/store-sections';
-import { SectionRenderer } from '@/components/store-sections/SectionRenderer';
+import { EditableSectionRenderer } from './EditableSectionRenderer';
 import { ThemeEditor } from './ThemeEditor';
 import { SectionListEditor } from './SectionListEditor';
 import { PresetPicker } from './PresetPicker';
 import { AddSectionPicker } from './AddSectionPicker';
 import { AIStoreBuilderDialog } from './AIStoreBuilderDialog';
+import { FullscreenPreview } from './FullscreenPreview';
 import { createSection } from '@/components/store-sections';
 
 type EditorTab = 'theme' | 'sections';
@@ -57,6 +61,16 @@ const VIEWPORT_WIDTHS: Record<PreviewViewport, string> = {
   tablet: '768px',
   mobile: '375px',
 };
+
+const VIEWPORT_OPTIONS: {
+  key: PreviewViewport;
+  icon: typeof Monitor;
+  labelKey: string;
+}[] = [
+  { key: 'desktop', icon: Monitor, labelKey: 'admin.storeBranding.viewportDesktop' },
+  { key: 'tablet', icon: Tablet, labelKey: 'admin.storeBranding.viewportTablet' },
+  { key: 'mobile', icon: Smartphone, labelKey: 'admin.storeBranding.viewportMobile' },
+];
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -93,6 +107,43 @@ function localizePresetConfig(config: StoreConfig, t: TFn): StoreConfig {
   return config;
 }
 
+/**
+ * Plain-language diff of what publishing would change for buyers. Publishing is
+ * the one irreversible step in the editor, so the seller sees this before it
+ * happens rather than a toast after.
+ */
+function summarizeChanges(from: StoreConfig | null | undefined, to: StoreConfig, t: TFn): string[] {
+  if (!from) return [t('admin.storeBranding.changeFirstPublish')];
+
+  const lines: string[] = [];
+  if (JSON.stringify(from.theme) !== JSON.stringify(to.theme)) {
+    lines.push(t('admin.storeBranding.changeTheme'));
+  }
+
+  const fromById = new Map(from.sections.map(s => [s.id, s]));
+  const toById = new Map(to.sections.map(s => [s.id, s]));
+
+  const added = to.sections.filter(s => !fromById.has(s.id)).length;
+  const removed = from.sections.filter(s => !toById.has(s.id)).length;
+  const updated = to.sections.filter(s => {
+    const before = fromById.get(s.id);
+    return before && JSON.stringify(before) !== JSON.stringify(s);
+  }).length;
+
+  if (added) lines.push(t('admin.storeBranding.changeSectionsAdded', { count: added }));
+  if (removed) lines.push(t('admin.storeBranding.changeSectionsRemoved', { count: removed }));
+  if (updated) lines.push(t('admin.storeBranding.changeSectionsUpdated', { count: updated }));
+
+  // Reordering is only meaningful among sections present on both sides.
+  const commonOrder = (c: StoreConfig) =>
+    c.sections.filter(s => fromById.has(s.id) && toById.has(s.id)).map(s => s.id);
+  if (JSON.stringify(commonOrder(from)) !== JSON.stringify(commonOrder(to))) {
+    lines.push(t('admin.storeBranding.changeSectionsReordered'));
+  }
+
+  return lines;
+}
+
 interface StoreBrandingEditorProps {
   backHref?: string;
 }
@@ -100,9 +151,31 @@ interface StoreBrandingEditorProps {
 export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { config: savedConfig, isLoading, isSaving, error, save } = useStorefrontConfig();
+  const {
+    config: savedConfig,
+    draft: serverDraft,
+    isLoading,
+    isSaving,
+    error,
+    saveDraft,
+    publish,
+    discardDraft,
+  } = useStorefrontConfig();
+  const { profile } = useUserStore();
+  // Real store data in the preview (PG-203): sections fetch the owner's actual
+  // products/collections. Falls back to placeholder mode until profile loads.
+  const previewPeerID = profile?.peerID || 'preview';
 
-  const [draft, setDraft] = useState<StoreConfig | null>(null);
+  // Local edit state lives in ONE object so every transition is a single,
+  // pure setState updater — StrictMode double-invocation and concurrent
+  // rebasing replay them safely (nested setState inside updaters is not).
+  const [editState, setEditState] = useState<{
+    draft: StoreConfig | null;
+    history: StoreConfig[];
+    future: StoreConfig[];
+  }>({ draft: null, history: [], future: [] });
+  const { draft, history, future } = editState;
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<EditorTab>('theme');
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
@@ -110,42 +183,102 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const [aiCooldown, setAiCooldown] = useState(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [viewport, setViewport] = useState<PreviewViewport>('desktop');
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   const config = useMemo(() => {
     if (draft) return draft;
+    if (serverDraft) return serverDraft;
     if (savedConfig) return savedConfig;
     return localizePresetConfig(deepClone(DEFAULT_STORE_CONFIG), t);
-  }, [draft, savedConfig, t]);
+  }, [draft, serverDraft, savedConfig, t]);
 
   const isDirty = draft !== null;
+  const hasServerDraft = !!serverDraft;
 
-  const initDraft = useCallback(() => {
-    if (!draft) {
-      const base = deepClone(savedConfig || DEFAULT_STORE_CONFIG);
-      setDraft(savedConfig ? base : localizePresetConfig(base, t));
-    }
-  }, [draft, savedConfig, t]);
+  /** Base config an edit starts from when there is no local draft yet. */
+  const pristineConfig = useCallback((): StoreConfig => {
+    const saved = serverDraft || savedConfig;
+    const base = deepClone(saved || DEFAULT_STORE_CONFIG);
+    return saved ? base : localizePresetConfig(base, t);
+  }, [serverDraft, savedConfig, t]);
+
+  const MAX_HISTORY = 50;
+
+  /** Every edit flows through here so undo/redo sees a linear history. */
+  const applyChange = useCallback(
+    (produce: (base: StoreConfig) => StoreConfig) => {
+      setEditState(prev => {
+        const base = prev.draft || pristineConfig();
+        return {
+          draft: produce(deepClone(base)),
+          history: [...prev.history.slice(-(MAX_HISTORY - 1)), deepClone(base)],
+          future: [],
+        };
+      });
+    },
+    [pristineConfig]
+  );
+
+  const undo = useCallback(() => {
+    setEditState(prev => {
+      if (prev.history.length === 0) return prev;
+      const snapshot = prev.history[prev.history.length - 1];
+      return {
+        // Bottom of the stack is the pristine base — undoing it clears the draft.
+        draft: prev.history.length === 1 ? null : snapshot,
+        history: prev.history.slice(0, -1),
+        future: prev.draft ? [...prev.future, deepClone(prev.draft)] : prev.future,
+      };
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setEditState(prev => {
+      if (prev.future.length === 0) return prev;
+      const snapshot = prev.future[prev.future.length - 1];
+      return {
+        draft: snapshot,
+        history: [...prev.history, prev.draft ? deepClone(prev.draft) : pristineConfig()],
+        future: prev.future.slice(0, -1),
+      };
+    });
+  }, [pristineConfig]);
+
+  // Cmd/Ctrl+Z to undo, Shift+Cmd/Ctrl+Z to redo — skipped while typing so
+  // native text-field undo keeps working.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (e.shiftKey) redo();
+      else undo();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [undo, redo]);
 
   const updateTheme = useCallback(
     (updates: Partial<StoreTheme>) => {
-      initDraft();
-      setDraft(prev => {
-        const base = prev || deepClone(savedConfig || DEFAULT_STORE_CONFIG);
-        return { ...base, theme: { ...base.theme, ...updates } };
-      });
+      applyChange(base => ({ ...base, theme: { ...base.theme, ...updates } }));
     },
-    [initDraft, savedConfig]
+    [applyChange]
   );
 
   const updateSections = useCallback(
     (sections: StoreSection[]) => {
-      initDraft();
-      setDraft(prev => {
-        const base = prev || deepClone(savedConfig || DEFAULT_STORE_CONFIG);
-        return { ...base, sections };
-      });
+      applyChange(base => ({ ...base, sections }));
     },
-    [initDraft, savedConfig]
+    [applyChange]
   );
 
   const addSection = useCallback(
@@ -160,6 +293,7 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const removeSection = useCallback(
     (id: string) => {
       updateSections(config.sections.filter(s => s.id !== id));
+      setSelectedSectionId(prev => (prev === id ? null : prev));
     },
     [config.sections, updateSections]
   );
@@ -196,66 +330,110 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
     [config.sections, updateSections]
   );
 
+  const renameSection = useCallback(
+    (id: string, name: string) => {
+      updateSections(
+        config.sections.map(s =>
+          s.id === id ? { ...s, name: name || undefined } : s
+        ) as StoreSection[]
+      );
+    },
+    [config.sections, updateSections]
+  );
+
   const applyPreset = useCallback(
     (presetId: string) => {
       const preset = STORE_PRESETS.find(p => p.id === presetId);
       if (preset) {
-        setDraft(localizePresetConfig(deepClone(preset.config), t));
+        applyChange(() => localizePresetConfig(deepClone(preset.config), t));
         setShowPresets(false);
       }
     },
-    [t]
+    [applyChange, t]
   );
 
   const handleAIApply = useCallback(
     (config: StoreConfig) => {
-      setDraft(config);
+      applyChange(() => config);
       setShowAIBuilder(false);
       toast({ title: t('admin.storeBranding.aiGenerateSuccess') });
       setAiCooldown(true);
       if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
       cooldownTimerRef.current = setTimeout(() => setAiCooldown(false), 10_000);
     },
-    [toast, t]
+    [applyChange, toast, t]
   );
 
-  const handleSave = useCallback(async () => {
-    if (!draft) return;
-    try {
-      await save(draft);
-      setDraft(null);
-      toast({ title: t('admin.storeBranding.saveSuccess') });
-    } catch {
-      toast({
-        title: t('admin.storeBranding.saveFailed'),
-        variant: 'destructive',
-      });
-    }
-  }, [draft, save, toast, t]);
-
-  const handleDiscard = useCallback(() => {
-    setDraft(null);
+  const resetEditState = useCallback(() => {
+    setEditState({ draft: null, history: [], future: [] });
   }, []);
 
-  const handleResetClassic = useCallback(async () => {
+  const handleSaveDraft = useCallback(async () => {
+    if (!draft) return;
     try {
-      await save({
-        ...DEFAULT_STORE_CONFIG,
-        sections: [],
-      });
-      setDraft(null);
-      toast({ title: t('admin.storeBranding.resetClassicLayout') });
+      await saveDraft(draft);
+      resetEditState();
+      toast({ title: t('admin.storeBranding.draftSaved') });
     } catch {
       toast({
         title: t('admin.storeBranding.saveFailed'),
         variant: 'destructive',
       });
     }
-  }, [save, toast, t]);
+  }, [draft, saveDraft, resetEditState, toast, t]);
+
+  const pendingPublish = draft || serverDraft;
+
+  /** What buyers will actually notice — shown before publishing, not after. */
+  const publishSummary = useMemo(
+    () => (pendingPublish ? summarizeChanges(savedConfig, pendingPublish, t) : []),
+    [pendingPublish, savedConfig, t]
+  );
+
+  const handlePublish = useCallback(async () => {
+    if (!pendingPublish) return;
+    try {
+      await publish(pendingPublish);
+      resetEditState();
+      toast({ title: t('admin.storeBranding.publishSuccess') });
+    } catch {
+      toast({
+        title: t('admin.storeBranding.saveFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [pendingPublish, publish, resetEditState, toast, t]);
+
+  const handleDiscardDraft = useCallback(async () => {
+    try {
+      if (hasServerDraft) await discardDraft();
+      resetEditState();
+    } catch {
+      toast({
+        title: t('admin.storeBranding.saveFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [hasServerDraft, discardDraft, resetEditState, toast, t]);
+
+  const handleDiscard = useCallback(() => {
+    resetEditState();
+  }, [resetEditState]);
+
+  // Wiping the layout is an edit like any other: it lands in the draft, is
+  // undoable, and only reaches buyers once the seller publishes. It used to
+  // publish straight to the live store, which was the one hole in the
+  // draft/publish model.
+  const handleResetClassic = useCallback(() => {
+    applyChange(() => ({ ...deepClone(DEFAULT_STORE_CONFIG), sections: [] }));
+  }, [applyChange]);
 
   const hasSavedConfig = !!savedConfig?.sections?.length;
 
-  if (isLoading && !savedConfig) {
+  // Block editing until BOTH the live config and the draft slot have loaded:
+  // editing against the live config while the server draft is still in flight
+  // would silently shadow (and later overwrite) the stored draft.
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -280,60 +458,109 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
           <span className="text-sm font-medium">{t('admin.storeBranding.pageTitle')}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAIBuilder(true)}
-            disabled={aiCooldown}
-            className="hidden sm:inline-flex gap-1"
-          >
-            <Sparkles className="w-4 h-4" />
-            {t('admin.storeBranding.aiGenerate')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPresets(true)}
-            className="hidden sm:inline-flex"
-          >
-            {t('admin.storeBranding.useTemplate')}
-          </Button>
-          {hasSavedConfig && !isDirty && (
+          <div className="flex items-center border border-border rounded-md">
+            <button
+              type="button"
+              onClick={undo}
+              disabled={history.length === 0}
+              className="p-1.5 rounded-l-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              aria-label={t('admin.storeBranding.undo')}
+              title={`${t('admin.storeBranding.undo')} (⌘Z)`}
+              data-testid="editor-undo"
+            >
+              <Undo2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={future.length === 0}
+              className="p-1.5 rounded-r-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              aria-label={t('admin.storeBranding.redo')}
+              title={`${t('admin.storeBranding.redo')} (⇧⌘Z)`}
+              data-testid="editor-redo"
+            >
+              <Redo2 className="w-4 h-4" />
+            </button>
+          </div>
+          {(isDirty || hasServerDraft) && (
+            <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              {t('admin.storeBranding.draftBadge')}
+            </span>
+          )}
+          {isDirty && (
+            <Button variant="ghost" size="sm" onClick={handleDiscard}>
+              <X className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">{t('common.discard')}</span>
+            </Button>
+          )}
+          {!isDirty && hasServerDraft && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <RotateCcw className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline">
-                    {t('admin.storeBranding.resetClassicLayout')}
-                  </span>
+                  {t('admin.storeBranding.discardDraft')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>{t('admin.storeBranding.resetClassicTitle')}</AlertDialogTitle>
+                  <AlertDialogTitle>{t('admin.storeBranding.discardDraftTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t('admin.storeBranding.resetClassicMessage')}
+                    {t('admin.storeBranding.discardDraftMessage')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleResetClassic}>
-                    {t('admin.storeBranding.resetClassicConfirm')}
+                  <AlertDialogAction onClick={handleDiscardDraft}>
+                    {t('admin.storeBranding.discardDraft')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {isDirty && (
-            <Button variant="ghost" size="sm" onClick={handleDiscard}>
-              <Undo2 className="w-4 h-4 sm:mr-1" />
-              <span className="hidden sm:inline">{t('common.discard')}</span>
-            </Button>
-          )}
-          <Button size="sm" onClick={handleSave} disabled={!isDirty || isSaving}>
-            {isSaving && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-            {t('common.save')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            disabled={!isDirty || isSaving}
+            data-testid="save-draft"
+          >
+            {t('admin.storeBranding.saveDraft')}
           </Button>
+          {/* Publishing is the only step buyers feel immediately — confirm it,
+              and say what actually changes. */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                disabled={(!isDirty && !hasServerDraft) || isSaving}
+                data-testid="publish"
+              >
+                {isSaving && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+                {t('admin.storeBranding.publish')}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('admin.storeBranding.publishConfirmTitle')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('admin.storeBranding.publishConfirmMessage')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <ul
+                className="text-sm text-foreground list-disc pl-5 space-y-1"
+                data-testid="publish-summary"
+              >
+                {publishSummary.map(line => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                <AlertDialogAction onClick={handlePublish} data-testid="publish-confirm">
+                  {t('admin.storeBranding.publishConfirmAction')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -375,14 +602,16 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
             </button>
           </div>
 
-          {/* Mobile-only: AI + template buttons */}
-          <div className="sm:hidden px-4 pt-3 flex gap-2">
+          {/* "Where do I start" actions, not header actions: they belong next
+              to the thing they rewrite, and the header was carrying nine. */}
+          <div className="px-4 pt-3 flex gap-2">
             <Button
               variant="outline"
               size="sm"
               className="flex-1 gap-1"
               onClick={() => setShowAIBuilder(true)}
               disabled={aiCooldown}
+              data-testid="ai-generate"
             >
               <Sparkles className="w-4 h-4" />
               {t('admin.storeBranding.aiGenerate')}
@@ -392,6 +621,7 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
               size="sm"
               className="flex-1"
               onClick={() => setShowPresets(true)}
+              data-testid="use-template"
             >
               {t('admin.storeBranding.useTemplate')}
             </Button>
@@ -401,14 +631,50 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
           <div className="p-4">
             {activeTab === 'theme' && <ThemeEditor theme={config.theme} onUpdate={updateTheme} />}
             {activeTab === 'sections' && (
-              <SectionListEditor
-                sections={config.sections}
-                onToggle={toggleSection}
-                onRemove={removeSection}
-                onMove={moveSection}
-                onUpdateProps={updateSectionProps}
-                onAddClick={() => setShowAddSection(true)}
-              />
+              <>
+                <SectionListEditor
+                  sections={config.sections}
+                  expandedId={selectedSectionId}
+                  onExpandedChange={setSelectedSectionId}
+                  onToggle={toggleSection}
+                  onRemove={removeSection}
+                  onMove={moveSection}
+                  onUpdateProps={updateSectionProps}
+                  onRename={renameSection}
+                  onAddClick={() => setShowAddSection(true)}
+                />
+                {hasSavedConfig && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-4 w-full text-muted-foreground gap-1"
+                        data-testid="reset-classic"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        {t('admin.storeBranding.resetClassicLayout')}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {t('admin.storeBranding.resetClassicTitle')}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t('admin.storeBranding.resetClassicMessage')}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetClassic}>
+                          {t('admin.storeBranding.resetClassicConfirm')}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -416,29 +682,43 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
         {/* Right: Live Preview */}
         <div className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
           {/* Viewport toolbar */}
-          <div className="flex items-center justify-center gap-1 py-2 px-4 border-b border-border bg-card/50 shrink-0">
-            {[
-              { key: 'desktop' as const, icon: Monitor, label: 'Desktop' },
-              { key: 'tablet' as const, icon: Tablet, label: 'Tablet' },
-              { key: 'mobile' as const, icon: Smartphone, label: 'Mobile' },
-            ].map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setViewport(key)}
-                className={cn(
-                  'p-2 rounded-md transition-colors',
-                  viewport === key
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-                aria-label={label}
-                aria-pressed={viewport === key}
-                title={label}
+          <div className="flex items-center gap-1 py-2 px-4 border-b border-border bg-card/50 shrink-0">
+            <div className="flex-1" />
+            {VIEWPORT_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
+              const label = t(labelKey as Parameters<TFn>[0]);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setViewport(key)}
+                  className={cn(
+                    'p-2 rounded-md transition-colors',
+                    viewport === key
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                  aria-label={label}
+                  aria-pressed={viewport === key}
+                  title={label}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              );
+            })}
+            <div className="flex-1 flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFullscreen(true)}
+                className="gap-1 text-muted-foreground"
+                data-testid="fullscreen-preview-open"
               >
-                <Icon className="w-4 h-4" />
-              </button>
-            ))}
+                <Maximize2 className="w-4 h-4" />
+                <span className="hidden lg:inline">
+                  {t('admin.storeBranding.fullscreenPreview')}
+                </span>
+              </Button>
+            </div>
           </div>
 
           {/* Preview container */}
@@ -448,7 +728,15 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
               style={{ maxWidth: VIEWPORT_WIDTHS[viewport] }}
             >
               <StoreThemeProvider theme={config.theme}>
-                <SectionRenderer sections={config.sections} peerId="preview" />
+                <EditableSectionRenderer
+                  sections={config.sections}
+                  peerId={previewPeerID}
+                  selectedId={selectedSectionId}
+                  onSelect={id => {
+                    setSelectedSectionId(id);
+                    setActiveTab('sections');
+                  }}
+                />
               </StoreThemeProvider>
             </div>
           </div>
@@ -474,6 +762,14 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
         open={showAIBuilder}
         onApply={handleAIApply}
         onClose={() => setShowAIBuilder(false)}
+      />
+
+      <FullscreenPreview
+        open={showFullscreen}
+        config={config}
+        peerId={previewPeerID}
+        isDraft={isDirty || hasServerDraft}
+        onClose={() => setShowFullscreen(false)}
       />
     </div>
   );

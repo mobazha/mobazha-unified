@@ -8,13 +8,17 @@
  * 2. Font selector with live preview
  * 3. Border radius selector
  * 4. Custom color inputs (when palette = custom)
+ *
+ * Grouped into a single-open accordion (PG-203): flat, these three lists run
+ * well past a screen, so reaching border radius meant scrolling past nine fonts
+ * every time.
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useI18n } from '@mobazha/core';
 import type { StoreTheme, ThemePalette, FontFamily, BorderRadius } from '@mobazha/core';
 import { PALETTE_MAP, ALL_PALETTES, FONT_FAMILY_MAP, isValidHexColor } from '@mobazha/core';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ThemeEditorProps {
@@ -63,8 +67,15 @@ const RADIUS_OPTIONS: { value: BorderRadius; i18nKey: string; preview: string }[
   { value: 'full', i18nKey: 'optPill', preview: '9999px' },
 ];
 
+type ThemeGroup = 'colors' | 'typography' | 'layout';
+
 export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
   const { t } = useI18n();
+  const [openGroup, setOpenGroup] = useState<ThemeGroup>('colors');
+  const toggleGroup = useCallback(
+    (group: ThemeGroup) => setOpenGroup(prev => (prev === group ? ('' as ThemeGroup) : group)),
+    []
+  );
 
   const handlePaletteSelect = useCallback(
     (palette: ThemePalette) => {
@@ -95,10 +106,14 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
     !ALL_PALETTES.includes(theme.palette as Exclude<ThemePalette, 'custom'>);
 
   return (
-    <div className="space-y-6" data-testid="theme-editor">
-      {/* Palette Selection */}
-      <section>
-        <h3 className="text-sm font-medium mb-3">{t('admin.storeBranding.colorPalette')}</h3>
+    <div className="space-y-2" data-testid="theme-editor">
+      {/* Colors */}
+      <ThemeGroupSection
+        title={t('admin.storeBranding.colorPalette')}
+        expanded={openGroup === 'colors'}
+        onToggle={() => toggleGroup('colors')}
+        testId="theme-group-colors"
+      >
         <div className="grid grid-cols-2 gap-2">
           {ALL_PALETTES.map(palette => {
             const colors = PALETTE_MAP[palette];
@@ -181,11 +196,15 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
             />
           </div>
         )}
-      </section>
+      </ThemeGroupSection>
 
-      {/* Font Selection */}
-      <section>
-        <h3 className="text-sm font-medium mb-3">{t('admin.storeBranding.fontFamily')}</h3>
+      {/* Typography */}
+      <ThemeGroupSection
+        title={t('admin.storeBranding.fontFamily')}
+        expanded={openGroup === 'typography'}
+        onToggle={() => toggleGroup('typography')}
+        testId="theme-group-typography"
+      >
         <div className="space-y-1">
           {FONT_OPTIONS.map(opt => {
             const isSelected = theme.fontFamily === opt.value;
@@ -212,11 +231,15 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
             );
           })}
         </div>
-      </section>
+      </ThemeGroupSection>
 
-      {/* Border Radius */}
-      <section>
-        <h3 className="text-sm font-medium mb-3">{t('admin.storeBranding.borderRadius')}</h3>
+      {/* Layout */}
+      <ThemeGroupSection
+        title={t('admin.storeBranding.borderRadius')}
+        expanded={openGroup === 'layout'}
+        onToggle={() => toggleGroup('layout')}
+        testId="theme-group-layout"
+      >
         <div className="flex gap-2">
           {RADIUS_OPTIONS.map(opt => {
             const isSelected = theme.borderRadius === opt.value;
@@ -243,8 +266,47 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
             );
           })}
         </div>
-      </section>
+      </ThemeGroupSection>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Accordion group
+// ---------------------------------------------------------------------------
+
+function ThemeGroupSection({
+  title,
+  expanded,
+  onToggle,
+  testId,
+  children,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  testId: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border border-border rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium hover:bg-muted/50 transition-colors"
+        data-testid={testId}
+      >
+        {title}
+        <ChevronDown
+          className={cn(
+            'w-4 h-4 text-muted-foreground transition-transform',
+            expanded && 'rotate-180'
+          )}
+        />
+      </button>
+      {expanded && <div className="px-3 pb-3">{children}</div>}
+    </section>
   );
 }
 

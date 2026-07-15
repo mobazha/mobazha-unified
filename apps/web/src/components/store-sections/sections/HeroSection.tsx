@@ -6,9 +6,11 @@
 
 import type { HeroSectionProps } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
+import { getImageUrl } from '@mobazha/core';
 
 interface Props extends HeroSectionProps {
   profile?: UserProfile;
+  storeHint?: string;
 }
 
 const HEIGHT_MAP = {
@@ -34,9 +36,12 @@ export function HeroSection({
   height,
   textAlign,
   profile,
+  storeHint,
 }: Props) {
   const displayTitle = title || profile?.name || 'Welcome';
-  const bgUrl = backgroundImage || profile?.headerHashes?.large;
+  // Values may be full URLs (legacy) or CID hashes (uploads) — getImageUrl handles both.
+  const bgUrl =
+    getImageUrl(backgroundImage, storeHint) || getImageUrl(profile?.headerHashes?.large, storeHint);
   const heightClass = HEIGHT_MAP[height] || HEIGHT_MAP.md;
   const alignClass = ALIGN_MAP[textAlign] || ALIGN_MAP.center;
 
@@ -44,12 +49,26 @@ export function HeroSection({
     <div
       className={`relative flex flex-col justify-center ${heightClass} ${alignClass} overflow-hidden`}
       style={{
-        backgroundColor: 'var(--store-primary)',
+        // Without an image, fall back to a theme-colored gradient instead of a
+        // flat block — the flat primary color reads as broken on dark palettes.
+        background: bgUrl
+          ? 'var(--store-primary)'
+          : 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 60%, var(--store-accent) 130%)',
         color: 'var(--store-on-primary)',
         fontFamily: 'var(--store-font)',
         borderRadius: 'var(--store-radius)',
       }}
     >
+      {!bgUrl && (
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 70% 20%, rgba(255,255,255,0.14), transparent 65%)',
+          }}
+        />
+      )}
       {bgUrl && (
         <>
           <div

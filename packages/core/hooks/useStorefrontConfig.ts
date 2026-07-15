@@ -16,6 +16,10 @@ import { formatQueryError } from './queryUtils';
 
 /**
  * Owner hook (authenticated — admin editor)
+ *
+ * Draft-aware (PG-203): `config` is the live/published config; `draft` is the
+ * unpublished draft slot. `saveDraft` never touches the live store;
+ * `publish` replaces it and clears the draft server-side.
  */
 export function useStorefrontConfig() {
   const queryClient = useQueryClient();
@@ -31,28 +35,73 @@ export function useStorefrontConfig() {
     staleTime: 60 * 1000,
   });
 
-  const saveMutation = useMutation({
-    mutationFn: (newConfig: StoreConfig) => storefrontApi.saveStorefrontConfig(newConfig),
+  const {
+    data: draft,
+    isLoading: isDraftLoading,
+    error: draftError,
+  } = useQuery({
+    queryKey: queryKeys.storefront.draft(),
+    queryFn: () => storefrontApi.getStorefrontDraft(),
+    staleTime: 60 * 1000,
+  });
+
+  const saveDraftMutation = useMutation({
+    mutationFn: (newConfig: StoreConfig) =>
+      storefrontApi.saveStorefrontConfig({ ...newConfig, status: 'draft' }),
+    onSuccess: saved => {
+      queryClient.setQueryData(queryKeys.storefront.draft(), saved);
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: (newConfig: StoreConfig) =>
+      storefrontApi.saveStorefrontConfig({ ...newConfig, status: 'published' }),
     onSuccess: saved => {
       queryClient.setQueryData(queryKeys.storefront.config(), saved);
+      queryClient.setQueryData(queryKeys.storefront.draft(), null);
       queryClient.invalidateQueries({ queryKey: queryKeys.storefront.all });
     },
   });
 
-  const save = useCallback(
-    async (newConfig: StoreConfig) => {
-      return saveMutation.mutateAsync(newConfig);
+  const discardDraftMutation = useMutation({
+    mutationFn: () => storefrontApi.discardStorefrontDraft(),
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.storefront.draft(), null);
     },
-    [saveMutation]
+  });
+
+  const saveDraft = useCallback(
+    async (newConfig: StoreConfig) => saveDraftMutation.mutateAsync(newConfig),
+    [saveDraftMutation]
   );
+
+  const publish = useCallback(
+    async (newConfig: StoreConfig) => publishMutation.mutateAsync(newConfig),
+    [publishMutation]
+  );
+
+  const discardDraft = useCallback(
+    async () => discardDraftMutation.mutateAsync(),
+    [discardDraftMutation]
+  );
+
+  /** @deprecated use `publish` — kept for existing callers. */
+  const save = publish;
 
   return {
     config: config ?? null,
-    isLoading,
-    isSaving: saveMutation.isPending,
-    error: formatQueryError(error || saveMutation.error),
+    draft: draft ?? null,
+    isLoading: isLoading || isDraftLoading,
+    isSaving:
+      saveDraftMutation.isPending || publishMutation.isPending || discardDraftMutation.isPending,
+    error: formatQueryError(
+      error || draftError || saveDraftMutation.error || publishMutation.error
+    ),
     refetch,
     save,
+    saveDraft,
+    publish,
+    discardDraft,
   };
 }
 

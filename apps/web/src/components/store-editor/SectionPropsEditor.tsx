@@ -20,7 +20,19 @@ import type {
   VideoSectionProps,
   CountdownSectionProps,
 } from '@mobazha/core';
-import { TextInput, TextArea, SelectInput, ToggleInput, NumberInput } from './form-helpers';
+import type { TrustBadge } from '@mobazha/core';
+import {
+  TextInput,
+  TextArea,
+  SelectInput,
+  ToggleInput,
+  NumberInput,
+  ImageInput,
+  DateTimeInput,
+} from './form-helpers';
+import { ProductPickerField, CollectionPickerField } from './ResourcePicker';
+import { ItemListEditor } from './ItemListEditor';
+import { AiRewriteButton } from './AiRewriteButton';
 
 interface SectionPropsEditorProps {
   section: StoreSection;
@@ -70,21 +82,34 @@ function HeroEditor({ props, onUpdate }: EditorProps<HeroSectionProps>) {
   const { t } = useI18n();
   return (
     <div className="space-y-3">
-      <TextInput
-        label={t('admin.storeBranding.fieldTitle')}
-        value={props.title}
-        onChange={v => onUpdate({ title: v })}
-      />
-      <TextInput
-        label={t('admin.storeBranding.fieldSubtitle')}
-        value={props.subtitle || ''}
-        onChange={v => onUpdate({ subtitle: v })}
-      />
-      <TextInput
+      <div>
+        <TextInput
+          label={t('admin.storeBranding.fieldTitle')}
+          value={props.title}
+          onChange={v => onUpdate({ title: v })}
+        />
+        <AiRewriteButton
+          value={props.title}
+          context="store hero headline"
+          onApply={text => onUpdate({ title: text })}
+        />
+      </div>
+      <div>
+        <TextInput
+          label={t('admin.storeBranding.fieldSubtitle')}
+          value={props.subtitle || ''}
+          onChange={v => onUpdate({ subtitle: v })}
+        />
+        <AiRewriteButton
+          value={props.subtitle || ''}
+          context="store hero subtitle"
+          onApply={text => onUpdate({ subtitle: text })}
+        />
+      </div>
+      <ImageInput
         label={t('admin.storeBranding.fieldBackgroundImage')}
         value={props.backgroundImage || ''}
         onChange={v => onUpdate({ backgroundImage: v })}
-        placeholder="https://..."
       />
       <TextInput
         label={t('admin.storeBranding.fieldCtaText')}
@@ -127,11 +152,18 @@ function AnnouncementEditor({ props, onUpdate }: EditorProps<AnnouncementBarProp
   const { t } = useI18n();
   return (
     <div className="space-y-3">
-      <TextInput
-        label={t('admin.storeBranding.fieldText')}
-        value={props.text}
-        onChange={v => onUpdate({ text: v })}
-      />
+      <div>
+        <TextInput
+          label={t('admin.storeBranding.fieldText')}
+          value={props.text}
+          onChange={v => onUpdate({ text: v })}
+        />
+        <AiRewriteButton
+          value={props.text}
+          context="store announcement-bar message"
+          onApply={text => onUpdate({ text })}
+        />
+      </div>
       <TextInput
         label={t('admin.storeBranding.fieldLink')}
         value={props.link || ''}
@@ -165,13 +197,20 @@ function FeaturedProductsEditor({ props, onUpdate }: EditorProps<FeaturedProduct
         ]}
         onChange={v => onUpdate({ mode: v })}
       />
-      <NumberInput
-        label={t('admin.storeBranding.fieldCount')}
-        value={props.count}
-        onChange={v => onUpdate({ count: v })}
-        min={1}
-        max={12}
-      />
+      {props.mode === 'manual' ? (
+        <ProductPickerField
+          value={props.productSlugs || []}
+          onChange={slugs => onUpdate({ productSlugs: slugs })}
+        />
+      ) : (
+        <NumberInput
+          label={t('admin.storeBranding.fieldCount')}
+          value={props.count}
+          onChange={v => onUpdate({ count: v })}
+          min={1}
+          max={12}
+        />
+      )}
       <SelectInput
         label={t('admin.storeBranding.fieldColumns')}
         value={String(props.columns)}
@@ -239,16 +278,22 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
         value={props.title}
         onChange={v => onUpdate({ title: v })}
       />
-      <TextArea
-        label={t('admin.storeBranding.fieldText')}
-        value={props.text}
-        onChange={v => onUpdate({ text: v })}
-      />
-      <TextInput
+      <div>
+        <TextArea
+          label={t('admin.storeBranding.fieldText')}
+          value={props.text}
+          onChange={v => onUpdate({ text: v })}
+        />
+        <AiRewriteButton
+          value={props.text}
+          context="store about/brand-story paragraph"
+          onApply={text => onUpdate({ text })}
+        />
+      </div>
+      <ImageInput
         label={t('admin.storeBranding.fieldImage')}
         value={props.image || ''}
         onChange={v => onUpdate({ image: v })}
-        placeholder="https://..."
       />
       <SelectInput
         label={t('admin.storeBranding.fieldImagePosition')}
@@ -270,6 +315,7 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
 
 function TrustBadgesEditor({ props, onUpdate }: EditorProps<TrustBadgesProps>) {
   const { t } = useI18n();
+  const badges = props.badges || [];
   return (
     <div className="space-y-3">
       <SelectInput
@@ -291,12 +337,55 @@ function TrustBadgesEditor({ props, onUpdate }: EditorProps<TrustBadgesProps>) {
         ]}
         onChange={v => onUpdate({ style: v })}
       />
-      <p className="text-xs text-muted-foreground">
-        {props.badges.length} {t('admin.storeBranding.sectionTrustBadges').toLowerCase()}
-      </p>
+      <ItemListEditor<TrustBadge>
+        label={t('admin.storeBranding.sectionTrustBadges')}
+        items={badges}
+        onChange={items => onUpdate({ badges: items })}
+        itemLabel={badge => badge.title}
+        addLabel={t('admin.storeBranding.addBadge')}
+        max={8}
+        createItem={() => ({ icon: 'escrow', title: '', description: '' })}
+        renderFields={(badge, update) => (
+          <>
+            <SelectInput
+              label={t('admin.storeBranding.fieldIcon')}
+              value={badge.icon}
+              options={[
+                { value: 'escrow', label: t('admin.storeBranding.iconEscrow') },
+                { value: 'crypto', label: t('admin.storeBranding.iconCrypto') },
+                { value: 'selfHosted', label: t('admin.storeBranding.iconSelfHosted') },
+                { value: 'p2p', label: t('admin.storeBranding.iconP2p') },
+                { value: 'privacy', label: t('admin.storeBranding.iconPrivacy') },
+                { value: 'custom', label: t('admin.storeBranding.iconCustom') },
+              ]}
+              onChange={v => update({ icon: v as TrustBadge['icon'] })}
+            />
+            {badge.icon === 'custom' && (
+              <ImageInput
+                label={t('admin.storeBranding.fieldCustomIcon')}
+                value={badge.customIcon || ''}
+                onChange={v => update({ customIcon: v })}
+              />
+            )}
+            <TextInput
+              label={t('admin.storeBranding.fieldTitle')}
+              value={badge.title}
+              onChange={v => update({ title: v })}
+            />
+            <TextArea
+              label={t('admin.storeBranding.fieldDescription')}
+              value={badge.description}
+              onChange={v => update({ description: v })}
+              rows={2}
+            />
+          </>
+        )}
+      />
     </div>
   );
 }
+
+type TestimonialItem = NonNullable<TestimonialsProps['items']>[number];
 
 function TestimonialsEditor({ props, onUpdate }: EditorProps<TestimonialsProps>) {
   const { t } = useI18n();
@@ -316,34 +405,54 @@ function TestimonialsEditor({ props, onUpdate }: EditorProps<TestimonialsProps>)
         ]}
         onChange={v => onUpdate({ mode: v })}
       />
-      <NumberInput
-        label={t('admin.storeBranding.fieldCount')}
-        value={props.count || 3}
-        onChange={v => onUpdate({ count: v })}
-        min={1}
-        max={10}
-      />
+      {props.mode === 'manual' ? (
+        <ItemListEditor<TestimonialItem>
+          items={props.items || []}
+          onChange={items => onUpdate({ items })}
+          itemLabel={item => item.name}
+          addLabel={t('admin.storeBranding.addTestimonial')}
+          max={10}
+          createItem={() => ({ name: '', text: '', rating: 5 })}
+          renderFields={(item, update) => (
+            <>
+              <TextInput
+                label={t('admin.storeBranding.fieldName')}
+                value={item.name}
+                onChange={v => update({ name: v })}
+              />
+              <TextArea
+                label={t('admin.storeBranding.fieldText')}
+                value={item.text}
+                onChange={v => update({ text: v })}
+                rows={2}
+              />
+              <NumberInput
+                label={t('admin.storeBranding.fieldRating')}
+                value={item.rating ?? 5}
+                onChange={v => update({ rating: Math.min(5, Math.max(1, v)) })}
+                min={1}
+                max={5}
+              />
+            </>
+          )}
+        />
+      ) : (
+        <NumberInput
+          label={t('admin.storeBranding.fieldCount')}
+          value={props.count || 3}
+          onChange={v => onUpdate({ count: v })}
+          min={1}
+          max={10}
+        />
+      )}
     </div>
   );
 }
 
+type FaqItem = FaqSectionProps['items'][number];
+
 function FaqEditor({ props, onUpdate }: EditorProps<FaqSectionProps>) {
   const { t } = useI18n();
-  const items = props.items || [];
-
-  const updateItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const newItems = items.map((item, i) => (i === index ? { ...item, [field]: value } : item));
-    onUpdate({ items: newItems });
-  };
-
-  const addItem = () => {
-    onUpdate({ items: [...items, { question: '', answer: '' }] });
-  };
-
-  const removeItem = (index: number) => {
-    onUpdate({ items: items.filter((_, i) => i !== index) });
-  };
-
   return (
     <div className="space-y-3">
       <TextInput
@@ -351,34 +460,29 @@ function FaqEditor({ props, onUpdate }: EditorProps<FaqSectionProps>) {
         value={props.title}
         onChange={v => onUpdate({ title: v })}
       />
-      {items.map((item, i) => (
-        <div key={i} className="p-2 rounded bg-muted/50 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Q{i + 1}</span>
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className="text-xs text-destructive hover:underline"
-            >
-              {t('admin.storeBranding.removeFaqItem')}
-            </button>
-          </div>
-          <TextInput
-            label={t('admin.storeBranding.fieldQuestion')}
-            value={item.question}
-            onChange={v => updateItem(i, 'question', v)}
-          />
-          <TextArea
-            label={t('admin.storeBranding.fieldAnswer')}
-            value={item.answer}
-            onChange={v => updateItem(i, 'answer', v)}
-            rows={2}
-          />
-        </div>
-      ))}
-      <button type="button" onClick={addItem} className="text-xs text-primary hover:underline">
-        {t('admin.storeBranding.addFaqItem')}
-      </button>
+      <ItemListEditor<FaqItem>
+        items={props.items || []}
+        onChange={items => onUpdate({ items })}
+        itemLabel={(item, i) => item.question || `Q${i + 1}`}
+        addLabel={t('admin.storeBranding.addFaqItem')}
+        max={20}
+        createItem={() => ({ question: '', answer: '' })}
+        renderFields={(item, update) => (
+          <>
+            <TextInput
+              label={t('admin.storeBranding.fieldQuestion')}
+              value={item.question}
+              onChange={v => update({ question: v })}
+            />
+            <TextArea
+              label={t('admin.storeBranding.fieldAnswer')}
+              value={item.answer}
+              onChange={v => update({ answer: v })}
+              rows={2}
+            />
+          </>
+        )}
+      />
     </div>
   );
 }
@@ -422,6 +526,8 @@ function ContactEditor({ props, onUpdate }: EditorProps<ContactSectionProps>) {
   );
 }
 
+type GalleryImageItem = GallerySectionProps['images'][number];
+
 function GalleryEditor({ props, onUpdate }: EditorProps<GallerySectionProps>) {
   const { t } = useI18n();
   return (
@@ -457,7 +563,34 @@ function GalleryEditor({ props, onUpdate }: EditorProps<GallerySectionProps>) {
         checked={props.enableLightbox}
         onChange={v => onUpdate({ enableLightbox: v })}
       />
-      <p className="text-xs text-muted-foreground">{props.images.length} image(s)</p>
+      <ItemListEditor<GalleryImageItem>
+        label={t('admin.storeBranding.fieldImages')}
+        items={props.images || []}
+        onChange={images => onUpdate({ images })}
+        itemLabel={(img, i) => img.caption || img.alt || `#${i + 1}`}
+        addLabel={t('admin.storeBranding.addImage')}
+        max={12}
+        createItem={() => ({ src: '' })}
+        renderFields={(img, update) => (
+          <>
+            <ImageInput
+              label={t('admin.storeBranding.fieldImage')}
+              value={img.src}
+              onChange={v => update({ src: v })}
+            />
+            <TextInput
+              label={t('admin.storeBranding.fieldCaption')}
+              value={img.caption || ''}
+              onChange={v => update({ caption: v })}
+            />
+            <TextInput
+              label={t('admin.storeBranding.fieldLink')}
+              value={img.link || ''}
+              onChange={v => update({ link: v })}
+            />
+          </>
+        )}
+      />
     </div>
   );
 }
@@ -505,6 +638,12 @@ function CollectionsEditor({ props, onUpdate }: EditorProps<CollectionsSectionPr
         ]}
         onChange={v => onUpdate({ mode: v })}
       />
+      {props.mode === 'manual' && (
+        <CollectionPickerField
+          value={props.collectionIDs || []}
+          onChange={ids => onUpdate({ collectionIDs: ids })}
+        />
+      )}
       <SelectInput
         label={t('admin.storeBranding.fieldLayout')}
         value={props.layout}
@@ -567,11 +706,10 @@ function VideoEditor({ props, onUpdate }: EditorProps<VideoSectionProps>) {
         onChange={v => onUpdate({ videoUrl: v })}
         placeholder={t('admin.storeBranding.placeholderVideoUrl')}
       />
-      <TextInput
+      <ImageInput
         label={t('admin.storeBranding.fieldPosterImage')}
         value={props.posterImage || ''}
         onChange={v => onUpdate({ posterImage: v })}
-        placeholder={t('admin.storeBranding.placeholderPosterImage')}
       />
       <SelectInput
         label={t('admin.storeBranding.fieldAspectRatio')}
@@ -611,11 +749,10 @@ function CountdownEditor({ props, onUpdate }: EditorProps<CountdownSectionProps>
         value={props.title || ''}
         onChange={v => onUpdate({ title: v })}
       />
-      <TextInput
+      <DateTimeInput
         label={t('admin.storeBranding.fieldTargetDate')}
         value={props.targetDate}
         onChange={v => onUpdate({ targetDate: v })}
-        placeholder="2026-03-15T00:00:00Z"
       />
       <TextInput
         label={t('admin.storeBranding.fieldEndMessage')}

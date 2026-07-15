@@ -310,6 +310,7 @@ export const NODE_API = {
 
   // --- Storefront (PG-201) ---
   SETTINGS_STOREFRONT: '/settings/storefront',
+  SETTINGS_STOREFRONT_DRAFT: '/settings/storefront/draft',
   SETTINGS_STOREFRONT_PEER: (peerID: string) => `/settings/storefront/${peerID}`,
 
   // --- Analytics (visitor tracking) ---

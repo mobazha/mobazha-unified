@@ -20,6 +20,12 @@ const nextConfig = {
   // 禁用开发指示器（左下角的 "N" 图标）
   devIndicators: false,
 
+  // Next 16 blocks dev chunks served to a host it considers cross-origin, which
+  // trips layout.js's ChunkLoadError guard into a reload loop — a blank page
+  // with no error. Hitting the dev server by IP (127.0.0.1, LAN address for
+  // device testing) is normal, so allow it.
+  allowedDevOrigins: ['127.0.0.1', 'localhost', '192.168.*.*', '10.*.*.*'],
+
   // 图片优化配置
   images: {
     remotePatterns: [

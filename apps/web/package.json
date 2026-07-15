@@ -24,7 +24,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:sovereign": "playwright test --config playwright.sovereign-prod.config.ts",
     "test:e2e:sovereign:dev": "playwright test --config playwright.sovereign-dev.config.ts",
-    "test:e2e:sovereign:real": "playwright test --config playwright.sovereign-real.config.ts"
+    "test:e2e:sovereign:real": "playwright test --config playwright.sovereign-real.config.ts",
+    "demo:storefront": "playwright test --config=playwright.demo.config.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0",

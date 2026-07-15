@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { SECTION_REGISTRY } from '@/components/store-sections';
+import { SectionIcon } from './SectionIcon';
 
 interface AddSectionPickerProps {
   open: boolean;
@@ -69,7 +70,9 @@ export function AddSectionPicker({
                   onClick={() => onAdd(type)}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-center group"
                 >
-                  <span className="text-2xl">{meta.icon}</span>
+                  <span className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                    <SectionIcon type={type} className="w-5 h-5" />
+                  </span>
                   <span className="text-xs font-medium group-hover:text-primary transition-colors">
                     {t(meta.labelKey)}
                   </span>

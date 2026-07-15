@@ -48,6 +48,7 @@ apps/web/standalone-smoke-*.png
 
 # Demo journey screenshots (generated, not baselines)
 apps/web/e2e/demo-output/
+apps/web/demo-output/
 
 # Diagnostic scripts and output (temporary)
 apps/web/e2e-diagnostic-output/

@@ -7,11 +7,11 @@
  * The generated StoreConfig is previewed inside the dialog before the user applies it.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useI18n, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import type { StoreConfig } from '@mobazha/core';
 import { aiService, AiServiceError } from '@mobazha/core/services/ai/aiService';
-import { Sparkles, Loader2, AlertCircle, Settings2 } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, Settings2, Wand2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { StoreThemeProvider, SectionRenderer } from '@/components/store-sections';
+import { useOwnerProducts } from './ResourcePicker';
 
 type Phase = 'idle' | 'generating' | 'preview' | 'error';
 
@@ -35,12 +36,37 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
 
   const [brandName, setBrandName] = useState('');
   const [brandDescription, setBrandDescription] = useState('');
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [generatedConfig, setGeneratedConfig] = useState<StoreConfig | null>(null);
   const [errorInfo, setErrorInfo] = useState<{ message: string; isNotConfigured: boolean }>({
     message: '',
     isNotConfigured: false,
   });
+
+  const { products } = useOwnerProducts();
+  const catalogSample = useMemo(
+    () => products.slice(0, 20).map(p => ({ slug: p.slug, title: p.title })),
+    [products]
+  );
+  const catalogSlugs = useMemo(() => new Set(products.map(p => p.slug)), [products]);
+
+  /** Drop any hallucinated slugs so manual sections only reference real listings. */
+  const sanitizeConfig = useCallback(
+    (config: StoreConfig): StoreConfig => ({
+      ...config,
+      sections: config.sections.map(section => {
+        if (section.type !== 'featured-products') return section;
+        const slugs = (section.props.productSlugs || []).filter(s => catalogSlugs.has(s));
+        if (section.props.mode === 'manual' && slugs.length === 0) {
+          return { ...section, props: { ...section.props, mode: 'newest' as const } };
+        }
+        return { ...section, props: { ...section.props, productSlugs: slugs } };
+      }),
+    }),
+    [catalogSlugs]
+  );
 
   const canGenerate = brandName.trim().length > 0 && brandDescription.trim().length > 0;
 
@@ -54,8 +80,9 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
         brandName: brandName.trim(),
         brandDescription: brandDescription.trim(),
         language: locale,
+        products: catalogSample,
       });
-      setGeneratedConfig(config);
+      setGeneratedConfig(sanitizeConfig(config));
       setPhase('preview');
     } catch (err) {
       const isNotConfigured = err instanceof AiServiceError && err.isNotConfigured;
@@ -63,7 +90,27 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
       setErrorInfo({ message, isNotConfigured });
       setPhase('error');
     }
-  }, [canGenerate, brandName, brandDescription, locale]);
+  }, [canGenerate, brandName, brandDescription, locale, catalogSample, sanitizeConfig]);
+
+  const handleRefine = useCallback(async () => {
+    const instruction = refineInstruction.trim();
+    if (!instruction || !generatedConfig) return;
+    setIsRefining(true);
+    try {
+      const config = await aiService.refineStoreConfig(generatedConfig, instruction, {
+        language: locale,
+      });
+      setGeneratedConfig(sanitizeConfig(config));
+      setRefineInstruction('');
+    } catch (err) {
+      const isNotConfigured = err instanceof AiServiceError && err.isNotConfigured;
+      const message = err instanceof Error ? err.message : String(err);
+      setErrorInfo({ message, isNotConfigured });
+      setPhase('error');
+    } finally {
+      setIsRefining(false);
+    }
+  }, [refineInstruction, generatedConfig, locale, sanitizeConfig]);
 
   const handleApply = useCallback(() => {
     if (generatedConfig) {
@@ -195,8 +242,14 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
 
         {/* Preview */}
         {phase === 'preview' && generatedConfig && (
-          <div className="flex-1 overflow-y-auto px-1 -mx-1">
-            <div className="rounded-lg border border-border bg-background overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-1 -mx-1 space-y-3">
+            <div className="rounded-lg border border-border bg-background overflow-hidden relative">
+              {isRefining && (
+                <div className="absolute inset-0 z-10 bg-background/70 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('admin.storeBranding.refining')}
+                </div>
+              )}
               <div
                 className="origin-top-left"
                 style={{
@@ -210,6 +263,29 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
                   <SectionRenderer sections={generatedConfig.sections} peerId="ai-preview" />
                 </StoreThemeProvider>
               </div>
+            </div>
+            {/* Conversational refinement */}
+            <div className="flex items-center gap-2 mx-0.5">
+              <Input
+                value={refineInstruction}
+                onChange={e => setRefineInstruction(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !isRefining) handleRefine();
+                }}
+                placeholder={t('admin.storeBranding.refinePlaceholder')}
+                disabled={isRefining}
+                data-testid="ai-refine-input"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefine}
+                disabled={isRefining || !refineInstruction.trim()}
+                data-testid="ai-refine-button"
+              >
+                <Wand2 className="w-4 h-4 mr-1" />
+                {t('admin.storeBranding.refine')}
+              </Button>
             </div>
           </div>
         )}

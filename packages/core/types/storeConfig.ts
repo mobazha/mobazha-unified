@@ -185,100 +185,36 @@ export interface CountdownSectionProps {
 // Discriminated Union — type field determines props type
 // ---------------------------------------------------------------------------
 
+/**
+ * Common shape shared by every section variant. `name` is an optional
+ * seller-chosen label shown in the editor section list (PG-203) so two
+ * sections of the same type can be told apart.
+ */
+interface SectionOf<TType extends string, TProps> {
+  id: string;
+  type: TType;
+  props: TProps;
+  visible: boolean;
+  layout?: SectionLayout;
+  name?: string;
+}
+
 export type StoreSection =
-  | { id: string; type: 'hero'; props: HeroSectionProps; visible: boolean; layout?: SectionLayout }
-  | {
-      id: string;
-      type: 'announcement-bar';
-      props: AnnouncementBarProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'featured-products';
-      props: FeaturedProductsProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'product-grid';
-      props: ProductGridProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'about';
-      props: AboutSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'trust-badges';
-      props: TrustBadgesProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'testimonials';
-      props: TestimonialsProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | { id: string; type: 'faq'; props: FaqSectionProps; visible: boolean; layout?: SectionLayout }
-  | {
-      id: string;
-      type: 'collections';
-      props: CollectionsSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'gallery';
-      props: GallerySectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'rich-text';
-      props: RichTextSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'contact';
-      props: ContactSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'store-tabs';
-      props: StoreTabsProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'video';
-      props: VideoSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    }
-  | {
-      id: string;
-      type: 'countdown';
-      props: CountdownSectionProps;
-      visible: boolean;
-      layout?: SectionLayout;
-    };
+  | SectionOf<'hero', HeroSectionProps>
+  | SectionOf<'announcement-bar', AnnouncementBarProps>
+  | SectionOf<'featured-products', FeaturedProductsProps>
+  | SectionOf<'product-grid', ProductGridProps>
+  | SectionOf<'about', AboutSectionProps>
+  | SectionOf<'trust-badges', TrustBadgesProps>
+  | SectionOf<'testimonials', TestimonialsProps>
+  | SectionOf<'faq', FaqSectionProps>
+  | SectionOf<'collections', CollectionsSectionProps>
+  | SectionOf<'gallery', GallerySectionProps>
+  | SectionOf<'rich-text', RichTextSectionProps>
+  | SectionOf<'contact', ContactSectionProps>
+  | SectionOf<'store-tabs', StoreTabsProps>
+  | SectionOf<'video', VideoSectionProps>
+  | SectionOf<'countdown', CountdownSectionProps>;
 
 export type SectionType = StoreSection['type'];
 

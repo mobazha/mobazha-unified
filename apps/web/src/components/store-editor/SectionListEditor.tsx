@@ -7,7 +7,7 @@
  * visibility toggle, delete, and expand/collapse for inline property editing.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from '@mobazha/core';
 import type { StoreSection } from '@mobazha/core';
 import { MAX_SECTIONS } from '@mobazha/core';
@@ -31,13 +31,19 @@ import { Eye, EyeOff, Trash2, GripVertical, ChevronRight, Plus } from 'lucide-re
 import { cn } from '@/lib/utils';
 import { getSectionMeta } from '@/components/store-sections';
 import { SectionPropsEditor } from './SectionPropsEditor';
+import { SectionIcon } from './SectionIcon';
+import { TextInput } from './form-helpers';
 
 interface SectionListEditorProps {
   sections: StoreSection[];
+  /** Controlled expanded/selected section (canvas selection maps here). */
+  expandedId: string | null;
+  onExpandedChange: (id: string | null) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onMove: (fromIndex: number, toIndex: number) => void;
   onUpdateProps: (id: string, props: Record<string, unknown>) => void;
+  onRename: (id: string, name: string) => void;
   onAddClick: () => void;
 }
 
@@ -48,6 +54,7 @@ interface SortableItemProps {
   onToggle: () => void;
   onRemove: () => void;
   onUpdateProps: (props: Record<string, unknown>) => void;
+  onRename: (name: string) => void;
 }
 
 function SortableItem({
@@ -57,6 +64,7 @@ function SortableItem({
   onToggle,
   onRemove,
   onUpdateProps,
+  onRename,
 }: SortableItemProps) {
   const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -70,12 +78,13 @@ function SortableItem({
 
   const meta = getSectionMeta(section.type);
   const localizedLabel = meta?.labelKey ? t(meta.labelKey) : (meta?.label ?? section.type);
-  const label = meta?.icon ? `${meta.icon} ${localizedLabel}` : localizedLabel;
+  const displayLabel = section.name || localizedLabel;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
+      data-list-section-id={section.id}
       className={cn(
         'rounded-lg border transition-colors',
         !section.visible && 'opacity-50',
@@ -114,9 +123,10 @@ function SortableItem({
         <button
           type="button"
           onClick={onExpandToggle}
-          className="flex-1 text-left text-sm font-medium truncate"
+          className="flex-1 flex items-center gap-1.5 text-left text-sm font-medium min-w-0"
         >
-          {label}
+          <SectionIcon type={section.type} className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+          <span className="truncate">{displayLabel}</span>
         </button>
 
         {/* Actions */}
@@ -145,7 +155,13 @@ function SortableItem({
       </div>
 
       {isExpanded && (
-        <div className="border-t border-border px-3 py-3">
+        <div className="border-t border-border px-3 py-3 space-y-3">
+          <TextInput
+            label={t('admin.storeBranding.fieldSectionName')}
+            value={section.name || ''}
+            onChange={onRename}
+            placeholder={localizedLabel}
+          />
           <SectionPropsEditor section={section} onUpdate={onUpdateProps} />
         </div>
       )}
@@ -155,14 +171,24 @@ function SortableItem({
 
 export function SectionListEditor({
   sections,
+  expandedId,
+  onExpandedChange,
   onToggle,
   onRemove,
   onMove,
   onUpdateProps,
+  onRename,
   onAddClick,
 }: SectionListEditorProps) {
   const { t } = useI18n();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
+
+  // Keep the expanded item visible when selection comes from the canvas.
+  React.useEffect(() => {
+    if (!expandedId) return;
+    const el = listRef.current?.querySelector(`[data-list-section-id="${expandedId}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [expandedId]);
 
   const canAdd = sections.length < MAX_SECTIONS;
 
@@ -182,7 +208,7 @@ export function SectionListEditor({
   }
 
   return (
-    <div className="space-y-2" data-testid="section-list-editor">
+    <div className="space-y-2" data-testid="section-list-editor" ref={listRef}>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
           {sections.map(section => (
@@ -190,12 +216,11 @@ export function SectionListEditor({
               key={section.id}
               section={section}
               isExpanded={expandedId === section.id}
-              onExpandToggle={() =>
-                setExpandedId(prev => (prev === section.id ? null : section.id))
-              }
+              onExpandToggle={() => onExpandedChange(expandedId === section.id ? null : section.id)}
               onToggle={() => onToggle(section.id)}
               onRemove={() => onRemove(section.id)}
               onUpdateProps={props => onUpdateProps(section.id, props)}
+              onRename={name => onRename(section.id, name)}
             />
           ))}
         </SortableContext>

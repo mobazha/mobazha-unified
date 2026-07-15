@@ -12,6 +12,9 @@ export const queryKeys = {
     featured: () => [...queryKeys.products.all, 'featured'] as const,
     myListings: () => [...queryKeys.products.all, 'my-listings'] as const,
     store: (peerID: string) => [...queryKeys.products.all, 'store', peerID] as const,
+    // Raw ProductListItem[] of the owner's catalog (store-editor pickers / AI
+    // builder). Distinct from `store`, whose cache holds { listings, isOffline }.
+    ownerCatalog: (peerID: string) => [...queryKeys.products.all, 'owner-catalog', peerID] as const,
     detail: (slug: string, peerID?: string) =>
       [...queryKeys.products.all, 'detail', slug, peerID] as const,
     ratings: (slug?: string, peerID?: string) =>
@@ -40,6 +43,7 @@ export const queryKeys = {
   storefront: {
     all: ['storefront'] as const,
     config: (peerID?: string) => [...queryKeys.storefront.all, 'config', peerID] as const,
+    draft: () => [...queryKeys.storefront.all, 'config-draft'] as const,
     configPublic: (peerID: string) =>
       [...queryKeys.storefront.all, 'config-public', peerID] as const,
   },

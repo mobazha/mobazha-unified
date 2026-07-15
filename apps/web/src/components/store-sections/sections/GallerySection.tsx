@@ -10,6 +10,7 @@ import { useState } from 'react';
 import type { GallerySectionProps } from '@mobazha/core';
 import { getImageUrl, useI18n } from '@mobazha/core';
 import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { useIsStoreEditor } from '../StoreEditorContext';
 
 const COLS_CLASS = {
   2: 'sm:grid-cols-2',
@@ -32,9 +33,21 @@ export function GallerySection({
   storeHint,
 }: GallerySectionProps & { storeHint?: string }) {
   const { t } = useI18n();
+  const isEditor = useIsStoreEditor();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  if (!images.length) return null;
+  if (!images.length) {
+    if (isEditor) {
+      return (
+        <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/30 px-4 text-center">
+          <span className="text-xs text-muted-foreground">
+            {t('admin.storeBranding.editorEmptyGallery')}
+          </span>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const openLightbox = (i: number) => {
     if (enableLightbox) setLightboxIndex(i);

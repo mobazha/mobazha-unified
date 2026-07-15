@@ -370,13 +370,23 @@ export function AuthProvider({
       if (!hasOAuthCallback() && !isProcessingOAuth) {
         hasRestoredSession.current = true;
 
-        if (isMiniApp) {
-          await handleMiniAppAuth();
-        } else {
-          await restoreSession();
+        // Session restore must never gate initialization: a throw here (a
+        // malformed stored token, a node that won't answer) would otherwise
+        // leave every route stuck behind the full-screen spinner forever, with
+        // no error and no recovery short of clearing storage. Failing to
+        // restore just means "not signed in".
+        try {
+          if (isMiniApp) {
+            await handleMiniAppAuth();
+          } else {
+            await restoreSession();
+          }
+        } catch (err) {
+          console.error('[AuthProvider] session restore failed, continuing signed out:', err);
+        } finally {
+          setLoadingMessage(null);
+          setIsInitialized(true);
         }
-        setLoadingMessage(null);
-        setIsInitialized(true);
       }
     };
 

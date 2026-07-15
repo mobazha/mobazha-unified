@@ -11,6 +11,7 @@ import { useEffect, useState, useCallback } from 'react';
 import type { FeaturedProductsProps, ProductListItem } from '@mobazha/core';
 import { productDataService, getImageUrl, useI18n, buildProductHref } from '@mobazha/core';
 import { ListingPriceLabel } from '@/components/Product/ListingPriceLabel';
+import { useIsStoreEditor } from '../StoreEditorContext';
 
 interface Props extends FeaturedProductsProps {
   peerId: string;
@@ -34,6 +35,7 @@ export function FeaturedProductsSection({
 }: Props) {
   const { t } = useI18n();
   const isPreview = peerId === PREVIEW_PEER;
+  const isEditor = useIsStoreEditor();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(!isPreview);
 
@@ -44,9 +46,12 @@ export function FeaturedProductsSection({
       const all = await productDataService.getStoreListings(peerId);
       let items = all || [];
 
-      if (mode === 'manual' && productSlugs?.length) {
-        const slugSet = new Set(productSlugs);
-        items = items.filter(p => slugSet.has(p.slug));
+      if (mode === 'manual') {
+        // Preserve the seller's hand-picked order; empty selection renders nothing.
+        const bySlug = new Map(items.map(p => [p.slug, p]));
+        items = (productSlugs || [])
+          .map(slug => bySlug.get(slug))
+          .filter((p): p is ProductListItem => !!p);
       } else {
         items = items.slice(0, count || 4);
       }
@@ -98,7 +103,17 @@ export function FeaturedProductsSection({
             </div>
           ))}
         </div>
-      ) : products.length === 0 ? null : (
+      ) : products.length === 0 ? (
+        isEditor ? (
+          <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/30 px-4 text-center">
+            <span className="text-xs text-muted-foreground">
+              {mode === 'manual'
+                ? t('admin.storeBranding.editorEmptyManualProducts')
+                : t('admin.storeBranding.editorEmptyProducts')}
+            </span>
+          </div>
+        ) : null
+      ) : (
         <div className={`grid gap-4 ${colClass}`}>
           {products.map(product => (
             <a

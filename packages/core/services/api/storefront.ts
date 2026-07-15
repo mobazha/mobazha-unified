@@ -5,21 +5,35 @@
  * Backend: mobazha/internal/api/storefront_handlers.go
  */
 
-import { authGet, authPut, publicGet } from './helpers';
+import { authGet, authPut, authDel, publicGet } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 import type { StoreConfig } from '../../types/storeConfig';
 import { isStoreUnavailableError } from './client';
 import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
 import { fetchStoreMetadata, getMetadataEntry } from './storeMetadata';
 
-/** Get the current user's storefront config (owner, may include draft). */
+/** Get the current user's live (published) storefront config. */
 export async function getStorefrontConfig(): Promise<StoreConfig> {
   return authGet<StoreConfig>(NODE_API.SETTINGS_STOREFRONT);
 }
 
-/** Full-replace the current user's storefront config. */
+/** Get the current user's unpublished storefront draft (null when absent). */
+export async function getStorefrontDraft(): Promise<StoreConfig | null> {
+  return authGet<StoreConfig | null>(`${NODE_API.SETTINGS_STOREFRONT}?variant=draft`);
+}
+
+/**
+ * Full-replace the storefront config. The node routes by `status`:
+ * 'draft' fills the draft slot (live config untouched); 'published'
+ * replaces the live config and clears any draft.
+ */
 export async function saveStorefrontConfig(config: StoreConfig): Promise<StoreConfig> {
   return authPut<StoreConfig>(NODE_API.SETTINGS_STOREFRONT, config);
+}
+
+/** Discard the unpublished storefront draft. */
+export async function discardStorefrontDraft(): Promise<void> {
+  await authDel<void>(NODE_API.SETTINGS_STOREFRONT_DRAFT);
 }
 
 /**

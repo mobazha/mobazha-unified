@@ -12,6 +12,7 @@ import type { CollectionsSectionProps } from '@mobazha/core';
 import type { Collection } from '@mobazha/core';
 import { collectionsApi, getImageUrl, useI18n, useStorefrontMode } from '@mobazha/core';
 import Link from 'next/link';
+import { useIsStoreEditor } from '../StoreEditorContext';
 
 const COLS_CLASS = {
   2: 'sm:grid-cols-2',
@@ -29,6 +30,7 @@ export function CollectionsSection({
 }: CollectionsSectionProps & { peerId: string }) {
   const { t } = useI18n();
   const standalone = useStorefrontMode();
+  const isEditor = useIsStoreEditor();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,14 +38,21 @@ export function CollectionsSection({
     let cancelled = false;
     (async () => {
       try {
-        const resp = await collectionsApi.listPublishedCollections(peerId, 1, 20);
-        if (cancelled) return;
-        let items = resp ?? [];
-        if (mode === 'manual' && collectionIDs?.length) {
-          const idSet = new Set(collectionIDs);
-          items = items.filter(c => idSet.has(c.id));
+        let items: Collection[];
+        if (mode === 'manual') {
+          // Resolve each hand-picked ID directly (the paged list caps at 20,
+          // which would silently drop selections); order follows the seller's
+          // picks, unpublished/missing ones are skipped until published.
+          const results = await Promise.all(
+            (collectionIDs || []).map(id =>
+              collectionsApi.getPublishedCollection(peerId, id).catch(() => null)
+            )
+          );
+          items = results.filter((c): c is Collection => !!c);
+        } else {
+          items = (await collectionsApi.listPublishedCollections(peerId, 1, 20)) ?? [];
         }
-        setCollections(items);
+        if (!cancelled) setCollections(items);
       } catch {
         // silently fail — section shows empty state
       } finally {
@@ -71,7 +80,28 @@ export function CollectionsSection({
     );
   }
 
-  if (!collections.length) return null;
+  if (!collections.length) {
+    if (isEditor) {
+      return (
+        <div className="py-4">
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ fontFamily: 'var(--store-font, inherit)' }}
+          >
+            {title}
+          </h2>
+          <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/30 px-4 text-center">
+            <span className="text-xs text-muted-foreground">
+              {mode === 'manual'
+                ? t('admin.storeBranding.editorEmptyManualCollections')
+                : t('admin.storeBranding.editorEmptyCollections')}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const isCarousel = layout === 'carousel';
 

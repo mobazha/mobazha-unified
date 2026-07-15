@@ -15,7 +15,14 @@ export type AiAction =
   | 'improve_title'
   | 'polish_description'
   | 'suggest_tags'
-  | 'generate_store';
+  | 'generate_store'
+  | 'refine_store'
+  | 'rewrite_text';
+
+export interface StoreProductContext {
+  slug: string;
+  title: string;
+}
 
 export interface AiGenerateRequest {
   action: AiAction;
@@ -26,6 +33,11 @@ export interface AiGenerateRequest {
   language?: string;
   brandName?: string;
   brandDescription?: string;
+  products?: StoreProductContext[];
+  storeConfig?: StoreConfig;
+  instruction?: string;
+  text?: string;
+  context?: string;
 }
 
 export interface AiGenerateResponse {
@@ -35,12 +47,15 @@ export interface AiGenerateResponse {
   productType?: string;
   shortDescription?: string;
   storeConfig?: unknown;
+  text?: string;
 }
 
 export interface StoreBuilderInput {
   brandName: string;
   brandDescription: string;
   language?: string;
+  /** Sample of the seller's real catalog so the AI references actual listings. */
+  products?: StoreProductContext[];
 }
 
 class AiService {
@@ -141,8 +156,42 @@ class AiService {
       brandName: input.brandName,
       brandDescription: input.brandDescription,
       language: input.language,
+      products: input.products,
     });
     return validateAndFixStoreConfig(result.storeConfig);
+  }
+
+  /**
+   * Refine an existing store config with a natural-language instruction
+   * ("make it warmer", "swap the hero copy to English"). Returns the full
+   * updated config, validated client-side.
+   */
+  async refineStoreConfig(
+    config: StoreConfig,
+    instruction: string,
+    opts?: { language?: string }
+  ): Promise<StoreConfig> {
+    const result = await this.request({
+      action: 'refine_store',
+      storeConfig: config,
+      instruction,
+      language: opts?.language,
+    });
+    return validateAndFixStoreConfig(result.storeConfig);
+  }
+
+  /**
+   * Rewrite a short piece of storefront copy (hero title, about text…).
+   * Plain text in, plain text out.
+   */
+  async rewriteText(text: string, opts?: { context?: string; language?: string }): Promise<string> {
+    const result = await this.request({
+      action: 'rewrite_text',
+      text,
+      context: opts?.context,
+      language: opts?.language,
+    });
+    return result.text || text;
   }
 }
 

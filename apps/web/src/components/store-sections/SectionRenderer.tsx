@@ -45,7 +45,7 @@ export function SectionRenderer({ sections, profile, peerId }: SectionRendererPr
   );
 }
 
-function SectionSwitch({
+export function SectionSwitch({
   section,
   profile,
   peerId,
@@ -56,7 +56,13 @@ function SectionSwitch({
 }) {
   switch (section.type) {
     case 'hero':
-      return <HeroSection {...section.props} profile={profile} />;
+      return (
+        <HeroSection
+          {...section.props}
+          profile={profile}
+          storeHint={peerId === 'preview' ? undefined : peerId}
+        />
+      );
     case 'announcement-bar':
       return <AnnouncementBarSection {...section.props} sectionId={section.id} />;
     case 'featured-products':
@@ -64,7 +70,12 @@ function SectionSwitch({
     case 'product-grid':
       return <ProductGridSection {...section.props} peerId={peerId} />;
     case 'trust-badges':
-      return <TrustBadgesSection {...section.props} />;
+      return (
+        <TrustBadgesSection
+          {...section.props}
+          storeHint={peerId === 'preview' ? undefined : peerId}
+        />
+      );
     case 'store-tabs':
       return <StoreTabsSection {...section.props} peerId={peerId} />;
     case 'about':
