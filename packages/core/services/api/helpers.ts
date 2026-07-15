@@ -22,6 +22,7 @@ import type { RequestOptions } from './client';
 import {
   getMyGatewayUrl,
   getGatewayUrl,
+  getBuyerGatewayUrl,
   getSearchUrl,
   getHostingUrl,
   getAuthHeaders,
@@ -187,6 +188,39 @@ export function anonymousPost<T>(
     method: 'POST',
     body,
     headers,
+    skipUnauthorizedHandler: true,
+  });
+}
+
+/**
+ * Anonymous read against a selected store through the buyer/Hosting gateway.
+ * The seller Peer is routing metadata, not account authorization.
+ */
+export function crossStoreAnonymousGet<T>(path: string, sellerPeerID: string): Promise<T> {
+  const peerID = sellerPeerID.trim();
+  if (!peerID) return Promise.reject(new Error('seller Peer ID is required'));
+  return request<T>(`${getBuyerGatewayUrl()}${path}`, {
+    method: 'GET',
+    headers: { 'X-Store-PeerID': peerID },
+    skipUnauthorizedHandler: true,
+  });
+}
+
+/**
+ * Anonymous write whose Node endpoint authorizes the body itself (for example,
+ * Seller Affiliate Peer evidence). Account credentials are never forwarded.
+ */
+export function crossStoreAnonymousPost<T>(
+  path: string,
+  sellerPeerID: string,
+  body?: unknown
+): Promise<T> {
+  const peerID = sellerPeerID.trim();
+  if (!peerID) return Promise.reject(new Error('seller Peer ID is required'));
+  return request<T>(`${getBuyerGatewayUrl()}${path}`, {
+    method: 'POST',
+    body,
+    headers: { 'X-Store-PeerID': peerID },
     skipUnauthorizedHandler: true,
   });
 }

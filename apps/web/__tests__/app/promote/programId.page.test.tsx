@@ -5,11 +5,11 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-const paramsMock = vi.fn<() => { programId?: string } | null>();
+const paramsMock = vi.fn<() => { sellerPeerID?: string; programId?: string } | null>();
 const routerPushMock = vi.fn();
 const setLoginRedirectPathMock = vi.fn();
 const createSellerAffiliateLinkMock = vi.fn();
-const getPublicSellerAffiliateLinkMock = vi.fn();
+const getPublicSellerAffiliateProgramMock = vi.fn();
 const mockToast = vi.fn();
 const copyToClipboardMock = vi.fn<(text: string) => Promise<boolean>>(async () => true);
 
@@ -54,7 +54,8 @@ vi.mock('@mobazha/core', async importOriginal => {
     useUserStore: (selector: (state: { isAuthenticated: boolean }) => unknown) =>
       selector({ isAuthenticated }),
     setLoginRedirectPath: (...args: unknown[]) => setLoginRedirectPathMock(...args),
-    getPublicSellerAffiliateLink: (...args: unknown[]) => getPublicSellerAffiliateLinkMock(...args),
+    getPublicSellerAffiliateProgram: (...args: unknown[]) =>
+      getPublicSellerAffiliateProgramMock(...args),
   };
 });
 
@@ -64,21 +65,26 @@ vi.mock('@mobazha/core/services/api/sellerAffiliate', async importOriginal => {
   return {
     ...actual,
     createSellerAffiliateLink: (...args: unknown[]) => createSellerAffiliateLinkMock(...args),
-    getPublicSellerAffiliateLink: (...args: unknown[]) => getPublicSellerAffiliateLinkMock(...args),
   };
 });
 
-import PromoteProgramPage from '@/app/promote/[programId]/page';
+import PromoteProgramPage from '@/app/promote/[sellerPeerID]/[programId]/page';
 
-describe('PromoteProgramPage (/promote/:programId)', () => {
+describe('PromoteProgramPage (/promote/:sellerPeerID/:programId)', () => {
   beforeEach(() => {
     isAuthenticated = true;
-    paramsMock.mockReturnValue({ programId: 'program-1' });
+    paramsMock.mockReturnValue({ sellerPeerID: 'seller-1', programId: 'program-1' });
     routerPushMock.mockClear();
     setLoginRedirectPathMock.mockClear();
     createSellerAffiliateLinkMock.mockReset();
-    getPublicSellerAffiliateLinkMock.mockReset();
-    getPublicSellerAffiliateLinkMock.mockRejectedValue(new Error('not mocked'));
+    getPublicSellerAffiliateProgramMock.mockReset();
+    getPublicSellerAffiliateProgramMock.mockResolvedValue({
+      programID: 'program-1',
+      sellerPeerID: 'seller-1',
+      status: 'active',
+      commissionRateBPS: 500,
+      attributionWindowSeconds: 2592000,
+    });
     mockToast.mockClear();
     copyToClipboardMock.mockClear();
     Object.defineProperty(window, 'location', {
@@ -94,9 +100,9 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
     expect(screen.getByTestId('promote-auth-required')).toBeInTheDocument();
     fireEvent.click(screen.getByText('promote.signInCta'));
 
-    expect(setLoginRedirectPathMock).toHaveBeenCalledWith('/promote/program-1');
+    expect(setLoginRedirectPathMock).toHaveBeenCalledWith('/promote/seller-1/program-1');
     expect(routerPushMock).toHaveBeenCalledWith(
-      `/login?redirect=${encodeURIComponent('/promote/program-1')}`
+      `/login?redirect=${encodeURIComponent('/promote/seller-1/program-1')}`
     );
   });
 
@@ -114,16 +120,17 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
 
     render(<PromoteProgramPage />);
 
-    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
     await waitFor(() =>
-      expect(screen.getByText('https://example.test/promo/token-1')).toBeInTheDocument()
+      expect(screen.getByText('https://example.test/promo/seller-1/token-1')).toBeInTheDocument()
     );
 
     fireEvent.click(screen.getByTestId('promote-copy-link'));
     await waitFor(() => expect(copyToClipboardMock).toHaveBeenCalled());
 
     expect(createSellerAffiliateLinkMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('https://example.test/promo/token-1')).toBeInTheDocument();
+    expect(screen.getByText('https://example.test/promo/seller-1/token-1')).toBeInTheDocument();
+    expect(createSellerAffiliateLinkMock).toHaveBeenCalledWith('seller-1', 'program-1');
   });
 
   it('shows the commission rate and attribution window once the link exists', async () => {
@@ -137,21 +144,13 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
       createdAt: '2026-07-11T00:00:00Z',
       updatedAt: '2026-07-11T00:00:00Z',
     });
-    getPublicSellerAffiliateLinkMock.mockResolvedValue({
-      programID: 'program-1',
-      sellerPeerID: 'seller-1',
-      status: 'active',
-      commissionRateBPS: 500,
-      attributionWindowSeconds: 2592000,
-    });
-
     render(<PromoteProgramPage />);
-    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
 
     // The i18n mock returns key names, so assert the wiring (fetch + rendered
     // terms block) rather than interpolated copy.
     const terms = await screen.findByTestId('promote-earn-terms');
-    expect(getPublicSellerAffiliateLinkMock).toHaveBeenCalledWith('token-1');
+    expect(getPublicSellerAffiliateProgramMock).toHaveBeenCalledWith('seller-1');
     expect(terms).toHaveTextContent('promote.termsRate');
     expect(terms).toHaveTextContent('promote.termsWindow');
     expect(terms).toHaveTextContent('promote.termsLastTouch');
@@ -170,12 +169,14 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
     });
 
     render(<PromoteProgramPage />);
-    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
     await waitFor(() => expect(screen.getByTestId('promote-copy-link')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('promote-copy-link'));
     await waitFor(() =>
-      expect(copyToClipboardMock).toHaveBeenCalledWith('https://example.test/promo/token-1')
+      expect(copyToClipboardMock).toHaveBeenCalledWith(
+        'https://example.test/promo/seller-1/token-1'
+      )
     );
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'promote.copySuccess' })
@@ -196,12 +197,14 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
 
     render(<PromoteProgramPage />);
-    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
     await waitFor(() => expect(screen.getByTestId('promote-share-link')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('promote-share-link'));
     await waitFor(() =>
-      expect(copyToClipboardMock).toHaveBeenCalledWith('https://example.test/promo/token-1')
+      expect(copyToClipboardMock).toHaveBeenCalledWith(
+        'https://example.test/promo/seller-1/token-1'
+      )
     );
   });
 
@@ -220,7 +223,7 @@ describe('PromoteProgramPage (/promote/:programId)', () => {
     Object.defineProperty(navigator, 'share', { configurable: true, value: shareMock });
 
     render(<PromoteProgramPage />);
-    fireEvent.click(screen.getByText('sellerAffiliate.createLink'));
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
     await waitFor(() => expect(screen.getByTestId('promote-share-link')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('promote-share-link'));

@@ -13,9 +13,14 @@ import {
   normalizeSellerAffiliateStatementPage,
   unwrapSellerAffiliateList,
 } from '../../utils/sellerAffiliate';
-import { get, post } from './client';
-import { getHostingUrl } from './config';
-import { hostingGet, hostingPost, nodeAuthGet, nodeAuthPost, nodeAuthPut } from './helpers';
+import {
+  crossStoreAnonymousGet,
+  crossStoreAnonymousPost,
+  hostingGet,
+  nodeAuthGet,
+  nodeAuthPost,
+  nodeAuthPut,
+} from './helpers';
 
 export async function getSellerAffiliateProgram() {
   return normalizeSellerAffiliateProgram(
@@ -35,9 +40,23 @@ export async function putSellerAffiliateProgram(body: SellerAffiliateProgramRequ
   );
 }
 
-export async function createSellerAffiliateLink(programID: string) {
+export async function getPublicSellerAffiliateProgram(sellerPeerID: string) {
+  return normalizePublicSellerAffiliateLink(
+    await crossStoreAnonymousGet<unknown>(NODE_API.PUBLIC_SELLER_AFFILIATE_PROGRAM, sellerPeerID)
+  );
+}
+
+export async function createSellerAffiliateLink(sellerPeerID: string, programID: string) {
+  const evidence = await nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_PROMOTER_ENROLLMENTS, {
+    sellerPeerID,
+    programID,
+  });
   return normalizeSellerAffiliateLink(
-    await hostingPost<unknown>(HOSTING_API.SELLER_AFFILIATE_PROGRAM_LINKS(programID))
+    await crossStoreAnonymousPost<unknown>(
+      NODE_API.PUBLIC_SELLER_AFFILIATE_PROGRAM_LINKS(programID),
+      sellerPeerID,
+      { evidence }
+    )
   );
 }
 
@@ -59,15 +78,21 @@ export async function reissueSellerAffiliateLink(linkID: string) {
   );
 }
 
-export async function getPublicSellerAffiliateLink(token: string) {
+export async function getPublicSellerAffiliateLink(sellerPeerID: string, token: string) {
   return normalizePublicSellerAffiliateLink(
-    await get<unknown>(`${getHostingUrl()}${HOSTING_API.PUBLIC_SELLER_AFFILIATE_LINK(token)}`)
+    await crossStoreAnonymousGet<unknown>(
+      NODE_API.PUBLIC_SELLER_AFFILIATE_LINK(token),
+      sellerPeerID
+    )
   );
 }
 
-export async function createSellerAffiliateReferralSession(token: string) {
+export async function createSellerAffiliateReferralSession(sellerPeerID: string, token: string) {
   return normalizeSellerAffiliateReferralSession(
-    await post<unknown>(`${getHostingUrl()}${HOSTING_API.PUBLIC_SELLER_AFFILIATE_SESSIONS(token)}`)
+    await crossStoreAnonymousPost<unknown>(
+      NODE_API.PUBLIC_SELLER_AFFILIATE_SESSIONS(token),
+      sellerPeerID
+    )
   );
 }
 

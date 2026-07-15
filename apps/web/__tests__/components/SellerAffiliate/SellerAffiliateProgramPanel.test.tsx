@@ -9,6 +9,11 @@ const getSellerAffiliateProgramMock = vi.fn();
 const putSellerAffiliateProgramMock = vi.fn();
 const getSellerAffiliateCapabilitiesMock = vi.fn();
 const listSellerAffiliateLinksMock = vi.fn();
+const copyToClipboardMock = vi.fn<(text: string) => Promise<boolean>>(async () => true);
+
+vi.mock('@/lib/clipboard', () => ({
+  copyToClipboard: (text: string) => copyToClipboardMock(text),
+}));
 
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
@@ -48,6 +53,7 @@ describe('SellerAffiliateProgramPanel', () => {
     putSellerAffiliateProgramMock.mockReset();
     getSellerAffiliateCapabilitiesMock.mockReset();
     listSellerAffiliateLinksMock.mockReset();
+    copyToClipboardMock.mockClear();
     // Unrelated panel sections must not inject their own error alerts into
     // program-form assertions.
     getSellerAffiliateCapabilitiesMock.mockResolvedValue({ version: 2, rails: [] });
@@ -376,6 +382,21 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(
       screen.queryByRole('button', { name: 'sellerAffiliate.copyPromoterInvite' })
     ).not.toBeInTheDocument();
+  });
+
+  it('copies a Peer-addressed promoter invite instead of an account-routed program URL', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    render(<SellerAffiliateProgramPanel />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'sellerAffiliate.copyPromoterInvite' })
+    );
+
+    await waitFor(() =>
+      expect(copyToClipboardMock).toHaveBeenCalledWith(
+        expect.stringMatching(/\/promote\/seller-1\/program-1$/)
+      )
+    );
   });
 
   it('surfaces a save failure from the API', async () => {

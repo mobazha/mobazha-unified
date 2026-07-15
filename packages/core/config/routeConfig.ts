@@ -44,7 +44,7 @@ export const PUBLIC_ROUTES = [
   '/deal/:token',
 
   // Deal promotion entry（公开解析并签发短期 claim，再跳转 Deal Link）
-  '/promo/:token',
+  '/promo/:sellerPeerID/:token',
 ] as const;
 
 /**

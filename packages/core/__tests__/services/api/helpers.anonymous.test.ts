@@ -15,6 +15,7 @@ vi.mock('../../../services/api/client', () => ({
 vi.mock('../../../services/api/config', () => ({
   getMyGatewayUrl: vi.fn(() => '/buyer-api/v1'),
   getGatewayUrl: vi.fn(() => '/v1'),
+  getBuyerGatewayUrl: vi.fn(() => '/buyer-api/v1'),
   getSearchUrl: vi.fn(() => '/info'),
   getHostingUrl: vi.fn(() => ''),
   getAuthHeaders: vi.fn(() => ({ Authorization: 'Bearer secret' })),
@@ -27,7 +28,12 @@ vi.mock('../../../services/api/config', () => ({
 }));
 
 import { request } from '../../../services/api/client';
-import { anonymousGet, anonymousPost } from '../../../services/api/helpers';
+import {
+  anonymousGet,
+  anonymousPost,
+  crossStoreAnonymousGet,
+  crossStoreAnonymousPost,
+} from '../../../services/api/helpers';
 
 describe('anonymous API helpers', () => {
   beforeEach(() => {
@@ -86,5 +92,41 @@ describe('anonymous API helpers', () => {
       signal: controller.signal,
       skipUnauthorizedHandler: true,
     });
+  });
+
+  it('routes selected-store public contracts through the buyer gateway with Peer metadata only', async () => {
+    vi.mocked(request).mockResolvedValue({ ok: true });
+
+    await crossStoreAnonymousGet('/public/seller-affiliate/program', ' seller-peer ');
+    await crossStoreAnonymousPost(
+      '/public/seller-affiliate/programs/program-1/links',
+      ' seller-peer ',
+      { evidence: { signature: 'signed' } }
+    );
+
+    expect(request).toHaveBeenCalledWith('/buyer-api/v1/public/seller-affiliate/program', {
+      method: 'GET',
+      headers: { 'X-Store-PeerID': 'seller-peer' },
+      skipUnauthorizedHandler: true,
+    });
+    expect(request).toHaveBeenCalledWith(
+      '/buyer-api/v1/public/seller-affiliate/programs/program-1/links',
+      {
+        method: 'POST',
+        body: { evidence: { signature: 'signed' } },
+        headers: { 'X-Store-PeerID': 'seller-peer' },
+        skipUnauthorizedHandler: true,
+      }
+    );
+  });
+
+  it('fails closed instead of falling back to the local Node when the target Peer is blank', async () => {
+    await expect(crossStoreAnonymousGet('/public/seller-affiliate/program', '   ')).rejects.toThrow(
+      'seller Peer ID is required'
+    );
+    await expect(
+      crossStoreAnonymousPost('/public/seller-affiliate/programs/program-1/links', '')
+    ).rejects.toThrow('seller Peer ID is required');
+    expect(request).not.toHaveBeenCalled();
   });
 });

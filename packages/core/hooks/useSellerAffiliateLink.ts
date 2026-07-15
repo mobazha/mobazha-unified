@@ -11,7 +11,7 @@ export interface UseSellerAffiliateLinkReturn {
   link: SellerAffiliateLink | null;
   loading: boolean;
   error: string | null;
-  ensureLink: (programID: string) => Promise<SellerAffiliateLink>;
+  ensureLink: (sellerPeerID: string, programID: string) => Promise<SellerAffiliateLink>;
 }
 
 export function useSellerAffiliateLink(): UseSellerAffiliateLinkReturn {
@@ -19,21 +19,24 @@ export function useSellerAffiliateLink(): UseSellerAffiliateLinkReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ensureLink = useCallback(async (programID: string): Promise<SellerAffiliateLink> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await createSellerAffiliateLink(programID);
-      setLink(next);
-      return next;
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : 'link_failed';
-      setError(message);
-      throw cause;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const ensureLink = useCallback(
+    async (sellerPeerID: string, programID: string): Promise<SellerAffiliateLink> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const next = await createSellerAffiliateLink(sellerPeerID, programID);
+        setLink(next);
+        return next;
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : 'link_failed';
+        setError(message);
+        throw cause;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   return useMemo(() => ({ link, loading, error, ensureLink }), [link, loading, error, ensureLink]);
 }

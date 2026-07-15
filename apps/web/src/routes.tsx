@@ -199,16 +199,16 @@ if (!__SOVEREIGN__) {
       element: lazyPage(() => import('./app/deal/[token]/page')),
     },
     {
-      path: '/promo/:token',
-      element: lazyPage(() => import('./app/promo/[token]/page')),
+      path: '/promo/:sellerPeerID/:token',
+      element: lazyPage(() => import('./app/promo/[sellerPeerID]/[token]/page')),
     },
     {
       path: '/promote/commissions',
       element: lazyPage(() => import('./app/promote/commissions/page')),
     },
     {
-      path: '/promote/:programId',
-      element: lazyPage(() => import('./app/promote/[programId]/page')),
+      path: '/promote/:sellerPeerID/:programId',
+      element: lazyPage(() => import('./app/promote/[sellerPeerID]/[programId]/page')),
     },
 
     // 结账流程
@@ -766,16 +766,16 @@ if (__SOVEREIGN__ && !__ROUTED_TMA__) {
       element: lazyPage(() => import('./app/deal/[token]/page')),
     },
     {
-      path: '/promo/:token',
-      element: lazyPage(() => import('./app/promo/[token]/page')),
+      path: '/promo/:sellerPeerID/:token',
+      element: lazyPage(() => import('./app/promo/[sellerPeerID]/[token]/page')),
     },
     {
       path: '/promote/commissions',
       element: lazyPage(() => import('./app/promote/commissions/page')),
     },
     {
-      path: '/promote/:programId',
-      element: lazyPage(() => import('./app/promote/[programId]/page')),
+      path: '/promote/:sellerPeerID/:programId',
+      element: lazyPage(() => import('./app/promote/[sellerPeerID]/[programId]/page')),
     },
 
     // Track Order (buyer entry point)

@@ -82,6 +82,15 @@ export const NODE_API = {
   SELLER_AFFILIATE_LINK_REISSUE: (linkID: string) =>
     `/seller-affiliate/links/${encodeURIComponent(linkID)}/reissue`,
   SELLER_AFFILIATE_STATEMENTS_SELLER: '/seller-affiliate/statements/seller',
+  SELLER_AFFILIATE_PROMOTER_ENROLLMENTS: '/seller-affiliate/promoter-enrollments',
+  PUBLIC_SELLER_AFFILIATE_PROGRAM: '/public/seller-affiliate/program',
+  PUBLIC_SELLER_AFFILIATE_PROGRAM_LINKS: (programID: string) =>
+    `/public/seller-affiliate/programs/${encodeURIComponent(programID)}/links`,
+  PUBLIC_SELLER_AFFILIATE_LINK: (token: string) =>
+    `/public/seller-affiliate-links/${encodeURIComponent(token)}`,
+  PUBLIC_SELLER_AFFILIATE_SESSIONS: (token: string) =>
+    `/public/seller-affiliate-links/${encodeURIComponent(token)}/sessions`,
+  PUBLIC_SELLER_AFFILIATE_STATEMENTS_PROMOTER: '/public/seller-affiliate/statements/promoter',
 
   // --- Vendor migration (DG-1.9 — "Storefront creators can leave with") ---
   // Single endpoint handles both dry-run preview and actual import via the

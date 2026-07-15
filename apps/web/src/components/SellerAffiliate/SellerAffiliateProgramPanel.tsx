@@ -214,7 +214,10 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
 
   const handleCopyPromoterInvite = useCallback(async (): Promise<void> => {
     if (!program || typeof window === 'undefined') return;
-    const inviteURL = new URL(`/promote/${encodeURIComponent(program.id)}`, window.location.origin);
+    const inviteURL = new URL(
+      `/promote/${encodeURIComponent(program.sellerPeerID)}/${encodeURIComponent(program.id)}`,
+      window.location.origin
+    );
     const copied = await copyToClipboard(inviteURL.toString());
     if (!copied) {
       setSaveError(t('sellerAffiliate.copyInviteFailed'));

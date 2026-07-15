@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../services/api/helpers', () => ({
+  crossStoreAnonymousGet: vi.fn(),
+  crossStoreAnonymousPost: vi.fn(),
   hostingGet: vi.fn(),
-  hostingPost: vi.fn(),
   nodeAuthGet: vi.fn(),
   nodeAuthPost: vi.fn(),
   nodeAuthPut: vi.fn(),
 }));
 
 import {
+  createSellerAffiliateLink,
+  createSellerAffiliateReferralSession,
+  getPublicSellerAffiliateLink,
+  getPublicSellerAffiliateProgram,
   getSellerAffiliateCapabilities,
   getSellerAffiliateProgram,
   listSellerAffiliateLinks,
@@ -17,7 +22,14 @@ import {
   reissueSellerAffiliateLink,
   revokeSellerAffiliateLink,
 } from '../../services/api/sellerAffiliate';
-import { hostingGet, nodeAuthGet, nodeAuthPost, nodeAuthPut } from '../../services/api/helpers';
+import {
+  crossStoreAnonymousGet,
+  crossStoreAnonymousPost,
+  hostingGet,
+  nodeAuthGet,
+  nodeAuthPost,
+  nodeAuthPut,
+} from '../../services/api/helpers';
 
 const program = {
   id: 'program-1',
@@ -27,6 +39,14 @@ const program = {
   attributionWindowSeconds: 2_592_000,
   createdAt: '2026-07-15T00:00:00Z',
   updatedAt: '2026-07-15T00:00:00Z',
+};
+
+const publicProgram = {
+  programID: 'program-1',
+  sellerPeerID: 'seller-peer',
+  status: 'active',
+  commissionRateBPS: 500,
+  attributionWindowSeconds: 2_592_000,
 };
 
 const link = {
@@ -42,10 +62,57 @@ const link = {
 
 describe('seller Affiliate API routing', () => {
   beforeEach(() => {
+    vi.mocked(crossStoreAnonymousGet).mockReset();
+    vi.mocked(crossStoreAnonymousPost).mockReset();
     vi.mocked(hostingGet).mockReset();
     vi.mocked(nodeAuthGet).mockReset();
     vi.mocked(nodeAuthPost).mockReset();
     vi.mocked(nodeAuthPut).mockReset();
+  });
+
+  it('discovers a program and enrolls a promoter by Peer evidence without account routing', async () => {
+    const evidence = { domain: 'mobazha:seller-affiliate-promoter-enrollment:v1' };
+    vi.mocked(crossStoreAnonymousGet).mockResolvedValue(publicProgram);
+    vi.mocked(nodeAuthPost).mockResolvedValue(evidence);
+    vi.mocked(crossStoreAnonymousPost).mockResolvedValue(link);
+
+    await getPublicSellerAffiliateProgram('seller-peer');
+    await createSellerAffiliateLink('seller-peer', 'program-1');
+
+    expect(crossStoreAnonymousGet).toHaveBeenCalledWith(
+      '/public/seller-affiliate/program',
+      'seller-peer'
+    );
+    expect(nodeAuthPost).toHaveBeenCalledWith('/seller-affiliate/promoter-enrollments', {
+      sellerPeerID: 'seller-peer',
+      programID: 'program-1',
+    });
+    expect(crossStoreAnonymousPost).toHaveBeenCalledWith(
+      '/public/seller-affiliate/programs/program-1/links',
+      'seller-peer',
+      { evidence }
+    );
+  });
+
+  it('resolves public links and referral sessions against the selected seller Peer', async () => {
+    vi.mocked(crossStoreAnonymousGet).mockResolvedValue(publicProgram);
+    vi.mocked(crossStoreAnonymousPost).mockResolvedValue({
+      referralSessionID: 'session-1',
+      sellerPeerID: 'seller-peer',
+      expiresAt: '2026-07-16T00:00:00Z',
+    });
+
+    await getPublicSellerAffiliateLink('seller-peer', 'token-1');
+    await createSellerAffiliateReferralSession('seller-peer', 'token-1');
+
+    expect(crossStoreAnonymousGet).toHaveBeenCalledWith(
+      '/public/seller-affiliate-links/token-1',
+      'seller-peer'
+    );
+    expect(crossStoreAnonymousPost).toHaveBeenCalledWith(
+      '/public/seller-affiliate-links/token-1/sessions',
+      'seller-peer'
+    );
   });
 
   it('routes seller program and capabilities to the local Node', async () => {

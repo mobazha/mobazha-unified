@@ -23,26 +23,31 @@ type PromoEntryPhase = 'loading' | 'ready' | 'not_found' | 'inactive' | 'error';
 
 export default function SellerAffiliateEntryPage() {
   const { t } = useI18n();
-  const params = useParams<{ token: string }>();
+  const params = useParams<{ sellerPeerID: string; token: string }>();
+  const routeSellerPeerID =
+    typeof params?.sellerPeerID === 'string' ? params.sellerPeerID : undefined;
   const token = typeof params?.token === 'string' ? params.token : undefined;
   const [phase, setPhase] = useState<PromoEntryPhase>('loading');
   const [sellerPeerID, setSellerPeerID] = useState<string | null>(null);
   const [sellerName, setSellerName] = useState<string | null>(null);
 
   const resolveAndRedirect = useCallback(async () => {
-    if (!token) {
+    if (!routeSellerPeerID || !token) {
       setPhase('not_found');
       return;
     }
 
     setPhase('loading');
     try {
-      const link = await getPublicSellerAffiliateLink(token);
-      if (link.status !== 'active') {
+      const link = await getPublicSellerAffiliateLink(routeSellerPeerID, token);
+      if (link.status !== 'active' || link.sellerPeerID !== routeSellerPeerID) {
         setPhase('inactive');
         return;
       }
-      const referral = await createSellerAffiliateReferralSession(token);
+      const referral = await createSellerAffiliateReferralSession(routeSellerPeerID, token);
+      if (referral.sellerPeerID !== routeSellerPeerID) {
+        throw new Error('seller peer mismatch');
+      }
       writeSellerAffiliateReferralSession(referral);
       setSellerPeerID(referral.sellerPeerID);
       setPhase('ready');
@@ -57,14 +62,14 @@ export default function SellerAffiliateEntryPage() {
       const message = cause instanceof Error ? cause.message.toLowerCase() : '';
       setPhase(message.includes('not found') ? 'not_found' : 'error');
     }
-  }, [token]);
+  }, [routeSellerPeerID, token]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => void resolveAndRedirect(), 0);
     return () => window.clearTimeout(timeout);
   }, [resolveAndRedirect]);
 
-  if (!token) {
+  if (!routeSellerPeerID || !token) {
     return (
       <div className="min-h-dvh bg-background">
         <Header />

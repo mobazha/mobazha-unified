@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
 import {
   getProfileDisplayInfo,
-  getPublicSellerAffiliateLink,
+  getPublicSellerAffiliateProgram,
   sellerAffiliateAttributionWindowCopy,
   setLoginRedirectPath,
   useI18n,
@@ -26,51 +26,77 @@ import { copyToClipboard } from '@/lib/clipboard';
 import Link from 'next/link';
 
 export default function PromoteProgramPage() {
-  const params = useParams<{ programId: string }>();
+  const params = useParams<{ sellerPeerID: string; programId: string }>();
+  const sellerPeerID = typeof params?.sellerPeerID === 'string' ? params.sellerPeerID : undefined;
   const programId = typeof params?.programId === 'string' ? params.programId : undefined;
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const { link, loading, error, ensureLink } = useSellerAffiliateLink();
-  const [terms, setTerms] = useState<{
-    token: string;
+  const [program, setProgram] = useState<{
+    programID: string;
     rate: number;
     windowSeconds: number;
     sellerPeerID: string;
   } | null>(null);
-  const [termsErrorToken, setTermsErrorToken] = useState<string | null>(null);
+  const [programLoading, setProgramLoading] = useState(Boolean(sellerPeerID && programId));
+  const [programError, setProgramError] = useState(false);
   const [sellerName, setSellerName] = useState<string | null>(null);
   const shareHref =
     link && typeof window !== 'undefined'
-      ? `${window.location.origin}/promo/${encodeURIComponent(link.publicToken)}`
+      ? `${window.location.origin}/promo/${encodeURIComponent(sellerPeerID ?? '')}/${encodeURIComponent(link.publicToken)}`
       : null;
 
-  const publicToken = link?.publicToken;
+  const loadProgram = useCallback(
+    async (isCurrent: () => boolean = () => true) => {
+      if (!isAuthenticated || !sellerPeerID || !programId) return;
+      if (isCurrent()) {
+        setProgramLoading(true);
+        setProgramError(false);
+      }
+      try {
+        const details = await getPublicSellerAffiliateProgram(sellerPeerID);
+        if (
+          details.programID !== programId ||
+          details.sellerPeerID !== sellerPeerID ||
+          details.status !== 'active'
+        ) {
+          throw new Error('program not found');
+        }
+        if (isCurrent()) {
+          setProgram({
+            programID: details.programID,
+            rate: details.commissionRateBPS / 100,
+            windowSeconds: details.attributionWindowSeconds,
+            sellerPeerID: details.sellerPeerID,
+          });
+        }
+      } catch {
+        if (isCurrent()) {
+          setProgram(null);
+          setProgramError(true);
+        }
+      } finally {
+        if (isCurrent()) {
+          setProgramLoading(false);
+        }
+      }
+    },
+    [isAuthenticated, programId, sellerPeerID]
+  );
+
   useEffect(() => {
-    if (!publicToken) return;
-    let cancelled = false;
-    void getPublicSellerAffiliateLink(publicToken)
-      .then(details => {
-        if (cancelled) return;
-        setTerms({
-          token: publicToken,
-          rate: details.commissionRateBPS / 100,
-          windowSeconds: details.attributionWindowSeconds,
-          sellerPeerID: details.sellerPeerID,
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setTermsErrorToken(publicToken);
-      });
+    let current = true;
+    void loadProgram(() => current);
     return () => {
-      cancelled = true;
+      current = false;
     };
-  }, [publicToken]);
+  }, [loadProgram]);
 
   // Resolve the seller's display name so the promoter can see whose store the
   // link promotes; the raw peer ID means nothing to a non-technical user.
-  const termsSellerPeerID = terms?.sellerPeerID;
+  const termsSellerPeerID = program?.sellerPeerID;
   useEffect(() => {
     if (!termsSellerPeerID) return;
     let cancelled = false;
@@ -86,18 +112,15 @@ export default function PromoteProgramPage() {
     };
   }, [termsSellerPeerID]);
 
-  // Derive at render time (keyed on the current token) instead of resetting
-  // state inside the effect, so a token change never shows stale terms.
-  const activeTerms = terms && terms.token === publicToken ? terms : null;
-  const showTermsUnavailable =
-    !activeTerms && Boolean(publicToken) && termsErrorToken === publicToken;
+  const activeTerms = program;
+  const showTermsUnavailable = !activeTerms && programError;
 
   const handleRequireAuth = useCallback(() => {
-    if (!programId) return;
-    const returnPath = `/promote/${encodeURIComponent(programId)}`;
+    if (!sellerPeerID || !programId) return;
+    const returnPath = `/promote/${encodeURIComponent(sellerPeerID)}/${encodeURIComponent(programId)}`;
     setLoginRedirectPath(returnPath);
     router.push(`/login?redirect=${encodeURIComponent(returnPath)}`);
-  }, [programId, router]);
+  }, [programId, router, sellerPeerID]);
 
   const handleCopy = useCallback(async () => {
     if (!shareHref) return;
@@ -128,7 +151,7 @@ export default function PromoteProgramPage() {
   // A promoter-facing growth surface must render inside the full app shell —
   // a bare card on a blank canvas reads as an unfinished widget, offers no
   // navigation, and carries no brand trust for someone deciding to promote.
-  if (!programId) {
+  if (!sellerPeerID || !programId) {
     return (
       <div className="min-h-dvh bg-background">
         <Header />
@@ -193,20 +216,23 @@ export default function PromoteProgramPage() {
             <CardTitle className="text-base">{t('promote.directLinkTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {loading ? (
+            {loading || programLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {t('promote.loadingLink')}
               </div>
             ) : null}
-            {error ? (
+            {error || programError ? (
               <div className="space-y-3">
                 <p className="text-sm text-destructive">{t('promote.linkFailed')}</p>
                 <Button
                   type="button"
                   variant="outline"
                   className="min-h-11"
-                  onClick={() => programId && void ensureLink(programId)}
+                  onClick={() => {
+                    if (programError) void loadProgram();
+                    else if (sellerPeerID && programId) void ensureLink(sellerPeerID, programId);
+                  }}
                 >
                   {t('promote.retry')}
                 </Button>
@@ -219,7 +245,7 @@ export default function PromoteProgramPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t('promote.entryPathHint', {
-                    path: `/promo/${link.publicToken}`,
+                    path: `/promo/${sellerPeerID}/${link.publicToken}`,
                   })}
                 </p>
                 {activeTerms ? (
@@ -275,11 +301,13 @@ export default function PromoteProgramPage() {
                 </div>
               </>
             ) : null}
-            {!loading && !error && !link ? (
+            {!loading && !programLoading && !error && !programError && !link && activeTerms ? (
               <Button
                 type="button"
                 className="min-h-11"
-                onClick={() => programId && void ensureLink(programId)}
+                onClick={() =>
+                  sellerPeerID && programId && void ensureLink(sellerPeerID, programId)
+                }
               >
                 {t('sellerAffiliate.createLink')}
               </Button>
