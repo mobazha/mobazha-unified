@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,8 @@ import {
 import { useI18n, useUserStore, getImageUrl, imagesApi, getCountryName } from '@mobazha/core';
 import type { ContactInfo, SocialAccount } from '@mobazha/core';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
+import { HeaderUpload } from '@/components/ui/header-upload';
+import { pickImageFile, type ImagePickRejection } from '@/lib/pick-image-file';
 import { Plus, Trash2 } from 'lucide-react';
 import { SettingsSection, SaveBar } from '@/components/SettingsLayout';
 
@@ -85,7 +87,7 @@ function linksToContactInfo(links: Array<{ type: string; url: string }>): Contac
 export function ProfileSettingsContent() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
-  const { profile, updateProfile } = useUserStore();
+  const { profile, updateProfile, fetchProfile } = useUserStore();
 
   const locationPlaceholder = useMemo(() => {
     const savedCountry =
@@ -105,7 +107,26 @@ export function ProfileSettingsContent() {
     profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : ''
   );
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [headerUrl, setHeaderUrl] = useState(
+    profile?.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : ''
+  );
+  const [pendingHeaderFile, setPendingHeaderFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Blob previews must be revoked by hand; keep the live one so replacing the
+  // pick, discarding, or unmounting releases it instead of leaking to page exit.
+  const headerBlobUrl = useRef<string | null>(null);
+  const setHeaderPreview = useCallback((url: string | undefined) => {
+    if (headerBlobUrl.current) URL.revokeObjectURL(headerBlobUrl.current);
+    headerBlobUrl.current = url?.startsWith('blob:') ? url : null;
+    setHeaderUrl(url);
+  }, []);
+  useEffect(
+    () => () => {
+      if (headerBlobUrl.current) URL.revokeObjectURL(headerBlobUrl.current);
+    },
+    []
+  );
   const [links, setLinks] = useState<Array<{ type: string; url: string }>>(() =>
     contactInfoToLinks(profile?.contactInfo)
   );
@@ -117,7 +138,12 @@ export function ProfileSettingsContent() {
       setLocation(profile.location || '');
       setAbout(profile.about || '');
       setAvatarUrl(profile.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : '');
+      setHeaderPreview(profile.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : '');
       setLinks(contactInfoToLinks(profile.contactInfo));
+      // Drop picks made against the previous identity; keeping them would upload
+      // that image to this profile while the preview shows this profile's own.
+      setPendingAvatarFile(null);
+      setPendingHeaderFile(null);
     }
   }, [profile?.peerID]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -133,9 +159,19 @@ export function ProfileSettingsContent() {
       location !== (orig?.location || '') ||
       about !== (orig?.about || '') ||
       linksChanged ||
-      !!pendingAvatarFile
+      !!pendingAvatarFile ||
+      !!pendingHeaderFile
     );
-  }, [name, shortDescription, location, about, links, pendingAvatarFile, profile]);
+  }, [
+    name,
+    shortDescription,
+    location,
+    about,
+    links,
+    pendingAvatarFile,
+    pendingHeaderFile,
+    profile,
+  ]);
 
   const handleDiscard = () => {
     setName(profile?.name || '');
@@ -145,12 +181,34 @@ export function ProfileSettingsContent() {
     setLinks(contactInfoToLinks(profile?.contactInfo));
     setPendingAvatarFile(null);
     setAvatarUrl(profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : '');
+    setPendingHeaderFile(null);
+    setHeaderPreview(profile?.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : '');
   };
 
+  // AvatarUpload hands over whatever the dialog returned — `accept` is only a hint —
+  // and it is shared with screens that expect that, so this form validates its own.
   const handleAvatarFileSelect = (file: File) => {
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarUrl(previewUrl);
-    setPendingAvatarFile(file);
+    const result = pickImageFile([file]);
+    if ('rejected' in result) {
+      handleFileRejected(result.rejected);
+      return;
+    }
+    setAvatarUrl(URL.createObjectURL(result.file));
+    setPendingAvatarFile(result.file);
+  };
+
+  const handleHeaderFileSelect = (file: File) => {
+    setHeaderPreview(URL.createObjectURL(file));
+    setPendingHeaderFile(file);
+  };
+
+  const handleFileRejected = (reason: ImagePickRejection) => {
+    toast({
+      title: t('common.error'),
+      description:
+        reason === 'size' ? t('settingsModal.fileTooLarge') : t('settingsModal.invalidImageType'),
+      variant: 'destructive',
+    });
   };
 
   const handleAddLink = () => {
@@ -181,22 +239,29 @@ export function ProfileSettingsContent() {
     try {
       const contactInfo = linksToContactInfo(links);
 
-      // Desktop pattern: profile save and avatar upload run in parallel.
-      // POST /v1/media/avatar auto-associates the avatar with the profile,
-      // so we don't need to include avatarHashes in the profile PUT.
-      const profilePromise = updateProfile({
+      // Media uploads must finish before the profile PUT. /v1/media/* associates the
+      // hashes server-side, but the node applies the PUT as a merge patch over the
+      // profile it read at request start — running them together lets the PUT write
+      // back a snapshot taken before the upload and drop the new hashes.
+      const [avatarHashes, headerHashes] = await Promise.all([
+        pendingAvatarFile ? imagesApi.uploadAvatar(pendingAvatarFile) : Promise.resolve(null),
+        pendingHeaderFile ? imagesApi.uploadHeader(pendingHeaderFile) : Promise.resolve(null),
+      ]);
+
+      // imagesApi swallows node errors and returns null. Save the text regardless:
+      // an image the node keeps rejecting must not hold the rest of the form hostage.
+      const uploadFailed =
+        (!!pendingAvatarFile && !avatarHashes) || (!!pendingHeaderFile && !headerHashes);
+
+      const profileSuccess = await updateProfile({
         name: name.trim(),
         shortDescription: shortDescription.trim(),
         location: location.trim(),
         about: about.trim(),
         contactInfo,
+        ...(avatarHashes ? { avatarHashes } : {}),
+        ...(headerHashes ? { headerHashes } : {}),
       });
-
-      const avatarPromise = pendingAvatarFile
-        ? imagesApi.uploadAvatar(pendingAvatarFile)
-        : Promise.resolve(null);
-
-      const [profileSuccess, avatarHashes] = await Promise.all([profilePromise, avatarPromise]);
 
       if (!profileSuccess) {
         toast({
@@ -204,23 +269,28 @@ export function ProfileSettingsContent() {
           description: t('settingsModal.saveFailed'),
           variant: 'destructive',
         });
+        // /v1/media/* associates the hashes server-side on its own, so an upload that
+        // landed before this PUT failed is already live on the storefront. Re-read the
+        // profile rather than leave the form asserting an old image the node discarded.
+        if (avatarHashes || headerHashes) await fetchProfile();
         return;
       }
 
-      if (pendingAvatarFile && !avatarHashes) {
+      // Clear only what actually landed. A rejected image stays pending, so the form
+      // stays dirty and the SaveBar remains as the retry affordance instead of
+      // vanishing behind a success toast for a picture that was never stored.
+      if (avatarHashes) setPendingAvatarFile(null);
+      if (headerHashes) setPendingHeaderFile(null);
+
+      if (uploadFailed) {
         toast({
           title: t('common.error'),
           description: t('settingsModal.uploadFailed'),
           variant: 'destructive',
         });
+        return;
       }
 
-      // Sync avatar hashes into local store state
-      if (avatarHashes) {
-        await updateProfile({ avatarHashes });
-      }
-
-      setPendingAvatarFile(null);
       toast({ title: t('common.success'), description: t('settingsModal.profileSaved') });
     } catch {
       toast({
@@ -287,6 +357,17 @@ export function ProfileSettingsContent() {
                   size="xl"
                   disabled={isSaving}
                   label={t('settings.loadAvatar') || 'Change Avatar'}
+                />
+              </FormField>
+
+              <FormField label={t('settings.cover')} description={t('settings.coverSizeHint')}>
+                <HeaderUpload
+                  src={headerUrl}
+                  onFileSelect={handleHeaderFileSelect}
+                  onFileRejected={handleFileRejected}
+                  disabled={isSaving}
+                  label={t('settings.loadHeader')}
+                  placeholder={t('settings.dragOrClickCover')}
                 />
               </FormField>
 

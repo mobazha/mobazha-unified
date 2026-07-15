@@ -706,6 +706,7 @@ export interface TranslationResource {
     chooseTheme: string;
     displayMode: string;
     avatar: string;
+    cover: string;
     loadAvatar: string;
     loadHeader: string;
     coverSizeHint?: string;
@@ -1428,6 +1429,7 @@ export interface TranslationResource {
     selectPhoto: string;
     avatarUploaded: string;
     uploadFailed: string;
+    invalidImageType: string;
     fileTooLarge?: string;
     aboutDesc: string;
     aboutPlaceholder: string;
