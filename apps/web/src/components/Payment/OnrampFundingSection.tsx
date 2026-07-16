@@ -1,45 +1,17 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { AlertCircle, ArrowUpRight, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n, ordersApi } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 import type { OnrampFundingSourceView } from '@mobazha/core';
 
-// Onramp purchase statuses that are still progressing toward delivery
-// (mirrors the backend contract's Active set).
-const ACTIVE_STATUSES = new Set(['created', 'awaiting_payment', 'processing', 'delivering']);
-
-// Mount-refresh throttle, deliberately OUTSIDE the component: the payment
-// page remounts this section when session refetches swap its subtree, and a
-// per-instance guard dies with the instance. Keyed by order id.
-const lastMountRefreshAt = new Map<string, number>();
-const MOUNT_REFRESH_MIN_GAP_MS = 5_000;
-
-function sameSource(a: OnrampFundingSourceView, b: OnrampFundingSourceView): boolean {
-  return (
-    a.providerID === b.providerID &&
-    a.onrampOrderID === b.onrampOrderID &&
-    a.status === b.status &&
-    a.deliverToBuyerWallet === b.deliverToBuyerWallet &&
-    a.buyerWalletAddress === b.buyerWalletAddress &&
-    a.buyerActionURL === b.buyerActionURL &&
-    a.disclosure === b.disclosure &&
-    a.updatedAt === b.updatedAt
-  );
-}
-
 export interface OnrampFundingSectionProps {
-  orderID: string;
-  /** The session's onramp funding source (session.onrampFunding). */
   source: OnrampFundingSourceView;
-  /** Cross-store checkout routes through the seller node. */
-  vendorPeerID?: string;
-  /**
-   * Called after a refresh persists a provider transition, so the page can
-   * re-fetch the payment session (funding state may have refined).
-   */
-  onUpdated?: (source: OnrampFundingSourceView | null) => void;
+  refreshing?: boolean;
+  refreshError?: boolean;
+  resolvedWithoutView?: boolean;
+  onRefresh?: () => void;
   className?: string;
 }
 
@@ -52,99 +24,14 @@ export interface OnrampFundingSectionProps {
  * which the surrounding payment page already gates on.
  */
 export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
-  orderID,
-  source: initialSource,
-  vendorPeerID,
-  onUpdated,
+  source,
+  refreshing = false,
+  refreshError = false,
+  resolvedWithoutView = false,
+  onRefresh,
   className,
 }) => {
   const { t } = useI18n();
-  const [source, setSource] = useState<OnrampFundingSourceView>(initialSource);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshError, setRefreshError] = useState(false);
-
-  const sourceRef = useRef(initialSource);
-  const refreshInFlightRef = useRef(false);
-  const pollingStoppedRef = useRef(false);
-  const [pollingStopped, setPollingStopped] = useState(false);
-
-  useEffect(() => {
-    if (sameSource(sourceRef.current, initialSource)) return;
-    sourceRef.current = initialSource;
-    pollingStoppedRef.current = false;
-    setPollingStopped(false);
-    setSource(initialSource);
-  }, [initialSource]);
-
-  const isActive = ACTIVE_STATUSES.has(source.status) && !pollingStopped;
-  const resolvedWithoutView = ACTIVE_STATUSES.has(source.status) && pollingStopped;
-
-  const refresh = useCallback(async () => {
-    if (refreshInFlightRef.current) return;
-    refreshInFlightRef.current = true;
-    setRefreshing(true);
-    try {
-      const next = await ordersApi.refreshOrderOnrampFunding(orderID, { vendorPeerID });
-      setRefreshError(false);
-      if (!next) {
-        // A source that existed locally but no longer has a refresh view must
-        // not poll forever. Propagate this edge once so the page can refresh
-        // the payment session, then stop the interval locally.
-        if (!pollingStoppedRef.current) {
-          pollingStoppedRef.current = true;
-          setPollingStopped(true);
-          onUpdated?.(null);
-        }
-        return;
-      }
-      pollingStoppedRef.current = false;
-      setPollingStopped(false);
-      if (!sameSource(next, sourceRef.current)) {
-        sourceRef.current = next;
-        setSource(next);
-        onUpdated?.(next);
-      }
-    } catch {
-      // Best-effort: the stored record stands; the next tick retries.
-      setRefreshError(true);
-    } finally {
-      refreshInFlightRef.current = false;
-      setRefreshing(false);
-    }
-  }, [orderID, vendorPeerID, onUpdated]);
-
-  // The interval must not depend on refresh's identity. refresh closes over
-  // onUpdated, which the payment page passes as an inline arrow — a new
-  // identity on every one of its renders. Depending on it here tore the timer
-  // down and rebuilt it on each parent render, and the page re-renders (its
-  // own session poll, countdowns) far more often than every 10s, so the tick
-  // never fired: the purchase sat at awaiting_payment forever in a real
-  // browser even though the endpoint works. Route through a ref instead.
-  const refreshRef = useRef(refresh);
-  useEffect(() => {
-    refreshRef.current = refresh;
-  }, [refresh]);
-
-  // Poll the provider while the purchase is progressing toward delivery.
-  // Refresh IMMEDIATELY on mount, then on the interval: the payment page can
-  // remount this section (session refetches swap the subtree), and a poll
-  // that only ever fires after a full quiet interval can be starved by that
-  // churn — observed live as refreshes minutes apart while the purchase sat
-  // at awaiting_payment. Refreshing on mount makes remounting itself drive
-  // the poll, with the interval as the steady-state backstop.
-  useEffect(() => {
-    if (!isActive) return;
-    const last = lastMountRefreshAt.get(orderID) ?? 0;
-    if (Date.now() - last >= MOUNT_REFRESH_MIN_GAP_MS) {
-      lastMountRefreshAt.set(orderID, Date.now());
-      void refreshRef.current();
-    }
-    const interval = window.setInterval(() => {
-      lastMountRefreshAt.set(orderID, Date.now());
-      void refreshRef.current();
-    }, 10_000);
-    return () => window.clearInterval(interval);
-  }, [isActive, orderID]);
 
   const statusLabel = (() => {
     if (resolvedWithoutView) return t('onramp.statusAwaitingChain');
@@ -192,7 +79,7 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
         </div>
         <button
           type="button"
-          onClick={() => void refresh()}
+          onClick={onRefresh}
           disabled={refreshing}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
           aria-label={t('onramp.refresh')}

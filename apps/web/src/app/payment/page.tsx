@@ -66,12 +66,13 @@ import {
   normalizeOrderOpenListings,
   isDealBackedOrder,
   usePaymentSelectionQuote,
+  useOnrampFunding,
   buildCanonicalFiatPaymentCoin,
   resolveCheckoutCanonicalPaymentCoin,
   isPaymentSelectionQuoteProvisioned,
   type WebSocketMessage,
 } from '@mobazha/core';
-import type { Order, PaymentSession, OnrampFundingSourceView } from '@mobazha/core';
+import type { Order, PaymentSession } from '@mobazha/core';
 import {
   buildFiatPaymentCancelUrl,
   buildFiatPaymentVerificationUrl,
@@ -318,32 +319,6 @@ export default function PaymentPage() {
   const [payFromCustodial, setPayFromCustodial] = useState(false);
   const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
 
-  // The onramp funding leg is buyer-side. The payment session may be re-fetched
-  // through vendor routing (whose view omits onrampFunding), so hold the source
-  // in resilient local state seeded from any session that carries it and kept
-  // fresh by the section's own refresh — a vendor-routed re-fetch must not
-  // unmount the card. (ADR-019)
-  const [onrampSource, setOnrampSource] = useState<OnrampFundingSourceView | null>(null);
-  useEffect(() => {
-    const next = paymentSession?.onrampFunding;
-    if (!next) return;
-    // Keep the previous object when nothing changed: every session refetch
-    // deserializes a fresh onrampFunding object, and letting that new identity
-    // through re-fires every effect that depends on onrampSource. With the
-    // status poll among them, identity churn becomes a request loop — each
-    // response schedules the next request immediately (observed live at ~34
-    // req/s) and every response re-renders the page, which reads as flicker.
-    setOnrampSource(prev =>
-      prev && prev.status === next.status && prev.updatedAt === next.updatedAt ? prev : next
-    );
-  }, [paymentSession?.onrampFunding]);
-  // Buyer-side entry point to start onramp funding (ADR-019). Fail-closed:
-  // if the backend advertises no onramp provider for this rail the initiate
-  // call errors and the affordance hides itself, so a fail-closed node shows
-  // nothing. The provider id targets the dev mock onramp module.
-  const [onrampInitBusy, setOnrampInitBusy] = useState(false);
-  const [onrampInitHidden, setOnrampInitHidden] = useState(false);
-
   const paymentReadinessPollEnabled =
     Boolean(orderID) && Boolean(orderDetails) && isPaymentOpenState(orderDetails?.status);
 
@@ -352,67 +327,22 @@ export default function PaymentPage() {
     vendorPeerID: orderDetails?.vendor?.peerID || urlVendorPeerID,
   });
 
-  // Discovery: which reviewed onramp providers may fund this order's frozen
-  // rail. null = not asked yet; [] = asked, none (affordance must not render).
-  // The client never assumes a specific vendor (RFC-0012 Proposal 4).
-  const [onrampProviders, setOnrampProviders] = useState<Awaited<
-    ReturnType<typeof ordersApi.getOrderOnrampProviders>
-  > | null>(null);
-  const directOnrampProviders = useMemo(
-    () => onrampProviders?.filter(provider => provider.deliverToTarget) ?? null,
-    [onrampProviders]
-  );
-
-  // This page instance can survive a query-string order change. Never carry a
-  // provider choice, hidden affordance, or purchase source into another order.
-  useEffect(() => {
-    setOnrampSource(null);
-    setOnrampInitBusy(false);
-    setOnrampInitHidden(false);
-    setOnrampProviders(null);
-  }, [orderID]);
-
-  const onrampTargetKey =
-    paymentSession?.fundingTarget?.type === 'address'
-      ? [
-          orderID ?? '',
-          paymentSession.fundingTarget.assetID,
-          paymentSession.fundingTarget.address ?? '',
-          paymentSession.fundingTarget.amount,
-        ].join('|')
-      : '';
-  const onrampTargetKeyRef = useRef('');
-  useEffect(() => {
-    if (!onrampTargetKey) return;
-    if (onrampTargetKeyRef.current && onrampTargetKeyRef.current !== onrampTargetKey) {
-      setOnrampSource(null);
-      setOnrampInitHidden(false);
-      setOnrampProviders(null);
-    }
-    onrampTargetKeyRef.current = onrampTargetKey;
-  }, [onrampTargetKey]);
-  // String key, deliberately NOT an object: this page has produced request
-  // loops out of effects keyed on refetched-object identity before.
-  const onrampDiscoveryTarget =
-    paymentSession?.status === 'awaiting_funds' && paymentSession.fundingTarget?.type === 'address'
-      ? (paymentSession.fundingTarget?.address ?? '')
-      : '';
-  useEffect(() => {
-    setOnrampProviders(null);
-    if (!orderID || !onrampDiscoveryTarget) return;
-    let cancelled = false;
-    ordersApi
-      .getOrderOnrampProviders(orderID, { vendorPeerID: paymentVendorPeerID })
-      .then(list => {
-        if (!cancelled) setOnrampProviders(list);
-      })
-      .catch(() => {
-        if (!cancelled) setOnrampProviders([]); // fail closed: no affordance
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [orderID, onrampDiscoveryTarget, paymentVendorPeerID]);
+  const {
+    source: onrampSource,
+    directProviders: directOnrampProviders,
+    initiationBusy: onrampInitBusy,
+    initiationHidden: onrampInitHidden,
+    refreshing: onrampRefreshing,
+    refreshError: onrampRefreshError,
+    resolvedWithoutView: onrampResolvedWithoutView,
+    initiateDirect: initiateDirectOnramp,
+    refresh: refreshOnramp,
+  } = useOnrampFunding({
+    orderID: orderID ?? undefined,
+    paymentSession,
+    vendorPeerID: paymentVendorPeerID,
+    onPaymentSessionUpdated: setPaymentSession,
+  });
 
   const {
     isCheckingReadiness,
@@ -1859,40 +1789,13 @@ export default function PaymentPage() {
                                 className="self-start"
                                 disabled={onrampInitBusy}
                                 onClick={async () => {
-                                  setOnrampInitBusy(true);
                                   try {
-                                    // Deliver straight to the frozen escrow target. Routing
-                                    // through a buyer wallet requires an embedded-wallet
-                                    // address to bind the purchase to, and nothing here
-                                    // provisions one — asking for it makes the backend
-                                    // reject every purchase ("a purchase must bind a
-                                    // delivery target or the buyer wallet"), which this
-                                    // button then swallows as "unavailable".
-                                    const chosen = directOnrampProviders?.[0];
-                                    if (!chosen) {
-                                      setOnrampInitHidden(true);
-                                      return;
-                                    }
-                                    const src = await ordersApi.initiateOrderOnrampFunding({
-                                      orderId: orderDetails.orderID,
-                                      providerID: chosen.providerID,
-                                      fiatCurrency: chosen.fiatCurrencies?.[0] ?? 'USD',
-                                      deliverToBuyerWallet: false,
-                                      vendorPeerID: paymentVendorPeerID,
-                                    });
-                                    if (src) {
-                                      setOnrampSource(src);
-                                    } else {
-                                      setOnrampInitHidden(true);
-                                    }
+                                    await initiateDirectOnramp();
                                   } catch {
-                                    setOnrampInitHidden(true);
                                     toast({
                                       title: t('onramp.fundWithCardError'),
                                       variant: 'destructive',
                                     });
-                                  } finally {
-                                    setOnrampInitBusy(false);
                                   }
                                 }}
                               >
@@ -1909,21 +1812,11 @@ export default function PaymentPage() {
                           on-chain observation the page already gates on. */}
                       {onrampSource && (
                         <OnrampFundingSection
-                          orderID={orderDetails.orderID}
                           source={onrampSource}
-                          vendorPeerID={paymentVendorPeerID}
-                          onUpdated={next => {
-                            // The section's own refresh is the source of truth for
-                            // the onramp leg; keep it even if the session re-fetch
-                            // (vendor-routed) omits onrampFunding.
-                            if (next) setOnrampSource(next);
-                            void ordersApi
-                              .getOrderPaymentSession(orderDetails.orderID, {
-                                vendorPeerID: paymentVendorPeerID,
-                              })
-                              .then(session => session && setPaymentSession(session))
-                              .catch(() => null);
-                          }}
+                          refreshing={onrampRefreshing}
+                          refreshError={onrampRefreshError}
+                          resolvedWithoutView={onrampResolvedWithoutView}
+                          onRefresh={() => void refreshOnramp()}
                         />
                       )}
 

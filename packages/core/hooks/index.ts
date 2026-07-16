@@ -18,6 +18,7 @@ export * from './useOrders';
 export * from './useOrderDetail';
 export * from './usePaymentReadinessPoll';
 export * from './usePaymentSelectionQuote';
+export * from './useOnrampFunding';
 export * from './useQuotedFiatPayment';
 export * from './useGuestDigitalDelivery';
 export * from './useGuestOrderKind';
