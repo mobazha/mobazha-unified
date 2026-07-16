@@ -355,17 +355,50 @@ export default function PaymentPage() {
   // Discovery: which reviewed onramp providers may fund this order's frozen
   // rail. null = not asked yet; [] = asked, none (affordance must not render).
   // The client never assumes a specific vendor (RFC-0012 Proposal 4).
-  const [onrampProviders, setOnrampProviders] = useState<
-    Awaited<ReturnType<typeof ordersApi.getOrderOnrampProviders>> | null
-  >(null);
+  const [onrampProviders, setOnrampProviders] = useState<Awaited<
+    ReturnType<typeof ordersApi.getOrderOnrampProviders>
+  > | null>(null);
+  const directOnrampProviders = useMemo(
+    () => onrampProviders?.filter(provider => provider.deliverToTarget) ?? null,
+    [onrampProviders]
+  );
+
+  // This page instance can survive a query-string order change. Never carry a
+  // provider choice, hidden affordance, or purchase source into another order.
+  useEffect(() => {
+    setOnrampSource(null);
+    setOnrampInitBusy(false);
+    setOnrampInitHidden(false);
+    setOnrampProviders(null);
+  }, [orderID]);
+
+  const onrampTargetKey =
+    paymentSession?.fundingTarget?.type === 'address'
+      ? [
+          orderID ?? '',
+          paymentSession.fundingTarget.assetID,
+          paymentSession.fundingTarget.address ?? '',
+          paymentSession.fundingTarget.amount,
+        ].join('|')
+      : '';
+  const onrampTargetKeyRef = useRef('');
+  useEffect(() => {
+    if (!onrampTargetKey) return;
+    if (onrampTargetKeyRef.current && onrampTargetKeyRef.current !== onrampTargetKey) {
+      setOnrampSource(null);
+      setOnrampInitHidden(false);
+      setOnrampProviders(null);
+    }
+    onrampTargetKeyRef.current = onrampTargetKey;
+  }, [onrampTargetKey]);
   // String key, deliberately NOT an object: this page has produced request
   // loops out of effects keyed on refetched-object identity before.
   const onrampDiscoveryTarget =
-    paymentSession?.status === 'awaiting_funds' &&
-    paymentSession.fundingTarget?.type === 'address'
+    paymentSession?.status === 'awaiting_funds' && paymentSession.fundingTarget?.type === 'address'
       ? (paymentSession.fundingTarget?.address ?? '')
       : '';
   useEffect(() => {
+    setOnrampProviders(null);
     if (!orderID || !onrampDiscoveryTarget) return;
     let cancelled = false;
     ordersApi
@@ -379,7 +412,6 @@ export default function PaymentPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderID, onrampDiscoveryTarget, paymentVendorPeerID]);
 
   const {
@@ -1812,7 +1844,7 @@ export default function PaymentPage() {
                       {!onrampSource &&
                         !onrampInitHidden &&
                         !visibleFiatProvider &&
-                        Boolean(onrampProviders && onrampProviders.length > 0) &&
+                        Boolean(directOnrampProviders && directOnrampProviders.length > 0) &&
                         paymentSession?.status === 'awaiting_funds' &&
                         paymentSession.fundingTarget?.type === 'address' &&
                         Boolean(paymentSession.fundingTarget?.address) && (
@@ -1836,7 +1868,7 @@ export default function PaymentPage() {
                                     // reject every purchase ("a purchase must bind a
                                     // delivery target or the buyer wallet"), which this
                                     // button then swallows as "unavailable".
-                                    const chosen = onrampProviders?.[0];
+                                    const chosen = directOnrampProviders?.[0];
                                     if (!chosen) {
                                       setOnrampInitHidden(true);
                                       return;

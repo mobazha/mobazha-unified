@@ -1,4 +1,7 @@
-import { render, act } from '@testing-library/react';
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 fengzie and the respective contributors.
+
+import { render, act, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -47,7 +50,7 @@ describe('OnrampFundingSection', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     refreshOrderOnrampFunding.mockReset();
-    refreshOrderOnrampFunding.mockResolvedValue(null);
+    refreshOrderOnrampFunding.mockResolvedValue(source);
   });
 
   afterEach(() => {
@@ -134,32 +137,61 @@ describe('OnrampFundingSection', () => {
     expect(refreshOrderOnrampFunding).not.toHaveBeenCalled();
   });
 
-  // A null refresh (settled or nothing in flight) must not propagate upward:
-  // onUpdated triggers an unconditional session refetch in the page, and
-  // null-on-every-poll turned that into a request loop.
-  it('only propagates real provider transitions to onUpdated', async () => {
+  it('stops polling and propagates a null refresh only once', async () => {
     const onUpdated = vi.fn();
     const orderID = nextOrderID();
+    refreshOrderOnrampFunding.mockResolvedValue(null);
     render(<OnrampFundingSection orderID={orderID} source={source} onUpdated={onUpdated} />);
 
-    // First poll returns null — no propagation.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
-    expect(onUpdated).not.toHaveBeenCalled();
-
-    // Next tick reports a real transition — propagate once.
-    refreshOrderOnrampFunding.mockResolvedValue({ ...(source as object), status: 'processing' });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(10_000);
-    });
     expect(onUpdated).toHaveBeenCalledTimes(1);
-    expect(onUpdated.mock.calls[0][0]).toMatchObject({ status: 'processing' });
+    expect(onUpdated).toHaveBeenCalledWith(null);
 
-    // Same status again — no re-propagation.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(10_000);
+      await vi.advanceTimersByTimeAsync(30_000);
     });
+    expect(refreshOrderOnrampFunding).toHaveBeenCalledTimes(1);
     expect(onUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it('propagates same-status action URL refreshes', async () => {
+    const onUpdated = vi.fn();
+    const next = {
+      ...(source as object),
+      buyerActionURL: 'https://mock-onramp.example/checkout/fresh-session',
+      updatedAt: '2026-07-15T00:00:05Z',
+    };
+    refreshOrderOnrampFunding.mockResolvedValue(next);
+
+    render(<OnrampFundingSection orderID={nextOrderID()} source={source} onUpdated={onUpdated} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining(next));
+    expect(screen.getByRole('link')).toHaveAttribute('href', next.buyerActionURL);
+  });
+
+  it('does not overlap slow refresh requests', async () => {
+    let resolveRefresh: ((value: typeof source) => void) | undefined;
+    refreshOrderOnrampFunding.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          resolveRefresh = resolve;
+        })
+    );
+
+    renderSection(nextOrderID());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(refreshOrderOnrampFunding).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveRefresh?.(source);
+      await Promise.resolve();
+    });
   });
 });

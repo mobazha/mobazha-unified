@@ -485,8 +485,8 @@ export async function getOrderOnrampProviders(
 
 /**
  * Polls the onramp provider for the order's in-flight purchase and persists
- * the transition. Returns the current onramp funding view, or null when
- * nothing is in flight.
+ * the transition. Once a purchase exists, returns its latest durable
+ * lifecycle view; null means no purchase exists.
  */
 export async function refreshOrderOnrampFunding(
   orderId: string,

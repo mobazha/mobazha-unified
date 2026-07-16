@@ -16,6 +16,19 @@ const ACTIVE_STATUSES = new Set(['created', 'awaiting_payment', 'processing', 'd
 const lastMountRefreshAt = new Map<string, number>();
 const MOUNT_REFRESH_MIN_GAP_MS = 5_000;
 
+function sameSource(a: OnrampFundingSourceView, b: OnrampFundingSourceView): boolean {
+  return (
+    a.providerID === b.providerID &&
+    a.onrampOrderID === b.onrampOrderID &&
+    a.status === b.status &&
+    a.deliverToBuyerWallet === b.deliverToBuyerWallet &&
+    a.buyerWalletAddress === b.buyerWalletAddress &&
+    a.buyerActionURL === b.buyerActionURL &&
+    a.disclosure === b.disclosure &&
+    a.updatedAt === b.updatedAt
+  );
+}
+
 export interface OnrampFundingSectionProps {
   orderID: string;
   /** The session's onramp funding source (session.onrampFunding). */
@@ -50,30 +63,44 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
 
+  const sourceRef = useRef(initialSource);
+  const refreshInFlightRef = useRef(false);
+  const pollingStoppedRef = useRef(false);
+  const [pollingStopped, setPollingStopped] = useState(false);
+
   useEffect(() => {
+    if (sameSource(sourceRef.current, initialSource)) return;
+    sourceRef.current = initialSource;
+    pollingStoppedRef.current = false;
+    setPollingStopped(false);
     setSource(initialSource);
   }, [initialSource]);
 
-  const isActive = ACTIVE_STATUSES.has(source.status);
-
-  const sourceStatusRef = useRef(source.status);
-  useEffect(() => {
-    sourceStatusRef.current = source.status;
-  }, [source.status]);
+  const isActive = ACTIVE_STATUSES.has(source.status) && !pollingStopped;
+  const resolvedWithoutView = ACTIVE_STATUSES.has(source.status) && pollingStopped;
 
   const refresh = useCallback(async () => {
+    if (refreshInFlightRef.current) return;
+    refreshInFlightRef.current = true;
     setRefreshing(true);
     try {
       const next = await ordersApi.refreshOrderOnrampFunding(orderID, { vendorPeerID });
       setRefreshError(false);
-      // Only a REAL provider transition propagates. A null refresh means
-      // settled-or-nothing-in-flight; pushing that upward on every poll made
-      // the page refetch the session unconditionally, and combined with
-      // remount-driven mount refreshes that closed a response-paced request
-      // loop (observed live at 19-34 req/s, rendered as page flicker). The
-      // page's own status poll owns the endgame once the chain observation
-      // verifies the session.
-      if (next && next.status !== sourceStatusRef.current) {
+      if (!next) {
+        // A source that existed locally but no longer has a refresh view must
+        // not poll forever. Propagate this edge once so the page can refresh
+        // the payment session, then stop the interval locally.
+        if (!pollingStoppedRef.current) {
+          pollingStoppedRef.current = true;
+          setPollingStopped(true);
+          onUpdated?.(null);
+        }
+        return;
+      }
+      pollingStoppedRef.current = false;
+      setPollingStopped(false);
+      if (!sameSource(next, sourceRef.current)) {
+        sourceRef.current = next;
         setSource(next);
         onUpdated?.(next);
       }
@@ -81,6 +108,7 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
       // Best-effort: the stored record stands; the next tick retries.
       setRefreshError(true);
     } finally {
+      refreshInFlightRef.current = false;
       setRefreshing(false);
     }
   }, [orderID, vendorPeerID, onUpdated]);
@@ -119,6 +147,7 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
   }, [isActive, orderID]);
 
   const statusLabel = (() => {
+    if (resolvedWithoutView) return t('onramp.statusAwaitingChain');
     switch (source.status) {
       case 'created':
       case 'awaiting_payment':
@@ -151,7 +180,7 @@ export const OnrampFundingSection: React.FC<OnrampFundingSectionProps> = ({
         <div className="flex items-center gap-2">
           {isTerminalFailure ? (
             <AlertCircle className="h-5 w-5 text-destructive" />
-          ) : source.status === 'delivered' ? (
+          ) : source.status === 'delivered' || resolvedWithoutView ? (
             <CheckCircle className="h-5 w-5 text-primary" />
           ) : (
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /**
  * Onramp funding demo — records the buyer's payment page while the onramp
  * funding leg runs against the LIVE local E2E stack (no mocked APIs).
@@ -28,22 +31,25 @@ const TARGET_AMOUNT = process.env.TARGET_AMOUNT || '';
 const BUYER_TOKEN = process.env.BUYER_TOKEN || '';
 const DELIVER_SCRIPT =
   process.env.DELIVER_SCRIPT ||
-  path.join(
-    process.env.HOME || '',
-    'dev/mobazha/tests/e2e/docker/scripts/pay-onramp-demo.sh',
-  );
+  path.join(process.env.HOME || '', 'dev/mobazha/tests/e2e/docker/scripts/pay-onramp-demo.sh');
 
 // Record every run, not just failures — the video is the deliverable here.
 test.use({ video: 'on', viewport: { width: 1280, height: 900 } });
 
 /** Read the payment session straight from the node, for timing decisions the
  *  rendered card is too coarse to drive. */
-async function readSession(page: Page): Promise<any> {
+interface PaymentSessionProbe {
+  status?: string;
+  onrampFunding?: { status: string } | null;
+}
+
+async function readSession(page: Page): Promise<PaymentSessionProbe> {
   const res = await page.request.get(
     `http://localhost:18080/v1/orders/${ORDER_ID}/payment-session`,
-    { headers: { Authorization: `Bearer ${BUYER_TOKEN}` } },
+    { headers: { Authorization: `Bearer ${BUYER_TOKEN}` } }
   );
-  return (await res.json())?.data ?? {};
+  const body = (await res.json()) as { data?: PaymentSessionProbe };
+  return body.data ?? {};
 }
 
 /** Inject the real buyer JWT the way userStore persists it. A token without the
@@ -114,7 +120,7 @@ test('buyer funds an order through the onramp leg', async ({ page }) => {
         const session = await readSession(page);
         return session.onrampFunding ? session.onrampFunding.status : 'settled';
       },
-      { timeout: 120_000, intervals: [2000] },
+      { timeout: 120_000, intervals: [2000] }
     )
     .toMatch(/delivering|delivered|settled/);
   try {
@@ -123,9 +129,10 @@ test('buyer funds an order through the onramp leg', async ({ page }) => {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     console.log(out);
-  } catch (e: any) {
+  } catch (error: unknown) {
+    const failure = error as { status?: number; stdout?: unknown; stderr?: unknown };
     throw new Error(
-      `onramp delivery failed (exit ${e?.status}):\nstdout: ${e?.stdout}\nstderr: ${e?.stderr}`,
+      `onramp delivery failed (exit ${failure.status}):\nstdout: ${String(failure.stdout ?? '')}\nstderr: ${String(failure.stderr ?? '')}`
     );
   }
 
@@ -140,8 +147,8 @@ test('buyer funds an order through the onramp leg', async ({ page }) => {
   //    regression check for the success-detection gate that used to require
   //    externalWalletInfo (never set on the onramp path), which left the page
   //    showing the payment countdown after the money had landed.
-  await expect(
-    page.getByRole('heading', { name: /Order Placed Successfully/i }),
-  ).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByRole('heading', { name: /Order Placed Successfully/i })).toBeVisible({
+    timeout: 90_000,
+  });
   await page.waitForTimeout(4000); // let the success step paint for the recording
 });
