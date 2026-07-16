@@ -68,11 +68,18 @@ vi.mock('@/components/ui/use-toast', () => ({
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
-  DialogContent: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={className}>{children}</div>
+  DialogContent: ({
+    children,
+    className,
+    ...rest
+  }: { children: React.ReactNode; className?: string } & Record<string, unknown>) => (
+    <div className={className} data-testid={rest['data-testid'] as string | undefined}>
+      {children}
+    </div>
   ),
   DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
@@ -709,5 +716,35 @@ describe('StoreBrandingEditor', () => {
 
     const desktopBtn = screen.getByLabelText('admin.storeBranding.viewportDesktop');
     expect(desktopBtn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('renders share-preview and version-history entry points (PG-203)', () => {
+    render(<StoreBrandingEditor />);
+    expect(screen.getByTestId('share-preview-open')).toBeTruthy();
+    expect(screen.getByTestId('version-history-open')).toBeTruthy();
+  });
+
+  it('offers optional page-color role tokens in the theme tab', () => {
+    render(<StoreBrandingEditor />);
+    const roleSection = screen.getByTestId('theme-role-colors');
+    expect(roleSection).toBeTruthy();
+    expect(screen.getByTestId('role-color-set-backgroundColor')).toBeTruthy();
+    expect(screen.getByTestId('role-color-set-textColor')).toBeTruthy();
+    expect(screen.getByTestId('role-color-set-surfaceColor')).toBeTruthy();
+  });
+
+  it('warns when body text and page background cannot be read together', () => {
+    render(<StoreBrandingEditor />);
+
+    // Opt into both roles (starters: white background, near-black text) —
+    // readable, so no warning yet.
+    fireEvent.click(screen.getByTestId('role-color-set-backgroundColor'));
+    fireEvent.click(screen.getByTestId('role-color-set-textColor'));
+    expect(screen.queryByTestId('contrast-warnings')).toBeNull();
+
+    // White-on-white: the guard must speak up (and only warn, never block).
+    const textInput = screen.getByLabelText('admin.storeBranding.bodyText');
+    fireEvent.change(textInput, { target: { value: '#ffffff' } });
+    expect(screen.getByTestId('contrast-warnings')).toBeTruthy();
   });
 });

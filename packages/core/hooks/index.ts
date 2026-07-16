@@ -141,6 +141,7 @@ export * from './useAuthGuard';
 
 // 店铺品牌化相关 (PG-201)
 export * from './useStorefrontConfig';
+export * from './useStoreCapabilities';
 
 // 渐进渲染 (M4-4)
 export * from './useProgressiveList';

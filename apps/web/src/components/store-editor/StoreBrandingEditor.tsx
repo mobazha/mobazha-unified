@@ -13,12 +13,14 @@ import { useI18n, useStorefrontConfig, useUserStore } from '@mobazha/core';
 import type { StoreConfig, StoreTheme, StoreSection, SectionType } from '@mobazha/core';
 import {
   ChevronLeft,
+  History,
   Loader2,
   Undo2,
   Redo2,
   Monitor,
   Tablet,
   Smartphone,
+  Share2,
   Sparkles,
   RotateCcw,
   Maximize2,
@@ -45,6 +47,9 @@ import {
   StoreThemeProvider,
 } from '@/components/store-sections';
 import { EditableSectionRenderer } from './EditableSectionRenderer';
+import { useBrokenReferences } from './useBrokenReferences';
+import { SharePreviewDialog } from './SharePreviewDialog';
+import { VersionHistoryDialog } from './VersionHistoryDialog';
 import { ThemeEditor } from './ThemeEditor';
 import { SectionListEditor } from './SectionListEditor';
 import { PresetPicker } from './PresetPicker';
@@ -184,6 +189,8 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [viewport, setViewport] = useState<PreviewViewport>('desktop');
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const config = useMemo(() => {
     if (draft) return draft;
@@ -368,11 +375,49 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
     setEditState({ draft: null, history: [], future: [] });
   }, []);
 
+  // ---------------------------------------------------------------------
+  // Autosave (PG-203). Edits used to live only in memory until the seller
+  // pressed "save draft" — closing the tab silently threw away the session.
+  // Now the draft flows to the server a few seconds after the last edit.
+  // Unlike manual save it must NOT reset the edit state: clearing it would
+  // wipe the undo stack mid-session, turning a background convenience into
+  // a destructive act.
+  // ---------------------------------------------------------------------
+  const draftJson = useMemo(() => (draft ? JSON.stringify(draft) : null), [draft]);
+  const [lastSavedJson, setLastSavedJson] = useState<string | null>(null);
+  const hasUnsavedEdits = draftJson !== null && draftJson !== lastSavedJson;
+  const autoSaved = draftJson !== null && draftJson === lastSavedJson;
+
+  useEffect(() => {
+    if (!draftJson || draftJson === lastSavedJson) return;
+    const timer = setTimeout(() => {
+      // Autosave failures stay silent: the seller did not ask for this save,
+      // and the next edit retries it. The beforeunload guard still has their
+      // back because lastSavedJson only advances on success.
+      saveDraft(JSON.parse(draftJson) as StoreConfig)
+        .then(() => setLastSavedJson(draftJson))
+        .catch(() => {});
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [draftJson, lastSavedJson, saveDraft]);
+
+  useEffect(() => {
+    if (!hasUnsavedEdits) return;
+    const onBeforeUnload = (e: Event) => {
+      e.preventDefault();
+      // Required by Chrome for the confirmation dialog to appear.
+      (e as Event & { returnValue: string }).returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedEdits]);
+
   const handleSaveDraft = useCallback(async () => {
     if (!draft) return;
     try {
       await saveDraft(draft);
       resetEditState();
+      setLastSavedJson(null);
       toast({ title: t('admin.storeBranding.draftSaved') });
     } catch {
       toast({
@@ -389,6 +434,10 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
     () => (pendingPublish ? summarizeChanges(savedConfig, pendingPublish, t) : []),
     [pendingPublish, savedConfig, t]
   );
+
+  // Stale product/collection references surface in the publish dialog, where
+  // the seller can still fix them — not as a buyer-visible hole afterwards.
+  const { broken: brokenRefs } = useBrokenReferences(pendingPublish ?? null);
 
   const handlePublish = useCallback(async () => {
     if (!pendingPublish) return;
@@ -428,6 +477,18 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
     applyChange(() => ({ ...deepClone(DEFAULT_STORE_CONFIG), sections: [] }));
   }, [applyChange]);
 
+  // Restoring an old revision is deliberately NOT a publish: it flows into
+  // the local draft so the seller reviews it (and can undo) before buyers
+  // see anything.
+  const handleRestoreVersion = useCallback(
+    (restored: StoreConfig) => {
+      applyChange(() => deepClone(restored));
+      setShowHistory(false);
+      toast({ title: t('admin.storeBranding.versionRestored') });
+    },
+    [applyChange, toast, t]
+  );
+
   const hasSavedConfig = !!savedConfig?.sections?.length;
 
   // Block editing until BOTH the live config and the draft slot have loaded:
@@ -458,6 +519,26 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
           <span className="text-sm font-medium">{t('admin.storeBranding.pageTitle')}</span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowShare(true)}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label={t('admin.storeBranding.sharePreview')}
+            title={t('admin.storeBranding.sharePreview')}
+            data-testid="share-preview-open"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowHistory(true)}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label={t('admin.storeBranding.versionHistory')}
+            title={t('admin.storeBranding.versionHistory')}
+            data-testid="version-history-open"
+          >
+            <History className="w-4 h-4" />
+          </button>
           <div className="flex items-center border border-border rounded-md">
             <button
               type="button"
@@ -485,6 +566,14 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
           {(isDirty || hasServerDraft) && (
             <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
               {t('admin.storeBranding.draftBadge')}
+            </span>
+          )}
+          {autoSaved && (
+            <span
+              className="hidden md:inline text-[11px] text-muted-foreground"
+              data-testid="autosaved-indicator"
+            >
+              {t('admin.storeBranding.autoSaved')}
             </span>
           )}
           {isDirty && (
@@ -553,6 +642,27 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
                   <li key={line}>{line}</li>
                 ))}
               </ul>
+              {brokenRefs.length > 0 && (
+                <div
+                  className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 space-y-1"
+                  data-testid="broken-references"
+                  role="status"
+                >
+                  {brokenRefs.map(ref => (
+                    <p
+                      key={`${ref.sectionLabel}-${ref.kind}`}
+                      className="text-xs leading-4 text-amber-800 dark:text-amber-300"
+                    >
+                      {t(
+                        ref.kind === 'listing'
+                          ? 'admin.storeBranding.brokenListingRefs'
+                          : 'admin.storeBranding.brokenCollectionRefs',
+                        { section: ref.sectionLabel, count: ref.missing.length }
+                      )}
+                    </p>
+                  ))}
+                </div>
+              )}
               <AlertDialogFooter>
                 <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={handlePublish} data-testid="publish-confirm">
@@ -770,6 +880,18 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
         peerId={previewPeerID}
         isDraft={isDirty || hasServerDraft}
         onClose={() => setShowFullscreen(false)}
+      />
+
+      <SharePreviewDialog
+        open={showShare}
+        peerID={profile?.peerID || null}
+        onClose={() => setShowShare(false)}
+      />
+
+      <VersionHistoryDialog
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        onRestore={handleRestoreVersion}
       />
     </div>
   );

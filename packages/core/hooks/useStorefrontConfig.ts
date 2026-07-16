@@ -107,24 +107,51 @@ export function useStorefrontConfig() {
 
 /**
  * Public hook (no auth — store visitor)
+ *
+ * `previewToken` (from a share-preview link) switches the fetch to the
+ * seller's unpublished draft. `isPreview` reports whether the shown config
+ * actually came through a token, so pages can badge it as a draft.
  */
-export function useStorefrontConfigPublic(peerID: string | null) {
+export function useStorefrontConfigPublic(peerID: string | null, previewToken?: string) {
   const {
     data: config,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.storefront.configPublic(peerID!),
-    queryFn: () => storefrontApi.getStorefrontConfigPublic(peerID!),
+    queryKey: previewToken
+      ? queryKeys.storefront.configPreview(peerID!, previewToken)
+      : queryKeys.storefront.configPublic(peerID!),
+    queryFn: () => storefrontApi.getStorefrontConfigPublic(peerID!, previewToken),
     enabled: !!peerID,
-    staleTime: 2 * 60 * 1000,
+    staleTime: previewToken ? 0 : 2 * 60 * 1000,
+    // An expired/rotated token 404s; retrying will not un-expire it.
+    retry: previewToken ? false : undefined,
   });
 
   return {
     config: config ?? null,
     isLoading,
+    isPreview: !!previewToken && !!config,
     error: formatQueryError(error),
     refetch,
+  };
+}
+
+/**
+ * Published-revision history (owner only). Fetch is deferred until `enabled`
+ * so the dialog that shows it pays the cost, not every editor mount.
+ */
+export function useStorefrontHistory(enabled: boolean) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.storefront.history(),
+    queryFn: () => storefrontApi.getStorefrontHistory(),
+    enabled,
+    staleTime: 30 * 1000,
+  });
+  return {
+    history: data ?? [],
+    isLoading,
+    error: formatQueryError(error),
   };
 }

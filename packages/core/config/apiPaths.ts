@@ -314,6 +314,7 @@ export const NODE_API = {
   SETTINGS_STOREFRONT: '/settings/storefront',
   SETTINGS_STOREFRONT_DRAFT: '/settings/storefront/draft',
   SETTINGS_STOREFRONT_PEER: (peerID: string) => `/settings/storefront/${peerID}`,
+  SETTINGS_STOREFRONT_PREVIEW_TOKEN: '/settings/storefront/preview-token',
 
   // --- Analytics (visitor tracking) ---
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${peerID}/events`,

@@ -10,6 +10,8 @@ import {
   FONT_FAMILY_MAP,
   RADIUS_MAP,
   SPACING_MAP,
+  getContrastRatio,
+  WCAG_AA_NORMAL_TEXT,
 } from '../../utils/theme';
 
 // ---------------------------------------------------------------------------
@@ -263,5 +265,47 @@ describe('getFallbackPalette', () => {
     for (const seed of seeds) {
       expect(getFallbackPalette(seed)).not.toBe('custom');
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getContrastRatio (PG-203 contrast guard)
+// ---------------------------------------------------------------------------
+
+describe('getContrastRatio', () => {
+  it('black on white is 21:1, the WCAG maximum', () => {
+    expect(getContrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 1);
+  });
+
+  it('is symmetric in its arguments', () => {
+    expect(getContrastRatio('#1a3a5c', '#ffffff')).toBeCloseTo(
+      getContrastRatio('#ffffff', '#1a3a5c')!,
+      6
+    );
+  });
+
+  it('identical colors give 1:1', () => {
+    expect(getContrastRatio('#7f7f7f', '#7f7f7f')).toBeCloseTo(1, 6);
+  });
+
+  it('accepts shorthand hex', () => {
+    expect(getContrastRatio('#000', '#fff')).toBeCloseTo(21, 1);
+  });
+
+  it('returns null for invalid colors instead of guessing', () => {
+    expect(getContrastRatio('#12', '#ffffff')).toBeNull();
+    expect(getContrastRatio('red', '#ffffff')).toBeNull();
+    expect(getContrastRatio('', '#ffffff')).toBeNull();
+  });
+
+  it('flags the classic light-gray-on-white failure below AA', () => {
+    const ratio = getContrastRatio('#aaaaaa', '#ffffff');
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeLessThan(WCAG_AA_NORMAL_TEXT);
+  });
+
+  it('passes dark navy on white at AA', () => {
+    const ratio = getContrastRatio('#1a3a5c', '#ffffff');
+    expect(ratio!).toBeGreaterThan(WCAG_AA_NORMAL_TEXT);
   });
 });

@@ -33,7 +33,7 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
     const accent = theme.accentColor || '#9ca3af';
     const fontVar = FONT_CSS_VAR_MAP[theme.fontFamily] || FONT_CSS_VAR_MAP['inter'];
 
-    return {
+    const vars: Record<string, string> = {
       '--store-primary': primary,
       '--store-secondary': secondary,
       '--store-accent': accent,
@@ -42,7 +42,26 @@ export function StoreThemeProvider({ theme, children }: StoreThemeProviderProps)
       '--store-on-accent': getContrastText(accent),
       '--store-font': fontVar,
       '--store-radius': RADIUS_MAP[theme.borderRadius] || RADIUS_MAP['md'],
-    } as Record<string, string>;
+      // Role tokens (PG-203). --store-surface always resolves so sections can
+      // paint cards with one var; the tint fallback is what card sections
+      // hardcoded before roles existed.
+      '--store-surface': theme.surfaceColor || `color-mix(in srgb, ${primary} 8%, transparent)`,
+    };
+    // bg/text stay absent unless chosen: an empty CSS var would still win the
+    // cascade and knock out the app theme (including dark mode) for every
+    // store that never picked page colors.
+    if (theme.backgroundColor) {
+      vars['--store-bg'] = theme.backgroundColor;
+      vars.backgroundColor = theme.backgroundColor;
+    }
+    if (theme.textColor) {
+      vars['--store-text'] = theme.textColor;
+      vars.color = theme.textColor;
+    }
+    if (theme.surfaceColor) {
+      vars['--store-on-surface'] = getContrastText(theme.surfaceColor);
+    }
+    return vars;
   }, [theme]);
 
   return (

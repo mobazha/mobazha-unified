@@ -82,17 +82,38 @@ function sRGBtoLinear(c: number): number {
   return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
+function relativeLuminance(hex: string): number {
+  const clean = normalizeHex(hex).replace('#', '');
+  const r = sRGBtoLinear(parseInt(clean.slice(0, 2), 16) / 255);
+  const g = sRGBtoLinear(parseInt(clean.slice(2, 4), 16) / 255);
+  const b = sRGBtoLinear(parseInt(clean.slice(4, 6), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 /**
  * Returns #000000 or #ffffff depending on which provides
  * sufficient contrast against the given hex background.
  */
 export function getContrastText(hex: string): string {
-  const clean = hex.replace('#', '');
-  const r = sRGBtoLinear(parseInt(clean.slice(0, 2), 16) / 255);
-  const g = sRGBtoLinear(parseInt(clean.slice(2, 4), 16) / 255);
-  const b = sRGBtoLinear(parseInt(clean.slice(4, 6), 16) / 255);
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 0.179 ? '#000000' : '#ffffff';
+  return relativeLuminance(hex) > 0.179 ? '#000000' : '#ffffff';
+}
+
+/** WCAG AA threshold for normal-size body text. */
+export const WCAG_AA_NORMAL_TEXT = 4.5;
+
+/**
+ * WCAG 2.x contrast ratio between two hex colors, 1 (identical) to 21
+ * (black on white). Order of arguments does not matter.
+ * Returns null when either color is not a valid hex string, so callers can
+ * skip the check while the user is mid-keystroke instead of warning on noise.
+ */
+export function getContrastRatio(a: string, b: string): number | null {
+  if (!isValidHexColor(a) || !isValidHexColor(b)) return null;
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const lighter = Math.max(la, lb);
+  const darker = Math.min(la, lb);
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 /**

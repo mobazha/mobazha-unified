@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useStoreCapabilities, useUserStore } from '@mobazha/core';
 import type {
   StoreSection,
   HeroSectionProps,
@@ -316,6 +316,21 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
 function TrustBadgesEditor({ props, onUpdate }: EditorProps<TrustBadgesProps>) {
   const { t } = useI18n();
   const badges = props.badges || [];
+  // Escrow/crypto badges are capability-gated on the buyer side (they only
+  // render when the store's published policy/profile backs the claim). Tell
+  // the seller HERE, while they are choosing the badge — not let them
+  // publish one that silently never shows.
+  const { profile } = useUserStore();
+  const capabilities = useStoreCapabilities(profile?.peerID);
+  const capabilityGap = (badge: TrustBadge): string | null => {
+    if (badge.icon === 'escrow' && capabilities.escrow === false) {
+      return t('admin.storeBranding.trustEscrowUnmet');
+    }
+    if (badge.icon === 'crypto' && capabilities.crypto === false) {
+      return t('admin.storeBranding.trustCryptoUnmet');
+    }
+    return null;
+  };
   return (
     <div className="space-y-3">
       <SelectInput
@@ -360,6 +375,14 @@ function TrustBadgesEditor({ props, onUpdate }: EditorProps<TrustBadgesProps>) {
               ]}
               onChange={v => update({ icon: v as TrustBadge['icon'] })}
             />
+            {capabilityGap(badge) && (
+              <p
+                className="text-[11px] leading-4 text-amber-700 dark:text-amber-400"
+                data-testid="trust-capability-gap"
+              >
+                {capabilityGap(badge)}
+              </p>
+            )}
             {badge.icon === 'custom' && (
               <ImageInput
                 label={t('admin.storeBranding.fieldCustomIcon')}

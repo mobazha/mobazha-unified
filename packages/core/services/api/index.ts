@@ -187,6 +187,8 @@ export type { UploadDigitalFileStreamInput, UploadDigitalFileStreamOptions } fro
 
 // Storefront Config API (PG-201)
 export * as storefrontApi from './storefront';
+export type { StoreConfigHistoryEntry, StorefrontPreviewToken } from './storefront';
+export * as storePolicyApi from './storePolicy';
 
 // Storefronts Lite API (Phase MS2a — per-store named storefront CRUD)
 export * as storefrontsLiteApi from './storefrontsLite';

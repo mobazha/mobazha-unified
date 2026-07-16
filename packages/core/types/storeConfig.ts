@@ -38,6 +38,15 @@ export interface StoreTheme {
   primaryColor: string;
   secondaryColor?: string;
   accentColor?: string;
+  // Role tokens (PG-203): each names a *place* colors land, not another accent.
+  // All optional — absent means "inherit the app theme", which is what every
+  // config published before these existed already does.
+  /** Page background behind all sections. */
+  backgroundColor?: string;
+  /** Body text on the page background. */
+  textColor?: string;
+  /** Card/panel background used by sections that draw raised surfaces. */
+  surfaceColor?: string;
   fontFamily: FontFamily;
   borderRadius: BorderRadius;
   headerStyle: HeaderStyle;

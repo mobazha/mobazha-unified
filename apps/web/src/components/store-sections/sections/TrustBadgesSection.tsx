@@ -9,8 +9,17 @@
  */
 
 import type { TrustBadgesProps, TrustBadge } from '@mobazha/core';
-import { useI18n, getImageUrl, WEB3_TRUST_KIT } from '@mobazha/core';
-import { ShieldCheck, Coins, Server, Handshake, Lock, Star, type LucideIcon } from 'lucide-react';
+import { useI18n, getImageUrl, useStoreCapabilities, WEB3_TRUST_KIT } from '@mobazha/core';
+import {
+  BadgeCheck,
+  ShieldCheck,
+  Coins,
+  Server,
+  Handshake,
+  Lock,
+  Star,
+  type LucideIcon,
+} from 'lucide-react';
 
 const ICON_COMPONENTS: Record<string, LucideIcon> = {
   escrow: ShieldCheck,
@@ -86,12 +95,30 @@ function BadgeCard({
   badge,
   style,
   storeHint,
+  verified,
 }: {
   badge: TrustBadge;
   style: TrustBadgesProps['style'];
   storeHint?: string;
+  verified?: boolean;
 }) {
   const { title, description } = useBadgeCopy(badge);
+  const { t } = useI18n();
+
+  const titleEl = (
+    <span className="inline-flex items-center gap-1">
+      {title}
+      {verified && (
+        <BadgeCheck
+          className="w-3.5 h-3.5"
+          style={{ color: 'var(--store-primary)' }}
+          aria-label={t('admin.storeBranding.trustVerified')}
+        >
+          <title>{t('admin.storeBranding.trustVerified')}</title>
+        </BadgeCheck>
+      )}
+    </span>
+  );
 
   if (style === 'minimal') {
     return (
@@ -99,7 +126,7 @@ function BadgeCard({
         <BadgeIcon badge={badge} size="sm" storeHint={storeHint} />
         <div>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--store-font)' }}>
-            {title}
+            {titleEl}
           </p>
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
@@ -112,13 +139,13 @@ function BadgeCard({
       <div
         className="flex flex-col items-center gap-3 p-6 text-center"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--store-primary) 8%, transparent)',
+          backgroundColor: 'var(--store-surface)',
           borderRadius: 'var(--store-radius)',
         }}
       >
         <BadgeIcon badge={badge} size="lg" storeHint={storeHint} />
         <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
-          {title}
+          {titleEl}
         </p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
@@ -135,7 +162,7 @@ function BadgeCard({
     >
       <BadgeIcon badge={badge} size="lg" storeHint={storeHint} />
       <p className="text-sm font-semibold" style={{ fontFamily: 'var(--store-font)' }}>
-        {title}
+        {titleEl}
       </p>
       <p className="text-xs text-muted-foreground">{description}</p>
     </div>
@@ -148,7 +175,26 @@ export function TrustBadgesSection({
   style,
   storeHint,
 }: TrustBadgesProps & { storeHint?: string }) {
+  // Capability gating (PG-203): "Buyer Protection" and "Crypto Native" are
+  // claims a buyer can act on, so they only render when the store's real,
+  // unfakeable state backs them — a published moderator list for escrow, an
+  // advertised accepted currency for crypto. While capabilities are still
+  // loading (or in editor preview, where storeHint is absent) badges render
+  // ungated so nothing flickers in and out.
+  const capabilities = useStoreCapabilities(storeHint || null);
+
   if (!badges || badges.length === 0) return null;
+
+  const visibleBadges = badges.filter(badge => {
+    if (badge.icon === 'escrow') return capabilities.escrow !== false;
+    if (badge.icon === 'crypto') return capabilities.crypto !== false;
+    return true;
+  });
+  if (visibleBadges.length === 0) return null;
+
+  const verified = (badge: TrustBadge): boolean =>
+    (badge.icon === 'escrow' && capabilities.escrow === true) ||
+    (badge.icon === 'crypto' && capabilities.crypto === true);
 
   const containerClass =
     layout === 'grid'
@@ -157,8 +203,14 @@ export function TrustBadgesSection({
 
   return (
     <div className={containerClass}>
-      {badges.map((badge, i) => (
-        <BadgeCard key={`${badge.icon}-${i}`} badge={badge} style={style} storeHint={storeHint} />
+      {visibleBadges.map((badge, i) => (
+        <BadgeCard
+          key={`${badge.icon}-${i}`}
+          badge={badge}
+          style={style}
+          storeHint={storeHint}
+          verified={verified(badge)}
+        />
       ))}
     </div>
   );

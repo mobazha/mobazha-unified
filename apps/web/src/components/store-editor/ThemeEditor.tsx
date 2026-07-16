@@ -14,11 +14,18 @@
  * every time.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useI18n } from '@mobazha/core';
 import type { StoreTheme, ThemePalette, FontFamily, BorderRadius } from '@mobazha/core';
-import { PALETTE_MAP, ALL_PALETTES, FONT_FAMILY_MAP, isValidHexColor } from '@mobazha/core';
-import { Check, ChevronDown } from 'lucide-react';
+import {
+  PALETTE_MAP,
+  ALL_PALETTES,
+  FONT_FAMILY_MAP,
+  isValidHexColor,
+  getContrastRatio,
+  WCAG_AA_NORMAL_TEXT,
+} from '@mobazha/core';
+import { Check, ChevronDown, TriangleAlert, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ThemeEditorProps {
@@ -69,6 +76,67 @@ const RADIUS_OPTIONS: { value: BorderRadius; i18nKey: string; preview: string }[
 
 type ThemeGroup = 'colors' | 'typography' | 'layout';
 
+/** Role tokens the seller can opt into; absent = inherit the app theme. */
+const ROLE_FIELDS = [
+  { field: 'backgroundColor', labelKey: 'pageBackground', starter: '#ffffff' },
+  { field: 'textColor', labelKey: 'bodyText', starter: '#111827' },
+  { field: 'surfaceColor', labelKey: 'cardSurface', starter: '#f3f4f6' },
+] as const;
+
+/**
+ * Contrast guard (PG-203): every pair here is text that actually lands on that
+ * background somewhere in the sections. Warns, never blocks — a seller may
+ * accept low contrast deliberately (e.g. a decorative hero), but should never
+ * discover it from a buyer complaint.
+ */
+function useContrastWarnings(theme: StoreTheme, t: ReturnType<typeof useI18n>['t']): string[] {
+  return useMemo(() => {
+    const warnings: string[] = [];
+    const pairs: Array<{ fgKey: string; fg?: string; bgKey: string; bg?: string }> = [
+      {
+        fgKey: 'roleBodyText',
+        fg: theme.textColor,
+        bgKey: 'rolePageBackground',
+        bg: theme.backgroundColor,
+      },
+      {
+        fgKey: 'rolePrimary',
+        fg: theme.primaryColor,
+        bgKey: 'rolePageBackground',
+        bg: theme.backgroundColor,
+      },
+      {
+        fgKey: 'roleBodyText',
+        fg: theme.textColor,
+        bgKey: 'roleCardSurface',
+        bg: theme.surfaceColor,
+      },
+    ];
+    for (const { fgKey, fg, bgKey, bg } of pairs) {
+      if (!fg || !bg) continue;
+      const ratio = getContrastRatio(fg, bg);
+      if (ratio !== null && ratio < WCAG_AA_NORMAL_TEXT) {
+        warnings.push(
+          t('admin.storeBranding.contrastWarning', {
+            fg: t(`admin.storeBranding.${fgKey}` as Parameters<typeof t>[0]),
+            bg: t(`admin.storeBranding.${bgKey}` as Parameters<typeof t>[0]),
+            ratio: ratio.toFixed(1),
+          })
+        );
+      }
+    }
+    // A dark page background with no explicit text color inherits the app's
+    // (usually near-black) text — flag it before a buyer does.
+    if (theme.backgroundColor && !theme.textColor) {
+      const ratio = getContrastRatio('#111827', theme.backgroundColor);
+      if (ratio !== null && ratio < WCAG_AA_NORMAL_TEXT) {
+        warnings.push(t('admin.storeBranding.contrastHintSetText'));
+      }
+    }
+    return warnings;
+  }, [theme.textColor, theme.backgroundColor, theme.primaryColor, theme.surfaceColor, t]);
+}
+
 export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
   const { t } = useI18n();
   const [openGroup, setOpenGroup] = useState<ThemeGroup>('colors');
@@ -100,6 +168,19 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
     },
     [onUpdate]
   );
+
+  const handleRoleColor = useCallback(
+    (field: (typeof ROLE_FIELDS)[number]['field'], value: string | undefined) => {
+      // Role tokens are places, not palette members: setting one must not
+      // flip the palette to "custom" the way brand-color edits do.
+      if (value === undefined || isValidHexColor(value) || value.length <= 7) {
+        onUpdate({ [field]: value });
+      }
+    },
+    [onUpdate]
+  );
+
+  const contrastWarnings = useContrastWarnings(theme, t);
 
   const isCustomPalette =
     theme.palette === 'custom' ||
@@ -194,6 +275,75 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
               value={theme.accentColor || '#9ca3af'}
               onChange={v => handleCustomColor('accentColor', v)}
             />
+          </div>
+        )}
+
+        {/* Role tokens: page/text/card colors, opt-in per role */}
+        <div className="mt-4 pt-3 border-t border-border" data-testid="theme-role-colors">
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            {t('admin.storeBranding.pageColors')}
+          </p>
+          <div className="space-y-2">
+            {ROLE_FIELDS.map(({ field, labelKey, starter }) => {
+              const value = theme[field];
+              const label = t(`admin.storeBranding.${labelKey}` as Parameters<typeof t>[0]);
+              if (value === undefined) {
+                return (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => handleRoleColor(field, starter)}
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg border border-dashed border-border text-left hover:border-muted-foreground/40 transition-colors"
+                    data-testid={`role-color-set-${field}`}
+                  >
+                    <span className="text-xs text-muted-foreground">{label}</span>
+                    <span className="text-[11px] text-muted-foreground/70">
+                      {t('admin.storeBranding.useDefault')}
+                    </span>
+                  </button>
+                );
+              }
+              return (
+                <div key={field} className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <ColorInput
+                      label={label}
+                      value={value}
+                      onChange={v => handleRoleColor(field, v)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleColor(field, undefined)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                    aria-label={t('admin.storeBranding.clearColor')}
+                    title={t('admin.storeBranding.clearColor')}
+                    data-testid={`role-color-clear-${field}`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Contrast guard — warns, never blocks */}
+        {contrastWarnings.length > 0 && (
+          <div
+            className="mt-3 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 space-y-1.5"
+            data-testid="contrast-warnings"
+            role="status"
+          >
+            {contrastWarnings.map(w => (
+              <p
+                key={w}
+                className="flex items-start gap-1.5 text-[11px] leading-4 text-amber-800 dark:text-amber-300"
+              >
+                <TriangleAlert className="w-3.5 h-3.5 shrink-0 mt-px" />
+                {w}
+              </p>
+            ))}
           </div>
         )}
       </ThemeGroupSection>

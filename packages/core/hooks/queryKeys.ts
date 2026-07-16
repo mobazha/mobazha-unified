@@ -46,6 +46,11 @@ export const queryKeys = {
     draft: () => [...queryKeys.storefront.all, 'config-draft'] as const,
     configPublic: (peerID: string) =>
       [...queryKeys.storefront.all, 'config-public', peerID] as const,
+    configPreview: (peerID: string, token: string) =>
+      [...queryKeys.storefront.all, 'config-preview', peerID, token] as const,
+    history: () => [...queryKeys.storefront.all, 'config-history'] as const,
+    capabilities: (peerID: string) =>
+      [...queryKeys.storefront.all, 'capabilities', peerID] as const,
   },
 
   moderators: {

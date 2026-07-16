@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import {
   ProductCard,
@@ -133,7 +133,12 @@ export default function StorePage() {
     autoCheck: !isOwnStore && isAuthenticated,
   });
 
-  const { config: storefrontConfig } = useStorefrontConfigPublic(peerId);
+  // Share-preview link (PG-203): ?preview=<token> shows the seller's draft
+  // instead of the published config, with a banner so nobody mistakes it for
+  // the live store.
+  const searchParams = useSearchParams();
+  const previewToken = searchParams.get('preview') || undefined;
+  const { config: storefrontConfig, isPreview } = useStorefrontConfigPublic(peerId, previewToken);
   const hasSections = !!storefrontConfig?.sections?.length;
   const heroSection = storefrontConfig?.sections?.find(
     s => s.type === 'hero' && s.visible !== false
@@ -824,6 +829,15 @@ export default function StorePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {isPreview && (
+        <div
+          className="sticky top-0 z-40 px-4 py-2 text-center text-xs font-medium bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100"
+          data-testid="draft-preview-banner"
+          role="status"
+        >
+          {t('store.draftPreviewBanner')}
+        </div>
+      )}
       {isMobile && !isEmbeddedApp && (
         <button
           onClick={() => router.back()}
