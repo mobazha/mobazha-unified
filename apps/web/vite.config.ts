@@ -565,6 +565,9 @@ export default defineConfig(({ mode }) => {
       'process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE': JSON.stringify(
         env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE || ''
       ),
+      'process.env.NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE': JSON.stringify(
+        env.NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE || ''
+      ),
       'process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME': JSON.stringify(
         env.NEXT_PUBLIC_BASIC_AUTH_USERNAME || ''
       ),

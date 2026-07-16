@@ -59,7 +59,9 @@ jobs:
         with:
           body: ${{ steps.changelog.outputs.content }}
           draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          prerelease:
+            ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') ||
+            contains(github.ref, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -95,15 +97,16 @@ jobs:
         run: pnpm --filter @mobazha/web build:next
         env:
           NEXT_PUBLIC_USE_MOCK_DATA: false
+          NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE: mobazha.org
 
       - name: Collect third-party licenses
         run: ./scripts/collect-third-party-licenses.sh third-party-licenses
 
       - name: Create archive
         run: >-
-          tar -czvf ${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz
-          apps/web/.next apps/web/public apps/web/package.json
-          LICENSE NOTICE THIRD_PARTY_NOTICES.md third-party-licenses
+          tar -czvf ${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz apps/web/.next
+          apps/web/public apps/web/package.json LICENSE NOTICE THIRD_PARTY_NOTICES.md
+          third-party-licenses
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1

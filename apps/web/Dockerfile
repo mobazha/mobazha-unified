@@ -21,6 +21,8 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 
+ARG NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE=mobazha.org
+
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
@@ -33,6 +35,7 @@ COPY . .
 # 设置环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE=$NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE
 
 # 构建 Next.js standalone 生产服务，并收集二进制分发许可证。
 RUN pnpm --filter @mobazha/web build:next
