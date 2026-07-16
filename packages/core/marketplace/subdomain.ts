@@ -3,7 +3,16 @@
  * Mirrors hosting `marketplaceSubdomainFromHost` (mobazha_hosting/api/marketplace_handlers.go).
  */
 
-const RESERVED_SUBDOMAINS = new Set(['app', 'www', 'api', 'miniapp', 'miniapptest']);
+const RESERVED_SUBDOMAINS = new Set([
+  'app',
+  'www',
+  'api',
+  'miniapp',
+  'miniappdev',
+  'miniapptest',
+  'standalone',
+  'test-new',
+]);
 
 function marketplaceSubdomainBase(): string {
   if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKETPLACE_SUBDOMAIN_BASE) {
