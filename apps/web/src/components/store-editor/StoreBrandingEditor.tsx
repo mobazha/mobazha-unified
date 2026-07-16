@@ -403,10 +403,10 @@ export function StoreBrandingEditor({ backHref }: StoreBrandingEditorProps) {
 
   useEffect(() => {
     if (!hasUnsavedEdits) return;
-    const onBeforeUnload = (e: Event) => {
-      e.preventDefault();
+    const onBeforeUnload = (event: Event) => {
+      event.preventDefault();
       // Required by Chrome for the confirmation dialog to appear.
-      (e as Event & { returnValue: string }).returnValue = '';
+      event.returnValue = true;
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
