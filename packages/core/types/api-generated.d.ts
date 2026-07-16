@@ -11380,6 +11380,7 @@ export interface components {
       confirmations?: number;
       /** Format: date-time */
       confirmedAt?: string;
+      lastError?: string;
       state: string;
       txHash?: string;
       /** Format: date-time */

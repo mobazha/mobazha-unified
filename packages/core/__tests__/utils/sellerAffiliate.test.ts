@@ -14,7 +14,7 @@ import {
 import type { SellerAffiliateStatementLine } from '../../types/sellerAffiliate';
 
 function statement(
-  settlementState?: 'planned' | 'submitted' | 'confirmed',
+  settlementState?: 'planned' | 'submitted' | 'confirmed' | 'failed' | 'abandoned',
   status: string = 'pending'
 ): SellerAffiliateStatementLine {
   return normalizeSellerAffiliateStatementLine({
@@ -238,9 +238,10 @@ interface LineOverrides {
   promoterPeerID?: string;
   settlement?: {
     actionId?: string;
-    state?: 'planned' | 'submitted' | 'confirmed';
+    state?: 'planned' | 'submitted' | 'confirmed' | 'failed' | 'abandoned';
     txHash?: string;
     updatedAt?: string;
+    lastError?: string;
   } | null;
 }
 
@@ -281,6 +282,7 @@ function line(overrides: LineOverrides = {}): SellerAffiliateStatementLine {
             amount: '100',
             address: '0x1111111111111111111111111111111111111111',
             confirmations: 3,
+            lastError: settlement.lastError,
             updatedAt: settlement.updatedAt ?? '2026-07-11T01:00:00Z',
           },
         }
@@ -333,6 +335,15 @@ describe('groupSellerAffiliateStatementLines', () => {
     ];
 
     expect(groupSellerAffiliateStatementLines(lines)[0].displayStatus).toBe('paid');
+  });
+
+  it('surfaces failed settlement actions instead of falling back to pending', () => {
+    const lines = [line({ settlement: { state: 'failed', lastError: 'relay rejected' } })];
+
+    const [group] = groupSellerAffiliateStatementLines(lines);
+
+    expect(group.displayStatus).toBe('failed');
+    expect(group.settlement?.lastError).toBe('relay rejected');
   });
 
   it('shows confirmed then reversed commission as clawback debt', () => {

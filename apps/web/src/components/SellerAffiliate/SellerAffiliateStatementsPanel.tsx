@@ -35,6 +35,7 @@ interface SellerAffiliateStatementsPanelProps {
 function statusClass(status: SellerAffiliateDisplayStatus): string {
   if (status === 'paid') return 'bg-primary/10 text-primary';
   if (status === 'settling') return 'bg-accent text-accent-foreground';
+  if (status === 'failed') return 'bg-destructive/10 text-destructive';
   if (status === 'reversed') return 'bg-destructive/10 text-destructive';
   if (status === 'clawback_due') return 'bg-destructive/10 text-destructive';
   return 'bg-muted text-muted-foreground';
@@ -112,6 +113,17 @@ const SettlementDetail = memo(function SettlementDetail({ settlement }: Settleme
             </p>
           ) : null}
         </>
+      ) : settlement.state === 'failed' || settlement.state === 'abandoned' ? (
+        <div className="space-y-1 text-xs text-destructive" role="alert">
+          <p>
+            {t(
+              settlement.state === 'failed'
+                ? 'sellerAffiliate.settlementStateFailed'
+                : 'sellerAffiliate.settlementStateAbandoned'
+            )}
+          </p>
+          {settlement.lastError ? <p className="break-words">{settlement.lastError}</p> : null}
+        </div>
       ) : (
         <p className="text-xs text-muted-foreground">
           {t(
@@ -147,6 +159,7 @@ export const SellerAffiliateStatementsPanel = memo(function SellerAffiliateState
   const statusLabels: Record<SellerAffiliateDisplayStatus, string> = {
     pending: t('sellerAffiliate.pending'),
     settling: t('sellerAffiliate.settling'),
+    failed: t('sellerAffiliate.failed'),
     paid: t('sellerAffiliate.paid'),
     reversed: t('sellerAffiliate.reversed'),
     clawback_due: t('sellerAffiliate.clawbackDue'),

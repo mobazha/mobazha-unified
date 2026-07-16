@@ -8,11 +8,17 @@ export type SellerAffiliateCommissionStatus = 'pending' | 'reversed';
 export type SellerAffiliateDisplayStatus =
   | 'pending'
   | 'settling'
+  | 'failed'
   | 'paid'
   | 'reversed'
   | 'clawback_due';
 
-export type SellerAffiliateSettlementState = 'planned' | 'submitted' | 'confirmed';
+export type SellerAffiliateSettlementState =
+  | 'planned'
+  | 'submitted'
+  | 'confirmed'
+  | 'failed'
+  | 'abandoned';
 
 export type SellerAffiliateBuyerKind = 'peer' | 'guest';
 
@@ -104,6 +110,7 @@ export interface SellerAffiliateSettlementOutput {
   amount: string;
   address: string;
   confirmations?: number;
+  lastError?: string;
   updatedAt: string;
   confirmedAt?: string;
 }

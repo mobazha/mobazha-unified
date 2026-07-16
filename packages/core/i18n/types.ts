@@ -6282,6 +6282,7 @@ export interface TranslationResource {
     payoutRailsTitle?: string;
     pending?: string;
     settling?: string;
+    failed?: string;
     paid?: string;
     reversed?: string;
     clawbackDue?: string;
@@ -6289,6 +6290,8 @@ export interface TranslationResource {
     settlementAmount?: string;
     settlementStatePlanned?: string;
     settlementStateSubmitted?: string;
+    settlementStateFailed?: string;
+    settlementStateAbandoned?: string;
     confirmations?: string;
     txHash?: string;
     confirmedAt?: string;

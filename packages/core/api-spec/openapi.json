@@ -38713,6 +38713,9 @@
             "format": "date-time",
             "type": "string"
           },
+          "lastError": {
+            "type": "string"
+          },
           "state": {
             "type": "string"
           },

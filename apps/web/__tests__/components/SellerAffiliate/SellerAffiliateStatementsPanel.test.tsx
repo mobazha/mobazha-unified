@@ -45,11 +45,12 @@ interface LineOverrides {
   status?: string;
   settlement?: {
     actionId?: string;
-    state?: 'planned' | 'submitted' | 'confirmed';
+    state?: 'planned' | 'submitted' | 'confirmed' | 'failed' | 'abandoned';
     txHash?: string;
     confirmations?: number;
     confirmedAt?: string;
     updatedAt?: string;
+    lastError?: string;
   } | null;
 }
 
@@ -92,6 +93,7 @@ function buildLine(overrides: LineOverrides = {}): SellerAffiliateStatementLine 
             confirmations: settlement.confirmations,
             updatedAt: settlement.updatedAt ?? '2026-07-11T01:00:00Z',
             confirmedAt: settlement.confirmedAt,
+            lastError: settlement.lastError,
           },
         }
       : {}),
@@ -163,6 +165,19 @@ describe('SellerAffiliateStatementsPanel', () => {
     expect(card).toHaveTextContent('sellerAffiliate.settling');
     expect(card).toHaveTextContent('sellerAffiliate.settlementStateSubmitted');
     expect(card).toHaveTextContent('sellerAffiliate.confirmations');
+  });
+
+  it('renders a failed settlement and its actionable backend reason', () => {
+    mockStatements([
+      buildLine({
+        settlement: { state: 'failed', lastError: 'affiliate output does not match frozen terms' },
+      }),
+    ]);
+    render(<SellerAffiliateStatementsPanel audience="promoter" />);
+    const card = screen.getByTestId('seller-affiliate-statement-order-1');
+    expect(card).toHaveTextContent('sellerAffiliate.failed');
+    expect(card).toHaveTextContent('sellerAffiliate.settlementStateFailed');
+    expect(card).toHaveTextContent('affiliate output does not match frozen terms');
   });
 
   it('renders paid with a copyable tx hash and confirmed time, and copies on click', async () => {

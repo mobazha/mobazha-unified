@@ -421,7 +421,13 @@ function normalizeCommissionLine(value: unknown): SellerAffiliateCommissionLine 
 function normalizeSettlementOutput(value: unknown): SellerAffiliateSettlementOutput {
   const raw = record(value);
   const state = stringField(raw, 'state');
-  if (state !== 'planned' && state !== 'submitted' && state !== 'confirmed')
+  if (
+    state !== 'planned' &&
+    state !== 'submitted' &&
+    state !== 'confirmed' &&
+    state !== 'failed' &&
+    state !== 'abandoned'
+  )
     throw new Error('Invalid seller affiliate settlement state');
   return {
     actionID: stringField(raw, 'actionId'),
@@ -434,6 +440,9 @@ function normalizeSettlementOutput(value: unknown): SellerAffiliateSettlementOut
     ...(typeof raw.txHash === 'string' && raw.txHash.trim() ? { txHash: raw.txHash } : {}),
     ...(typeof raw.confirmations === 'number' && Number.isInteger(raw.confirmations)
       ? { confirmations: raw.confirmations }
+      : {}),
+    ...(typeof raw.lastError === 'string' && raw.lastError.trim()
+      ? { lastError: raw.lastError }
       : {}),
     ...(typeof raw.confirmedAt === 'string' && raw.confirmedAt.trim()
       ? { confirmedAt: raw.confirmedAt }
@@ -469,6 +478,8 @@ export function deriveSellerAffiliateDisplayStatus(
 
   if (isConfirmed) return 'paid';
   if (isReversed) return 'reversed';
+  if (line.settlement?.state === 'failed' || line.settlement?.state === 'abandoned')
+    return 'failed';
   if (line.settlement?.state === 'planned' || line.settlement?.state === 'submitted')
     return 'settling';
   return 'pending';
@@ -489,8 +500,10 @@ export function normalizeSellerAffiliateStatementLine(
 }
 
 const SETTLEMENT_STATE_RANK: Record<SellerAffiliateSettlementState, number> = {
-  confirmed: 3,
-  submitted: 2,
+  confirmed: 4,
+  submitted: 3,
+  failed: 3,
+  abandoned: 3,
   planned: 1,
 };
 
@@ -552,6 +565,8 @@ export function groupSellerAffiliateStatementLines(
       displayStatus = 'paid';
     } else if (!hasActive) {
       displayStatus = 'reversed';
+    } else if (lineStatuses.includes('failed')) {
+      displayStatus = 'failed';
     } else if (lineStatuses.includes('settling')) {
       displayStatus = 'settling';
     } else {
