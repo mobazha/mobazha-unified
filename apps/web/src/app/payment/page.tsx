@@ -325,7 +325,17 @@ export default function PaymentPage() {
   // unmount the card. (ADR-019)
   const [onrampSource, setOnrampSource] = useState<OnrampFundingSourceView | null>(null);
   useEffect(() => {
-    if (paymentSession?.onrampFunding) setOnrampSource(paymentSession.onrampFunding);
+    const next = paymentSession?.onrampFunding;
+    if (!next) return;
+    // Keep the previous object when nothing changed: every session refetch
+    // deserializes a fresh onrampFunding object, and letting that new identity
+    // through re-fires every effect that depends on onrampSource. With the
+    // status poll among them, identity churn becomes a request loop — each
+    // response schedules the next request immediately (observed live at ~34
+    // req/s) and every response re-renders the page, which reads as flicker.
+    setOnrampSource(prev =>
+      prev && prev.status === next.status && prev.updatedAt === next.updatedAt ? prev : next
+    );
   }, [paymentSession?.onrampFunding]);
   // Buyer-side entry point to start onramp funding (ADR-019). Fail-closed:
   // if the backend advertises no onramp provider for this rail the initiate
@@ -341,6 +351,68 @@ export default function PaymentPage() {
     isDealBacked,
     vendorPeerID: orderDetails?.vendor?.peerID || urlVendorPeerID,
   });
+
+  // Discovery: which reviewed onramp providers may fund this order's frozen
+  // rail. null = not asked yet; [] = asked, none (affordance must not render).
+  // The client never assumes a specific vendor (RFC-0012 Proposal 4).
+  const [onrampProviders, setOnrampProviders] = useState<Awaited<
+    ReturnType<typeof ordersApi.getOrderOnrampProviders>
+  > | null>(null);
+  const directOnrampProviders = useMemo(
+    () => onrampProviders?.filter(provider => provider.deliverToTarget) ?? null,
+    [onrampProviders]
+  );
+
+  // This page instance can survive a query-string order change. Never carry a
+  // provider choice, hidden affordance, or purchase source into another order.
+  useEffect(() => {
+    setOnrampSource(null);
+    setOnrampInitBusy(false);
+    setOnrampInitHidden(false);
+    setOnrampProviders(null);
+  }, [orderID]);
+
+  const onrampTargetKey =
+    paymentSession?.fundingTarget?.type === 'address'
+      ? [
+          orderID ?? '',
+          paymentSession.fundingTarget.assetID,
+          paymentSession.fundingTarget.address ?? '',
+          paymentSession.fundingTarget.amount,
+        ].join('|')
+      : '';
+  const onrampTargetKeyRef = useRef('');
+  useEffect(() => {
+    if (!onrampTargetKey) return;
+    if (onrampTargetKeyRef.current && onrampTargetKeyRef.current !== onrampTargetKey) {
+      setOnrampSource(null);
+      setOnrampInitHidden(false);
+      setOnrampProviders(null);
+    }
+    onrampTargetKeyRef.current = onrampTargetKey;
+  }, [onrampTargetKey]);
+  // String key, deliberately NOT an object: this page has produced request
+  // loops out of effects keyed on refetched-object identity before.
+  const onrampDiscoveryTarget =
+    paymentSession?.status === 'awaiting_funds' && paymentSession.fundingTarget?.type === 'address'
+      ? (paymentSession.fundingTarget?.address ?? '')
+      : '';
+  useEffect(() => {
+    setOnrampProviders(null);
+    if (!orderID || !onrampDiscoveryTarget) return;
+    let cancelled = false;
+    ordersApi
+      .getOrderOnrampProviders(orderID, { vendorPeerID: paymentVendorPeerID })
+      .then(list => {
+        if (!cancelled) setOnrampProviders(list);
+      })
+      .catch(() => {
+        if (!cancelled) setOnrampProviders([]); // fail closed: no affordance
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderID, onrampDiscoveryTarget, paymentVendorPeerID]);
 
   const {
     isCheckingReadiness,
@@ -704,7 +776,9 @@ export default function PaymentPage() {
       }
       if (nextState) {
         const destination = resolvePaymentPageOrderDestination(nextState);
-        setOrderDetails(prev => (prev ? { ...prev, status: nextState } : prev));
+        setOrderDetails(prev =>
+          prev && prev.status !== nextState ? { ...prev, status: nextState } : prev
+        );
         if (!isPaymentOpenState(nextState) || sessionVerified) {
           setExternalWalletInfo(null);
           if (markSuccess && destination === 'confirmation') {
@@ -1180,28 +1254,42 @@ export default function PaymentPage() {
     return () => window.clearInterval(interval);
   }, [paymentStep, syncOrderStatus]);
 
+  // The onramp funding leg has no externalWalletInfo — the buyer never opens
+  // the external-wallet pane. Success detection must poll whenever ANY funding
+  // leg is live, or an onramp-funded order pays on chain while this page keeps
+  // showing the countdown forever. Reduce both legs to booleans BEFORE they
+  // reach the effect: this effect fires a request the moment it (re)runs, so
+  // any dependency whose identity churns with each response turns the poll
+  // into a response-paced request loop.
+  const hasLiveFundingLeg = Boolean(externalWalletInfo || onrampSource);
+  const paymentIsOpen = Boolean(orderDetails && isPaymentOpenState(orderDetails.status));
+  // syncOrderStatus is a useCallback over half the page's state, so its
+  // identity drifts with nearly every render — and this effect fires a
+  // request the moment it (re)runs. Depending on the callback identity turned
+  // the poll into a response-paced request loop (~1000 req/min observed,
+  // rendered as page flicker). The ref keeps the latest callback without
+  // making its identity a reason to poll.
+  const syncOrderStatusRef = useRef(syncOrderStatus);
   useEffect(() => {
-    if (
-      !orderID ||
-      !orderDetails ||
-      !externalWalletInfo ||
-      !isPaymentOpenState(orderDetails.status)
-    ) {
+    syncOrderStatusRef.current = syncOrderStatus;
+  }, [syncOrderStatus]);
+  useEffect(() => {
+    if (!orderID || !hasLiveFundingLeg || !paymentIsOpen) {
       return;
     }
 
-    void syncOrderStatus({ markSuccess: true }).catch(() => {
+    void syncOrderStatusRef.current({ markSuccess: true }).catch(() => {
       // Polling is best-effort; the next tick or websocket event will retry.
     });
 
     const intervalID = window.setInterval(() => {
-      void syncOrderStatus({ markSuccess: true }).catch(() => {
+      void syncOrderStatusRef.current({ markSuccess: true }).catch(() => {
         // Keep the payment screen responsive even if one status poll fails.
       });
     }, 10_000);
 
     return () => window.clearInterval(intervalID);
-  }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
+  }, [hasLiveFundingLeg, paymentIsOpen, orderID]);
 
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
   const totalWithFee = orderDetails?.total || 0;
@@ -1756,6 +1844,7 @@ export default function PaymentPage() {
                       {!onrampSource &&
                         !onrampInitHidden &&
                         !visibleFiatProvider &&
+                        Boolean(directOnrampProviders && directOnrampProviders.length > 0) &&
                         paymentSession?.status === 'awaiting_funds' &&
                         paymentSession.fundingTarget?.type === 'address' &&
                         Boolean(paymentSession.fundingTarget?.address) && (
@@ -1772,11 +1861,23 @@ export default function PaymentPage() {
                                 onClick={async () => {
                                   setOnrampInitBusy(true);
                                   try {
+                                    // Deliver straight to the frozen escrow target. Routing
+                                    // through a buyer wallet requires an embedded-wallet
+                                    // address to bind the purchase to, and nothing here
+                                    // provisions one — asking for it makes the backend
+                                    // reject every purchase ("a purchase must bind a
+                                    // delivery target or the buyer wallet"), which this
+                                    // button then swallows as "unavailable".
+                                    const chosen = directOnrampProviders?.[0];
+                                    if (!chosen) {
+                                      setOnrampInitHidden(true);
+                                      return;
+                                    }
                                     const src = await ordersApi.initiateOrderOnrampFunding({
                                       orderId: orderDetails.orderID,
-                                      providerID: 'mock-onramp',
-                                      fiatCurrency: 'USD',
-                                      deliverToBuyerWallet: true,
+                                      providerID: chosen.providerID,
+                                      fiatCurrency: chosen.fiatCurrencies?.[0] ?? 'USD',
+                                      deliverToBuyerWallet: false,
                                       vendorPeerID: paymentVendorPeerID,
                                     });
                                     if (src) {
