@@ -10,8 +10,58 @@ import {
   readNativeMarketplaceSentEventKeys,
   writeNativeMarketplaceSentEventKeys,
 } from '../curation/nativeMarketplaceAttribution';
-import { submitPublicMarketplaceAttributionEvent } from '../services/api/marketplace';
+import {
+  submitPublicMarketplaceAttributionEvent,
+  submitPublicMarketplaceOrderAttribution,
+} from '../services/api/marketplace';
 import type { MarketplaceAttributionEventType } from '../types/marketplace';
+
+export interface RegisterNativeMarketplaceOrderInput {
+  marketplaceID: string;
+  orderID: string;
+  listingSlug: string;
+  peerID: string;
+  pricingCoin: string;
+  /** Integer minor units; non-integer values skip registration silently. */
+  amount: string;
+  currencyDivisibility?: number;
+}
+
+/**
+ * Fire-and-forget order registration for the operator commission ledger
+ * (RFC-0015 phase 1). Reuses the SAME persisted journey the attribution
+ * events used, so the backend's checkout-handoff gate matches. Never throws
+ * and never blocks the buyer's flow; hosting deduplicates per (order, seller).
+ */
+export function registerNativeMarketplaceOrderAttribution(
+  input: RegisterNativeMarketplaceOrderInput
+): void {
+  if (typeof window === 'undefined') return;
+  const { marketplaceID, orderID, listingSlug, peerID, pricingCoin } = input;
+  const amount = input.amount?.trim?.() ?? '';
+  if (!marketplaceID || !orderID || !listingSlug || !peerID || !pricingCoin) return;
+  if (!/^\d+$/.test(amount) || /^0+$/.test(amount)) return;
+
+  const journey = getOrCreateNativeMarketplaceJourneyState({
+    marketplaceID,
+    searchParams: new URLSearchParams(window.location.search),
+    referrer: document.referrer,
+  });
+  void submitPublicMarketplaceOrderAttribution(marketplaceID, {
+    orderID,
+    journeyID: journey.journeyID,
+    listingSlug,
+    peerID,
+    pricingCoin,
+    amount,
+    currencyDivisibility: input.currencyDivisibility,
+    source: journey.source,
+    medium: journey.medium,
+    campaign: journey.campaign,
+  }).catch(() => {
+    // Best-effort only: ledger registration must never block checkout.
+  });
+}
 
 interface NativeMarketplaceAttributionEventInput {
   listingSlug?: string;

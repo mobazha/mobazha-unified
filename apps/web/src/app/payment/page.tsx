@@ -70,6 +70,8 @@ import {
   buildCanonicalFiatPaymentCoin,
   resolveCheckoutCanonicalPaymentCoin,
   isPaymentSelectionQuoteProvisioned,
+  useMarketplaceContext,
+  registerNativeMarketplaceOrderAttribution,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
@@ -259,6 +261,32 @@ export default function PaymentPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const haptic = useHaptic();
+  const { isSubMarket, config: marketplaceConfig } = useMarketplaceContext();
+  const attributionMarketplaceID =
+    marketplaceConfig?.attribution?.marketplaceId || marketplaceConfig?.id;
+
+  // Submarket checkout completion feeds the operator commission ledger
+  // (RFC-0015 phase 1). Best-effort: hosting dedupes per order, and a miss
+  // here only means one fewer estimate row — never a blocked payment.
+  const reportOrderToMarketplace = useCallback(
+    (details: OrderDetails) => {
+      if (!isSubMarket || !attributionMarketplaceID) return;
+      const listingSlug = details.items[0]?.id;
+      const peerID = details.vendor?.peerID;
+      const amount = details.paymentAmount?.amount;
+      const pricingCoin = details.paymentAmount?.currency || details.currency;
+      if (!listingSlug || !peerID || !amount || !pricingCoin) return;
+      registerNativeMarketplaceOrderAttribution({
+        marketplaceID: attributionMarketplaceID,
+        orderID: details.orderID,
+        listingSlug,
+        peerID,
+        pricingCoin,
+        amount: String(amount),
+      });
+    },
+    [attributionMarketplaceID, isSubMarket]
+  );
 
   // 从 URL 获取参数
   const orderID = searchParams.get('orderID');
@@ -722,6 +750,7 @@ export default function PaymentPage() {
           router.replace(orderDetailPath(orderID, 'purchase'));
         } else if (sessionVerified) {
           clearNavigationGuard();
+          if (orderDetails) reportOrderToMarketplace(orderDetails);
           router.replace(
             orderDetails
               ? buildConfirmationUrl(orderDetails)
@@ -741,6 +770,7 @@ export default function PaymentPage() {
       orderID,
       paymentVendorPeerID,
       refreshPaymentReadiness,
+      reportOrderToMarketplace,
       router,
       selectedPaymentCoin,
       visibleTokenId,
@@ -1120,12 +1150,13 @@ export default function PaymentPage() {
     if (destination === 'checkout') return;
 
     clearNavigationGuard();
+    if (destination === 'confirmation') reportOrderToMarketplace(orderDetails);
     router.replace(
       destination === 'confirmation'
         ? buildConfirmationUrl(orderDetails)
         : orderDetailPath(orderID, 'purchase')
     );
-  }, [clearNavigationGuard, isLoadingOrder, orderDetails, orderID, router]);
+  }, [clearNavigationGuard, isLoadingOrder, orderDetails, orderID, reportOrderToMarketplace, router]);
 
   useEffect(() => {
     if (!orderID || !orderDetails || !isPaymentOpenState(orderDetails.status)) {
