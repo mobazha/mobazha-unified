@@ -130,41 +130,59 @@ export function useOperatorMarketplace(
   const [working, setWorking] = useState<string | null>(null);
   const requestSeqRef = useRef(0);
   const curationCandidatesRequestSeqRef = useRef(0);
+  const attributionRequestSeqRef = useRef(0);
   const marketplaceIdRef = useRef(marketplaceId);
   marketplaceIdRef.current = marketplaceId;
+  // Operators review different spans (weekly check-ins, campaign windows), so
+  // the summary window is caller-adjustable; deltas stay comparable because
+  // the backend always mirrors the previous same-length window.
+  const [attributionWindowDays, setAttributionWindowDaysState] = useState(30);
+  const attributionWindowDaysRef = useRef(30);
 
-  const loadAttributionSummary = useCallback(
-    async (requestMarketplaceId: string, requestSeq: number) => {
-      setAttributionSummaryLoading(true);
-      try {
-        const summary = await getMarketplaceAttributionSummary(requestMarketplaceId);
-        if (
-          requestSeq !== requestSeqRef.current ||
-          marketplaceIdRef.current !== requestMarketplaceId
-        ) {
-          return;
-        }
-        setAttributionSummary(summary);
-        setAttributionSummaryError(null);
-      } catch (err) {
-        if (
-          requestSeq !== requestSeqRef.current ||
-          marketplaceIdRef.current !== requestMarketplaceId
-        ) {
-          return;
-        }
-        setAttributionSummary(null);
-        setAttributionSummaryError(toErrorMessage(err, 'Failed to load attribution summary'));
-      } finally {
-        if (
-          requestSeq === requestSeqRef.current &&
-          marketplaceIdRef.current === requestMarketplaceId
-        ) {
-          setAttributionSummaryLoading(false);
-        }
+  const loadAttributionSummary = useCallback(async (requestMarketplaceId: string) => {
+    const requestSeq = ++attributionRequestSeqRef.current;
+    setAttributionSummaryLoading(true);
+    try {
+      const from = new Date(
+        Date.now() - attributionWindowDaysRef.current * 24 * 60 * 60 * 1000
+      ).toISOString();
+      const summary = await getMarketplaceAttributionSummary(requestMarketplaceId, { from });
+      if (
+        requestSeq !== attributionRequestSeqRef.current ||
+        marketplaceIdRef.current !== requestMarketplaceId
+      ) {
+        return;
+      }
+      setAttributionSummary(summary);
+      setAttributionSummaryError(null);
+    } catch (err) {
+      if (
+        requestSeq !== attributionRequestSeqRef.current ||
+        marketplaceIdRef.current !== requestMarketplaceId
+      ) {
+        return;
+      }
+      setAttributionSummary(null);
+      setAttributionSummaryError(toErrorMessage(err, 'Failed to load attribution summary'));
+    } finally {
+      if (
+        requestSeq === attributionRequestSeqRef.current &&
+        marketplaceIdRef.current === requestMarketplaceId
+      ) {
+        setAttributionSummaryLoading(false);
+      }
+    }
+  }, []);
+
+  const setAttributionWindowDays = useCallback(
+    (days: number) => {
+      attributionWindowDaysRef.current = days;
+      setAttributionWindowDaysState(days);
+      if (attribution && marketplaceIdRef.current) {
+        void loadAttributionSummary(marketplaceIdRef.current);
       }
     },
-    []
+    [attribution, loadAttributionSummary]
   );
 
   const refresh = useCallback(async () => {
@@ -274,7 +292,7 @@ export function useOperatorMarketplace(
         setCurationError(toErrorMessage(source, 'Failed to load curation'));
       }
       if (attribution) {
-        void loadAttributionSummary(requestMarketplaceId, requestSeq);
+        void loadAttributionSummary(requestMarketplaceId);
       }
     } catch (err) {
       if (
@@ -631,6 +649,8 @@ export function useOperatorMarketplace(
     reviewEventsError,
     attributionSummaryError,
     attributionSummaryLoading,
+    attributionWindowDays,
+    setAttributionWindowDays,
     working,
     refresh,
     publish,

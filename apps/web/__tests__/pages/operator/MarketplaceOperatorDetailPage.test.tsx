@@ -14,6 +14,7 @@ const mockUpdateMarketplace = vi.fn();
 const mockArchiveMarketplace = vi.fn();
 const mockVerifyCustomDomain = vi.fn();
 const mockRefresh = vi.fn();
+const mockSetAttributionWindowDays = vi.fn();
 const mockPublish = vi.fn();
 const mockSuspend = vi.fn();
 const mockResume = vi.fn();
@@ -211,6 +212,8 @@ vi.mock('@mobazha/core', async importOriginal => {
       attributionSummary: mockAttributionSummary,
       attributionSummaryError: mockAttributionSummaryError,
       attributionSummaryLoading: mockAttributionSummaryLoading,
+      attributionWindowDays: 30,
+      setAttributionWindowDays: mockSetAttributionWindowDays,
       curationItems: [],
       curationCandidates: {
         sellers: [],
@@ -909,7 +912,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     expect(screen.queryByText('RAW_REVIEW_HISTORY_FAILURE')).not.toBeInTheDocument();
   });
 
-  it('renders attribution funnel metrics when summary has data', () => {
+  it('renders attribution funnel steps with transition rates when samples are large enough', () => {
     render(<MarketplaceOperatorDetailPage />);
 
     expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
@@ -918,8 +921,45 @@ describe('MarketplaceOperatorDetailPage', () => {
     expect(within(funnel).getByText('80')).toBeInTheDocument();
     expect(within(funnel).getByText('30')).toBeInTheDocument();
     expect(within(funnel).getByText('9')).toBeInTheDocument();
-    expect(screen.getByText('37.5%')).toBeInTheDocument();
-    expect(screen.getByText('30.0%')).toBeInTheDocument();
+    expect(within(funnel).getByText('38%')).toBeInTheDocument();
+    expect(within(funnel).getByText('30%')).toBeInTheDocument();
+  });
+
+  it('suppresses rates on tiny samples and flags deep-linked checkouts', () => {
+    mockAttributionSummary = {
+      from: '2026-01-01T00:00:00Z',
+      to: '2026-01-31T00:00:00Z',
+      visits: 2,
+      impressions: 1,
+      listingClicks: 0,
+      checkoutHandoffs: 1,
+      listingClickRate: 0,
+      checkoutHandoffRate: null,
+      previousVisits: 0,
+      previousOrders: 0,
+      hasData: true,
+    };
+    render(<MarketplaceOperatorDetailPage />);
+
+    const funnel = screen.getByTestId('operator-attribution-has-data');
+    // 0.0% over 2 visits is noise, not signal — no percentage renders at all.
+    expect(within(funnel).queryByText(/%/)).not.toBeInTheDocument();
+    // 0 clicks but 1 checkout: the deep-link note explains the non-monotonic step.
+    // (The test i18n mock returns raw keys, so assert on the key.)
+    expect(
+      within(screen.getByTestId('operator-attribution-step-handoffs')).getByText(
+        'marketplace.operator.attributionDeepLinkNote'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('lets the operator switch the attribution window', () => {
+    render(<MarketplaceOperatorDetailPage />);
+
+    fireEvent.click(screen.getByTestId('operator-attribution-window-7'));
+    expect(mockSetAttributionWindowDays).toHaveBeenCalledWith(7);
+    fireEvent.click(screen.getByTestId('operator-attribution-window-90'));
+    expect(mockSetAttributionWindowDays).toHaveBeenCalledWith(90);
   });
 
   it('renders empty-state copy when attribution summary has no data', () => {

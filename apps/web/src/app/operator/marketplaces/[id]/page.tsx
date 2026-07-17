@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -67,6 +67,7 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  ChevronRight,
   Loader2,
   PauseCircle,
   PlayCircle,
@@ -201,6 +202,8 @@ export default function MarketplaceOperatorDetailPage() {
     attributionSummary,
     attributionSummaryError,
     attributionSummaryLoading,
+    attributionWindowDays,
+    setAttributionWindowDays,
     curationItems,
     curationCandidates,
     curationLoading,
@@ -903,6 +906,7 @@ export default function MarketplaceOperatorDetailPage() {
                   summaryLoading={attributionSummaryLoading}
                   approvedSellers={counts.approved}
                   pendingSellers={counts.waiting}
+                  windowDays={attributionWindowDays}
                   onNavigate={handleMetricNavigate}
                 />
               ) : (
@@ -987,8 +991,32 @@ export default function MarketplaceOperatorDetailPage() {
                   id="operator-attribution-funnel"
                   data-testid="operator-attribution-funnel-card"
                 >
-                  <CardHeader>
+                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
                     <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
+                    <div
+                      className="flex rounded-md border border-border p-0.5"
+                      role="group"
+                      aria-label={t('marketplace.operator.attributionWindowLabel', {
+                        defaultValue: 'Time range',
+                      })}
+                    >
+                      {[7, 30, 90].map(days => (
+                        <button
+                          key={days}
+                          type="button"
+                          onClick={() => setAttributionWindowDays(days)}
+                          aria-pressed={attributionWindowDays === days}
+                          data-testid={`operator-attribution-window-${days}`}
+                          className={
+                            attributionWindowDays === days
+                              ? 'rounded bg-muted px-2 py-0.5 text-xs font-medium'
+                              : 'rounded px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground'
+                          }
+                        >
+                          {days}d
+                        </button>
+                      ))}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
                     {attributionSummaryLoading ? (
@@ -1021,11 +1049,16 @@ export default function MarketplaceOperatorDetailPage() {
                       <div className="space-y-3" data-testid="operator-attribution-has-data">
                         {(() => {
                           const summary = attributionSummary;
-                          const rows: Array<{
+                          // A rate computed over a handful of journeys is noise
+                          // dressed as precision — suppress it until the
+                          // denominator can support a percentage.
+                          const MIN_RATE_SAMPLE = 10;
+                          const steps: Array<{
                             key: string;
                             label: string;
                             count: number;
                             rate?: number | null;
+                            note?: string;
                             testId?: string;
                           }> = [
                             {
@@ -1039,13 +1072,25 @@ export default function MarketplaceOperatorDetailPage() {
                               key: 'clicks',
                               label: t('marketplace.operator.attributionListingClicks'),
                               count: summary.listingClicks,
-                              rate: summary.listingClickRate,
+                              rate:
+                                (summary.visits ?? 0) >= MIN_RATE_SAMPLE
+                                  ? summary.listingClickRate
+                                  : null,
                             },
                             {
                               key: 'handoffs',
                               label: t('marketplace.operator.attributionCheckoutHandoffs'),
                               count: summary.checkoutHandoffs,
-                              rate: summary.checkoutHandoffRate,
+                              rate:
+                                summary.listingClicks >= MIN_RATE_SAMPLE
+                                  ? summary.checkoutHandoffRate
+                                  : null,
+                              note:
+                                summary.checkoutHandoffs > summary.listingClicks
+                                  ? t('marketplace.operator.attributionDeepLinkNote', {
+                                      defaultValue: 'Includes direct product-link visits',
+                                    })
+                                  : undefined,
                             },
                             {
                               key: 'orders',
@@ -1056,33 +1101,43 @@ export default function MarketplaceOperatorDetailPage() {
                               testId: 'operator-attribution-orders',
                             },
                           ];
-                          const maxCount = Math.max(1, ...rows.map(row => row.count));
-                          return rows.map(row => (
-                            <div key={row.key} data-testid={`operator-attribution-row-${row.key}`}>
-                              <div className="flex items-baseline justify-between gap-4">
-                                <span className="text-muted-foreground">{row.label}</span>
-                                <span className="tabular-nums">
-                                  <span data-testid={row.testId}>{row.count}</span>
-                                  {row.rate !== undefined ? (
-                                    <span className="ml-2 text-xs text-muted-foreground">
-                                      {row.rate == null ? '—' : `${(row.rate * 100).toFixed(1)}%`}
-                                    </span>
+                          return (
+                            <div className="grid grid-cols-2 gap-4 md:flex md:items-start md:gap-0">
+                              {steps.map((step, index) => (
+                                <React.Fragment key={step.key}>
+                                  {index > 0 ? (
+                                    <div className="hidden shrink-0 flex-col items-center self-center px-2 md:flex">
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                                      {step.rate != null ? (
+                                        <span className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">
+                                          {(step.rate * 100).toFixed(0)}%
+                                        </span>
+                                      ) : null}
+                                    </div>
                                   ) : null}
-                                </span>
-                              </div>
-                              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                                <div
-                                  className="h-full rounded-full bg-primary/70"
-                                  style={{
-                                    width:
-                                      row.count > 0
-                                        ? `${Math.max(3, (row.count / maxCount) * 100)}%`
-                                        : '0%',
-                                  }}
-                                />
-                              </div>
+                                  <div
+                                    className="min-w-0 md:flex-1"
+                                    data-testid={`operator-attribution-step-${step.key}`}
+                                  >
+                                    <div className="text-xs text-muted-foreground">
+                                      {step.label}
+                                    </div>
+                                    <div
+                                      className="mt-1 text-2xl font-semibold tabular-nums"
+                                      data-testid={step.testId}
+                                    >
+                                      {step.count}
+                                    </div>
+                                    {step.note ? (
+                                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                        {step.note}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </React.Fragment>
+                              ))}
                             </div>
-                          ));
+                          );
                         })()}
                         {attributionSummary.sources && attributionSummary.sources.length > 0 ? (
                           <div
@@ -1108,6 +1163,9 @@ export default function MarketplaceOperatorDetailPage() {
                                     })}
                                   </th>
                                   <th className="py-1 pr-2 font-normal">
+                                    {t('marketplace.operator.attributionListingClicks')}
+                                  </th>
+                                  <th className="py-1 pr-2 font-normal">
                                     {t('marketplace.operator.attributionCheckoutHandoffs')}
                                   </th>
                                   <th className="py-1 font-normal">
@@ -1123,11 +1181,27 @@ export default function MarketplaceOperatorDetailPage() {
                                     key={`${source.source}|${source.medium ?? ''}|${source.campaign ?? ''}`}
                                     className="border-t border-border"
                                   >
-                                    <td className="py-1 pr-2">
-                                      {source.source ||
-                                        t('marketplace.operator.attributionSourceDirect', {
-                                          defaultValue: 'direct',
-                                        })}
+                                    <td
+                                      className="py-1 pr-2"
+                                      // Operators should read plain words, not raw
+                                      // UTM slugs; the untranslated tuple stays
+                                      // available on hover for debugging.
+                                      title={[
+                                        source.source || 'direct',
+                                        source.medium,
+                                        source.campaign,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' / ')}
+                                    >
+                                      {source.source === 'operator_share'
+                                        ? t('marketplace.operator.attributionSourceOperatorShare', {
+                                            defaultValue: 'Community share link',
+                                          })
+                                        : source.source ||
+                                          t('marketplace.operator.attributionSourceDirect', {
+                                            defaultValue: 'Direct',
+                                          })}
                                       {source.campaign ? (
                                         <span className="text-muted-foreground">
                                           {' '}
@@ -1137,6 +1211,9 @@ export default function MarketplaceOperatorDetailPage() {
                                     </td>
                                     <td className="py-1 pr-2 tabular-nums">
                                       {source.visits ?? source.impressions}
+                                    </td>
+                                    <td className="py-1 pr-2 tabular-nums">
+                                      {source.listingClicks}
                                     </td>
                                     <td className="py-1 pr-2 tabular-nums">
                                       {source.checkoutHandoffs}

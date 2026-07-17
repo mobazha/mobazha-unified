@@ -3373,13 +3373,16 @@ export const en: TranslationResource = {
       responsibilityBoundary: 'Responsibility boundary',
       responsibilityDesc:
         'The marketplace owns brand, distribution, catalog, and admission. Stores keep products, orders, payments, support, and fulfillment.',
-      attributionFunnelTitle: 'Recent 30-day attribution funnel',
+      attributionFunnelTitle: 'Attribution funnel',
       attributionSummaryLoading: 'Loading attribution summary...',
       attributionSummaryLoadFailed: 'Failed to load attribution summary. Please try again.',
       attributionNoData: 'No real visit data collected yet.',
+      attributionVisits: 'Visits',
       attributionImpressions: 'Marketplace visits',
       attributionListingClicks: 'Listing clicks',
       attributionCheckoutHandoffs: 'Entered checkout',
+      attributionDeepLinkNote: 'Includes direct product-link visits',
+      attributionSourceOperatorShare: 'Community share link',
       attributionListingClickRate: 'Visit -> click conversion',
       attributionCheckoutRate: 'Click -> checkout conversion',
       attributionCheckoutMeaning:

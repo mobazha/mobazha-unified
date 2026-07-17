@@ -26,6 +26,7 @@ export function OperatorMetricsRow({
   summaryLoading,
   approvedSellers,
   pendingSellers,
+  windowDays = 30,
   onNavigate,
 }: {
   marketplaceId: string;
@@ -33,6 +34,9 @@ export function OperatorMetricsRow({
   summaryLoading: boolean;
   approvedSellers: number;
   pendingSellers: number;
+  /** Attribution window in days — keeps card labels and the earnings fetch in
+   * step with the funnel card's range selector. */
+  windowDays?: number;
   onNavigate?: (target: OperatorMetricTarget) => void;
 }) {
   const { t } = useI18n();
@@ -44,7 +48,8 @@ export function OperatorMetricsRow({
     setEarningsLoading(true);
     void (async () => {
       try {
-        const result = await getMarketplaceEarnings(marketplaceId);
+        const from = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
+        const result = await getMarketplaceEarnings(marketplaceId, { from });
         if (!cancelled) setEarnings(result);
       } catch {
         // The dedicated earnings card below surfaces load errors; the strip
@@ -56,7 +61,7 @@ export function OperatorMetricsRow({
     return () => {
       cancelled = true;
     };
-  }, [marketplaceId]);
+  }, [marketplaceId, windowDays]);
 
   const commissionTotals = (earnings?.totals ?? []).filter(total => total.status === 'recorded');
   const commissionLabel =
@@ -90,7 +95,7 @@ export function OperatorMetricsRow({
     {
       key: 'visits',
       icon: Eye,
-      label: t('marketplace.operator.metricVisits', { defaultValue: 'Visits · 30d' }),
+      label: `${t('marketplace.operator.metricVisits', { defaultValue: 'Visits' })} · ${windowDays}d`,
       value: summaryLoading ? '…' : String(visits),
       target: 'funnel',
       delta: visitsDelta,
@@ -105,7 +110,7 @@ export function OperatorMetricsRow({
     {
       key: 'orders',
       icon: ShoppingBag,
-      label: t('marketplace.operator.metricOrders', { defaultValue: 'Attributed orders · 30d' }),
+      label: `${t('marketplace.operator.metricOrders', { defaultValue: 'Attributed orders' })} · ${windowDays}d`,
       value: summaryLoading ? '…' : String(orders),
       target: 'funnel',
       delta: ordersDelta,
@@ -118,7 +123,7 @@ export function OperatorMetricsRow({
     {
       key: 'commission',
       icon: Coins,
-      label: t('marketplace.operator.metricCommission', { defaultValue: 'Commission · 30d' }),
+      label: `${t('marketplace.operator.metricCommission', { defaultValue: 'Commission' })} · ${windowDays}d`,
       value: earningsLoading ? '…' : commissionLabel,
       target: 'earnings',
       highlight: true,
@@ -185,9 +190,9 @@ export function OperatorMetricsRow({
                           ? 'text-muted-foreground'
                           : 'text-muted-foreground'
                     }`}
-                    title={t('marketplace.operator.metricDeltaTitle', {
-                      defaultValue: 'vs previous 30 days',
-                    })}
+                    title={`${t('marketplace.operator.metricDeltaTitle', {
+                      defaultValue: 'vs previous',
+                    })} ${windowDays}d`}
                     data-testid={`operator-metric-${metric.key}-delta`}
                   >
                     {metric.delta > 0 ? (
