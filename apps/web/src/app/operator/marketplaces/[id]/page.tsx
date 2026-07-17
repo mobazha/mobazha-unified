@@ -681,9 +681,13 @@ export default function MarketplaceOperatorDetailPage() {
   const hasApprovedVisibleSeller = stores.some(
     store => store.status === 'approved' && store.isVisible
   );
+  // Publishing with zero sellers is allowed (cold-start launch): the buyer
+  // home renders an honest empty state and the live URL is the recruiting
+  // asset. Having a visible seller is a soft recommendation, not a gate —
+  // matching hosting's validateMarketplacePublishReadiness. The flag below
+  // only picks the checklist copy, it no longer blocks publish.
   const requiresApprovedVisibleSeller = marketplace.sellerEntryMode === 'operator_invited';
-  const sellerLaunchRequirementMet = !requiresApprovedVisibleSeller || hasApprovedVisibleSeller;
-  const launchChecklistReady = hasVerifiedDomain && sellerLaunchRequirementMet;
+  const launchChecklistReady = hasVerifiedDomain;
   const isDraft = marketplace.status === 'draft';
   const isSuspended = marketplace.status === 'suspended';
   const hasPublishedDraftChanges =
