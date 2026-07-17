@@ -3107,7 +3107,7 @@ export const zh: PartialTranslationResource = {
       productGroupsSummary: '已选择 {{count}} 个商品组',
       productGroupsCount: '{{count}} 个商品组，共 {{items}} 件商品',
       productGroupsFullCatalog: '全目录范围（未限制商品组）。',
-      productGroupsNoneSelectedCurated: '此策展 Marketplace 尚未选择任何商品组。',
+      productGroupsNoneSelectedCurated: '整店商品均可在此 Marketplace 上架(未指定商品组)。',
       productGroupWithCount: '{{name}}（{{count}} 件）',
       decisionReasonLabel: '审核原因：{{reason}}',
       reviewHistoryTitle: '决策历史（{{count}}）',

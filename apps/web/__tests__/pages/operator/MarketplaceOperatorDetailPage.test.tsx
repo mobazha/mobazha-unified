@@ -2,7 +2,7 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/core';
 
@@ -406,7 +406,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     render(<MarketplaceOperatorDetailPage />);
 
     expect(screen.getByTestId('operator-tab-content-overview')).toBeInTheDocument();
-    expect(screen.getByTestId('operator-overview-readiness')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-metrics-row')).toBeInTheDocument();
     expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
     expect(screen.queryByTestId('curation-panel')).not.toBeInTheDocument();
     expect(screen.queryByTestId('settings-card')).not.toBeInTheDocument();
@@ -907,10 +907,11 @@ describe('MarketplaceOperatorDetailPage', () => {
     render(<MarketplaceOperatorDetailPage />);
 
     expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
-    expect(screen.getByTestId('operator-attribution-has-data')).toBeInTheDocument();
-    expect(screen.getByText('80')).toBeInTheDocument();
-    expect(screen.getByText('30')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
+    const funnel = screen.getByTestId('operator-attribution-has-data');
+    expect(funnel).toBeInTheDocument();
+    expect(within(funnel).getByText('80')).toBeInTheDocument();
+    expect(within(funnel).getByText('30')).toBeInTheDocument();
+    expect(within(funnel).getByText('9')).toBeInTheDocument();
     expect(screen.getByText('37.5%')).toBeInTheDocument();
     expect(screen.getByText('30.0%')).toBeInTheDocument();
   });

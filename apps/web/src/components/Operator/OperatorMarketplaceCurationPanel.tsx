@@ -263,6 +263,13 @@ export function OperatorMarketplaceCurationPanel({
     if (kind === 'banner' && result !== false) setSelectedBannerKey('');
   }
 
+  // Curation is a visual, editorial act: featuring a product is one click on
+  // its card, not a slug picked from a dropdown.
+  async function handleAddListingCandidate(candidate: ListingCandidateOption) {
+    if (actionLocked || candidateActionLocked) return;
+    await onAdd('listing', { peerID: candidate.peerID, listingSlug: candidate.slug });
+  }
+
   async function handleMove(kind: MarketplaceCurationKind, index: number, direction: -1 | 1) {
     if (actionLocked) return;
     const rows = itemsByKind[kind];
@@ -285,7 +292,10 @@ export function OperatorMarketplaceCurationPanel({
       listingMeta?.title ||
       formatListingSlugTitle(item.listingSlug || '') ||
       t('marketplace.operator.curation.listingFallbackTitle');
-    const secondary = [item.peerID, item.listingSlug].filter(Boolean).join(' / ');
+    // Operators think in store names, not peer IDs.
+    const secondary = [item.peerID ? sellerDisplayName(item.peerID) : '', item.listingSlug]
+      .filter(Boolean)
+      .join(' · ');
     const sellerPrimary = item.peerID
       ? sellerDisplayName(item.peerID)
       : t('marketplace.operator.curation.sellerFallbackTitle');
@@ -379,8 +389,10 @@ export function OperatorMarketplaceCurationPanel({
     candidateCount: number,
     addDisabled: boolean,
     addControl: ReactNode,
-    rows: MarketplaceCurationItem[]
+    rows: MarketplaceCurationItem[],
+    options: { showAddButton?: boolean; badgeText?: string } = {}
   ) {
+    const { showAddButton = true, badgeText } = options;
     return (
       <section className="space-y-3" data-testid={`operator-curation-section-${kind}`}>
         <div className="flex items-start justify-between gap-3">
@@ -389,20 +401,26 @@ export function OperatorMarketplaceCurationPanel({
             <p className="mt-1 text-sm text-muted-foreground">{t(descriptionKey)}</p>
           </div>
           <Badge variant="outline">
-            {t('marketplace.operator.curation.candidateCount', { count: candidateCount })}
+            {badgeText ?? t('marketplace.operator.curation.candidateCount', { count: candidateCount })}
           </Badge>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div
+          className={
+            showAddButton ? 'flex flex-col gap-2 sm:flex-row sm:items-center' : 'space-y-2'
+          }
+        >
           {addControl}
-          <Button
-            size="sm"
-            onClick={() => void handleAdd(kind)}
-            disabled={addDisabled}
-            data-testid={`operator-curation-add-${kind}`}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t('marketplace.operator.curation.add')}
-          </Button>
+          {showAddButton ? (
+            <Button
+              size="sm"
+              onClick={() => void handleAdd(kind)}
+              disabled={addDisabled}
+              data-testid={`operator-curation-add-${kind}`}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('marketplace.operator.curation.add')}
+            </Button>
+          ) : null}
         </div>
         {rows.length === 0 ? (
           <p className="rounded-md border border-dashed border-border/80 p-3 text-sm text-muted-foreground">
@@ -520,24 +538,76 @@ export function OperatorMarketplaceCurationPanel({
               'marketplace.operator.curation.sections.listings',
               'marketplace.operator.curation.sections.listingsDesc',
               availableListingCandidates.length,
-              candidateActionLocked ||
-                availableListingCandidates.length === 0 ||
-                !selectedListingKey,
-              <select
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
-                value={selectedListingKey}
-                onChange={event => setSelectedListingKey(event.target.value)}
-                disabled={candidateActionLocked || availableListingCandidates.length === 0}
-                data-testid="operator-curation-select-listing"
-              >
-                <option value="">{t('marketplace.operator.curation.selectListing')}</option>
-                {availableListingCandidates.map(candidate => (
-                  <option key={candidate.key} value={candidate.key}>
-                    {candidate.title} ({candidate.peerID} / {candidate.slug})
-                  </option>
-                ))}
-              </select>,
-              itemsByKind.listing
+              true,
+              availableListingCandidates.length === 0 ? (
+                <p
+                  className="rounded-md border border-dashed border-border/80 p-3 text-sm text-muted-foreground"
+                  data-testid="operator-curation-listing-grid-empty"
+                >
+                  {itemsByKind.listing.length > 0
+                    ? t('marketplace.operator.curation.allListingsFeatured', {
+                        defaultValue: 'Every eligible product is already featured.',
+                      })
+                    : t('marketplace.operator.curation.noListingCandidates', {
+                        defaultValue:
+                          'No products to feature yet — they appear here once approved sellers have items on sale.',
+                      })}
+                </p>
+              ) : (
+                <div
+                  className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
+                  data-testid="operator-curation-listing-grid"
+                >
+                  {availableListingCandidates.map(candidate => {
+                    const preview = enrichedListingLookup.get(candidate.key);
+                    return (
+                      <button
+                        key={candidate.key}
+                        type="button"
+                        onClick={() => void handleAddListingCandidate(candidate)}
+                        disabled={candidateActionLocked}
+                        className="group overflow-hidden rounded-lg border border-border text-left transition-colors hover:border-primary disabled:opacity-60"
+                        data-testid={`operator-curation-candidate-${candidate.key}`}
+                      >
+                        {preview?.imageUrl ? (
+                          <img
+                            src={preview.imageUrl}
+                            alt=""
+                            className="h-24 w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-24 w-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                            {t('marketplace.operator.curation.noImage', { defaultValue: 'No image' })}
+                          </div>
+                        )}
+                        <div className="p-2">
+                          <p className="truncate text-sm font-medium">
+                            {preview?.title?.trim() || candidate.title}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {sellerDisplayName(candidate.peerID)}
+                          </p>
+                          <p className="mt-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                            {t('marketplace.operator.curation.clickToFeature', {
+                              defaultValue: '+ Feature',
+                            })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ),
+              itemsByKind.listing,
+              {
+                showAddButton: false,
+                badgeText:
+                  availableListingCandidates.length === 0 && itemsByKind.listing.length > 0
+                    ? t('marketplace.operator.curation.allFeaturedBadge', {
+                        defaultValue: 'All featured',
+                      })
+                    : undefined,
+              }
             )}
             {renderSection(
               'seller',

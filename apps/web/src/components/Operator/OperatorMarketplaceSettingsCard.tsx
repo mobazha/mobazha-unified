@@ -397,6 +397,49 @@ export function OperatorMarketplaceSettingsCard({
             ) : null}
           </div>
 
+          {/* Monetization gets its own section directly under Brand — the
+              commission rate is the operator's core business lever, not a
+              catalog-policy detail buried mid-form. */}
+          <div className="space-y-2 md:col-span-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t('marketplace.operator.monetizationSectionTitle', {
+                defaultValue: 'Monetization',
+              })}
+            </h3>
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="operator-commission-percent">
+              {t('marketplace.operator.commissionRate', { defaultValue: 'Operator commission' })}
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="operator-commission-percent"
+                inputMode="decimal"
+                placeholder="0"
+                value={form.commissionPercent}
+                disabled={isArchived || isBusy}
+                onChange={event => setField('commissionPercent', event.target.value)}
+                data-testid="operator-marketplace-commission-percent"
+                className="max-w-[8rem]"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+            {!validation.commissionPercent ? (
+              <p className="text-sm text-destructive" data-testid="operator-commission-invalid">
+                {t('marketplace.operator.commissionRateInvalid', {
+                  defaultValue: 'Enter a rate between 0 and 30 (up to 2 decimals).',
+                })}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t('marketplace.operator.commissionRateHint', {
+                  defaultValue:
+                    'Charged to sellers on orders this marketplace produces. Takes effect for new orders after you republish; sellers see the committed rate before joining.',
+                })}
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <h3 className="text-sm font-semibold text-foreground">
               {t('marketplace.operator.accessSectionTitle')}
@@ -521,38 +564,6 @@ export function OperatorMarketplaceSettingsCard({
             <p className="text-sm text-muted-foreground">
               {t('marketplace.operator.sellerReviewModeHint')}
             </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="operator-commission-percent">
-              {t('marketplace.operator.commissionRate', { defaultValue: 'Operator commission' })}
-            </Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="operator-commission-percent"
-                inputMode="decimal"
-                placeholder="0"
-                value={form.commissionPercent}
-                disabled={isArchived || isBusy}
-                onChange={event => setField('commissionPercent', event.target.value)}
-                data-testid="operator-marketplace-commission-percent"
-                className="max-w-[8rem]"
-              />
-              <span className="text-sm text-muted-foreground">%</span>
-            </div>
-            {!validation.commissionPercent ? (
-              <p className="text-sm text-destructive" data-testid="operator-commission-invalid">
-                {t('marketplace.operator.commissionRateInvalid', {
-                  defaultValue: 'Enter a rate between 0 and 30 (up to 2 decimals).',
-                })}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {t('marketplace.operator.commissionRateHint', {
-                  defaultValue:
-                    'Charged to sellers on orders this marketplace produces. Takes effect for new orders after you republish; sellers see the committed rate before joining.',
-                })}
-              </p>
-            )}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="operator-marketplace-vertical">

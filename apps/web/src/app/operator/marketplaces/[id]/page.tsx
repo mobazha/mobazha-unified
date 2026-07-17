@@ -18,15 +18,21 @@ import {
   MARKETPLACE_SELLER_ENTRY_MODE_KEYS,
   MARKETPLACE_SELLER_REVIEW_MODE_KEYS,
   formatUserName,
+  useCommunityMarketplaceEnrichment,
   useI18n,
   useOperatorMarketplace,
   useRuntimeCapability,
 } from '@mobazha/core';
-import type { MarketplaceSellerResolveCandidate, MarketplaceStoreMembership } from '@mobazha/core';
+import type {
+  MarketplaceSellerResolveCandidate,
+  MarketplaceStoreMembership,
+  PublicMarketplaceListingRef,
+} from '@mobazha/core';
 import { resolveMarketplaceSellers } from '@mobazha/core/services/api/marketplace';
 import { getImageUrl } from '@mobazha/core/services/api/config';
 import { Header, Footer } from '@/components';
 import { OperatorEarningsCard } from '@/components/Operator/OperatorEarningsCard';
+import { OperatorMetricsRow } from '@/components/Operator/OperatorMetricsRow';
 import { OperatorInviteLinkPanel } from '@/components/Operator/OperatorInviteLinkPanel';
 import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
@@ -111,6 +117,7 @@ const PENDING_STATUSES: ReadonlySet<MarketplaceStoreMembership['status']> = new 
 // unbounded render loop — and that loop blocks the event loop, so it spins the
 // CPU rather than surfacing as a timeout.
 const NO_CANDIDATES: readonly MarketplaceSellerResolveCandidate[] = [];
+const NO_LISTING_REFS: PublicMarketplaceListingRef[] = [];
 
 const STORE_STATUS_PRIORITY: Record<MarketplaceStoreMembership['status'], number> = {
   applied: 0,
@@ -206,6 +213,14 @@ export default function MarketplaceOperatorDetailPage() {
     releasePublishing: canPublishReleases,
     attribution: canViewAttribution,
   });
+  // Resolve store display names/avatars for the review list — operators
+  // recognize "Atelier Kimura", never a raw peer ID.
+  const storePeerIDs = useMemo(() => stores.map(store => store.peerID).filter(Boolean), [stores]);
+  const { sellerProfiles: storeProfiles } = useCommunityMarketplaceEnrichment(
+    NO_LISTING_REFS,
+    storePeerIDs
+  );
+
   const [inviteQuery, setInviteQuery] = useState('');
   const [sellerIdMode, setSellerIdMode] = useState(false);
   const [sellerIdInput, setSellerIdInput] = useState('');
@@ -694,6 +709,54 @@ export default function MarketplaceOperatorDetailPage() {
     marketplace.status === 'published' && marketplace.hasUnpublishedChanges;
   const canPublish = isDraft && launchChecklistReady && !isArchived;
   const canResumeMarketplace = isSuspended && launchChecklistReady && !isArchived;
+
+  // Phase-aware "what should I do next" for a published marketplace. One
+  // suggestion at a time, ordered by operational urgency; disappears entirely
+  // once the market is humming.
+  const activeCuratedListings = curationItems.filter(
+    item => item.kind === 'listing' && item.isActive
+  ).length;
+  const overviewNextStep = (() => {
+    if (marketplace.status !== 'published' || isArchived) return null;
+    if (counts.waiting > 0) {
+      return {
+        title: t('marketplace.operator.nextStepReviewTitle', {
+          defaultValue: `${counts.waiting} seller application${counts.waiting > 1 ? 's' : ''} waiting`,
+          count: counts.waiting,
+        }),
+        body: t('marketplace.operator.nextStepReviewBody', {
+          defaultValue: 'Sellers are waiting on your decision before they can go on sale.',
+        }),
+        cta: t('marketplace.operator.nextStepReviewCta', { defaultValue: 'Review sellers' }),
+        action: () => handleTabChange('sellers'),
+      };
+    }
+    if (counts.approved === 0) {
+      return {
+        title: t('marketplace.operator.nextStepRecruitTitle', {
+          defaultValue: 'Recruit your first seller',
+        }),
+        body: t('marketplace.operator.nextStepRecruitBody', {
+          defaultValue: 'Mint an invite link and share it where your community already is.',
+        }),
+        cta: t('marketplace.operator.nextStepRecruitCta', { defaultValue: 'Invite sellers' }),
+        action: () => handleTabChange('sellers'),
+      };
+    }
+    if (canCurate && activeCuratedListings === 0) {
+      return {
+        title: t('marketplace.operator.nextStepCurateTitle', {
+          defaultValue: 'Feature your first products',
+        }),
+        body: t('marketplace.operator.nextStepCurateBody', {
+          defaultValue: 'Pick what buyers see first — curated homepages convert better.',
+        }),
+        cta: t('marketplace.operator.nextStepCurateCta', { defaultValue: 'Curate homepage' }),
+        action: () => handleTabChange('curation'),
+      };
+    }
+    return null;
+  })();
   const showLaunchChecklist = isDraft || isSuspended;
 
   return (
@@ -714,9 +777,22 @@ export default function MarketplaceOperatorDetailPage() {
                 <h1 className="text-3xl font-bold">{marketplace.name}</h1>
                 <Badge>{t(MARKETPLACE_LIFECYCLE_STATUS_KEYS[marketplace.status])}</Badge>
               </div>
-              <p className="mt-2 text-muted-foreground">
-                {marketplace.description || t('marketplace.operator.noDescription')}
-              </p>
+              {marketplace.description ? (
+                <p className="mt-2 text-muted-foreground">{marketplace.description}</p>
+              ) : (
+                // An empty value is an invitation, not a shrug: link straight
+                // to where it gets fixed instead of stating the absence.
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('settings')}
+                  className="mt-2 text-sm text-primary hover:underline"
+                  data-testid="operator-add-positioning"
+                >
+                  {t('marketplace.operator.addPositioningCta', {
+                    defaultValue: '+ Add a positioning line buyers will see',
+                  })}
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {!isArchived ? (
@@ -746,7 +822,8 @@ export default function MarketplaceOperatorDetailPage() {
               ) : null}
               {canPublishReleases && marketplace.status === 'published' && !isArchived ? (
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  className="text-muted-foreground"
                   onClick={() => void handleSuspend()}
                   disabled={Boolean(working)}
                   data-testid="operator-marketplace-suspend"
@@ -802,7 +879,17 @@ export default function MarketplaceOperatorDetailPage() {
               className="mt-6"
               data-testid="operator-tab-content-overview"
             >
-              <div className="grid gap-6 lg:grid-cols-2">
+              {marketplace.status === 'published' ? (
+                // Published = a running business: lead with performance, not
+                // configuration. Setup guidance only returns for draft/suspended.
+                <OperatorMetricsRow
+                  marketplaceId={marketplace.id}
+                  summary={attributionSummary}
+                  summaryLoading={attributionSummaryLoading}
+                  approvedSellers={counts.approved}
+                  pendingSellers={counts.waiting}
+                />
+              ) : (
                 <Card data-testid="operator-overview-readiness">
                   <CardHeader>
                     <CardTitle>{t('marketplace.operator.overviewReadinessTitle')}</CardTitle>
@@ -846,15 +933,24 @@ export default function MarketplaceOperatorDetailPage() {
                     ) : null}
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('marketplace.operator.responsibilityBoundary')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground">
-                    {t('marketplace.operator.responsibilityDesc')}
+              )}
+
+              {overviewNextStep ? (
+                <Card
+                  className="mt-6 border-primary/25 bg-primary/5"
+                  data-testid="operator-next-step-card"
+                >
+                  <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                    <div>
+                      <p className="text-sm font-medium">{overviewNextStep.title}</p>
+                      <p className="text-sm text-muted-foreground">{overviewNextStep.body}</p>
+                    </div>
+                    <Button size="sm" onClick={overviewNextStep.action} data-testid="operator-next-step-cta">
+                      {overviewNextStep.cta}
+                    </Button>
                   </CardContent>
                 </Card>
-              </div>
+              ) : null}
 
               {marketplace.status === 'published' ? (
                 <div className="mt-6">
@@ -1027,6 +1123,20 @@ export default function MarketplaceOperatorDetailPage() {
                   commissionBps={marketplace.operatorCommissionBps ?? 0}
                 />
               ) : null}
+
+              {/* Read-once knowledge, collapsed by default — it should never
+                  outrank live business data in the visual hierarchy. */}
+              <details
+                className="mt-6 rounded-lg border border-border px-4 py-3"
+                data-testid="operator-responsibility-boundary"
+              >
+                <summary className="cursor-pointer text-sm font-medium">
+                  {t('marketplace.operator.responsibilityBoundary')}
+                </summary>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t('marketplace.operator.responsibilityDesc')}
+                </p>
+              </details>
             </TabsContent>
 
             {canCurate ? (
@@ -1058,19 +1168,8 @@ export default function MarketplaceOperatorDetailPage() {
               className="mt-6"
               data-testid="operator-tab-content-sellers"
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('marketplace.operator.storeAdmission')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p>{t('marketplace.operator.waitingCount', { count: counts.waiting })}</p>
-                  <p>{t('marketplace.operator.approvedCount', { count: counts.approved })}</p>
-                  <p className="text-muted-foreground">
-                    {t('marketplace.operator.inviteNotApproval')}
-                  </p>
-                </CardContent>
-              </Card>
-
+              {/* Recruiting leads the tab (the counts live in the review
+                  filters below — a separate counters card was redundant). */}
               {!isArchived ? <OperatorInviteLinkPanel marketplaceId={marketplace.id} /> : null}
 
               {!isArchived ? (
@@ -1080,7 +1179,8 @@ export default function MarketplaceOperatorDetailPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      {t('marketplace.operator.inviteStoreHint')}
+                      {t('marketplace.operator.inviteStoreHint')}{' '}
+                      {t('marketplace.operator.inviteNotApproval')}
                     </p>
                     {!sellerIdMode ? (
                       <>
@@ -1334,11 +1434,27 @@ export default function MarketplaceOperatorDetailPage() {
                           className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="space-y-2">
-                            <div className="text-sm font-medium">
-                              {formatUserName(
-                                { peerID: store.peerID },
-                                { prefix: t('marketplace.operator.storeNamePrefix') }
-                              )}
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <Avatar className="h-7 w-7">
+                                {storeProfiles[store.peerID]?.avatarUrl ? (
+                                  <AvatarImage
+                                    src={storeProfiles[store.peerID]!.avatarUrl}
+                                    alt=""
+                                  />
+                                ) : null}
+                                <AvatarFallback className="text-xs">
+                                  {(storeProfiles[store.peerID]?.displayName || 'S')
+                                    .slice(0, 1)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>
+                                {storeProfiles[store.peerID]?.displayName?.trim() ||
+                                  formatUserName(
+                                    { peerID: store.peerID },
+                                    { prefix: t('marketplace.operator.storeNamePrefix') }
+                                  )}
+                              </span>
                             </div>
                             <div className="mt-1 flex items-center gap-2">
                               <Badge variant="outline">

@@ -3421,7 +3421,8 @@ export const en: TranslationResource = {
       productGroupsSummary: '{{count}} group(s) selected',
       productGroupsCount: '{{count}} group(s), {{items}} item(s)',
       productGroupsFullCatalog: 'Full catalog scope (no product-group restriction).',
-      productGroupsNoneSelectedCurated: 'No product groups selected for this curated marketplace.',
+      productGroupsNoneSelectedCurated:
+        'Entire store catalog is available in this marketplace (no specific groups selected).',
       productGroupWithCount: '{{name}} ({{count}} item(s))',
       decisionReasonLabel: 'Decision reason: {{reason}}',
       reviewHistoryTitle: 'Decision history ({{count}})',
