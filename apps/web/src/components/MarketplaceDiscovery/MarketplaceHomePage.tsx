@@ -626,7 +626,11 @@ export function MarketplaceHomePage() {
         </section>
 
         {showColdStart ? (
-          <MarketplaceColdStartPanel sellerEntryMode={config.sellerEntryMode} sellHref={sellHref} />
+          <MarketplaceColdStartPanel
+            sellerEntryMode={config.sellerEntryMode}
+            sellHref={sellHref}
+            marketplaceIdentifier={config.subdomain || config.id}
+          />
         ) : null}
 
         {showDegraded ? <MarketplaceDegradedPanel onRetry={retryFeeds} /> : null}

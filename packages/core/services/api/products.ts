@@ -280,16 +280,54 @@ export async function fetchFeaturedListings(
       return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
     }
 
-    return fetchAndDiversifyListingFeed(
+    const diversified = await fetchAndDiversifyListingFeed(
       fetchLimit => fetchWindow(SEARCH_API.LISTINGS_FRESH(fetchLimit)),
       limit,
       1
     );
+    return topUpSparseListingFeed(diversified, limit);
   } catch (error) {
     console.error('Failed to fetch featured listings:', error);
     if (options.strict) throw error;
     return [];
   }
+}
+
+// On young networks the hot/fresh windows can filter down to almost nothing
+// while the general index still has products. Below this floor, top the feed
+// up from the unfiltered index so a small marketplace never looks empty.
+const HOMEPAGE_FEED_SPARSE_FLOOR = 4;
+
+/**
+ * Top up a sparse hot/fresh feed from the general listings index. Best-effort
+ * by design: it never throws (even under strict feeds — sparseness is not a
+ * failure) and never removes items the primary window already returned.
+ */
+async function topUpSparseListingFeed(
+  primary: ProductListItem[],
+  limit: number
+): Promise<ProductListItem[]> {
+  if (primary.length >= Math.min(limit, HOMEPAGE_FEED_SPARSE_FLOOR)) {
+    return primary;
+  }
+  const response = await searchSafeGet<SearchApiResponse>(
+    `${SEARCH_API.SEARCH_LISTINGS}?limit=${limit * 2}`,
+    {}
+  );
+  const general = parseSearchResults(response);
+  if (general.length === 0) {
+    return primary;
+  }
+  const seen = new Set(primary.map(item => `${item.vendorPeerID}:${item.slug}`));
+  const merged = [...primary];
+  for (const item of general) {
+    const key = `${item.vendorPeerID}:${item.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+    if (merged.length >= limit) break;
+  }
+  return merged;
 }
 
 export async function getListingSupplySummary(
@@ -790,7 +828,7 @@ export async function fetchLatestListings(
     const response = options.strict
       ? await searchGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit))
       : await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_FRESH(limit), {});
-    return parseSearchResults(response);
+    return topUpSparseListingFeed(parseSearchResults(response), limit);
   } catch (error) {
     console.error('Failed to fetch latest listings:', error);
     // strict: reject so a failed feed is surfaced as `degraded` (WP-C), not [].
