@@ -3266,6 +3266,12 @@ export interface TranslationResource {
       aiConnect?: string;
       aiModels?: string;
       payments?: string;
+      group?: {
+        catalog?: string;
+        sales?: string;
+        marketing?: string;
+        channels?: string;
+      };
     };
     payments?: {
       pageDesc?: string;

@@ -6841,6 +6841,12 @@ export const en: TranslationResource = {
       aiWorkspace: 'AI Workspace',
       aiConnect: 'Connect AI Clients',
       aiModels: 'AI Models & Keys',
+      group: {
+        catalog: 'Catalog',
+        sales: 'Sales',
+        marketing: 'Marketing',
+        channels: 'Channels',
+      },
       viewStore: 'View Store',
       backToShopping: 'Back to Shopping',
       mainNavigation: 'Main navigation',

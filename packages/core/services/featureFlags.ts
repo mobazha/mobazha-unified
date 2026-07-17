@@ -76,6 +76,10 @@ function normalizeSnapshot(raw: unknown): FeatureSnapshot {
 }
 
 const FRONTEND_FEATURE_DEFAULTS: FeatureSnapshot = {
+  aiWorkspaceEnabled: {
+    effective: true,
+    overridable: ['platform_global', 'tenant', 'node_runtime'],
+  },
   supplyAvailabilityEnabled: {
     effective: false,
     overridable: ['platform_global', 'tenant', 'node_runtime'],

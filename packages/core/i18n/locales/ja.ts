@@ -4552,6 +4552,12 @@ export const ja: PartialTranslationResource = {
       home: 'ホーム',
       aiConnect: '接続',
       aiModels: 'モデル',
+      group: {
+        catalog: 'カタログ',
+        sales: '販売',
+        marketing: 'マーケティング',
+        channels: 'チャネル',
+      },
       mainNavigation: 'メインナビゲーション',
       sourcing: '調達',
       storefronts: '店頭',

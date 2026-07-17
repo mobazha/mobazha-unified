@@ -4514,6 +4514,12 @@ export const ko: PartialTranslationResource = {
       home: '홈',
       aiConnect: '연결',
       aiModels: '모델',
+      group: {
+        catalog: '카탈로그',
+        sales: '판매',
+        marketing: '마케팅',
+        channels: '채널',
+      },
       mainNavigation: '메인 내비게이션',
       sourcing: '소싱',
       storefronts: '상점 정면',

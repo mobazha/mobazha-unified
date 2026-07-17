@@ -12,7 +12,9 @@ export default function AdminAiLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!aiWorkspaceEnabled) {
-      router.replace('/admin');
+      // Workspace killed: AI Connect stays reachable via the legacy entry,
+      // which renders the Connect content directly when the flag is off.
+      router.replace('/admin/ai-agents');
     }
   }, [aiWorkspaceEnabled, router]);
 

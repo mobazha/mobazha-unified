@@ -4572,6 +4572,12 @@ export const ru: PartialTranslationResource = {
       home: 'Главная',
       aiConnect: 'Подключение',
       aiModels: 'Модели',
+      group: {
+        catalog: 'Каталог',
+        sales: 'Продажи',
+        marketing: 'Маркетинг',
+        channels: 'Каналы',
+      },
       mainNavigation: 'Основная навигация',
       sourcing: 'Поиск',
       storefronts: 'Витрины',

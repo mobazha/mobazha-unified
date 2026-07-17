@@ -8,6 +8,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace }),
 }));
 
+// Keep the real core package out of the module graph (it makes this test's
+// dynamic import take seconds) and prove sovereign ignores the flag entirely.
+vi.mock('@mobazha/core', () => ({
+  useFeature: () => false,
+}));
+
 vi.mock('@/components/admin/ai/AIConnectPageContent', () => ({
   AIConnectPageContent: () => <div data-testid="sovereign-ai-agents">AI Agents</div>,
 }));

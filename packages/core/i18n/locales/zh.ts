@@ -6204,6 +6204,12 @@ export const zh: PartialTranslationResource = {
       aiWorkspace: 'AI 工作台',
       aiConnect: '连接 AI 客户端',
       aiModels: 'AI 模型与密钥',
+      group: {
+        catalog: '商品',
+        sales: '销售',
+        marketing: '营销',
+        channels: '渠道',
+      },
       sourcing: '货源采购',
     },
     payments: {

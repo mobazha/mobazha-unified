@@ -225,6 +225,12 @@ describe('featureFlags', () => {
         effective: false,
         overridable: ['platform_global', 'tenant', 'node_runtime'],
       });
+      // aiWorkspaceEnabled is the one default-ON frontend fallback: the
+      // workspace ships enabled even against backends that predate the flag.
+      expect(snap.aiWorkspaceEnabled).toEqual({
+        effective: true,
+        overridable: ['platform_global', 'tenant', 'node_runtime'],
+      });
       expect(featureFlags.isInitialized()).toBe(true);
     });
   });

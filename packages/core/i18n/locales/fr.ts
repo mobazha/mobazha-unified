@@ -4659,6 +4659,12 @@ export const fr: PartialTranslationResource = {
       home: 'Accueil',
       aiConnect: 'Connexion',
       aiModels: 'Modèles',
+      group: {
+        catalog: 'Catalogue',
+        sales: 'Ventes',
+        marketing: 'Marketing',
+        channels: 'Canaux',
+      },
       mainNavigation: 'Main navigation',
       sourcing: 'Approvisionnement',
       storefronts: 'Vitrines de magasins',

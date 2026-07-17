@@ -4625,6 +4625,12 @@ export const es: PartialTranslationResource = {
       home: 'Inicio',
       aiConnect: 'Conectar',
       aiModels: 'Modelos',
+      group: {
+        catalog: 'Catálogo',
+        sales: 'Ventas',
+        marketing: 'Marketing',
+        channels: 'Canales',
+      },
       mainNavigation: 'Main navigation',
       sourcing: 'Abastecimiento',
       storefronts: 'Escaparates',

@@ -44,6 +44,13 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: number;
+  /**
+   * Sidebar section (`admin.nav.group.*` i18n suffix). A section header is
+   * rendered whenever the group changes between consecutive items; items
+   * without a group (Dashboard on top, Analytics/AI/Settings/System tail)
+   * stay ungrouped.
+   */
+  group?: 'catalog' | 'sales' | 'marketing' | 'channels';
 }
 
 const storePaymentsNavItem: NavItem = {
@@ -51,6 +58,7 @@ const storePaymentsNavItem: NavItem = {
   labelKey: 'admin.nav.payments',
   href: getAdminStorePaymentsPath(),
   icon: Wallet,
+  group: 'sales',
 };
 
 function applyAiWorkspaceNav(items: NavItem[], aiWorkspaceEnabled: boolean): NavItem[] {
@@ -72,28 +80,55 @@ function applyAiWorkspaceNav(items: NavItem[], aiWorkspaceEnabled: boolean): Nav
 
 const baseNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
-  { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
-  { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
-  storePaymentsNavItem,
-  { id: 'discounts', labelKey: 'admin.nav.discounts', href: '/admin/discounts', icon: Tag },
-  { id: 'affiliate', labelKey: 'admin.nav.affiliate', href: '/admin/affiliate', icon: Megaphone },
   {
-    id: 'deal-links',
-    labelKey: 'admin.nav.dealLinks',
-    href: '/admin/deal-links',
-    icon: Link2,
+    id: 'products',
+    labelKey: 'admin.nav.products',
+    href: '/admin/products',
+    icon: Package,
+    group: 'catalog',
   },
   {
     id: 'collections',
     labelKey: 'admin.nav.collections',
     href: '/admin/collections',
     icon: Layers,
+    group: 'catalog',
+  },
+  {
+    id: 'orders',
+    labelKey: 'admin.nav.orders',
+    href: '/admin/orders',
+    icon: ShoppingCart,
+    group: 'sales',
+  },
+  storePaymentsNavItem,
+  {
+    id: 'discounts',
+    labelKey: 'admin.nav.discounts',
+    href: '/admin/discounts',
+    icon: Tag,
+    group: 'marketing',
+  },
+  {
+    id: 'affiliate',
+    labelKey: 'admin.nav.affiliate',
+    href: '/admin/affiliate',
+    icon: Megaphone,
+    group: 'marketing',
+  },
+  {
+    id: 'deal-links',
+    labelKey: 'admin.nav.dealLinks',
+    href: '/admin/deal-links',
+    icon: Link2,
+    group: 'marketing',
   },
   {
     id: 'storefront',
     labelKey: 'admin.nav.storefront',
     href: '/admin/storefront',
     icon: Palette,
+    group: 'channels',
   },
   { id: 'analytics', labelKey: 'admin.nav.analytics', href: '/admin/analytics', icon: BarChart3 },
   { id: 'ai-agents', labelKey: 'admin.nav.aiAgents', href: '/admin/ai-agents', icon: Bot },
@@ -105,6 +140,7 @@ const sourcingNavItem: NavItem = {
   labelKey: 'admin.nav.sourcing',
   href: '/admin/sourcing',
   icon: Compass,
+  group: 'catalog',
 };
 
 const storefrontsNavItem: NavItem = {
@@ -112,6 +148,7 @@ const storefrontsNavItem: NavItem = {
   labelKey: 'admin.nav.storefronts',
   href: '/admin/storefronts',
   icon: Store,
+  group: 'channels',
 };
 
 const standaloneNavItems: NavItem[] = [
@@ -121,20 +158,34 @@ const standaloneNavItems: NavItem[] = [
 
 const sovereignNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
-  { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
-  { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
-  storePaymentsNavItem,
+  {
+    id: 'products',
+    labelKey: 'admin.nav.products',
+    href: '/admin/products',
+    icon: Package,
+    group: 'catalog',
+  },
   {
     id: 'collections',
     labelKey: 'admin.nav.collections',
     href: '/admin/collections',
     icon: Layers,
+    group: 'catalog',
   },
+  {
+    id: 'orders',
+    labelKey: 'admin.nav.orders',
+    href: '/admin/orders',
+    icon: ShoppingCart,
+    group: 'sales',
+  },
+  storePaymentsNavItem,
   {
     id: 'storefront',
     labelKey: 'admin.nav.storefront',
     href: '/admin/storefront',
     icon: Palette,
+    group: 'channels',
   },
   { id: 'ai-agents', labelKey: 'admin.nav.aiAgents', href: '/admin/ai-agents', icon: Bot },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
@@ -259,7 +310,29 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {navEntries.map(renderNavLink)}
+        {navEntries.map((item, index) => {
+          const prevGroup = index > 0 ? navEntries[index - 1].group : undefined;
+          const groupChanged = item.group !== prevGroup;
+          return (
+            <React.Fragment key={item.id}>
+              {groupChanged && item.group && !collapsed && (
+                <div
+                  className="px-3 pt-4 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground/70 select-none"
+                  data-testid={`admin-nav-group-${item.group}`}
+                >
+                  {t(`admin.nav.group.${item.group}`)}
+                </div>
+              )}
+              {groupChanged && index > 0 && collapsed && (
+                <div className="mx-2 my-2 border-t border-border" aria-hidden="true" />
+              )}
+              {groupChanged && !item.group && !collapsed && (
+                <div className="mx-2 my-2 border-t border-border" aria-hidden="true" />
+              )}
+              {renderNavLink(item)}
+            </React.Fragment>
+          );
+        })}
       </nav>
 
       {/* Bottom section */}

@@ -17,7 +17,9 @@ export function AiSectionShell({ children }: AiSectionShellProps) {
 
   useEffect(() => {
     if (!aiWorkspaceEnabled) {
-      navigate('/admin', { replace: true });
+      // Workspace killed: AI Connect stays reachable via the legacy entry,
+      // which renders the Connect content directly when the flag is off.
+      navigate('/admin/ai-agents', { replace: true });
     }
   }, [aiWorkspaceEnabled, navigate]);
 
