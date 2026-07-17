@@ -42,6 +42,17 @@ export function registerNativeMarketplaceOrderAttribution(
   if (!marketplaceID || !orderID || !listingSlug || !peerID || !pricingCoin) return;
   if (!/^\d+$/.test(amount) || /^0+$/.test(amount)) return;
 
+  // Session-scoped once-guard: the payment page can hit its success paths more
+  // than once per order (status sync + revisit). Hosting dedupes anyway; this
+  // just avoids pointless requests and handoff-missing noise on revisits.
+  const sentKey = `mbz_order_attr_sent:${marketplaceID}:${orderID}`;
+  try {
+    if (window.sessionStorage.getItem(sentKey)) return;
+    window.sessionStorage.setItem(sentKey, '1');
+  } catch {
+    // Storage unavailable (private mode): fall through, hosting dedupes.
+  }
+
   const journey = getOrCreateNativeMarketplaceJourneyState({
     marketplaceID,
     searchParams: new URLSearchParams(window.location.search),

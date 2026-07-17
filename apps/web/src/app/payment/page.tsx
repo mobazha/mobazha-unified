@@ -126,6 +126,16 @@ interface OrderDetails {
     amount: string;
     currency: string;
   };
+  /**
+   * PRICING-currency order amount in integer minor units, straight from the
+   * order contract — the basis the operator commission ledger records.
+   * Kept as a string so large crypto minor units never lose precision.
+   */
+  pricingAmount?: {
+    amount: string;
+    currency: string;
+    divisibility: number;
+  };
   contractType?: string;
   rawOrderAmount?: number;
 }
@@ -273,16 +283,16 @@ export default function PaymentPage() {
       if (!isSubMarket || !attributionMarketplaceID) return;
       const listingSlug = details.items[0]?.id;
       const peerID = details.vendor?.peerID;
-      const amount = details.paymentAmount?.amount;
-      const pricingCoin = details.paymentAmount?.currency || details.currency;
-      if (!listingSlug || !peerID || !amount || !pricingCoin) return;
+      const pricing = details.pricingAmount;
+      if (!listingSlug || !peerID || !pricing?.amount || !pricing.currency) return;
       registerNativeMarketplaceOrderAttribution({
         marketplaceID: attributionMarketplaceID,
         orderID: details.orderID,
         listingSlug,
         peerID,
-        pricingCoin,
-        amount: String(amount),
+        pricingCoin: pricing.currency,
+        amount: pricing.amount,
+        currencyDivisibility: pricing.divisibility,
       });
     },
     [attributionMarketplaceID, isSubMarket]
@@ -1066,6 +1076,11 @@ export default function PaymentPage() {
           currency: items[0]?.currency || urlCurrency || pricingCurrency,
           contractType,
           rawOrderAmount: orderAmount,
+          pricingAmount: {
+            amount: String(orderOpen.amount ?? ''),
+            currency: pricingCurrency,
+            divisibility: pricingDivisibility,
+          },
         };
 
         setOrderDetails(orderDetailsData);

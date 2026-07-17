@@ -274,7 +274,8 @@ export function OperatorMarketplaceSettingsCard({
       !validation.vertical ||
       !validation.customDomain ||
       !validation.logoURL ||
-      !validation.bannerURL
+      !validation.bannerURL ||
+      !validation.commissionPercent
     ) {
       return false;
     }

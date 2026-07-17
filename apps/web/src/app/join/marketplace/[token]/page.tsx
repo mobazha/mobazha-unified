@@ -232,7 +232,14 @@ export default function MarketplaceInviteLandingPage() {
                       : t('marketplace.invite.accept', { defaultValue: 'Join as a seller' })}
                   </Button>
                 ) : (
-                  <Button onClick={() => router.push('/login')} data-testid="invite-login">
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        `/login?redirect=${encodeURIComponent(`/join/marketplace/${token}`)}`
+                      )
+                    }
+                    data-testid="invite-login"
+                  >
                     {t('marketplace.invite.loginToAccept', {
                       defaultValue: 'Sign in to accept the invitation',
                     })}

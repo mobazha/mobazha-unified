@@ -629,7 +629,9 @@ export function MarketplaceHomePage() {
           <MarketplaceColdStartPanel
             sellerEntryMode={config.sellerEntryMode}
             sellHref={sellHref}
-            marketplaceIdentifier={config.subdomain || config.id}
+            // The public API resolves slug OR id — never the subdomain, which
+            // can diverge from the slug after a rename.
+            marketplaceIdentifier={config.id}
           />
         ) : null}
 

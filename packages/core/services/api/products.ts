@@ -310,8 +310,10 @@ async function topUpSparseListingFeed(
   if (primary.length >= Math.min(limit, HOMEPAGE_FEED_SPARSE_FLOOR)) {
     return primary;
   }
+  // The search endpoint takes pageSize/browse (not limit); browse=all opts out
+  // of the curated "discover" subset so the top-up really is the whole index.
   const response = await searchSafeGet<SearchApiResponse>(
-    `${SEARCH_API.SEARCH_LISTINGS}?limit=${limit * 2}`,
+    `${SEARCH_API.SEARCH_LISTINGS}?pageSize=${limit * 2}&browse=all`,
     {}
   );
   const general = parseSearchResults(response);

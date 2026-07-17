@@ -107,7 +107,10 @@ export function OperatorInviteLinkPanel({ marketplaceId }: { marketplaceId: stri
     async (link: MarketplaceInviteLink) => {
       try {
         await revokeMarketplaceInviteLink(marketplaceId, link.id);
-        await reload();
+        // Reflect the revoke locally first — a failed refresh must not leave a
+        // revoked link looking active.
+        setLinks(current => current.filter(item => item.id !== link.id));
+        void reload();
         toast({
           description: t('marketplace.operator.inviteLinkRevoked', {
             defaultValue: 'Invite link revoked.',
