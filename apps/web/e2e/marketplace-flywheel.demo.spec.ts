@@ -268,6 +268,15 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await expect(op.getByText(/published/i).first()).toBeVisible({ timeout: 20000 });
   await dwell(op, 1600);
 
+  // Read the REAL subdomain from the public projection (slug is
+  // server-normalized and can carry a -N suffix); the buyer segment needs it.
+  const pubDetail = await fetch(`${BACKEND}/platform/v1/public-marketplaces/${marketplaceId}`)
+    .then(r => r.json())
+    .catch(() => null);
+  const publicHost: string =
+    pubDetail?.data?.marketplace?.publicURL || pubDetail?.data?.publicURL || '';
+  const subdomain = publicHost.replace(/^https?:\/\//, '').split('.')[0] || marketplaceId;
+
   // CH4 invite link
   await chapter(op, 4, 'operator', 'Invite sellers with one link', 'No forms, no back-and-forth.');
   await op.getByTestId('operator-tab-sellers').click();
@@ -327,20 +336,24 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   // ── Segment 4 · Buyer: arrive via share link ──
   const buyerCtx = await loginContext(browser, 'testuser2');
   const buyer = await buyerCtx.newPage();
-  const shareUrl = `${SUB_ORIGIN}/?utm_source=operator_share&utm_medium=community&utm_campaign=${DEMO_SLUG}`;
+  // The community share link — the operator's real submarket subdomain.
+  const shareUrl = `http://${subdomain}.localhost:3000/?utm_source=operator_share&utm_medium=community&utm_campaign=${DEMO_SLUG}`;
   await buyer.goto(shareUrl);
   await buyer.waitForLoadState('domcontentloaded');
-  // Wait for the storefront to actually paint a product or a heading.
-  await Promise.race([
-    buyer.getByText(HERO_TITLE).first().waitFor({ state: 'visible', timeout: 20000 }),
-    buyer.getByRole('heading').first().waitFor({ state: 'visible', timeout: 20000 }),
-  ]).catch(() => {});
-  await chapter(buyer, 7, 'buyer', 'Buy through the market', 'A real order, paid on-chain.');
-  await dwell(buyer, 2200);
+  // CH7 — THIS is the storefront the operator built, as buyers see it.
+  await chapter(buyer, 7, 'buyer', 'This is the storefront buyers see', `${MARKET_NAME} — the operator's brand, the seller's product.`);
+  // Wait for the real submarket home (branded hero + product), not a spinner
+  // or the "unavailable" fallback.
+  await expect(buyer.getByText(HERO_TITLE).first()).toBeVisible({ timeout: 25000 });
+  await dwell(buyer, 2800);
+
+  // CH8 — open the product: price, seller, and buyer protection.
+  await chapter(buyer, 8, 'buyer', 'Every order is escrow-protected', 'Funds stay in escrow until the buyer confirms delivery.');
+  await buyer.getByText(HERO_TITLE).first().click();
+  await buyer.waitForLoadState('domcontentloaded');
+  await expect(buyer.getByRole('heading', { name: HERO_TITLE }).first()).toBeVisible({ timeout: 25000 });
+  await dwell(buyer, 3000);
   if (includePayment) {
-    await buyer.getByText(HERO_TITLE).first().click();
-    await buyer.waitForLoadState('domcontentloaded');
-    await dwell(buyer, 1500);
     await buyer.getByRole('button', { name: /buy now/i }).first().click();
     await dwell(buyer, 4000);
   }
@@ -378,7 +391,7 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   const op3 = await opCtx.newPage();
   await op3.goto(`/operator/marketplaces/${marketplaceId}`);
   await expect(op3.getByRole('heading', { name: MARKET_NAME, level: 1 })).toBeVisible({ timeout: 30000 });
-  await chapter(op3, 8, 'operator', 'Watch it come back', 'Every share, click, and sale — attributed and paid.');
+  await chapter(op3, 9, 'operator', 'Watch it come back', 'Every share, click, and sale — attributed and paid.');
   const earnings = op3.getByTestId('operator-earnings-card');
   await focusOn(op3, earnings, 800);
   await expect(earnings.getByTestId('operator-earnings-rate')).toHaveText(/10/);
