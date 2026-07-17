@@ -53,18 +53,38 @@ async function passAuthGate(page: import('@playwright/test').Page, gateTestId: s
   }
 }
 
-test('1 · seller 开 affiliate program + 归因窗口护栏', async ({ page }) => {
+test('1 · seller 开 affiliate program + 归因窗口护栏与修复', async ({ page }) => {
   test.setTimeout(180000);
   await performCasdoorLogin(page, 'testuser1', '123');
   await page.goto('/admin/affiliate');
   await page.waitForLoadState('networkidle').catch(() => {});
   await page.waitForTimeout(3500);
 
-  // Seller affiliate panel: 5% commission, Active rails, and — because the
-  // program's window is 1 hour — the round-5 guardrail warning that a sub-day
-  // window silently discards promoter-driven sales.
-  await reveal(page, 'seller-affiliate-program-panel', 3000);
-  await reveal(page, 'affiliate-window-advice', 4500);
+  // Seller affiliate panel: 5% commission, Active rails. Config starts
+  // collapsed — open it on camera.
+  await reveal(page, 'seller-affiliate-program-panel', 2500);
+  const configToggle = page.getByTestId('affiliate-config-toggle').first();
+  if (await configToggle.isVisible().catch(() => false)) {
+    await configToggle.click();
+    await page.waitForTimeout(2000);
+  }
+
+  // The 1-hour window trips the guardrail: a sub-day window silently discards
+  // promoter-driven sales. Linger on the warning…
+  await reveal(page, 'affiliate-window-advice', 4000);
+
+  // …then fix it on camera with the 7-day preset (exact value+unit editing —
+  // no lossy day conversion) and save.
+  const preset = page.getByTestId('affiliate-window-preset-7').first();
+  if (await preset.isVisible().catch(() => false)) {
+    await preset.click();
+    await page.waitForTimeout(2500);
+    const save = page.getByTestId('seller-affiliate-program-save').first();
+    if (await save.isEnabled().catch(() => false)) {
+      await save.click();
+      await page.waitForTimeout(3500);
+    }
+  }
 });
 
 test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+汇总', async ({ page }) => {
@@ -123,8 +143,57 @@ test('2 · promoter 带货：橱窗看收益 → 生成链接 → 佣金法币+�
   await page.waitForTimeout(2500);
 });
 
-test('3 · guest 点开推广链接（referral saved）', async ({ page }) => {
-  test.setTimeout(90000);
+test('3 · guest 点开推广链接 → 逛店 → 打开商品（referral saved）', async ({ page }) => {
+  test.setTimeout(150000);
   await page.goto(`/promo/${SELLER_PEER_ID}/${PROMO_TOKEN}`);
   await settle(page, 'seller-affiliate-entry-ready', 4000);
+
+  // Follow the landing CTA into the seller's store — the shelf the promoter
+  // is actually selling. The referral session persists across navigation.
+  const storeLink = page.locator(`a[href*="/store/"]`).first();
+  if (await storeLink.isVisible().catch(() => false)) {
+    await storeLink.click();
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(4500);
+  } else {
+    await page.goto(`/store/${SELLER_PEER_ID}`);
+    await page.waitForTimeout(4500);
+  }
+
+  // Open one of the demo catalog items so the recording shows a real product
+  // page reached through the promoter's link.
+  const productCard = page
+    .getByText(/Titan Leather Hardware Wallet Case|Fireproof Steel Seed Backup Plate/i)
+    .first();
+  if (await productCard.isVisible().catch(() => false)) {
+    await productCard.click();
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(5000);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(2500);
+  }
+});
+
+test('4 · seller 账单：汇总 → 筛选 → 展开一笔看归因与链上结算', async ({ page }) => {
+  test.setTimeout(180000);
+  await performCasdoorLogin(page, 'testuser1', '123');
+  await page.goto('/admin/affiliate');
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.waitForTimeout(3500);
+
+  // The richer statements table: per-currency earnings rollup, converting
+  // promoters, then the grouped commission rows themselves.
+  await reveal(page, 'seller-affiliate-statements-seller', 2500);
+  await reveal(page, 'seller-affiliate-earnings-summary-seller', 4000);
+  await reveal(page, 'seller-affiliate-filters', 3000);
+
+  // Expand the first commission row: attribution details, settlement address,
+  // and the on-chain transaction the payout landed in.
+  const firstRow = page.locator('[data-testid^="seller-affiliate-statement-row-"]').first();
+  if (await firstRow.isVisible().catch(() => false)) {
+    await firstRow.click();
+    await page.waitForTimeout(4500);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(3000);
+  }
 });
