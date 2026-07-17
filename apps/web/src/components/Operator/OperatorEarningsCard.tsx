@@ -26,12 +26,21 @@ export function formatMinorUnits(amount: string, divisibility: number): string {
  * Operator commission estimate ledger (V1). Amounts are estimates until the
  * settlement-layer payout leg verifies them — the copy says so explicitly.
  */
+function formatBpsPercent(bps: number): string {
+  return (bps / 100).toFixed(bps % 100 === 0 ? 0 : 2);
+}
+
 export function OperatorEarningsCard({
   marketplaceId,
   commissionBps,
+  windowDays = 30,
 }: {
   marketplaceId: string;
+  /** Working-draft rate — shown only until the ledger reports the published one. */
   commissionBps: number;
+  /** Same window the Performance card's selector governs, so the two commission
+   * figures on the page can never disagree about their time span. */
+  windowDays?: number;
 }) {
   const { t } = useI18n();
   const [earnings, setEarnings] = useState<MarketplaceEarnings | null>(null);
@@ -45,7 +54,8 @@ export function OperatorEarningsCard({
     setFailed(false);
     void (async () => {
       try {
-        const result = await getMarketplaceEarnings(marketplaceId);
+        const from = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
+        const result = await getMarketplaceEarnings(marketplaceId, { from });
         if (!cancelled) setEarnings(result);
       } catch {
         if (!cancelled) setFailed(true);
@@ -56,10 +66,15 @@ export function OperatorEarningsCard({
     return () => {
       cancelled = true;
     };
-  }, [marketplaceId, reloadKey]);
+  }, [marketplaceId, windowDays, reloadKey]);
 
   const retry = useCallback(() => setReloadKey(key => key + 1), []);
-  const ratePercent = (commissionBps / 100).toFixed(commissionBps % 100 === 0 ? 0 : 2);
+  // The ledger snapshots the PUBLISHED rate; showing the draft value next to
+  // ledger rows would let the card contradict itself after an unpublished
+  // Settings edit. Fall back to the prop only until the ledger answers.
+  const publishedBps = earnings?.commissionBps ?? commissionBps;
+  const ratePercent = formatBpsPercent(publishedBps);
+  const draftDiffers = earnings != null && earnings.commissionBps !== commissionBps;
 
   return (
     <Card className="mt-6" data-testid="operator-earnings-card">
@@ -74,7 +89,16 @@ export function OperatorEarningsCard({
           <span className="text-muted-foreground">
             {t('marketplace.operator.earningsCurrentRate', { defaultValue: 'Current rate' })}
           </span>
-          <span data-testid="operator-earnings-rate">{ratePercent}%</span>
+          <span data-testid="operator-earnings-rate">
+            {ratePercent}%
+            {draftDiffers ? (
+              <span className="ml-2 text-xs text-muted-foreground">
+                {t('marketplace.operator.earningsRatePendingPublish', {
+                  defaultValue: `${formatBpsPercent(commissionBps)}% after next publish`,
+                })}
+              </span>
+            ) : null}
+          </span>
         </div>
 
         {loading ? (
@@ -116,7 +140,10 @@ export function OperatorEarningsCard({
               </thead>
               <tbody>
                 {earnings.totals.map(total => (
-                  <tr key={`${total.pricingCoin}-${total.status}`} className="border-t border-border">
+                  <tr
+                    key={`${total.pricingCoin}-${total.status}`}
+                    className="border-t border-border"
+                  >
                     <td className="py-1.5 pr-3">{total.pricingCoin}</td>
                     <td className="py-1.5 pr-3">{total.orderCount}</td>
                     <td className="py-1.5 pr-3">

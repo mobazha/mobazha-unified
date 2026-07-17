@@ -1263,6 +1263,7 @@ export default function MarketplaceOperatorDetailPage() {
                   <OperatorEarningsCard
                     marketplaceId={marketplace.id}
                     commissionBps={marketplace.operatorCommissionBps ?? 0}
+                    windowDays={attributionWindowDays}
                   />
                 </div>
               ) : null}

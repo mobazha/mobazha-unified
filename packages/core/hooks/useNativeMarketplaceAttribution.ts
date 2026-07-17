@@ -45,10 +45,12 @@ export function registerNativeMarketplaceOrderAttribution(
   // Session-scoped once-guard: the payment page can hit its success paths more
   // than once per order (status sync + revisit). Hosting dedupes anyway; this
   // just avoids pointless requests and handoff-missing noise on revisits.
+  // The guard is only written AFTER the POST succeeds — this is the order's
+  // sole registration path, so marking it sent before a transient failure
+  // would permanently forfeit the commission entry.
   const sentKey = `mbz_order_attr_sent:${marketplaceID}:${orderID}`;
   try {
     if (window.sessionStorage.getItem(sentKey)) return;
-    window.sessionStorage.setItem(sentKey, '1');
   } catch {
     // Storage unavailable (private mode): fall through, hosting dedupes.
   }
@@ -69,9 +71,18 @@ export function registerNativeMarketplaceOrderAttribution(
     source: journey.source,
     medium: journey.medium,
     campaign: journey.campaign,
-  }).catch(() => {
-    // Best-effort only: ledger registration must never block checkout.
-  });
+  })
+    .then(() => {
+      try {
+        window.sessionStorage.setItem(sentKey, '1');
+      } catch {
+        // Storage unavailable: hosting dedupes.
+      }
+    })
+    .catch(() => {
+      // Best-effort only: ledger registration must never block checkout; the
+      // unset guard lets the next success-path entry retry.
+    });
 }
 
 interface NativeMarketplaceAttributionEventInput {

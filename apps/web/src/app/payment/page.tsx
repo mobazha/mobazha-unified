@@ -281,19 +281,26 @@ export default function PaymentPage() {
   const reportOrderToMarketplace = useCallback(
     (details: OrderDetails) => {
       if (!isSubMarket || !attributionMarketplaceID) return;
-      const listingSlug = details.items[0]?.id;
       const peerID = details.vendor?.peerID;
       const pricing = details.pricingAmount;
-      if (!listingSlug || !peerID || !pricing?.amount || !pricing.currency) return;
-      registerNativeMarketplaceOrderAttribution({
-        marketplaceID: attributionMarketplaceID,
-        orderID: details.orderID,
-        listingSlug,
-        peerID,
-        pricingCoin: pricing.currency,
-        amount: pricing.amount,
-        currencyDivisibility: pricing.divisibility,
-      });
+      if (!peerID || !pricing?.amount || !pricing.currency) return;
+      // The backend's handoff gate matches (journey, listing) — in a
+      // multi-item cart the handoff may have fired for any of the items, so
+      // try each slug; hosting keeps a single row per (order, seller).
+      const uniqueSlugs = Array.from(
+        new Set(details.items.map(item => item.id).filter(Boolean))
+      ).slice(0, 10);
+      for (const listingSlug of uniqueSlugs) {
+        registerNativeMarketplaceOrderAttribution({
+          marketplaceID: attributionMarketplaceID,
+          orderID: details.orderID,
+          listingSlug,
+          peerID,
+          pricingCoin: pricing.currency,
+          amount: pricing.amount,
+          currencyDivisibility: pricing.divisibility,
+        });
+      }
     },
     [attributionMarketplaceID, isSubMarket]
   );
@@ -1171,7 +1178,14 @@ export default function PaymentPage() {
         ? buildConfirmationUrl(orderDetails)
         : orderDetailPath(orderID, 'purchase')
     );
-  }, [clearNavigationGuard, isLoadingOrder, orderDetails, orderID, reportOrderToMarketplace, router]);
+  }, [
+    clearNavigationGuard,
+    isLoadingOrder,
+    orderDetails,
+    orderID,
+    reportOrderToMarketplace,
+    router,
+  ]);
 
   useEffect(() => {
     if (!orderID || !orderDetails || !isPaymentOpenState(orderDetails.status)) {
