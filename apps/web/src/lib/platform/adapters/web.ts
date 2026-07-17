@@ -63,6 +63,17 @@ interface BackSentinelState {
   [BACK_STACK_MARKER]?: true;
 }
 
+/**
+ * Sentinel entries must CARRY the router's current `history.state`, not
+ * replace it: Next ignores popstate events whose state it doesn't recognize,
+ * so a bare-marker entry left in the stack desyncs the address bar from the
+ * rendered route the moment anything pops back onto it.
+ */
+function sentinelState(): BackSentinelState {
+  const current = typeof window !== 'undefined' ? window.history.state : null;
+  return { ...(current ?? {}), [BACK_STACK_MARKER]: true };
+}
+
 class WebBackActionAdapter implements BackActionCapability {
   readonly isNative = false;
   private readonly stack = new BackActionStack();
@@ -83,7 +94,7 @@ class WebBackActionAdapter implements BackActionCapability {
         // (Browser has already advanced state to whatever was *before* the
         // sentinel, so we need to restore the barrier.)
         if (typeof window !== 'undefined') {
-          window.history.pushState({ [BACK_STACK_MARKER]: true } satisfies BackSentinelState, '');
+          window.history.pushState(sentinelState(), '');
           this.sentinelPushed = true;
         }
       } else {
@@ -106,7 +117,7 @@ class WebBackActionAdapter implements BackActionCapability {
       this.listenerBound = true;
     }
     if (!this.sentinelPushed) {
-      window.history.pushState({ [BACK_STACK_MARKER]: true } satisfies BackSentinelState, '');
+      window.history.pushState(sentinelState(), '');
       this.sentinelPushed = true;
     }
   }

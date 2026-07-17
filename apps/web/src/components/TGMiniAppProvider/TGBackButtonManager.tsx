@@ -42,7 +42,11 @@ export function TGBackButtonManager() {
   }, [returnUrl, router]);
 
   useEffect(() => {
-    if (isRootTab) return;
+    // Only drive a real native BackButton (TG). On plain web / Discord the
+    // browser's own Back must stay untouched — registering a handler here
+    // routes it through the history-sentinel web adapter, which pollutes
+    // Next's history entries and desyncs the address bar from the view.
+    if (isRootTab || !back.isNative) return;
     return back.pushHandler(handleBack);
   }, [back, isRootTab, handleBack]);
 
