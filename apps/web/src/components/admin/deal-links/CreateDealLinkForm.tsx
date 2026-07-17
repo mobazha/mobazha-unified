@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Info, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Info, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import {
   ApiError,
   digitalAssetsApi,
@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { ProductListingPicker } from '@/components/pickers/ProductListingPicker';
+import { ProductListingSummary } from '@/components/pickers/ProductListingSummary';
 import {
   Select,
   SelectContent,
@@ -67,7 +69,7 @@ const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/;
  * A terms hash is a long opaque fingerprint; show enough of both ends to be
  * verifiable without pretending the whole value fits or is meaningful to read.
  */
-function truncateTermsHash(hash: string): string {
+function truncateFingerprint(hash: string): string {
   if (hash.length <= 20) return hash;
   return `${hash.slice(0, 10)}…${hash.slice(-6)}`;
 }
@@ -117,7 +119,7 @@ export function CreateDealLinkForm({
   showHeader = true,
 }: CreateDealLinkFormProps) {
   const { t } = useI18n();
-  const { formatPrice, fromMinimalUnit } = useCurrency();
+  const { fromMinimalUnit } = useCurrency();
   const { toast } = useToast();
   const { listings, isLoading: listingsLoading } = useMyListings();
 
@@ -171,13 +173,17 @@ export function CreateDealLinkForm({
     [eligibleListings, selectedProductSlug]
   );
 
-  // When editing, the template is bound to a listing hash, not a slug; recover
-  // the slug from the seller's own index so we can load the option catalog.
-  const editListingSlug = useMemo(() => {
+  // When editing, the template is bound to a listing hash, not a slug. Keep the
+  // matching list item for the locked-product summary and its slug for loading
+  // the option catalog. If the live listing changed, the saved title/hash still
+  // provide an honest fallback instead of pretending the current product matches.
+  const editListing = useMemo(() => {
     const hash = editLink?.purchaseTemplate?.listingHash;
-    if (!hash) return null;
-    return listings.find(item => item.cid === hash)?.slug ?? null;
+    if (!hash) return undefined;
+    return listings.find(item => item.cid === hash);
   }, [editLink, listings]);
+  const editListingSlug = editListing?.slug ?? null;
+  const lockedListingHash = editLink?.purchaseTemplate?.listingHash;
 
   // Load the full listing so we can offer its variant options. The list index
   // (`useMyListings`) carries no options, so this is the only place they can be
@@ -497,7 +503,7 @@ export function CreateDealLinkForm({
                   title={editLink.termsHash}
                   data-testid="deal-link-terms-hash"
                 >
-                  {truncateTermsHash(editLink.termsHash)}
+                  {truncateFingerprint(editLink.termsHash)}
                 </span>
               </span>
             ) : null}
@@ -510,28 +516,67 @@ export function CreateDealLinkForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="deal-product-select">{t('admin.dealLinks.productLabel')}</Label>
+          <div className="flex min-h-6 items-center justify-between gap-3">
+            <Label htmlFor={isEditing ? undefined : 'deal-product-select'}>
+              {t('admin.dealLinks.productLabel')}
+            </Label>
+            {isEditing ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+                data-testid="deal-link-product-locked-badge"
+              >
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                {t('admin.dealLinks.productLockedLabel')}
+              </span>
+            ) : null}
+          </div>
           {isEditing ? (
-            <div className="flex min-h-11 items-center rounded-md border border-border bg-muted/30 px-3 text-sm text-foreground">
-              {editLink?.title}
+            <div
+              className="rounded-lg border border-border bg-muted/20 p-3"
+              role="group"
+              aria-label={t('admin.dealLinks.productLabel')}
+              data-testid="deal-link-locked-product"
+            >
+              <ProductListingSummary
+                listing={editListing}
+                fallbackTitle={editLink?.title}
+                variant="locked"
+              />
+              {lockedListingHash ? (
+                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-xs">
+                  <span className="text-muted-foreground">
+                    {t('admin.dealLinks.productVersionLabel')}:
+                  </span>
+                  <code
+                    className="font-mono text-foreground"
+                    title={lockedListingHash}
+                    data-testid="deal-link-product-version"
+                  >
+                    {truncateFingerprint(lockedListingHash)}
+                  </code>
+                </div>
+              ) : null}
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t('admin.dealLinks.productLockedHint')}
+              </p>
+              {!listingsLoading && lockedListingHash && !editListing ? (
+                <p
+                  className="mt-2 flex items-start gap-1.5 rounded-md border border-warning/20 bg-warning/10 px-2.5 py-2 text-xs text-warning"
+                  data-testid="deal-link-product-version-warning"
+                >
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{t('admin.dealLinks.productVersionUnavailable')}</span>
+                </p>
+              ) : null}
             </div>
           ) : (
-            <Select value={selectedProductSlug} onValueChange={applyProductSlug}>
-              <SelectTrigger id="deal-product-select" className="min-h-11">
-                <SelectValue placeholder={t('admin.dealLinks.productPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {eligibleListings.map(listing => (
-                  <SelectItem key={listing.slug} value={listing.slug}>
-                    {listing.title} ·{' '}
-                    {formatPrice(
-                      fromMinimalUnit(listing.price.amount, listing.price.currency.code),
-                      listing.price.currency.code
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ProductListingPicker
+              id="deal-product-select"
+              listings={eligibleListings}
+              value={selectedProductSlug}
+              onValueChange={applyProductSlug}
+              loading={listingsLoading}
+            />
           )}
           {!isEditing && !listingsLoading && !eligibleListings.length ? (
             <p className="text-sm text-muted-foreground">

@@ -4013,6 +4013,15 @@ export interface TranslationResource {
       dealCreateSubtitle?: string;
       productLabel?: string;
       productPlaceholder?: string;
+      productSearchPlaceholder?: string;
+      productNoResults?: string;
+      productLoading?: string;
+      productTypeService?: string;
+      productTypeDigital?: string;
+      productLockedLabel?: string;
+      productVersionLabel?: string;
+      productLockedHint?: string;
+      productVersionUnavailable?: string;
       noEligibleProducts?: string;
       deliveryTypeLabel?: string;
       deliveryDigitalFile?: string;

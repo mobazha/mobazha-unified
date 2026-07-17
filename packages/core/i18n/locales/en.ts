@@ -7602,6 +7602,17 @@ export const en: TranslationResource = {
         'Choose a published digital product or service. The price and product version are locked into this link.',
       productLabel: 'Product or service',
       productPlaceholder: 'Choose what you are selling',
+      productSearchPlaceholder: 'Search by product name or ID',
+      productNoResults: 'No matching eligible products',
+      productLoading: 'Loading products...',
+      productTypeService: 'Service',
+      productTypeDigital: 'Digital product',
+      productLockedLabel: 'Locked',
+      productVersionLabel: 'Product version',
+      productLockedHint:
+        'This product version is permanently bound to this protected link. Create a new protected link to use another product.',
+      productVersionUnavailable:
+        'The current product is unavailable or has changed since this version was locked.',
       noEligibleProducts:
         'Publish a fixed-price service, or configure delivery assets for a digital product first.',
       deliveryTypeLabel: 'How you will deliver it',

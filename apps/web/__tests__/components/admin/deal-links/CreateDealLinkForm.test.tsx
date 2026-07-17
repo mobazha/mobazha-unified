@@ -25,15 +25,44 @@ const LISTING = {
   contractType: 'SERVICE',
   price: { amount: '12000', currency: { code: 'USD' } },
 };
+let mockListings = [LISTING];
 
 vi.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
 }));
 
-// The real Select is Radix-based (no native <select> a11y tree jsdom/RTL can
-// drive with fireEvent.change). Swap in a native <select> that flattens the
-// SelectTrigger id and SelectItem value/label pairs out of the same JSX tree,
-// so the form under test is unchanged and only the interaction shape differs.
+// ProductListingPicker owns the rich combobox interaction and is tested
+// separately. Keep this form suite focused on the product-selection effects.
+vi.mock('@/components/pickers/ProductListingPicker', () => ({
+  ProductListingPicker: ({
+    id,
+    listings,
+    value,
+    onValueChange,
+  }: {
+    id?: string;
+    listings: Array<typeof LISTING>;
+    value?: string;
+    onValueChange: (value: string) => void;
+  }) => (
+    <select
+      id={id}
+      value={value}
+      onChange={event => onValueChange(event.target.value)}
+      data-testid="deal-product-picker"
+    >
+      <option value="">Choose</option>
+      {listings.map(listing => (
+        <option key={listing.slug} value={listing.slug}>
+          {listing.title}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
+// Other form fields still use Radix Select. Swap it for a native select so the
+// form's expiry and product-option behavior stays easy to drive in jsdom.
 vi.mock('@/components/ui/select', async () => {
   const ReactModule = await import('react');
   const { Children, isValidElement, createElement } = ReactModule.default ?? ReactModule;
@@ -112,7 +141,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       formatPrice: (amount: string, currency: string) => `${amount} ${currency}`,
       fromMinimalUnit: (amount: string) => amount,
     }),
-    useMyListings: () => ({ listings: [LISTING], isLoading: false }),
+    useMyListings: () => ({ listings: mockListings, isLoading: false }),
     useListing: () => ({ listing: mockProductDetail, isOffline: false, isLoading: false }),
     createSellerDealLink: (...args: unknown[]) => createSellerDealLinkMock(...args),
     activateSellerDealLink: (...args: unknown[]) => activateSellerDealLinkMock(...args),
@@ -175,6 +204,7 @@ describe('CreateDealLinkForm', () => {
     updateSellerDealLinkMock.mockReset();
     toastMock.mockClear();
     mockProductDetail = null;
+    mockListings = [LISTING];
   });
 
   it('persists the draft and calls onCreated when both create and activate succeed', async () => {
@@ -357,6 +387,7 @@ describe('CreateDealLinkForm', () => {
   });
 
   it('shows the locked revision and truncated terms hash, and preserves the template on save', async () => {
+    mockListings = [{ ...LISTING, cid: 'QmABC', slug: 'locked-design-review' }];
     updateSellerDealLinkMock.mockResolvedValue({ ...EDIT_LINK, currentRevision: 4 });
     render(<CreateDealLinkForm editLink={EDIT_LINK} onSaved={vi.fn()} />);
 
@@ -364,6 +395,17 @@ describe('CreateDealLinkForm', () => {
       'admin.dealLinks.revisionValue'
     );
     expect(screen.getByTestId('deal-link-terms-hash')).toHaveTextContent('0123456789…UVWXYZ');
+    expect(screen.getByTestId('deal-link-product-locked-badge')).toHaveTextContent(
+      'admin.dealLinks.productLockedLabel'
+    );
+    expect(screen.getByTestId('deal-link-locked-product')).toHaveTextContent(
+      'locked-design-review'
+    );
+    expect(screen.getByTestId('deal-link-product-version')).toHaveTextContent('QmABC');
+    expect(screen.getByTestId('deal-link-locked-product')).toHaveTextContent(
+      'admin.dealLinks.productLockedHint'
+    );
+    expect(screen.queryByTestId('deal-link-product-version-warning')).not.toBeInTheDocument();
     expect(screen.getByTestId('deal-quantity')).toHaveValue('2');
 
     fireEvent.change(screen.getByTestId('deal-quantity'), { target: { value: '5' } });
@@ -380,6 +422,16 @@ describe('CreateDealLinkForm', () => {
           }),
         })
       )
+    );
+  });
+
+  it('keeps the locked product identifiable when the current listing version is unavailable', () => {
+    render(<CreateDealLinkForm editLink={EDIT_LINK} onSaved={vi.fn()} />);
+
+    expect(screen.getByTestId('deal-link-locked-product')).toHaveTextContent('Design review');
+    expect(screen.getByTestId('deal-link-product-version')).toHaveAttribute('title', 'QmABC');
+    expect(screen.getByTestId('deal-link-product-version-warning')).toHaveTextContent(
+      'admin.dealLinks.productVersionUnavailable'
     );
   });
 
