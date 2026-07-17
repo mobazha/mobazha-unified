@@ -4,7 +4,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { featureFlags } from '../../services/featureFlags';
-import { getCachedFeatureFlags, setCachedFeatureFlags } from '../../hooks/featureFlagsCache';
+import {
+  getCachedFeatureFlags,
+  reapplyCachedFeatureFlags,
+  setCachedFeatureFlags,
+} from '../../hooks/featureFlagsCache';
 
 describe('featureFlagsCache', () => {
   beforeEach(() => {
@@ -37,6 +41,33 @@ describe('featureFlagsCache', () => {
 
     expect(featureFlags.isEnabled('guestCheckout')).toBe(false);
     expect(featureFlags.isEnabled('collectiblesHubEnabled')).toBe(true);
+  });
+
+  it('reapply restores server flags after a runtime-config re-seed wipes them', () => {
+    // Authenticated serverInfo fetch landed first: server says enabled.
+    setCachedFeatureFlags({ aiWorkspaceEnabled: true });
+    expect(featureFlags.isEnabled('aiWorkspaceEnabled')).toBe(true);
+
+    // A runtime-config refresh then re-seeds the unified store with the
+    // node's unauthenticated evaluation (feature disabled) — this is the
+    // race that made the sidebar fall back to the legacy AI Agents entry.
+    featureFlags.initialize({
+      aiWorkspaceEnabled: { effective: false, overridable: [] },
+    });
+    expect(featureFlags.isEnabled('aiWorkspaceEnabled')).toBe(false);
+
+    reapplyCachedFeatureFlags();
+    expect(featureFlags.isEnabled('aiWorkspaceEnabled')).toBe(true);
+  });
+
+  it('reapply is a no-op when no server flags are cached', () => {
+    setCachedFeatureFlags(null);
+    featureFlags.initialize({
+      aiWorkspaceEnabled: { effective: false, overridable: [] },
+    });
+
+    reapplyCachedFeatureFlags();
+    expect(featureFlags.isEnabled('aiWorkspaceEnabled')).toBe(false);
   });
 
   it('invalidation restores runtime-config baseline and clears API cache', () => {

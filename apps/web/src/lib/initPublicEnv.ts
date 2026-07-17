@@ -5,6 +5,7 @@ import {
   initializeRuntimeConfigFromWindow,
   subscribeRuntimeConfig,
 } from '@mobazha/core/config/runtimeConfig';
+import { reapplyCachedFeatureFlags } from '@mobazha/core/hooks/featureFlagsCache';
 import { featureFlags } from '@mobazha/core/services/featureFlags';
 
 const runtimeConfig = initializeRuntimeConfigFromWindow();
@@ -30,4 +31,8 @@ featureFlags.initializeFromRuntimeConfig(runtimeConfig);
 
 subscribeRuntimeConfig(() => {
   featureFlags.initializeFromRuntimeConfig(getRuntimeConfig());
+  // Runtime-config refreshes carry the node's unauthenticated evaluation;
+  // re-apply the authenticated serverInfo flags so they stay authoritative
+  // regardless of which response lands last.
+  reapplyCachedFeatureFlags();
 });

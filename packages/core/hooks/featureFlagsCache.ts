@@ -57,6 +57,20 @@ function bridgeToUnifiedFeatureFlags(flags: FeatureFlags): void {
   }
 }
 
+/**
+ * Re-apply the cached server flags on top of the current unified snapshot.
+ *
+ * Runtime-config refreshes re-seed the unified store from `rc.features`
+ * (node-evaluated, unauthenticated); without this, a refresh landing after
+ * the serverInfo fetch silently discards the authenticated SaaS values.
+ * Call after any `featureFlags.initializeFromRuntimeConfig(...)` re-seed.
+ */
+export function reapplyCachedFeatureFlags(): void {
+  if (cachedFlags) {
+    bridgeToUnifiedFeatureFlags(cachedFlags);
+  }
+}
+
 /** Replace the cache and notify all subscribers. */
 export function setCachedFeatureFlags(next: FeatureFlags | null): void {
   cachedFlags = next;
