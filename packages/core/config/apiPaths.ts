@@ -550,6 +550,11 @@ export const HOSTING_API = {
   MARKETPLACE_LINK: (id: string) => `/platform/v1/marketplaces/${id}/link`,
   MARKETPLACE_CUSTOM_DOMAIN_VERIFY: (id: string) =>
     `/platform/v1/marketplaces/${id}/domains/custom/verify`,
+  MARKETPLACE_EARNINGS: (id: string) => `/platform/v1/marketplaces/${id}/earnings`,
+  MARKETPLACE_INVITE_LINKS: (id: string) => `/platform/v1/marketplaces/${id}/invite-links`,
+  MARKETPLACE_INVITE_LINK: (id: string, linkId: string) =>
+    `/platform/v1/marketplaces/${id}/invite-links/${encodeURIComponent(linkId)}`,
+  MARKETPLACE_INTEREST_SIGNUPS: (id: string) => `/platform/v1/marketplaces/${id}/interest-signups`,
   MARKETPLACE_SELLERS: (id: string) => `/platform/v1/marketplaces/${id}/sellers`,
   MARKETPLACE_SELLER_RESOLVE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/resolve`,
   MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
@@ -580,6 +585,14 @@ export const HOSTING_API = {
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
   PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
+  PUBLIC_MARKETPLACE_ORDER_ATTRIBUTIONS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/order-attributions`,
+  PUBLIC_MARKETPLACE_INTEREST_SIGNUPS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/interest-signups`,
+  PUBLIC_MARKETPLACE_INVITE_LINK: (token: string) =>
+    `/platform/v1/public-marketplaces/invite-links/${encodeURIComponent(token)}`,
+  PUBLIC_MARKETPLACE_INVITE_LINK_ACCEPT: (token: string) =>
+    `/platform/v1/public-marketplaces/invite-links/${encodeURIComponent(token)}/accept`,
   MARKETPLACE_ATTRIBUTION_SUMMARY: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/attribution-summary`,
   MARKETPLACE_CURATION: (id: string) =>

@@ -67,6 +67,7 @@ const marketplace: NativeMarketplace = {
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'operator_invited',
+  operatorCommissionBps: 0,
   vertical: 'collectibles',
   plan: 'free',
   domains: [],
@@ -482,6 +483,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'draft',
       sellerEntryMode: 'seller_self_serve',
+      operatorCommissionBps: 0,
       domains: [
         {
           host: 'market.example.test',
@@ -511,6 +513,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'suspended',
       sellerEntryMode: 'operator_invited',
+      operatorCommissionBps: 0,
       domains: [],
     };
     currentStores = [];
@@ -538,6 +541,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'suspended',
       sellerEntryMode: 'operator_invited',
+      operatorCommissionBps: 0,
       domains: [
         {
           host: 'market.example.test',

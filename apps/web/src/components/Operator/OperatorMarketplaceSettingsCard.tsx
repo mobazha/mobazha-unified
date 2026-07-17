@@ -60,6 +60,19 @@ interface MarketplaceSettingsFormState {
   sellerEntryMode: MarketplaceSellerEntryMode;
   customDomain: string;
   catalogQuery: string;
+  /** Operator take-rate as a percent string ("5" / "7.5"); stored as bps. */
+  commissionPercent: string;
+}
+
+const COMMISSION_MAX_PERCENT = 30;
+
+function parseCommissionPercent(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === '') return 0;
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
+  const percent = Number(trimmed);
+  if (!Number.isFinite(percent) || percent < 0 || percent > COMMISSION_MAX_PERCENT) return null;
+  return Math.round(percent * 100);
 }
 
 function domainHost(marketplace: NativeMarketplace, kind: 'subdomain' | 'custom'): string {
@@ -103,6 +116,7 @@ interface MarketplaceSettingsValidation {
   customDomain: boolean;
   logoURL: boolean;
   bannerURL: boolean;
+  commissionPercent: boolean;
 }
 
 function validateForm(form: MarketplaceSettingsFormState): MarketplaceSettingsValidation {
@@ -112,6 +126,7 @@ function validateForm(form: MarketplaceSettingsFormState): MarketplaceSettingsVa
     customDomain: !form.customDomain.trim() || isValidHostname(form.customDomain),
     logoURL: isValidMediaUrl(form.logoURL),
     bannerURL: isValidMediaUrl(form.bannerURL),
+    commissionPercent: parseCommissionPercent(form.commissionPercent) !== null,
   };
 }
 
@@ -129,6 +144,10 @@ function buildFormState(marketplace: NativeMarketplace): MarketplaceSettingsForm
     sellerEntryMode: marketplace.sellerEntryMode,
     customDomain: domainHost(marketplace, 'custom'),
     catalogQuery: marketplace.catalogQuery ?? '',
+    commissionPercent:
+      (marketplace.operatorCommissionBps ?? 0) > 0
+        ? String((marketplace.operatorCommissionBps ?? 0) / 100)
+        : '',
   };
 }
 
@@ -183,6 +202,10 @@ function buildPartialUpdate(
   if (normalizedCustomDomain !== serverCustomDomain) {
     // Hosting semantics: empty string removes custom domain.
     payload.domain = normalizedCustomDomain;
+  }
+  const commissionBps = parseCommissionPercent(form.commissionPercent);
+  if (commissionBps !== null && commissionBps !== (marketplace.operatorCommissionBps ?? 0)) {
+    payload.operatorCommissionBps = commissionBps;
   }
 
   return payload;
@@ -497,6 +520,38 @@ export function OperatorMarketplaceSettingsCard({
             <p className="text-sm text-muted-foreground">
               {t('marketplace.operator.sellerReviewModeHint')}
             </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="operator-commission-percent">
+              {t('marketplace.operator.commissionRate', { defaultValue: 'Operator commission' })}
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="operator-commission-percent"
+                inputMode="decimal"
+                placeholder="0"
+                value={form.commissionPercent}
+                disabled={isArchived || isBusy}
+                onChange={event => setField('commissionPercent', event.target.value)}
+                data-testid="operator-marketplace-commission-percent"
+                className="max-w-[8rem]"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+            {!validation.commissionPercent ? (
+              <p className="text-sm text-destructive" data-testid="operator-commission-invalid">
+                {t('marketplace.operator.commissionRateInvalid', {
+                  defaultValue: 'Enter a rate between 0 and 30 (up to 2 decimals).',
+                })}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t('marketplace.operator.commissionRateHint', {
+                  defaultValue:
+                    'Charged to sellers on orders this marketplace produces. Takes effect for new orders after you republish; sellers see the committed rate before joining.',
+                })}
+              </p>
+            )}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="operator-marketplace-vertical">

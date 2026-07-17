@@ -95,6 +95,7 @@ function buildMarketplace(id: string, name: string): NativeMarketplace {
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
+    operatorCommissionBps: 0,
     vertical: 'collectibles',
     plan: 'free',
     domains: [],
@@ -128,8 +129,10 @@ describe('useOperatorMarketplace', () => {
     checkoutHandoffs: 0,
     listingClickRate: null,
     checkoutHandoffRate: null,
+    orders: 0,
+    sources: [],
     hasData: false,
-  } as const;
+  } satisfies MarketplaceAttributionSummary;
 
   beforeEach(() => {
     vi.clearAllMocks();

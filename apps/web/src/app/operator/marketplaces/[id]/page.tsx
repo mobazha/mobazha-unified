@@ -26,6 +26,7 @@ import type { MarketplaceSellerResolveCandidate, MarketplaceStoreMembership } fr
 import { resolveMarketplaceSellers } from '@mobazha/core/services/api/marketplace';
 import { getImageUrl } from '@mobazha/core/services/api/config';
 import { Header, Footer } from '@/components';
+import { OperatorEarningsCard } from '@/components/Operator/OperatorEarningsCard';
 import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
 import { OperatorSharePanel } from '@/components/Operator/OperatorSharePanel';
@@ -931,6 +932,71 @@ export default function MarketplaceOperatorDetailPage() {
                               : `${(attributionSummary.checkoutHandoffRate * 100).toFixed(1)}%`}
                           </span>
                         </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {t('marketplace.operator.attributionOrders', {
+                              defaultValue: 'Attributed orders',
+                            })}
+                          </span>
+                          <span data-testid="operator-attribution-orders">
+                            {attributionSummary.orders ?? 0}
+                          </span>
+                        </div>
+                        {attributionSummary.sources && attributionSummary.sources.length > 0 ? (
+                          <div
+                            className="overflow-x-auto pt-2"
+                            data-testid="operator-attribution-sources"
+                          >
+                            <p className="mb-1 text-xs text-muted-foreground">
+                              {t('marketplace.operator.attributionSourcesTitle', {
+                                defaultValue: 'By share source',
+                              })}
+                            </p>
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-left text-muted-foreground">
+                                  <th className="py-1 pr-2 font-normal">
+                                    {t('marketplace.operator.attributionSource', {
+                                      defaultValue: 'Source',
+                                    })}
+                                  </th>
+                                  <th className="py-1 pr-2 font-normal">
+                                    {t('marketplace.operator.attributionImpressions')}
+                                  </th>
+                                  <th className="py-1 pr-2 font-normal">
+                                    {t('marketplace.operator.attributionCheckoutHandoffs')}
+                                  </th>
+                                  <th className="py-1 font-normal">
+                                    {t('marketplace.operator.attributionOrders', {
+                                      defaultValue: 'Attributed orders',
+                                    })}
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {attributionSummary.sources.map(source => (
+                                  <tr
+                                    key={`${source.source}|${source.medium ?? ''}|${source.campaign ?? ''}`}
+                                    className="border-t border-border"
+                                  >
+                                    <td className="py-1 pr-2">
+                                      {source.source ||
+                                        t('marketplace.operator.attributionSourceDirect', {
+                                          defaultValue: 'direct',
+                                        })}
+                                      {source.campaign ? (
+                                        <span className="text-muted-foreground"> · {source.campaign}</span>
+                                      ) : null}
+                                    </td>
+                                    <td className="py-1 pr-2">{source.impressions}</td>
+                                    <td className="py-1 pr-2">{source.checkoutHandoffs}</td>
+                                    <td className="py-1">{source.orders}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : null}
                       </div>
                     ) : attributionSummary?.hasData === false ? (
                       <p
@@ -948,6 +1014,13 @@ export default function MarketplaceOperatorDetailPage() {
                     </p>
                   </CardContent>
                 </Card>
+              ) : null}
+
+              {canViewAttribution ? (
+                <OperatorEarningsCard
+                  marketplaceId={marketplace.id}
+                  commissionBps={marketplace.operatorCommissionBps ?? 0}
+                />
               ) : null}
             </TabsContent>
 

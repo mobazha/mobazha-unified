@@ -78,6 +78,7 @@ function buildMarketplace(id = 'mp-1'): NativeMarketplace {
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
+    operatorCommissionBps: 0,
     vertical: 'collectibles',
     plan: 'free',
     domains: [],
