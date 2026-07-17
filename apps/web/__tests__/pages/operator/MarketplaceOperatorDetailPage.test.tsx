@@ -948,7 +948,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     // (The test i18n mock returns raw keys, so assert on the key.)
     expect(
       within(screen.getByTestId('operator-attribution-step-handoffs')).getByText(
-        'marketplace.operator.attributionDeepLinkNote'
+        /attributionDeepLinkNote/
       )
     ).toBeInTheDocument();
   });

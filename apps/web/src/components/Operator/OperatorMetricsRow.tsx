@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { useI18n } from '@mobazha/core';
 import { getMarketplaceEarnings } from '@mobazha/core/services/api/marketplace';
 import type {
@@ -11,14 +10,15 @@ import type {
 import { formatMinorUnits } from './OperatorEarningsCard';
 import { ArrowDownRight, ArrowUpRight, Coins, Eye, ShoppingBag, Store } from 'lucide-react';
 
-export type OperatorMetricTarget = 'funnel' | 'earnings' | 'sellers';
+export type OperatorMetricTarget = 'earnings' | 'sellers';
 
 /**
- * The operator's business-at-a-glance strip: the first thing a published
- * marketplace shows. Four numbers answer "how is my market doing" before any
- * configuration UI appears — visits, attributed orders, commission earned,
- * and sellers (with pending-review pressure surfaced as a badge). Every card
- * is a door: clicking it lands on the detail that explains the number.
+ * The operator's business-at-a-glance strip: the KPI row of the Performance
+ * card. Four numbers answer "how is my market doing" before any configuration
+ * UI appears — visits, attributed orders, commission earned, and sellers
+ * (with pending-review pressure surfaced as a badge). Commission and Sellers
+ * are doors to their detail views; Visits and Orders are explained by the
+ * conversion line rendered directly beneath this row, so they don't navigate.
  */
 export function OperatorMetricsRow({
   marketplaceId,
@@ -85,7 +85,7 @@ export function OperatorMetricsRow({
     icon: typeof Eye;
     label: string;
     value: string;
-    target: OperatorMetricTarget;
+    target?: OperatorMetricTarget;
     delta?: number | null;
     showDelta?: boolean;
     hint?: string;
@@ -97,7 +97,6 @@ export function OperatorMetricsRow({
       icon: Eye,
       label: `${t('marketplace.operator.metricVisits', { defaultValue: 'Visits' })} · ${windowDays}d`,
       value: summaryLoading ? '…' : String(visits),
-      target: 'funnel',
       delta: visitsDelta,
       showDelta: showVisitsDelta,
       hint:
@@ -112,7 +111,6 @@ export function OperatorMetricsRow({
       icon: ShoppingBag,
       label: `${t('marketplace.operator.metricOrders', { defaultValue: 'Attributed orders' })} · ${windowDays}d`,
       value: summaryLoading ? '…' : String(orders),
-      target: 'funnel',
       delta: ordersDelta,
       showDelta: showOrdersDelta,
       hint:
@@ -157,62 +155,65 @@ export function OperatorMetricsRow({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="operator-metrics-row">
-      {metrics.map(metric => (
-        <Card
-          key={metric.key}
-          data-testid={`operator-metric-${metric.key}`}
-          className="transition-colors hover:border-foreground/20"
-        >
-          <button
-            type="button"
-            className="block w-full text-left"
-            onClick={() => onNavigate?.(metric.target)}
-            aria-label={metric.label}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <metric.icon className="h-3.5 w-3.5" />
-                {metric.label}
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" data-testid="operator-metrics-row">
+      {metrics.map(metric => {
+        const target = metric.target;
+        const clickable = Boolean(target && onNavigate);
+        const content = (
+          <>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <metric.icon className="h-3.5 w-3.5" />
+              {metric.label}
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span
+                className={`truncate text-2xl font-semibold tabular-nums ${metric.highlight ? 'text-primary' : ''}`}
+              >
+                {metric.value}
+              </span>
+              {metric.showDelta && metric.delta != null ? (
                 <span
-                  className={`truncate text-2xl font-semibold tabular-nums ${metric.highlight ? 'text-primary' : ''}`}
+                  className={`flex items-center gap-0.5 text-xs font-medium tabular-nums ${
+                    metric.delta > 0 ? 'text-emerald-500' : 'text-muted-foreground'
+                  }`}
+                  title={`${t('marketplace.operator.metricDeltaTitle', {
+                    defaultValue: 'vs previous',
+                  })} ${windowDays}d`}
+                  data-testid={`operator-metric-${metric.key}-delta`}
                 >
-                  {metric.value}
+                  {metric.delta > 0 ? (
+                    <ArrowUpRight className="h-3 w-3" />
+                  ) : metric.delta < 0 ? (
+                    <ArrowDownRight className="h-3 w-3" />
+                  ) : null}
+                  {metric.delta > 0 ? `+${metric.delta}` : String(metric.delta)}
                 </span>
-                {metric.showDelta && metric.delta != null ? (
-                  <span
-                    className={`flex items-center gap-0.5 text-xs font-medium tabular-nums ${
-                      metric.delta > 0
-                        ? 'text-emerald-500'
-                        : metric.delta < 0
-                          ? 'text-muted-foreground'
-                          : 'text-muted-foreground'
-                    }`}
-                    title={`${t('marketplace.operator.metricDeltaTitle', {
-                      defaultValue: 'vs previous',
-                    })} ${windowDays}d`}
-                    data-testid={`operator-metric-${metric.key}-delta`}
-                  >
-                    {metric.delta > 0 ? (
-                      <ArrowUpRight className="h-3 w-3" />
-                    ) : metric.delta < 0 ? (
-                      <ArrowDownRight className="h-3 w-3" />
-                    ) : null}
-                    {metric.delta > 0 ? `+${metric.delta}` : String(metric.delta)}
-                  </span>
-                ) : null}
-              </div>
-              {metric.badge ? (
-                <div className="mt-1 text-xs font-medium text-amber-500">{metric.badge}</div>
-              ) : metric.hint ? (
-                <div className="mt-1 truncate text-xs text-muted-foreground">{metric.hint}</div>
               ) : null}
-            </CardContent>
+            </div>
+            {metric.badge ? (
+              <div className="mt-1 text-xs font-medium text-amber-500">{metric.badge}</div>
+            ) : metric.hint ? (
+              <div className="mt-1 truncate text-xs text-muted-foreground">{metric.hint}</div>
+            ) : null}
+          </>
+        );
+        return clickable && target ? (
+          <button
+            key={metric.key}
+            type="button"
+            className="rounded-lg p-3 text-left transition-colors hover:bg-muted/50"
+            onClick={() => onNavigate?.(target)}
+            aria-label={metric.label}
+            data-testid={`operator-metric-${metric.key}`}
+          >
+            {content}
           </button>
-        </Card>
-      ))}
+        ) : (
+          <div key={metric.key} className="p-3" data-testid={`operator-metric-${metric.key}`}>
+            {content}
+          </div>
+        );
+      })}
     </div>
   );
 }

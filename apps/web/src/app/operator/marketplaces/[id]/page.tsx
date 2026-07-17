@@ -177,17 +177,18 @@ export default function MarketplaceOperatorDetailPage() {
     [syncTabToUrl]
   );
 
-  // Metric cards are doors, not posters: each lands on the detail view that
-  // explains its number (funnel card, earnings card, or the sellers tab).
+  // Metric cards are doors, not posters: Commission lands on the earnings
+  // card, Sellers on the sellers tab. Visits/Orders are explained by the
+  // conversion line right below the KPI row, so they don't navigate.
   const handleMetricNavigate = useCallback(
-    (target: 'funnel' | 'earnings' | 'sellers') => {
+    (target: 'earnings' | 'sellers') => {
       if (target === 'sellers') {
         handleTabChange('sellers');
         return;
       }
-      const anchorId =
-        target === 'funnel' ? 'operator-attribution-funnel' : 'operator-earnings-anchor';
-      document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document
+        .getElementById('operator-earnings-anchor')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
     [handleTabChange]
   );
@@ -898,17 +899,289 @@ export default function MarketplaceOperatorDetailPage() {
               data-testid="operator-tab-content-overview"
             >
               {marketplace.status === 'published' ? (
-                // Published = a running business: lead with performance, not
-                // configuration. Setup guidance only returns for draft/suspended.
-                <OperatorMetricsRow
-                  marketplaceId={marketplace.id}
-                  summary={attributionSummary}
-                  summaryLoading={attributionSummaryLoading}
-                  approvedSellers={counts.approved}
-                  pendingSellers={counts.waiting}
-                  windowDays={attributionWindowDays}
-                  onNavigate={handleMetricNavigate}
-                />
+                // Published = a running business: one Performance card owns the
+                // KPI row and the conversion detail beneath it, so every number
+                // the window selector governs lives inside the selector's card
+                // and Visits/Orders appear at full weight exactly once.
+                <Card data-testid="operator-performance-card">
+                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+                    <CardTitle>
+                      {t('marketplace.operator.performanceTitle', { defaultValue: 'Performance' })}
+                    </CardTitle>
+                    {canViewAttribution ? (
+                      <div
+                        className="flex rounded-md border border-border p-0.5"
+                        role="group"
+                        aria-label={t('marketplace.operator.attributionWindowLabel', {
+                          defaultValue: 'Time range',
+                        })}
+                      >
+                        {[7, 30, 90].map(days => (
+                          <button
+                            key={days}
+                            type="button"
+                            onClick={() => setAttributionWindowDays(days)}
+                            aria-pressed={attributionWindowDays === days}
+                            data-testid={`operator-attribution-window-${days}`}
+                            className={
+                              attributionWindowDays === days
+                                ? 'rounded bg-muted px-2 py-0.5 text-xs font-medium'
+                                : 'rounded px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground'
+                            }
+                          >
+                            {days}d
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </CardHeader>
+                  <CardContent>
+                    <OperatorMetricsRow
+                      marketplaceId={marketplace.id}
+                      summary={attributionSummary}
+                      summaryLoading={attributionSummaryLoading}
+                      approvedSellers={counts.approved}
+                      pendingSellers={counts.waiting}
+                      windowDays={attributionWindowDays}
+                      onNavigate={handleMetricNavigate}
+                    />
+                    {canViewAttribution ? (
+                      <div
+                        className="mt-4 space-y-3 border-t border-border pt-4 text-sm"
+                        data-testid="operator-attribution-funnel-card"
+                      >
+                        {attributionSummaryLoading ? (
+                          <p
+                            className="text-muted-foreground"
+                            data-testid="operator-attribution-summary-loading"
+                          >
+                            {t('marketplace.operator.attributionSummaryLoading')}
+                          </p>
+                        ) : attributionSummaryError ? (
+                          <div
+                            className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                            data-testid="operator-attribution-summary-error"
+                          >
+                            <p className="text-xs text-destructive">
+                              {t('marketplace.operator.attributionSummaryLoadFailed')}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2"
+                              onClick={() => void refresh()}
+                              disabled={Boolean(working)}
+                              data-testid="operator-attribution-summary-retry"
+                            >
+                              {t('common.retry')}
+                            </Button>
+                          </div>
+                        ) : attributionSummary?.hasData ? (
+                          <div className="space-y-3" data-testid="operator-attribution-has-data">
+                            {(() => {
+                              const summary = attributionSummary;
+                              // A rate computed over a handful of journeys is
+                              // noise dressed as precision — suppress it until
+                              // the denominator can support a percentage.
+                              const MIN_RATE_SAMPLE = 10;
+                              const steps: Array<{
+                                key: string;
+                                label: string;
+                                count: number;
+                                rate?: number | null;
+                                note?: string;
+                                testId?: string;
+                              }> = [
+                                {
+                                  key: 'visits',
+                                  label: t('marketplace.operator.attributionVisits', {
+                                    defaultValue: 'Visits',
+                                  }),
+                                  count: summary.visits ?? 0,
+                                },
+                                {
+                                  key: 'clicks',
+                                  label: t('marketplace.operator.attributionListingClicks'),
+                                  count: summary.listingClicks,
+                                  rate:
+                                    (summary.visits ?? 0) >= MIN_RATE_SAMPLE
+                                      ? summary.listingClickRate
+                                      : null,
+                                },
+                                {
+                                  key: 'handoffs',
+                                  label: t('marketplace.operator.attributionCheckoutHandoffs'),
+                                  count: summary.checkoutHandoffs,
+                                  rate:
+                                    summary.listingClicks >= MIN_RATE_SAMPLE
+                                      ? summary.checkoutHandoffRate
+                                      : null,
+                                  note:
+                                    summary.checkoutHandoffs > summary.listingClicks
+                                      ? t('marketplace.operator.attributionDeepLinkNote', {
+                                          defaultValue: 'Includes direct product-link visits',
+                                        })
+                                      : undefined,
+                                },
+                                {
+                                  key: 'orders',
+                                  label: t('marketplace.operator.attributionOrders', {
+                                    defaultValue: 'Attributed orders',
+                                  }),
+                                  count: summary.orders ?? 0,
+                                  testId: 'operator-attribution-orders',
+                                },
+                              ];
+                              // Subordinate to the KPI row above: the endpoints
+                              // repeat here only at small scale, reading as the
+                              // path between the big numbers, not a second copy.
+                              return (
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                  <span className="mr-1 text-xs uppercase tracking-wide text-muted-foreground">
+                                    {t('marketplace.operator.attributionConversionTitle', {
+                                      defaultValue: 'Conversion',
+                                    })}
+                                  </span>
+                                  {steps.map((step, index) => (
+                                    <React.Fragment key={step.key}>
+                                      {index > 0 ? (
+                                        <span className="flex items-center gap-1 text-muted-foreground/60">
+                                          <ChevronRight className="h-3.5 w-3.5" />
+                                          {step.rate != null ? (
+                                            <span className="text-[10px] tabular-nums text-muted-foreground">
+                                              {(step.rate * 100).toFixed(0)}%
+                                            </span>
+                                          ) : null}
+                                        </span>
+                                      ) : null}
+                                      <span
+                                        className="flex items-baseline gap-1.5"
+                                        data-testid={`operator-attribution-step-${step.key}`}
+                                      >
+                                        <span className="text-muted-foreground">{step.label}</span>
+                                        <span
+                                          className="font-semibold tabular-nums"
+                                          data-testid={step.testId}
+                                        >
+                                          {step.count}
+                                        </span>
+                                        {step.note ? (
+                                          <span className="text-[11px] text-muted-foreground">
+                                            · {step.note}
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                    </React.Fragment>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                            {attributionSummary.sources && attributionSummary.sources.length > 0 ? (
+                              <div
+                                className="overflow-x-auto pt-1"
+                                data-testid="operator-attribution-sources"
+                              >
+                                <p className="mb-1 text-xs text-muted-foreground">
+                                  {t('marketplace.operator.attributionSourcesTitle', {
+                                    defaultValue: 'By share source',
+                                  })}
+                                </p>
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-left text-muted-foreground">
+                                      <th className="py-1 pr-2 font-normal">
+                                        {t('marketplace.operator.attributionSource', {
+                                          defaultValue: 'Source',
+                                        })}
+                                      </th>
+                                      <th className="py-1 pr-2 font-normal">
+                                        {t('marketplace.operator.attributionVisits', {
+                                          defaultValue: 'Visits',
+                                        })}
+                                      </th>
+                                      <th className="py-1 pr-2 font-normal">
+                                        {t('marketplace.operator.attributionListingClicks')}
+                                      </th>
+                                      <th className="py-1 pr-2 font-normal">
+                                        {t('marketplace.operator.attributionCheckoutHandoffs')}
+                                      </th>
+                                      <th className="py-1 font-normal">
+                                        {t('marketplace.operator.attributionOrders', {
+                                          defaultValue: 'Attributed orders',
+                                        })}
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {attributionSummary.sources.map(source => (
+                                      <tr
+                                        key={`${source.source}|${source.medium ?? ''}|${source.campaign ?? ''}`}
+                                        className="border-t border-border"
+                                      >
+                                        <td
+                                          className="py-1 pr-2"
+                                          // Operators should read plain words, not
+                                          // raw UTM slugs; the untranslated tuple
+                                          // stays available on hover for debugging.
+                                          title={[
+                                            source.source || 'direct',
+                                            source.medium,
+                                            source.campaign,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(' / ')}
+                                        >
+                                          {source.source === 'operator_share'
+                                            ? t(
+                                                'marketplace.operator.attributionSourceOperatorShare',
+                                                { defaultValue: 'Community share link' }
+                                              )
+                                            : source.source ||
+                                              t('marketplace.operator.attributionSourceDirect', {
+                                                defaultValue: 'Direct',
+                                              })}
+                                          {source.campaign ? (
+                                            <span className="text-muted-foreground">
+                                              {' '}
+                                              · {source.campaign}
+                                            </span>
+                                          ) : null}
+                                        </td>
+                                        <td className="py-1 pr-2 tabular-nums">
+                                          {source.visits ?? source.impressions}
+                                        </td>
+                                        <td className="py-1 pr-2 tabular-nums">
+                                          {source.listingClicks}
+                                        </td>
+                                        <td className="py-1 pr-2 tabular-nums">
+                                          {source.checkoutHandoffs}
+                                        </td>
+                                        <td className="py-1 tabular-nums">{source.orders}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : attributionSummary?.hasData === false ? (
+                          <p
+                            className="text-muted-foreground"
+                            data-testid="operator-attribution-no-data"
+                          >
+                            {t('marketplace.operator.attributionNoData')}
+                          </p>
+                        ) : null}
+                        <p
+                          className="text-xs text-muted-foreground"
+                          data-testid="operator-attribution-note"
+                        >
+                          {t('marketplace.operator.attributionCheckoutMeaning')}
+                        </p>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
               ) : (
                 <Card data-testid="operator-overview-readiness">
                   <CardHeader>
@@ -983,265 +1256,6 @@ export default function MarketplaceOperatorDetailPage() {
                     slug={marketplace.slug || marketplace.id}
                   />
                 </div>
-              ) : null}
-
-              {canViewAttribution ? (
-                <Card
-                  className="mt-6 scroll-mt-24"
-                  id="operator-attribution-funnel"
-                  data-testid="operator-attribution-funnel-card"
-                >
-                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-                    <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
-                    <div
-                      className="flex rounded-md border border-border p-0.5"
-                      role="group"
-                      aria-label={t('marketplace.operator.attributionWindowLabel', {
-                        defaultValue: 'Time range',
-                      })}
-                    >
-                      {[7, 30, 90].map(days => (
-                        <button
-                          key={days}
-                          type="button"
-                          onClick={() => setAttributionWindowDays(days)}
-                          aria-pressed={attributionWindowDays === days}
-                          data-testid={`operator-attribution-window-${days}`}
-                          className={
-                            attributionWindowDays === days
-                              ? 'rounded bg-muted px-2 py-0.5 text-xs font-medium'
-                              : 'rounded px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground'
-                          }
-                        >
-                          {days}d
-                        </button>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    {attributionSummaryLoading ? (
-                      <p
-                        className="text-muted-foreground"
-                        data-testid="operator-attribution-summary-loading"
-                      >
-                        {t('marketplace.operator.attributionSummaryLoading')}
-                      </p>
-                    ) : attributionSummaryError ? (
-                      <div
-                        className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
-                        data-testid="operator-attribution-summary-error"
-                      >
-                        <p className="text-xs text-destructive">
-                          {t('marketplace.operator.attributionSummaryLoadFailed')}
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-2"
-                          onClick={() => void refresh()}
-                          disabled={Boolean(working)}
-                          data-testid="operator-attribution-summary-retry"
-                        >
-                          {t('common.retry')}
-                        </Button>
-                      </div>
-                    ) : attributionSummary?.hasData ? (
-                      <div className="space-y-3" data-testid="operator-attribution-has-data">
-                        {(() => {
-                          const summary = attributionSummary;
-                          // A rate computed over a handful of journeys is noise
-                          // dressed as precision — suppress it until the
-                          // denominator can support a percentage.
-                          const MIN_RATE_SAMPLE = 10;
-                          const steps: Array<{
-                            key: string;
-                            label: string;
-                            count: number;
-                            rate?: number | null;
-                            note?: string;
-                            testId?: string;
-                          }> = [
-                            {
-                              key: 'visits',
-                              label: t('marketplace.operator.attributionVisits', {
-                                defaultValue: 'Visits',
-                              }),
-                              count: summary.visits ?? 0,
-                            },
-                            {
-                              key: 'clicks',
-                              label: t('marketplace.operator.attributionListingClicks'),
-                              count: summary.listingClicks,
-                              rate:
-                                (summary.visits ?? 0) >= MIN_RATE_SAMPLE
-                                  ? summary.listingClickRate
-                                  : null,
-                            },
-                            {
-                              key: 'handoffs',
-                              label: t('marketplace.operator.attributionCheckoutHandoffs'),
-                              count: summary.checkoutHandoffs,
-                              rate:
-                                summary.listingClicks >= MIN_RATE_SAMPLE
-                                  ? summary.checkoutHandoffRate
-                                  : null,
-                              note:
-                                summary.checkoutHandoffs > summary.listingClicks
-                                  ? t('marketplace.operator.attributionDeepLinkNote', {
-                                      defaultValue: 'Includes direct product-link visits',
-                                    })
-                                  : undefined,
-                            },
-                            {
-                              key: 'orders',
-                              label: t('marketplace.operator.attributionOrders', {
-                                defaultValue: 'Attributed orders',
-                              }),
-                              count: summary.orders ?? 0,
-                              testId: 'operator-attribution-orders',
-                            },
-                          ];
-                          return (
-                            <div className="grid grid-cols-2 gap-4 md:flex md:items-start md:gap-0">
-                              {steps.map((step, index) => (
-                                <React.Fragment key={step.key}>
-                                  {index > 0 ? (
-                                    <div className="hidden shrink-0 flex-col items-center self-center px-2 md:flex">
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
-                                      {step.rate != null ? (
-                                        <span className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">
-                                          {(step.rate * 100).toFixed(0)}%
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                  <div
-                                    className="min-w-0 md:flex-1"
-                                    data-testid={`operator-attribution-step-${step.key}`}
-                                  >
-                                    <div className="text-xs text-muted-foreground">
-                                      {step.label}
-                                    </div>
-                                    <div
-                                      className="mt-1 text-2xl font-semibold tabular-nums"
-                                      data-testid={step.testId}
-                                    >
-                                      {step.count}
-                                    </div>
-                                    {step.note ? (
-                                      <div className="mt-0.5 text-[11px] text-muted-foreground">
-                                        {step.note}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          );
-                        })()}
-                        {attributionSummary.sources && attributionSummary.sources.length > 0 ? (
-                          <div
-                            className="overflow-x-auto pt-2"
-                            data-testid="operator-attribution-sources"
-                          >
-                            <p className="mb-1 text-xs text-muted-foreground">
-                              {t('marketplace.operator.attributionSourcesTitle', {
-                                defaultValue: 'By share source',
-                              })}
-                            </p>
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-muted-foreground">
-                                  <th className="py-1 pr-2 font-normal">
-                                    {t('marketplace.operator.attributionSource', {
-                                      defaultValue: 'Source',
-                                    })}
-                                  </th>
-                                  <th className="py-1 pr-2 font-normal">
-                                    {t('marketplace.operator.attributionVisits', {
-                                      defaultValue: 'Visits',
-                                    })}
-                                  </th>
-                                  <th className="py-1 pr-2 font-normal">
-                                    {t('marketplace.operator.attributionListingClicks')}
-                                  </th>
-                                  <th className="py-1 pr-2 font-normal">
-                                    {t('marketplace.operator.attributionCheckoutHandoffs')}
-                                  </th>
-                                  <th className="py-1 font-normal">
-                                    {t('marketplace.operator.attributionOrders', {
-                                      defaultValue: 'Attributed orders',
-                                    })}
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {attributionSummary.sources.map(source => (
-                                  <tr
-                                    key={`${source.source}|${source.medium ?? ''}|${source.campaign ?? ''}`}
-                                    className="border-t border-border"
-                                  >
-                                    <td
-                                      className="py-1 pr-2"
-                                      // Operators should read plain words, not raw
-                                      // UTM slugs; the untranslated tuple stays
-                                      // available on hover for debugging.
-                                      title={[
-                                        source.source || 'direct',
-                                        source.medium,
-                                        source.campaign,
-                                      ]
-                                        .filter(Boolean)
-                                        .join(' / ')}
-                                    >
-                                      {source.source === 'operator_share'
-                                        ? t('marketplace.operator.attributionSourceOperatorShare', {
-                                            defaultValue: 'Community share link',
-                                          })
-                                        : source.source ||
-                                          t('marketplace.operator.attributionSourceDirect', {
-                                            defaultValue: 'Direct',
-                                          })}
-                                      {source.campaign ? (
-                                        <span className="text-muted-foreground">
-                                          {' '}
-                                          · {source.campaign}
-                                        </span>
-                                      ) : null}
-                                    </td>
-                                    <td className="py-1 pr-2 tabular-nums">
-                                      {source.visits ?? source.impressions}
-                                    </td>
-                                    <td className="py-1 pr-2 tabular-nums">
-                                      {source.listingClicks}
-                                    </td>
-                                    <td className="py-1 pr-2 tabular-nums">
-                                      {source.checkoutHandoffs}
-                                    </td>
-                                    <td className="py-1 tabular-nums">{source.orders}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : attributionSummary?.hasData === false ? (
-                      <p
-                        className="text-muted-foreground"
-                        data-testid="operator-attribution-no-data"
-                      >
-                        {t('marketplace.operator.attributionNoData')}
-                      </p>
-                    ) : null}
-                    <p
-                      className="text-xs text-muted-foreground"
-                      data-testid="operator-attribution-note"
-                    >
-                      {t('marketplace.operator.attributionCheckoutMeaning')}
-                    </p>
-                  </CardContent>
-                </Card>
               ) : null}
 
               {canViewAttribution ? (
