@@ -94,6 +94,8 @@ export interface NativeMarketplace {
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
+  /** Operator take-rate in basis points; effective only once published. */
+  operatorCommissionBps: number;
   vertical: string;
   catalogQuery?: string;
   theme?: Record<string, unknown>;
@@ -121,6 +123,8 @@ export interface CreateNativeMarketplaceRequest {
   theme?: Record<string, unknown>;
   attribution?: string;
   sellerEntryMode?: MarketplaceSellerEntryMode;
+  /** Operator take-rate in basis points (0-3000); requires republish to bind. */
+  operatorCommissionBps?: number;
 }
 
 export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest>;
@@ -560,6 +564,8 @@ export interface PublicNativeMarketplace {
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
+  /** Published operator take-rate — the terms a prospective seller reviews. */
+  operatorCommissionBps: number;
   vertical: string;
   sellerCount: number;
   productCount: number;
@@ -682,12 +688,134 @@ export interface SubmitMarketplaceAttributionEventResponse {
 export interface MarketplaceAttributionSummary {
   from: string;
   to: string;
+  /** Distinct journeys over any event type — deep-linked traffic counts too. */
+  visits: number;
   impressions: number;
   listingClicks: number;
   checkoutHandoffs: number;
+  orders: number;
   listingClickRate: number | null;
   checkoutHandoffRate: number | null;
+  /** Same-length window immediately before `from`, for trend deltas. */
+  previousVisits: number;
+  previousOrders: number;
   hasData: boolean;
+  /** Per-UTM funnel so a shared link's outcome is measurable. */
+  sources: MarketplaceAttributionSourceBreakdown[];
+}
+
+export interface MarketplaceAttributionSourceBreakdown {
+  source: string;
+  medium?: string;
+  campaign?: string;
+  visits: number;
+  impressions: number;
+  listingClicks: number;
+  checkoutHandoffs: number;
+  orders: number;
+}
+
+// ---- Operator commission (V1 estimate ledger) ----
+
+export interface MarketplaceEarningsTotal {
+  pricingCoin: string;
+  currencyDivisibility: number;
+  status: string;
+  orderCount: number;
+  grossAmount: string;
+  commissionAmount: string;
+  platformFeeAmount: string;
+}
+
+export interface MarketplaceOrderAttributionRow {
+  id: string;
+  marketplaceID: string;
+  orderID: string;
+  sellerPeerID: string;
+  listingSlug?: string;
+  journeyID: string;
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  pricingCoin: string;
+  amount: string;
+  currencyDivisibility: number;
+  commissionBps: number;
+  commissionAmount: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface MarketplaceEarnings {
+  from: string;
+  to: string;
+  commissionBps: number;
+  totals: MarketplaceEarningsTotal[];
+  recent: MarketplaceOrderAttributionRow[];
+  hasData: boolean;
+}
+
+export interface SubmitMarketplaceOrderAttributionRequest {
+  orderID: string;
+  journeyID: string;
+  listingSlug: string;
+  peerID: string;
+  pricingCoin: string;
+  amount: string;
+  currencyDivisibility?: number;
+  source?: string;
+  medium?: string;
+  campaign?: string;
+}
+
+// ---- Seller invite links ----
+
+export interface MarketplaceInviteLink {
+  id: string;
+  token: string;
+  autoApprove: boolean;
+  maxUses: number;
+  useCount: number;
+  expiresAt?: string;
+  revokedAt?: string;
+  createdAt: string;
+}
+
+export interface CreateMarketplaceInviteLinkRequest {
+  autoApprove?: boolean;
+  maxUses?: number;
+  expiresInHours?: number;
+}
+
+export interface PublicMarketplaceInviteLink {
+  marketplaceID: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logoURL?: string;
+  vertical: string;
+  catalogMode: MarketplaceCatalogMode;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  operatorCommissionBps: number;
+  autoApprove: boolean;
+}
+
+// ---- Buyer interest capture ----
+
+export interface MarketplaceInterestSignupResult {
+  accepted: boolean;
+  duplicate: boolean;
+}
+
+export interface MarketplaceInterestSummary {
+  total: number;
+  recent: Array<{
+    id: string;
+    marketplaceID: string;
+    email: string;
+    source?: string;
+    createdAt: string;
+  }>;
 }
 
 // 商品列表参数

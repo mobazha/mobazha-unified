@@ -2,7 +2,7 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/core';
 
@@ -14,6 +14,7 @@ const mockUpdateMarketplace = vi.fn();
 const mockArchiveMarketplace = vi.fn();
 const mockVerifyCustomDomain = vi.fn();
 const mockRefresh = vi.fn();
+const mockSetAttributionWindowDays = vi.fn();
 const mockPublish = vi.fn();
 const mockSuspend = vi.fn();
 const mockResume = vi.fn();
@@ -29,11 +30,14 @@ let mockPageLoading = false;
 let mockAttributionSummary: {
   from: string;
   to: string;
+  visits: number;
   impressions: number;
   listingClicks: number;
   checkoutHandoffs: number;
   listingClickRate: number | null;
   checkoutHandoffRate: number | null;
+  previousVisits: number;
+  previousOrders: number;
   hasData: boolean;
 } | null = null;
 let latestSettingsCardProps: {
@@ -67,6 +71,7 @@ const marketplace: NativeMarketplace = {
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'operator_invited',
+  operatorCommissionBps: 0,
   vertical: 'collectibles',
   plan: 'free',
   domains: [],
@@ -207,6 +212,8 @@ vi.mock('@mobazha/core', async importOriginal => {
       attributionSummary: mockAttributionSummary,
       attributionSummaryError: mockAttributionSummaryError,
       attributionSummaryLoading: mockAttributionSummaryLoading,
+      attributionWindowDays: 30,
+      setAttributionWindowDays: mockSetAttributionWindowDays,
       curationItems: [],
       curationCandidates: {
         sellers: [],
@@ -373,11 +380,14 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockAttributionSummary = {
       from: '2026-01-01T00:00:00Z',
       to: '2026-01-31T00:00:00Z',
-      impressions: 80,
+      visits: 80,
+      impressions: 64,
       listingClicks: 30,
       checkoutHandoffs: 9,
       listingClickRate: 0.375,
       checkoutHandoffRate: 0.3,
+      previousVisits: 60,
+      previousOrders: 0,
       hasData: true,
     };
     latestSettingsCardProps = null;
@@ -405,7 +415,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     render(<MarketplaceOperatorDetailPage />);
 
     expect(screen.getByTestId('operator-tab-content-overview')).toBeInTheDocument();
-    expect(screen.getByTestId('operator-overview-readiness')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-metrics-row')).toBeInTheDocument();
     expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
     expect(screen.queryByTestId('curation-panel')).not.toBeInTheDocument();
     expect(screen.queryByTestId('settings-card')).not.toBeInTheDocument();
@@ -482,6 +492,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'draft',
       sellerEntryMode: 'seller_self_serve',
+      operatorCommissionBps: 0,
       domains: [
         {
           host: 'market.example.test',
@@ -511,6 +522,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'suspended',
       sellerEntryMode: 'operator_invited',
+      operatorCommissionBps: 0,
       domains: [],
     };
     currentStores = [];
@@ -538,6 +550,7 @@ describe('MarketplaceOperatorDetailPage', () => {
       ...marketplace,
       status: 'suspended',
       sellerEntryMode: 'operator_invited',
+      operatorCommissionBps: 0,
       domains: [
         {
           host: 'market.example.test',
@@ -899,27 +912,68 @@ describe('MarketplaceOperatorDetailPage', () => {
     expect(screen.queryByText('RAW_REVIEW_HISTORY_FAILURE')).not.toBeInTheDocument();
   });
 
-  it('renders attribution funnel metrics when summary has data', () => {
+  it('renders attribution funnel steps with transition rates when samples are large enough', () => {
     render(<MarketplaceOperatorDetailPage />);
 
     expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
-    expect(screen.getByTestId('operator-attribution-has-data')).toBeInTheDocument();
-    expect(screen.getByText('80')).toBeInTheDocument();
-    expect(screen.getByText('30')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
-    expect(screen.getByText('37.5%')).toBeInTheDocument();
-    expect(screen.getByText('30.0%')).toBeInTheDocument();
+    const funnel = screen.getByTestId('operator-attribution-has-data');
+    expect(funnel).toBeInTheDocument();
+    expect(within(funnel).getByText('80')).toBeInTheDocument();
+    expect(within(funnel).getByText('30')).toBeInTheDocument();
+    expect(within(funnel).getByText('9')).toBeInTheDocument();
+    expect(within(funnel).getByText('38%')).toBeInTheDocument();
+    expect(within(funnel).getByText('30%')).toBeInTheDocument();
+  });
+
+  it('suppresses rates on tiny samples and flags deep-linked checkouts', () => {
+    mockAttributionSummary = {
+      from: '2026-01-01T00:00:00Z',
+      to: '2026-01-31T00:00:00Z',
+      visits: 2,
+      impressions: 1,
+      listingClicks: 0,
+      checkoutHandoffs: 1,
+      listingClickRate: 0,
+      checkoutHandoffRate: null,
+      previousVisits: 0,
+      previousOrders: 0,
+      hasData: true,
+    };
+    render(<MarketplaceOperatorDetailPage />);
+
+    const funnel = screen.getByTestId('operator-attribution-has-data');
+    // 0.0% over 2 visits is noise, not signal — no percentage renders at all.
+    expect(within(funnel).queryByText(/%/)).not.toBeInTheDocument();
+    // 0 clicks but 1 checkout: the deep-link note explains the non-monotonic step.
+    // (The test i18n mock returns raw keys, so assert on the key.)
+    expect(
+      within(screen.getByTestId('operator-attribution-step-handoffs')).getByText(
+        /attributionDeepLinkNote/
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('lets the operator switch the attribution window', () => {
+    render(<MarketplaceOperatorDetailPage />);
+
+    fireEvent.click(screen.getByTestId('operator-attribution-window-7'));
+    expect(mockSetAttributionWindowDays).toHaveBeenCalledWith(7);
+    fireEvent.click(screen.getByTestId('operator-attribution-window-90'));
+    expect(mockSetAttributionWindowDays).toHaveBeenCalledWith(90);
   });
 
   it('renders empty-state copy when attribution summary has no data', () => {
     mockAttributionSummary = {
       from: '2026-01-01T00:00:00Z',
       to: '2026-01-31T00:00:00Z',
+      visits: 0,
       impressions: 0,
       listingClicks: 0,
       checkoutHandoffs: 0,
       listingClickRate: null,
       checkoutHandoffRate: null,
+      previousVisits: 0,
+      previousOrders: 0,
       hasData: false,
     };
     render(<MarketplaceOperatorDetailPage />);

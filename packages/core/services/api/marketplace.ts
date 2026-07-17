@@ -11,9 +11,16 @@ import type {
   MarketplaceCurationCandidates,
   MarketplaceCurationCandidatesParams,
   MarketplaceCurationItem,
+  CreateMarketplaceInviteLinkRequest,
   InviteMarketplaceSellerRequest,
   MarketplaceAttributionSummary,
   MarketplaceCurationConfig,
+  MarketplaceEarnings,
+  MarketplaceInterestSignupResult,
+  MarketplaceInterestSummary,
+  MarketplaceInviteLink,
+  PublicMarketplaceInviteLink,
+  SubmitMarketplaceOrderAttributionRequest,
   MarketplaceSellerResolveResponse,
   MarketplaceSellerReviewEvent,
   MarketplaceShareLink,
@@ -369,6 +376,101 @@ export async function getMarketplaceAttributionSummary(
   const query = queryParams.toString();
   return hostingGet<MarketplaceAttributionSummary>(
     `${HOSTING_API.MARKETPLACE_ATTRIBUTION_SUMMARY(marketplaceId)}${query ? `?${query}` : ''}`
+  );
+}
+
+/** Operator commission estimate ledger (per-coin totals + recent rows). */
+export async function getMarketplaceEarnings(
+  marketplaceId: string,
+  params: { from?: string; to?: string } = {}
+): Promise<MarketplaceEarnings> {
+  const queryParams = new URLSearchParams();
+  if (params.from) queryParams.set('from', params.from);
+  if (params.to) queryParams.set('to', params.to);
+  const query = queryParams.toString();
+  return hostingGet<MarketplaceEarnings>(
+    `${HOSTING_API.MARKETPLACE_EARNINGS(marketplaceId)}${query ? `?${query}` : ''}`
+  );
+}
+
+/**
+ * Register a submarket-attributed order for the operator commission ledger.
+ * Best-effort: called right after order creation; failures must not block
+ * the buyer's checkout, so callers should swallow errors.
+ */
+export async function submitPublicMarketplaceOrderAttribution(
+  identifier: string,
+  data: SubmitMarketplaceOrderAttributionRequest
+): Promise<{ accepted: boolean; duplicate: boolean }> {
+  return apiClient.request<{ accepted: boolean; duplicate: boolean }>(
+    `${getHostingUrl()}${HOSTING_API.PUBLIC_MARKETPLACE_ORDER_ATTRIBUTIONS(identifier)}`,
+    { method: 'POST', body: data, keepalive: true }
+  );
+}
+
+// ============ Seller invite links ============
+
+export async function createMarketplaceInviteLink(
+  marketplaceId: string,
+  data: CreateMarketplaceInviteLinkRequest = {}
+): Promise<MarketplaceInviteLink> {
+  return hostingPost<MarketplaceInviteLink>(
+    HOSTING_API.MARKETPLACE_INVITE_LINKS(marketplaceId),
+    data
+  );
+}
+
+export async function listMarketplaceInviteLinks(
+  marketplaceId: string
+): Promise<MarketplaceInviteLink[]> {
+  return hostingGet<MarketplaceInviteLink[]>(HOSTING_API.MARKETPLACE_INVITE_LINKS(marketplaceId));
+}
+
+export async function revokeMarketplaceInviteLink(
+  marketplaceId: string,
+  linkId: string
+): Promise<{ revoked: boolean }> {
+  return hostingDel<{ revoked: boolean }>(
+    HOSTING_API.MARKETPLACE_INVITE_LINK(marketplaceId, linkId)
+  );
+}
+
+/** Resolve an invite token to the marketplace terms (public, unauthenticated). */
+export async function getPublicMarketplaceInviteLink(
+  token: string
+): Promise<PublicMarketplaceInviteLink> {
+  return hostingGet<PublicMarketplaceInviteLink>(HOSTING_API.PUBLIC_MARKETPLACE_INVITE_LINK(token));
+}
+
+/** Join a marketplace as the current seller via an invite link. */
+export async function acceptMarketplaceInviteLink(
+  token: string,
+  productGroupIDs: number[] = []
+): Promise<NativeMarketplaceSellerApplication> {
+  return hostingPost<NativeMarketplaceSellerApplication>(
+    HOSTING_API.PUBLIC_MARKETPLACE_INVITE_LINK_ACCEPT(token),
+    { productGroupIDs }
+  );
+}
+
+// ============ Buyer interest capture ============
+
+export async function submitMarketplaceInterestSignup(
+  identifier: string,
+  email: string,
+  source?: string
+): Promise<MarketplaceInterestSignupResult> {
+  return apiClient.request<MarketplaceInterestSignupResult>(
+    `${getHostingUrl()}${HOSTING_API.PUBLIC_MARKETPLACE_INTEREST_SIGNUPS(identifier)}`,
+    { method: 'POST', body: { email, ...(source ? { source } : {}) } }
+  );
+}
+
+export async function getMarketplaceInterestSignups(
+  marketplaceId: string
+): Promise<MarketplaceInterestSummary> {
+  return hostingGet<MarketplaceInterestSummary>(
+    HOSTING_API.MARKETPLACE_INTEREST_SIGNUPS(marketplaceId)
   );
 }
 

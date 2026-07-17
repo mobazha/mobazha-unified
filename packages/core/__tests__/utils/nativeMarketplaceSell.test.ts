@@ -75,17 +75,19 @@ describe('isNativeMarketplaceSelfServeEligible', () => {
 });
 
 describe('resolveNativeMarketplaceSellPolicy', () => {
-  it('requires product groups for curated catalogs', () => {
+  it('lets curated catalogs submit without product groups (join-first)', () => {
     const policy = resolveNativeMarketplaceSellPolicy(
       buildMarketplace({ catalogMode: 'curated' }),
       null,
       0
     );
 
-    expect(policy.requiresProductGroups).toBe(true);
+    // Hosting accepts a group-less application in every catalog mode; the
+    // seller can attach catalog after joining.
+    expect(policy.requiresProductGroups).toBe(false);
     expect(policy.showSubmit).toBe(true);
-    expect(policy.canSubmit).toBe(false);
-    expect(policy.showGroupsValidation).toBe(true);
+    expect(policy.canSubmit).toBe(true);
+    expect(policy.showGroupsValidation).toBe(false);
   });
 
   it('allows zero groups for open catalogs', () => {
@@ -187,8 +189,9 @@ describe('resolveNativeMarketplaceSellPolicy', () => {
     const policy = resolveNativeMarketplaceSellPolicy(buildMarketplace(), null, 0);
     expect(policy.showApplicationForm).toBe(true);
     expect(policy.showSubmit).toBe(true);
-    expect(policy.canSubmit).toBe(false);
-    expect(policy.showGroupsValidation).toBe(true);
+    // Zero selected groups no longer blocks submission in any catalog mode.
+    expect(policy.canSubmit).toBe(true);
+    expect(policy.showGroupsValidation).toBe(false);
   });
 });
 

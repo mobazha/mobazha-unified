@@ -1,11 +1,88 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Container } from '@/components/layouts';
 import { useI18n, type MarketplaceSellerEntryMode } from '@mobazha/core';
-import { PackageOpen, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { submitMarketplaceInterestSignup } from '@mobazha/core/services/api/marketplace';
+import { PackageOpen, AlertTriangle, ShieldCheck, BellRing } from 'lucide-react';
+
+/**
+ * Demand capture for a pre-inventory marketplace: "notify me when it opens".
+ * Banked signups reach the operator's dashboard, so cold-start traffic is not
+ * simply lost.
+ */
+function MarketplaceInterestForm({ marketplaceIdentifier }: { marketplaceIdentifier: string }) {
+  const { t } = useI18n();
+  const [email, setEmail] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+
+  const submit = useCallback(async () => {
+    const trimmed = email.trim();
+    if (!trimmed || state === 'sending') return;
+    setState('sending');
+    try {
+      await submitMarketplaceInterestSignup(marketplaceIdentifier, trimmed, 'cold_start');
+      setState('done');
+    } catch {
+      setState('error');
+    }
+  }, [email, marketplaceIdentifier, state]);
+
+  if (state === 'done') {
+    return (
+      <p className="text-sm text-muted-foreground" data-testid="marketplace-interest-done">
+        {t('marketplaceStarter.coldStart.notifyDone', {
+          defaultValue: "You're on the list — we'll let you know when this market opens.",
+        })}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-sm space-y-2" data-testid="marketplace-interest-form">
+      <div className="flex items-center gap-2">
+        <Input
+          type="email"
+          inputMode="email"
+          placeholder={t('marketplaceStarter.coldStart.notifyPlaceholder', {
+            defaultValue: 'you@example.com',
+          })}
+          value={email}
+          onChange={event => {
+            setEmail(event.target.value);
+            if (state === 'error') setState('idle');
+          }}
+          data-testid="marketplace-interest-email"
+        />
+        <Button
+          variant="outline"
+          onClick={() => void submit()}
+          disabled={state === 'sending' || !email.trim()}
+          data-testid="marketplace-interest-submit"
+        >
+          <BellRing className="mr-2 h-4 w-4" />
+          {t('marketplaceStarter.coldStart.notifyCta', { defaultValue: 'Notify me' })}
+        </Button>
+      </div>
+      {state === 'error' ? (
+        <p className="text-xs text-destructive" data-testid="marketplace-interest-error">
+          {t('marketplaceStarter.coldStart.notifyFailed', {
+            defaultValue: 'That did not work — check the address and try again.',
+          })}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {t('marketplaceStarter.coldStart.notifyHint', {
+            defaultValue: 'Get one email when products go live. No spam.',
+          })}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Cold-start panel — shown ONLY when the marketplace loaded successfully and the
@@ -16,9 +93,12 @@ import { PackageOpen, AlertTriangle, ShieldCheck } from 'lucide-react';
 export function MarketplaceColdStartPanel({
   sellerEntryMode,
   sellHref,
+  marketplaceIdentifier,
 }: {
   sellerEntryMode: MarketplaceSellerEntryMode;
   sellHref: string;
+  /** Enables the "notify me" demand capture when provided. */
+  marketplaceIdentifier?: string;
 }) {
   const { t } = useI18n();
   const isSelfServe = sellerEntryMode === 'seller_self_serve';
@@ -89,6 +169,10 @@ export function MarketplaceColdStartPanel({
             })}
           </p>
         )}
+
+        {marketplaceIdentifier ? (
+          <MarketplaceInterestForm marketplaceIdentifier={marketplaceIdentifier} />
+        ) : null}
       </Container>
     </section>
   );

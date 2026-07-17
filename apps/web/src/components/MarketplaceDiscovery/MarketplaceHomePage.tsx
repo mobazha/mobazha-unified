@@ -423,7 +423,9 @@ export function MarketplaceHomePage() {
 
       try {
         const latest = (latestR.status === 'fulfilled' ? latestR.value : []) as ProductListItem[];
-        const popular = (popularR.status === 'fulfilled' ? popularR.value : []) as ProductListItem[];
+        const popular = (
+          popularR.status === 'fulfilled' ? popularR.value : []
+        ) as ProductListItem[];
         const stores = (storesR.status === 'fulfilled' ? storesR.value : []) as SearchedUser[];
 
         if (latestR.status === 'rejected') {
@@ -437,7 +439,11 @@ export function MarketplaceHomePage() {
         }
 
         const latestFiltered = filterByCatalogMode(latest, activeConfig.catalogMode, allowedPeers);
-        const popularFiltered = filterByCatalogMode(popular, activeConfig.catalogMode, allowedPeers);
+        const popularFiltered = filterByCatalogMode(
+          popular,
+          activeConfig.catalogMode,
+          allowedPeers
+        );
 
         setLatestProducts(latestFiltered.map(convertToDisplayProduct));
         setPopularProducts(popularFiltered.map(convertToDisplayProduct));
@@ -626,7 +632,13 @@ export function MarketplaceHomePage() {
         </section>
 
         {showColdStart ? (
-          <MarketplaceColdStartPanel sellerEntryMode={config.sellerEntryMode} sellHref={sellHref} />
+          <MarketplaceColdStartPanel
+            sellerEntryMode={config.sellerEntryMode}
+            sellHref={sellHref}
+            // The public API resolves slug OR id — never the subdomain, which
+            // can diverge from the slug after a rename.
+            marketplaceIdentifier={config.id}
+          />
         ) : null}
 
         {showDegraded ? <MarketplaceDegradedPanel onRetry={retryFeeds} /> : null}

@@ -106,6 +106,10 @@ export default function MarketplaceOperatorPage() {
   const [name, setName] = useState('');
   const [vertical, setVertical] = useState('general');
   const [subdomain, setSubdomain] = useState('');
+  // Starting posture: recruit-first (curated + operator-invited) or
+  // open-doors (open catalog + seller self-serve). Everything remains
+  // adjustable later in Settings; this only sets honest defaults.
+  const [startMode, setStartMode] = useState<'invite' | 'open'>('invite');
 
   const activeMarketplaces = marketplaces.filter(marketplace => marketplace.status !== 'archived');
   const archivedMarketplaces = marketplaces.filter(
@@ -120,8 +124,8 @@ export default function MarketplaceOperatorPage() {
         name: name.trim(),
         vertical: vertical.trim() || 'general',
         subdomain: subdomain.trim() || undefined,
-        catalogMode: 'curated',
-        sellerEntryMode: 'operator_invited',
+        catalogMode: startMode === 'open' ? 'open' : 'curated',
+        sellerEntryMode: startMode === 'open' ? 'seller_self_serve' : 'operator_invited',
       });
       router.push(`/operator/marketplaces/${encodeURIComponent(created.id)}`);
     } catch (error) {
@@ -174,6 +178,52 @@ export default function MarketplaceOperatorPage() {
                   onChange={event => setSubdomain(event.target.value)}
                   placeholder={t('marketplace.operator.subdomainPlaceholder')}
                 />
+                <div className="md:col-span-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setStartMode('invite')}
+                    data-testid="create-mode-invite"
+                    className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                      startMode === 'invite'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/40'
+                    }`}
+                  >
+                    <span className="font-medium">
+                      {t('marketplace.operator.startModeInvite', {
+                        defaultValue: 'Curated — invite sellers',
+                      })}
+                    </span>
+                    <span className="mt-1 block text-muted-foreground">
+                      {t('marketplace.operator.startModeInviteDesc', {
+                        defaultValue:
+                          'You pick every seller and product. Publish first, then recruit with invite links.',
+                      })}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStartMode('open')}
+                    data-testid="create-mode-open"
+                    className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                      startMode === 'open'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/40'
+                    }`}
+                  >
+                    <span className="font-medium">
+                      {t('marketplace.operator.startModeOpen', {
+                        defaultValue: 'Open — sellers join themselves',
+                      })}
+                    </span>
+                    <span className="mt-1 block text-muted-foreground">
+                      {t('marketplace.operator.startModeOpenDesc', {
+                        defaultValue:
+                          'Sellers apply on their own and the catalog fills from the network. Fastest way to a stocked marketplace.',
+                      })}
+                    </span>
+                  </button>
+                </div>
                 <div className="md:col-span-3 flex justify-end">
                   <Button
                     disabled={!name.trim() || creating}

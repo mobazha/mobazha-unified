@@ -3373,13 +3373,16 @@ export const en: TranslationResource = {
       responsibilityBoundary: 'Responsibility boundary',
       responsibilityDesc:
         'The marketplace owns brand, distribution, catalog, and admission. Stores keep products, orders, payments, support, and fulfillment.',
-      attributionFunnelTitle: 'Recent 30-day attribution funnel',
+      attributionFunnelTitle: 'Attribution funnel',
       attributionSummaryLoading: 'Loading attribution summary...',
       attributionSummaryLoadFailed: 'Failed to load attribution summary. Please try again.',
       attributionNoData: 'No real visit data collected yet.',
+      attributionVisits: 'Visits',
       attributionImpressions: 'Marketplace visits',
       attributionListingClicks: 'Listing clicks',
       attributionCheckoutHandoffs: 'Entered checkout',
+      attributionDeepLinkNote: 'Includes direct product-link visits',
+      attributionSourceOperatorShare: 'Community share link',
       attributionListingClickRate: 'Visit -> click conversion',
       attributionCheckoutRate: 'Click -> checkout conversion',
       attributionCheckoutMeaning:
@@ -3421,7 +3424,8 @@ export const en: TranslationResource = {
       productGroupsSummary: '{{count}} group(s) selected',
       productGroupsCount: '{{count}} group(s), {{items}} item(s)',
       productGroupsFullCatalog: 'Full catalog scope (no product-group restriction).',
-      productGroupsNoneSelectedCurated: 'No product groups selected for this curated marketplace.',
+      productGroupsNoneSelectedCurated:
+        'Entire store catalog is available in this marketplace (no specific groups selected).',
       productGroupWithCount: '{{name}} ({{count}} item(s))',
       decisionReasonLabel: 'Decision reason: {{reason}}',
       reviewHistoryTitle: 'Decision history ({{count}})',

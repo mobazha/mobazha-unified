@@ -68,6 +68,7 @@ function buildMarketplace(overrides: Partial<NativeMarketplace> = {}): NativeMar
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
+    operatorCommissionBps: 0,
     vertical: 'collectibles',
     description: 'Curated collectibles',
     logoURL: 'https://cdn.example.com/logo.png',

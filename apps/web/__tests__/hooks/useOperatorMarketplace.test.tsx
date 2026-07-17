@@ -95,6 +95,7 @@ function buildMarketplace(id: string, name: string): NativeMarketplace {
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
+    operatorCommissionBps: 0,
     vertical: 'collectibles',
     plan: 'free',
     domains: [],
@@ -123,13 +124,18 @@ describe('useOperatorMarketplace', () => {
   const noDataSummary = {
     from: '2026-01-01T00:00:00Z',
     to: '2026-01-31T00:00:00Z',
+    visits: 0,
     impressions: 0,
     listingClicks: 0,
     checkoutHandoffs: 0,
     listingClickRate: null,
     checkoutHandoffRate: null,
+    orders: 0,
+    previousVisits: 0,
+    previousOrders: 0,
+    sources: [],
     hasData: false,
-  } as const;
+  } satisfies MarketplaceAttributionSummary;
 
   beforeEach(() => {
     vi.clearAllMocks();

@@ -489,7 +489,35 @@ export default function MarketplaceSellPage() {
                         </dt>
                         <dd className="mt-1 text-sm text-foreground">{catalogLabel}</dd>
                       </div>
+                      <div
+                        className="rounded-md border border-border bg-muted/40 px-3 py-2"
+                        data-testid="sell-market-commission"
+                      >
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketCommissionLabel', {
+                            defaultValue: 'Operator commission',
+                          })}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">
+                          {(marketplace.operatorCommissionBps ?? 0) > 0
+                            ? `${((marketplace.operatorCommissionBps ?? 0) / 100).toFixed(
+                                (marketplace.operatorCommissionBps ?? 0) % 100 === 0 ? 0 : 2
+                              )}%`
+                            : t('marketplace.sell.marketCommissionNone', { defaultValue: '0%' })}
+                        </dd>
+                      </div>
                     </dl>
+                    {(marketplace.operatorCommissionBps ?? 0) > 0 ? (
+                      <p
+                        className="mt-2 text-xs text-muted-foreground"
+                        data-testid="sell-market-commission-note"
+                      >
+                        {t('marketplace.sell.marketCommissionNote', {
+                          defaultValue:
+                            'The operator commission is charged on orders this marketplace brings you, out of your proceeds. The rate shown is the published rate; changes require the operator to republish.',
+                        })}
+                      </p>
+                    ) : null}
                   </div>
                   <Button
                     asChild

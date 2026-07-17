@@ -80,18 +80,17 @@ describe('OperatorMarketplaceCurationPanel', () => {
       />
     );
 
-    const listingSelect = screen.getByTestId('operator-curation-select-listing');
-    act(() => {
-      fireEvent.change(listingSelect, { target: { value: 'QmPeer::beta' } });
-    });
+    // Already-curated candidates never appear in the grid; eligible ones are
+    // featured with a single click on their card.
+    expect(screen.queryByTestId('operator-curation-candidate-QmPeer::alpha')).toBeNull();
     await act(async () => {
-      fireEvent.click(screen.getByTestId('operator-curation-add-listing'));
+      fireEvent.click(screen.getByTestId('operator-curation-candidate-QmPeer::beta'));
     });
 
     expect(onAdd).toHaveBeenCalledWith('listing', { peerID: 'QmPeer', listingSlug: 'beta' });
   });
 
-  it('disables add action until a concrete candidate is selected', () => {
+  it('shows only eligible candidates in the listing grid', () => {
     render(
       <OperatorMarketplaceCurationPanel
         items={[buildItem({ id: 1, kind: 'listing', peerID: 'QmPeer', listingSlug: 'alpha' })]}
@@ -108,15 +107,11 @@ describe('OperatorMarketplaceCurationPanel', () => {
       />
     );
 
-    const listingAddButton = screen.getByTestId('operator-curation-add-listing');
-    expect(listingAddButton).toBeDisabled();
-    fireEvent.change(screen.getByTestId('operator-curation-select-listing'), {
-      target: { value: 'QmPeer::beta' },
-    });
-    expect(listingAddButton).toBeEnabled();
+    expect(screen.queryByTestId('operator-curation-candidate-QmPeer::alpha')).toBeNull();
+    expect(screen.getByTestId('operator-curation-candidate-QmPeer::beta')).toBeEnabled();
   });
 
-  it('keeps selected value when onAdd resolves false', async () => {
+  it('keeps the candidate available when onAdd resolves false', async () => {
     onAdd.mockResolvedValueOnce(false);
     render(
       <OperatorMarketplaceCurationPanel
@@ -134,18 +129,12 @@ describe('OperatorMarketplaceCurationPanel', () => {
       />
     );
 
-    const listingSelect = screen.getByTestId(
-      'operator-curation-select-listing'
-    ) as HTMLSelectElement;
-    fireEvent.change(listingSelect, { target: { value: 'QmPeer::beta' } });
-    expect(listingSelect.value).toBe('QmPeer::beta');
-
     await act(async () => {
-      fireEvent.click(screen.getByTestId('operator-curation-add-listing'));
+      fireEvent.click(screen.getByTestId('operator-curation-candidate-QmPeer::beta'));
     });
 
     expect(onAdd).toHaveBeenCalledWith('listing', { peerID: 'QmPeer', listingSlug: 'beta' });
-    expect(listingSelect.value).toBe('QmPeer::beta');
+    expect(screen.getByTestId('operator-curation-candidate-QmPeer::beta')).toBeInTheDocument();
   });
 
   it('uses listing slug as fallback title before generic label', () => {
@@ -281,7 +270,7 @@ describe('OperatorMarketplaceCurationPanel', () => {
       />
     );
 
-    expect(screen.getByTestId('operator-curation-add-listing')).toBeDisabled();
+    expect(screen.getByTestId('operator-curation-candidate-QmPeer::beta')).toBeDisabled();
     expect(screen.getByLabelText('marketplace.operator.curation.moveDownAria')).toBeDisabled();
     expect(screen.getByText('marketplace.operator.curation.deactivate')).toBeDisabled();
     expect(screen.getByLabelText('marketplace.operator.curation.removeAria')).toBeDisabled();
