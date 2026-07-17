@@ -271,6 +271,8 @@ function ProductGridEditor({ props, onUpdate }: EditorProps<ProductGridProps>) {
 
 function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
   const { t } = useI18n();
+  const legacyProps = props as AboutSectionProps & { content?: string };
+  const text = props.text ?? legacyProps.content ?? '';
   return (
     <div className="space-y-3">
       <TextInput
@@ -281,11 +283,11 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
       <div>
         <TextArea
           label={t('admin.storeBranding.fieldText')}
-          value={props.text}
+          value={text}
           onChange={v => onUpdate({ text: v })}
         />
         <AiRewriteButton
-          value={props.text}
+          value={text}
           context="store about/brand-story paragraph"
           onApply={text => onUpdate({ text })}
         />
@@ -297,7 +299,7 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
       />
       <SelectInput
         label={t('admin.storeBranding.fieldImagePosition')}
-        value={props.imagePosition}
+        value={props.imagePosition ?? 'right'}
         options={[
           { value: 'left', label: t('admin.storeBranding.optLeft') },
           { value: 'right', label: t('admin.storeBranding.optRight') },
@@ -306,7 +308,7 @@ function AboutEditor({ props, onUpdate }: EditorProps<AboutSectionProps>) {
       />
       <ToggleInput
         label={t('admin.storeBranding.fieldShowContactInfo')}
-        checked={props.showContactInfo}
+        checked={props.showContactInfo ?? false}
         onChange={v => onUpdate({ showContactInfo: v })}
       />
     </div>
@@ -359,6 +361,7 @@ function TrustBadgesEditor({ props, onUpdate }: EditorProps<TrustBadgesProps>) {
         itemLabel={badge => badge.title}
         addLabel={t('admin.storeBranding.addBadge')}
         max={8}
+        accordion
         createItem={() => ({ icon: 'escrow', title: '', description: '' })}
         renderFields={(badge, update) => (
           <>

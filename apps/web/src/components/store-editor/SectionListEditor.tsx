@@ -8,6 +8,7 @@
  */
 
 import React, { useMemo } from 'react';
+import type { RefObject } from 'react';
 import { useI18n } from '@mobazha/core';
 import type { StoreSection } from '@mobazha/core';
 import { MAX_SECTIONS } from '@mobazha/core';
@@ -33,6 +34,7 @@ import { getSectionMeta } from '@/components/store-sections';
 import { SectionPropsEditor } from './SectionPropsEditor';
 import { SectionIcon } from './SectionIcon';
 import { TextInput } from './form-helpers';
+import { scrollElementWithinContainer } from './scrollElementWithinContainer';
 
 interface SectionListEditorProps {
   sections: StoreSection[];
@@ -45,6 +47,8 @@ interface SectionListEditorProps {
   onUpdateProps: (id: string, props: Record<string, unknown>) => void;
   onRename: (id: string, name: string) => void;
   onAddClick: () => void;
+  /** The settings pane is the only surface list selection is allowed to scroll. */
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
 }
 
 interface SortableItemProps {
@@ -92,7 +96,12 @@ function SortableItem({
         isExpanded ? 'border-primary/50 bg-primary/5' : 'border-border bg-card'
       )}
     >
-      <div className="flex items-center gap-1 px-2 py-2">
+      <div
+        className={cn(
+          'flex items-center gap-1 px-2 py-2',
+          isExpanded && 'sticky top-[45px] z-10 border-b border-border bg-card/95 backdrop-blur-sm'
+        )}
+      >
         {/* Drag handle */}
         <button
           type="button"
@@ -179,6 +188,7 @@ export function SectionListEditor({
   onUpdateProps,
   onRename,
   onAddClick,
+  scrollContainerRef,
 }: SectionListEditorProps) {
   const { t } = useI18n();
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -187,8 +197,17 @@ export function SectionListEditor({
   React.useEffect(() => {
     if (!expandedId) return;
     const el = listRef.current?.querySelector(`[data-list-section-id="${expandedId}"]`);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [expandedId]);
+    const container = scrollContainerRef?.current;
+    if (!(el instanceof HTMLElement) || !container) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    scrollElementWithinContainer(container, el, {
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'nearest',
+      inset: 8,
+      // Keep the expanded card below the sticky Theme / Sections tabs.
+      topInset: 56,
+    });
+  }, [expandedId, scrollContainerRef]);
 
   const canAdd = sections.length < MAX_SECTIONS;
 

@@ -14,7 +14,8 @@
 
 import React, { useState } from 'react';
 import { useI18n } from '@mobazha/core';
-import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronUp, Trash2, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { FieldLabel } from './form-helpers';
 
 interface ItemListEditorProps<T> {
@@ -29,6 +30,8 @@ interface ItemListEditorProps<T> {
   createItem: () => T;
   addLabel: string;
   max?: number;
+  /** Keep long item collections compact by editing at most one item at a time. */
+  accordion?: boolean;
 }
 
 export function ItemListEditor<T>({
@@ -40,8 +43,12 @@ export function ItemListEditor<T>({
   createItem,
   addLabel,
   max,
+  accordion = false,
 }: ItemListEditorProps<T>) {
   const { t } = useI18n();
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(() =>
+    accordion && items.length > 0 ? 0 : null
+  );
 
   // Items are plain data with no natural id, so track a parallel array of
   // stable uids to key the cards. Keys must survive a reorder, otherwise React
@@ -76,6 +83,14 @@ export function ItemListEditor<T>({
     // Drop the removed position's uid, not the trailing one, so the surviving
     // cards keep their identity.
     setUidState(prev => ({ ...prev, uids: prev.uids.filter((_, i) => i !== index) }));
+    if (accordion) {
+      setExpandedIndex(current => {
+        if (current === null) return null;
+        if (items.length === 1) return null;
+        if (current === index) return Math.min(index, items.length - 2);
+        return current > index ? current - 1 : current;
+      });
+    }
     onChange(items.filter((_, i) => i !== index));
   };
 
@@ -88,6 +103,13 @@ export function ItemListEditor<T>({
       nextUids.splice(to, 0, movedUid);
       return { ...prev, uids: nextUids };
     });
+    if (accordion) {
+      setExpandedIndex(current => {
+        if (current === index) return to;
+        if (current === to) return index;
+        return current;
+      });
+    }
     const next = [...items];
     const [moved] = next.splice(index, 1);
     next.splice(to, 0, moved);
@@ -96,15 +118,37 @@ export function ItemListEditor<T>({
 
   const canAdd = max === undefined || items.length < max;
 
+  const addItem = () => {
+    if (accordion) setExpandedIndex(items.length);
+    onChange([...items, createItem()]);
+  };
+
   return (
     <div className="space-y-2">
       {label && <FieldLabel>{label}</FieldLabel>}
       {items.map((item, i) => (
         <div key={uids[i]} className="p-2 rounded-md border border-border bg-muted/30 space-y-2">
           <div className="flex items-center gap-1">
-            <span className="flex-1 min-w-0 text-xs font-medium truncate">
-              {itemLabel(item, i) || `#${i + 1}`}
-            </span>
+            {accordion ? (
+              <button
+                type="button"
+                onClick={() => setExpandedIndex(current => (current === i ? null : i))}
+                className="flex min-h-11 flex-1 min-w-0 items-center gap-1.5 rounded text-left text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-expanded={expandedIndex === i}
+              >
+                <ChevronRight
+                  className={cn(
+                    'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform',
+                    expandedIndex === i && 'rotate-90'
+                  )}
+                />
+                <span className="truncate">{itemLabel(item, i) || `#${i + 1}`}</span>
+              </button>
+            ) : (
+              <span className="flex-1 min-w-0 text-xs font-medium truncate">
+                {itemLabel(item, i) || `#${i + 1}`}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => moveItem(i, -1)}
@@ -132,13 +176,17 @@ export function ItemListEditor<T>({
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
-          {renderFields(item, patch => updateAt(i, patch), i)}
+          {(!accordion || expandedIndex === i) && (
+            <div className={cn('space-y-2', accordion && 'border-t border-border pt-2')}>
+              {renderFields(item, patch => updateAt(i, patch), i)}
+            </div>
+          )}
         </div>
       ))}
       {canAdd && (
         <button
           type="button"
-          onClick={() => onChange([...items, createItem()])}
+          onClick={addItem}
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md border border-dashed border-border hover:border-primary/50 hover:bg-primary/5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />

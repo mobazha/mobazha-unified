@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import type { RefObject } from 'react';
 import type { StoreSection, UserProfile } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 import { EyeOff } from 'lucide-react';
@@ -22,6 +23,7 @@ import { SectionBlock } from '@/components/store-sections/SectionBlock';
 import { SectionSwitch } from '@/components/store-sections/SectionRenderer';
 import { StoreEditorContext } from '@/components/store-sections/StoreEditorContext';
 import { getSectionMeta } from '@/components/store-sections';
+import { scrollElementWithinContainer } from './scrollElementWithinContainer';
 
 interface EditableSectionRendererProps {
   sections: StoreSection[];
@@ -29,6 +31,8 @@ interface EditableSectionRendererProps {
   profile?: UserProfile;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** The preview pane is the only surface selection is allowed to scroll. */
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function EditableSectionRenderer({
@@ -37,6 +41,7 @@ export function EditableSectionRenderer({
   profile,
   selectedId,
   onSelect,
+  scrollContainerRef,
 }: EditableSectionRendererProps) {
   const { t } = useI18n();
   const blockRefs = useRef(new Map<string, HTMLDivElement>());
@@ -47,8 +52,15 @@ export function EditableSectionRenderer({
     if (!selectedId || selectedId === lastScrolledRef.current) return;
     lastScrolledRef.current = selectedId;
     const el = blockRefs.current.get(selectedId);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [selectedId]);
+    const container = scrollContainerRef?.current;
+    if (!el || !container) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    scrollElementWithinContainer(container, el, {
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+      inset: 16,
+    });
+  }, [scrollContainerRef, selectedId]);
 
   if (sections.length === 0) return null;
 
@@ -77,7 +89,7 @@ export function EditableSectionRenderer({
                 }
               }}
               className={cn(
-                'relative group/canvas cursor-pointer transition-shadow',
+                'relative group/canvas cursor-pointer scroll-mt-4 scroll-mb-4 transition-shadow',
                 'hover:ring-2 hover:ring-primary/40 hover:ring-inset',
                 isSelected && 'ring-2 ring-primary ring-inset',
                 !section.visible && 'opacity-40'

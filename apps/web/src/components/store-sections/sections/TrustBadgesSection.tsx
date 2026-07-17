@@ -77,15 +77,16 @@ function BadgeIcon({
   return (
     <span
       className={`${px} shrink-0 rounded-full flex items-center justify-center overflow-hidden`}
+      data-testid="trust-badge-icon"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--store-primary) 10%, transparent)',
-        color: 'var(--store-primary)',
+        color: 'var(--store-on-primary)',
       }}
     >
       {customUrl ? (
         <img src={customUrl} alt="" className="w-full h-full object-cover" />
       ) : (
-        <Icon className={iconPx} strokeWidth={1.75} />
+        <Icon className={iconPx} strokeWidth={1.75} aria-hidden="true" />
       )}
     </span>
   );

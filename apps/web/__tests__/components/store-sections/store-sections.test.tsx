@@ -22,6 +22,7 @@ vi.mock('@mobazha/core', async importOriginal => {
     useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
     useGatewayUrl: () => 'http://localhost:4002',
     usePeerID: () => 'QmTest123',
+    useStoreCapabilities: () => ({ escrow: undefined, crypto: undefined, isLoading: false }),
     getImageUrl: (hash: string | undefined | null) =>
       hash ? `http://localhost:4002/v1/media/images/${hash}` : undefined,
     getContrastText: (hex: string) => {
@@ -357,6 +358,38 @@ describe('SectionRenderer', () => {
 
     expect(screen.getByText('Q1?')).toBeTruthy();
     expect(screen.getByText('Q2?')).toBeTruthy();
+  });
+
+  it('uses the contrast-safe store color for trust badge icons', () => {
+    render(
+      <StoreThemeProvider theme={{ ...BASE_THEME, primaryColor: '#000000' }}>
+        <SectionRenderer
+          sections={[
+            {
+              id: 'trust-dark',
+              type: 'trust-badges',
+              visible: true,
+              props: {
+                layout: 'grid',
+                style: 'card',
+                badges: [
+                  { icon: 'selfHosted', title: 'Self-Hosted', description: "Seller's own server" },
+                  { icon: 'p2p', title: 'Direct Trade', description: 'No middleman' },
+                  { icon: 'privacy', title: 'Privacy First', description: 'No tracking' },
+                ],
+              },
+            },
+          ]}
+          peerId="preview"
+        />
+      </StoreThemeProvider>
+    );
+
+    const icons = screen.getAllByTestId('trust-badge-icon');
+    expect(icons).toHaveLength(3);
+    for (const icon of icons) {
+      expect(icon).toHaveStyle({ color: 'var(--store-on-primary)' });
+    }
   });
 
   it('can toggle FAQ items', () => {

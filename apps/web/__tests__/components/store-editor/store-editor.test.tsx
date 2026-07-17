@@ -233,6 +233,10 @@ import { SectionListEditor } from '@/components/store-editor/SectionListEditor';
 import { PresetPicker } from '@/components/store-editor/PresetPicker';
 import { AddSectionPicker } from '@/components/store-editor/AddSectionPicker';
 import { StoreBrandingEditor } from '@/components/store-editor/StoreBrandingEditor';
+import { SectionPropsEditor } from '@/components/store-editor/SectionPropsEditor';
+import { AiRewriteButton } from '@/components/store-editor/AiRewriteButton';
+import { EditableSectionRenderer } from '@/components/store-editor/EditableSectionRenderer';
+import { ItemListEditor } from '@/components/store-editor/ItemListEditor';
 import type { StoreTheme, StoreSection } from '@mobazha/core';
 
 // ---------------------------------------------------------------------------
@@ -346,6 +350,123 @@ describe('form-helpers', () => {
       fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '5' } });
       expect(onChange).toHaveBeenCalledWith(5);
     });
+  });
+});
+
+describe('section property editors', () => {
+  it('renders legacy About content without crashing', () => {
+    const section = {
+      id: 'legacy-about',
+      type: 'about',
+      visible: true,
+      props: {
+        title: 'About This Shop',
+        content: 'Legacy about copy',
+      },
+    } as unknown as StoreSection;
+
+    render(<SectionPropsEditor section={section} onUpdate={vi.fn()} />);
+
+    expect(screen.getByDisplayValue('Legacy about copy')).toBeTruthy();
+  });
+
+  it('disables AI rewrite when a legacy field has no text', () => {
+    render(<AiRewriteButton value={undefined} context="legacy field" onApply={vi.fn()} />);
+
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
+});
+
+describe('editable section preview', () => {
+  it('top-aligns the selected section by scrolling only the preview pane', () => {
+    const scrollTo = vi.fn();
+    const previewPane = document.createElement('div');
+    Object.defineProperty(previewPane, 'scrollTop', {
+      configurable: true,
+      writable: true,
+      value: 120,
+    });
+    Object.defineProperty(previewPane, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+    type Rect = ReturnType<Element['getBoundingClientRect']>;
+    previewPane.getBoundingClientRect = () =>
+      ({ top: 50, bottom: 650, height: 600, left: 0, right: 800, width: 800 }) as Rect;
+
+    const rectSpy = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function getBoundingClientRect(this: Element) {
+        if (this.hasAttribute('data-section-id')) {
+          return {
+            top: 300,
+            bottom: 574,
+            height: 274,
+            left: 0,
+            right: 800,
+            width: 800,
+          } as Rect;
+        }
+        return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0 } as Rect;
+      });
+
+    const section = {
+      id: 'trust-low-on-page',
+      type: 'trust-badges',
+      visible: true,
+      props: {
+        badges: [],
+        layout: 'grid',
+        style: 'card',
+      },
+    } as StoreSection;
+
+    render(
+      <EditableSectionRenderer
+        sections={[section]}
+        peerId="preview"
+        selectedId={section.id}
+        onSelect={vi.fn()}
+        scrollContainerRef={{ current: previewPane }}
+      />
+    );
+
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: 'smooth', top: 354 });
+    expect(document.querySelector(`[data-section-id="${section.id}"]`)).toHaveClass(
+      'scroll-mt-4',
+      'scroll-mb-4'
+    );
+    rectSpy.mockRestore();
+  });
+});
+
+describe('compact item editor', () => {
+  it('shows only one item form at a time in accordion mode', () => {
+    const items = [{ name: 'First' }, { name: 'Second' }, { name: 'Third' }];
+
+    render(
+      <ItemListEditor
+        accordion
+        items={items}
+        onChange={vi.fn()}
+        itemLabel={item => item.name}
+        createItem={() => ({ name: '' })}
+        addLabel="Add item"
+        renderFields={item => (
+          <input aria-label={`${item.name} field`} value={item.name} readOnly />
+        )}
+      />
+    );
+
+    expect(screen.getByLabelText('First field')).toBeTruthy();
+    expect(screen.queryByLabelText('Second field')).toBeNull();
+    expect(screen.queryByLabelText('Third field')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Second' }));
+
+    expect(screen.queryByLabelText('First field')).toBeNull();
+    expect(screen.getByLabelText('Second field')).toBeTruthy();
+    expect(screen.queryByLabelText('Third field')).toBeNull();
   });
 });
 
