@@ -499,6 +499,9 @@ export default defineConfig(({ mode }) => {
   // 加载 .env.local 等环境文件中的 NEXT_PUBLIC_* 和 OPENAI_* 变量
   const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_', 'VITE_']);
   const apiBase = env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+  // A containerized dev server reaches Hosting through the Compose network,
+  // while browser-facing runtime config must keep using localhost/public URLs.
+  const devProxyTarget = env.VITE_DEV_PROXY_TARGET || apiBase;
   const buildTarget = env.VITE_BUILD_TARGET || 'default';
   const isRoutedTMA = buildTarget === 'routed-tma';
   const isSovereign = buildTarget === 'sovereign' || isRoutedTMA;
@@ -787,13 +790,13 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/v1': withBrowserProxyPolicy(
           {
-            target: apiBase,
+            target: devProxyTarget,
             changeOrigin: true,
           },
           { rewriteOriginToTarget: true }
         ),
         '/ws': {
-          target: apiBase,
+          target: devProxyTarget,
           changeOrigin: true,
           ws: true,
         },
@@ -812,7 +815,7 @@ export default defineConfig(({ mode }) => {
         }),
         '/platform': withBrowserProxyPolicy(
           {
-            target: apiBase,
+            target: devProxyTarget,
             changeOrigin: true,
           },
           { rewriteOriginToTarget: true }

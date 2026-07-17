@@ -13,7 +13,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { REQUEST_URL_HEADER } from '@/lib/requestUrl';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+// Server-side proxy traffic must use the Docker-internal endpoint when available.
+// NEXT_PUBLIC_API_BASE_URL is browser-facing and may point at localhost on the host,
+// which resolves back to this frontend container when used from inside Docker.
+const API_BASE =
+  process.env.INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'https://miniapptest.mobazha.org';
 const INFO_API_BASE =
   process.env.NEXT_PUBLIC_INFO_API_URL || process.env.INTERNAL_INFO_API_URL || API_BASE;
 
