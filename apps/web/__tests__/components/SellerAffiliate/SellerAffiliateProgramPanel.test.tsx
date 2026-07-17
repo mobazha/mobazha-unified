@@ -2,13 +2,14 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 
 const getSellerAffiliateProgramMock = vi.fn();
 const putSellerAffiliateProgramMock = vi.fn();
 const getSellerAffiliateCapabilitiesMock = vi.fn();
 const listSellerAffiliateLinksMock = vi.fn();
+const listSellerAffiliateStatementsMock = vi.fn();
 const copyToClipboardMock = vi.fn<(text: string) => Promise<boolean>>(async () => true);
 
 vi.mock('@/lib/clipboard', () => ({
@@ -20,6 +21,7 @@ vi.mock('@mobazha/core', async importOriginal => {
   return {
     ...actual,
     useI18n: () => ({ t: (key: string) => key }),
+    batchGetProfileDisplayInfo: async () => new Map(),
   };
 });
 
@@ -32,6 +34,8 @@ vi.mock('@mobazha/core/services/api/sellerAffiliate', async importOriginal => {
     putSellerAffiliateProgram: (...args: unknown[]) => putSellerAffiliateProgramMock(...args),
     getSellerAffiliateCapabilities: () => getSellerAffiliateCapabilitiesMock(),
     listSellerAffiliateLinks: (...args: unknown[]) => listSellerAffiliateLinksMock(...args),
+    listSellerAffiliateStatements: (...args: unknown[]) =>
+      listSellerAffiliateStatementsMock(...args),
   };
 });
 
@@ -58,6 +62,7 @@ describe('SellerAffiliateProgramPanel', () => {
     // program-form assertions.
     getSellerAffiliateCapabilitiesMock.mockResolvedValue({ version: 2, rails: [] });
     listSellerAffiliateLinksMock.mockResolvedValue([]);
+    listSellerAffiliateStatementsMock.mockResolvedValue([]);
   });
 
   it('loads and populates the form from the existing program', async () => {
@@ -72,7 +77,10 @@ describe('SellerAffiliateProgramPanel', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('10')
     );
-    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('7');
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('7');
+    expect(screen.getByTestId('affiliate-window-unit')).toHaveTextContent(
+      'sellerAffiliate.unitDays'
+    );
     expect(screen.getByTestId('affiliate-status-badge')).toHaveAttribute('data-status', 'active');
     // An active program offers to pause, not enable.
     expect(screen.getByTestId('affiliate-status-toggle')).toHaveTextContent(
@@ -84,8 +92,16 @@ describe('SellerAffiliateProgramPanel', () => {
     expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
     expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
     expect(screen.getByTestId('affiliate-window-help')).toHaveTextContent(
-      'sellerAffiliate.attributionWindowDaysHelp'
+      'sellerAffiliate.attributionWindowHelp'
     );
+    const commissionColumn = screen.getByTestId('affiliate-commission-column');
+    expect(within(commissionColumn).getByTestId('affiliate-cost-preview')).toBeInTheDocument();
+    expect(within(commissionColumn).getByTestId('affiliate-rate-suffix')).toHaveTextContent('%');
+    expect(
+      within(screen.getByTestId('affiliate-attribution-column')).queryByTestId(
+        'affiliate-cost-preview'
+      )
+    ).not.toBeInTheDocument();
   });
 
   it('shows a load error without blocking the form for a first-time (no program) seller', async () => {
@@ -139,11 +155,12 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('0.04')
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('1')
     );
-    expect(screen.getByTestId('affiliate-window-hint')).toHaveTextContent(
-      'sellerAffiliate.attributionWindowExact'
+    expect(screen.getByTestId('affiliate-window-unit')).toHaveTextContent(
+      'sellerAffiliate.unitHours'
     );
+    expect(screen.queryByTestId('affiliate-window-hint')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
     await waitFor(() =>
@@ -173,7 +190,7 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('30')
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('30')
     );
     expect(screen.queryByTestId('affiliate-window-advice')).not.toBeInTheDocument();
   });
@@ -185,10 +202,11 @@ describe('SellerAffiliateProgramPanel', () => {
     // Before hydration the fields show placeholder defaults; editing them then
     // would either be clobbered or clobber the real program.
     expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toBeDisabled();
-    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toBeDisabled();
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toBeDisabled();
+    expect(screen.getByTestId('affiliate-window-unit')).toBeDisabled();
 
     await waitFor(() =>
-      expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).not.toBeDisabled()
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).not.toBeDisabled()
     );
   });
 
@@ -213,7 +231,7 @@ describe('SellerAffiliateProgramPanel', () => {
     render(<SellerAffiliateProgramPanel />);
     await waitFor(() => expect(getSellerAffiliateProgramMock).toHaveBeenCalled());
 
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindowDays'), {
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindow'), {
       target: { value: 'abc' },
     });
 
@@ -222,6 +240,33 @@ describe('SellerAffiliateProgramPanel', () => {
     );
     expect(screen.getByTestId('seller-affiliate-program-save')).toBeDisabled();
     expect(putSellerAffiliateProgramMock).not.toHaveBeenCalled();
+  });
+
+  it('applies a suggested window as whole days and saves its exact seconds', async () => {
+    getSellerAffiliateProgramMock.mockResolvedValue({
+      ...EXISTING_PROGRAM,
+      attributionWindowSeconds: 3600,
+    });
+    putSellerAffiliateProgramMock.mockResolvedValue(EXISTING_PROGRAM);
+    render(<SellerAffiliateProgramPanel />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('1')
+    );
+    fireEvent.click(screen.getByTestId('affiliate-window-preset-7'));
+
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('7');
+    expect(screen.getByTestId('affiliate-window-unit')).toHaveTextContent(
+      'sellerAffiliate.unitDays'
+    );
+    expect(screen.getByTestId('affiliate-window-preset-7')).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
+    await waitFor(() =>
+      expect(putSellerAffiliateProgramMock).toHaveBeenCalledWith(
+        expect.objectContaining({ attributionWindowSeconds: 7 * 86_400 })
+      )
+    );
   });
 
   it('does not let the status toggle commit unsaved form edits', async () => {
@@ -276,7 +321,7 @@ describe('SellerAffiliateProgramPanel', () => {
     fireEvent.change(screen.getByLabelText('sellerAffiliate.commissionRate'), {
       target: { value: '7.5' },
     });
-    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindowDays'), {
+    fireEvent.change(screen.getByLabelText('sellerAffiliate.attributionWindow'), {
       target: { value: '14' },
     });
     fireEvent.click(screen.getByTestId('seller-affiliate-program-save'));
@@ -466,7 +511,7 @@ describe('SellerAffiliateProgramPanel', () => {
     await waitFor(() =>
       expect(screen.getByLabelText('sellerAffiliate.commissionRate')).toHaveValue('20')
     );
-    expect(screen.getByLabelText('sellerAffiliate.attributionWindowDays')).toHaveValue('14');
+    expect(screen.getByLabelText('sellerAffiliate.attributionWindow')).toHaveValue('14');
     expect(screen.queryByTestId('affiliate-status-dirty-hint')).not.toBeInTheDocument();
     expect(screen.getByTestId('affiliate-status-toggle')).not.toBeDisabled();
   });

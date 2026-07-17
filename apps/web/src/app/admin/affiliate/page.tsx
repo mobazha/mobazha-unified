@@ -21,7 +21,7 @@ function AffiliateHomeContent() {
         </h1>
         <p className="text-sm text-muted-foreground">{t('sellerAffiliate.adminSubtitle')}</p>
       </div>
-      <SellerAffiliateProgramPanel programState={programState} />
+      <SellerAffiliateProgramPanel programState={programState} defaultConfigExpanded={false} />
       {programState.program ? (
         <SellerAffiliateStatementsPanel audience="seller" />
       ) : !programState.loading ? (

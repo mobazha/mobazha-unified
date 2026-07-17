@@ -31,6 +31,7 @@ vi.mock('@mobazha/core', async importOriginal => {
     getPaymentCoinDisplayLabel: (coin: string) => coin.split(':').pop() ?? coin,
     renderPairedPrice: (amount: string) => `AMT:${amount}`,
     truncateAddress: (value: string) => `${value.slice(0, 4)}...${value.slice(-4)}`,
+    batchGetProfileDisplayInfo: async () => new Map(),
   };
 });
 

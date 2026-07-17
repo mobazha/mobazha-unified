@@ -30,6 +30,20 @@ export interface SellerAffiliateAttributionWindow {
   value: number;
 }
 
+export type SellerAffiliateAttributionUnit = SellerAffiliateAttributionWindow['unit'];
+
+export interface SellerAffiliateAttributionInput {
+  value: string;
+  unit: SellerAffiliateAttributionUnit;
+}
+
+const ATTRIBUTION_UNIT_SECONDS: Record<SellerAffiliateAttributionUnit, number> = {
+  day: SECONDS_PER_DAY,
+  hour: SECONDS_PER_HOUR,
+  minute: SECONDS_PER_MINUTE,
+  second: 1,
+};
+
 /**
  * Describes an attribution window in the largest unit that divides it exactly,
  * so a 3600-second window reads "1 hour" and is never rounded up to "1 day".
@@ -72,6 +86,34 @@ export function sellerAffiliateAttributionWindowCopy(seconds: number): {
 }
 
 /**
+ * Produces an exact value + unit pair for the seller form. This avoids exposing
+ * implementation-oriented fractional days such as 0.04 when the stored term is
+ * the much clearer "1 hour".
+ */
+export function sellerAffiliateAttributionInput(seconds: number): SellerAffiliateAttributionInput {
+  const window = describeSellerAffiliateAttributionWindow(seconds);
+  return {
+    value: window.value > 0 ? String(window.value) : '',
+    unit: window.unit,
+  };
+}
+
+/**
+ * Converts the seller-facing value + unit control back to whole seconds.
+ * Windows must be at least one minute and no longer than one year.
+ */
+export function sellerAffiliateAttributionSecondsFromInput(
+  input: string,
+  unit: SellerAffiliateAttributionUnit
+): number | null {
+  const value = Number(input);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const seconds = Math.round(value * ATTRIBUTION_UNIT_SECONDS[unit]);
+  if (seconds < SECONDS_PER_MINUTE || seconds > 365 * SECONDS_PER_DAY) return null;
+  return seconds;
+}
+
+/**
  * Renders the seller panel's "attribution days" input value without inventing
  * precision: whole days stay integers; sub-day windows keep two decimals so a
  * 1-hour window reads "0.04" instead of a fabricated "1".
@@ -89,10 +131,7 @@ export function sellerAffiliateAttributionDaysInput(seconds: number): string {
  * window (non-numeric, non-positive, above one year, or under one minute).
  */
 export function sellerAffiliateAttributionSecondsFromDaysInput(input: string): number | null {
-  const days = Number(input);
-  if (!Number.isFinite(days) || days <= 0 || days > 365) return null;
-  const seconds = Math.round(days * SECONDS_PER_DAY);
-  return seconds >= SECONDS_PER_MINUTE ? seconds : null;
+  return sellerAffiliateAttributionSecondsFromInput(input, 'day');
 }
 
 /**

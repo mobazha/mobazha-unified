@@ -3,29 +3,43 @@
 
 'use client';
 
-import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Check, Copy, Plus, Save, Trash2 } from 'lucide-react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Check, Copy, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import {
-  describeSellerAffiliateAttributionWindow,
-  sellerAffiliateAttributionDaysInput,
+  renderPairedPrice,
+  sellerAffiliateAttributionInput,
   sellerAffiliateAttributionWindowAdvice,
-  sellerAffiliateAttributionSecondsFromDaysInput,
   sellerAffiliateAttributionWindowCopy,
+  sellerAffiliateAttributionSecondsFromInput,
+  useCurrencyFormat,
   useI18n,
   useSellerAffiliateCapabilities,
   useSellerAffiliateLinks,
   useSellerAffiliateProgram,
+  useSellerAffiliateStatements,
   useStoreCredentialRecovery,
   truncateAddress,
+  type SellerAffiliateAttributionUnit,
   type UseSellerAffiliateProgramReturn,
 } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import Link from 'next/link';
 import { copyToClipboard } from '@/lib/clipboard';
 import { StoreCredentialNotice } from '@/components/common/StoreCredentialNotice';
 import { AffiliateRailChips } from './AffiliateRailChips';
+import { usePeerDisplayProfiles } from './usePeerDisplayProfiles';
+
+const ATTRIBUTION_WINDOW_PRESET_DAYS = [7, 14, 30] as const;
 
 export interface SellerAffiliateProgramPanelProps {
   /**
@@ -34,10 +48,18 @@ export interface SellerAffiliateProgramPanelProps {
    * panel owns the state through its own hook instance.
    */
   programState?: UseSellerAffiliateProgramReturn;
+  /**
+   * Whether the settings form starts expanded when a program already exists.
+   * Returning sellers mostly come back to check money, not edit terms, so the
+   * admin page passes false to fold the form behind a one-line summary. A
+   * missing program always forces the form open (there is nothing to fold).
+   */
+  defaultConfigExpanded?: boolean;
 }
 
 export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramPanel({
   programState,
+  defaultConfigExpanded = true,
 }: SellerAffiliateProgramPanelProps = {}) {
   const { t } = useI18n();
   // Always call the hook (rules of hooks); disable its fetch when the page owns
@@ -62,17 +84,14 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     revoke,
   } = useSellerAffiliateLinks(program?.id);
   const [rate, setRate] = useState('5');
-  const [windowDays, setWindowDays] = useState('30');
+  const [windowValue, setWindowValue] = useState('30');
+  const [windowUnit, setWindowUnit] = useState<SellerAffiliateAttributionUnit>('day');
   // The id of the program the form fields currently reflect. Hydration runs in
   // an effect (after commit), so on the first render where a program arrives the
   // fields still hold their placeholder defaults ('5'/'30'). Tracking which
   // program the fields belong to lets `dirty` ignore that pre-hydration gap
   // instead of misreading the defaults as unsaved edits.
   const [hydratedProgramId, setHydratedProgramId] = useState<string | null>(null);
-  // The exact stored window. While the input text still matches this value's
-  // rendering, saving must send it back verbatim: the days input is lossy for
-  // sub-day windows and must never silently rewrite an untouched setting.
-  const [savedWindowSeconds, setSavedWindowSeconds] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedRecently, setSavedRecently] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -84,39 +103,59 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
   const [revokingID, setRevokingID] = useState<string | null>(null);
   // Rails settle automatically, so the full list stays folded behind a summary.
   const [railsExpanded, setRailsExpanded] = useState(false);
+  // null = no explicit choice yet; the default then depends on the page intent.
+  const [configExpandedPref, setConfigExpandedPref] = useState<boolean | null>(null);
+  const configExpanded = program ? (configExpandedPref ?? defaultConfigExpanded) : true;
+  const { localCurrency } = useCurrencyFormat();
+  // Per-promoter performance for the links list. Fetched only once a program
+  // and at least one link exist, so the empty/creation states stay one-request.
+  const { statements } = useSellerAffiliateStatements(
+    'seller',
+    Boolean(program) && links.length > 0
+  );
+
+  const linkPromoterIDs = useMemo(() => links.map(link => link.promoterPeerID), [links]);
+  const promoterProfiles = usePeerDisplayProfiles(linkPromoterIDs);
+
+  /** promoterPeerID → attributed order count + commission totals per currency. */
+  const promoterStats = useMemo(() => {
+    const stats = new Map<string, { orders: Set<string>; byCurrency: Map<string, bigint> }>();
+    for (const line of statements) {
+      const promoter = line.attribution.promoterPeerID;
+      if (!promoter) continue;
+      let entry = stats.get(promoter);
+      if (!entry) {
+        entry = { orders: new Set(), byCurrency: new Map() };
+        stats.set(promoter, entry);
+      }
+      entry.orders.add(line.commissionLine.orderID);
+      // Reversed lines took the commission back — they still count as
+      // attributed orders but must not inflate the earned total.
+      if (line.commissionLine.status !== 'reversed') {
+        const currency = line.commissionLine.currency;
+        entry.byCurrency.set(
+          currency,
+          (entry.byCurrency.get(currency) ?? BigInt(0)) +
+            BigInt(line.commissionLine.commissionAtomic)
+        );
+      }
+    }
+    return stats;
+  }, [statements]);
 
   useEffect(() => {
     if (!program) return;
+    const windowInput = sellerAffiliateAttributionInput(program.attributionWindowSeconds);
     setRate(String(program.commissionRateBPS / 100));
-    setSavedWindowSeconds(program.attributionWindowSeconds);
-    setWindowDays(sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
+    setWindowValue(windowInput.value);
+    setWindowUnit(windowInput.unit);
     setHydratedProgramId(program.id);
   }, [program]);
 
-  // The window that would actually be saved: the untouched stored value, or
-  // the user's (possibly fractional) days input converted to seconds.
-  const effectiveWindowSeconds =
-    savedWindowSeconds !== null &&
-    windowDays === sellerAffiliateAttributionDaysInput(savedWindowSeconds)
-      ? savedWindowSeconds
-      : sellerAffiliateAttributionSecondsFromDaysInput(windowDays);
-
-  const formatWindow = useCallback(
-    (seconds: number): string => {
-      const copy = sellerAffiliateAttributionWindowCopy(seconds);
-      return t(copy.key, copy.params);
-    },
-    [t]
+  const effectiveWindowSeconds = sellerAffiliateAttributionSecondsFromInput(
+    windowValue,
+    windowUnit
   );
-
-  // Sub-day windows render as fractional days, so spell out the exact duration.
-  const windowHint =
-    effectiveWindowSeconds !== null &&
-    describeSellerAffiliateAttributionWindow(effectiveWindowSeconds).unit !== 'day'
-      ? t('sellerAffiliate.attributionWindowExact', {
-          window: formatWindow(effectiveWindowSeconds),
-        })
-      : null;
 
   // Warn before a too-short window silently discards promoter-driven sales.
   const windowAdvice =
@@ -129,17 +168,33 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
     rate.trim() !== '' && (!Number.isFinite(rateNumber) || rateNumber <= 0 || rateNumber > 100);
   // A non-empty window that fails to parse into a valid duration. Kept separate
   // from the "too short" advice, which flags a valid-but-weak window.
-  const windowInvalid = windowDays.trim() !== '' && effectiveWindowSeconds === null;
+  const windowInvalid = windowValue.trim() !== '' && effectiveWindowSeconds === null;
   const formInvalid = rateInvalid || windowInvalid;
   // The form differs from what is persisted. Compared against the exact strings
   // the fields hydrate to, so an untouched form is never seen as dirty. Gated on
   // hydratedProgramId === program.id so the brief pre-hydration render (fields
   // still on their '5'/'30' defaults) never reads as a false dirty edit.
+  const persistedWindowInput = program
+    ? sellerAffiliateAttributionInput(program.attributionWindowSeconds)
+    : null;
+  // Human copy for the stored window ("7 days"), shown in the collapsed summary.
+  const persistedWindowCopy = program
+    ? sellerAffiliateAttributionWindowCopy(program.attributionWindowSeconds)
+    : null;
+  const persistedWindowSummary = persistedWindowCopy
+    ? t(persistedWindowCopy.key, persistedWindowCopy.params)
+    : '';
   const dirty =
     program !== null &&
     hydratedProgramId === program.id &&
     (rate !== String(program.commissionRateBPS / 100) ||
-      windowDays !== sellerAffiliateAttributionDaysInput(program.attributionWindowSeconds));
+      windowValue !== persistedWindowInput?.value ||
+      windowUnit !== persistedWindowInput?.unit);
+
+  const handleWindowPreset = useCallback((days: number): void => {
+    setWindowValue(String(days));
+    setWindowUnit('day');
+  }, []);
 
   // Worked commission cost on a 100-unit net-merchandise sale (base 100 makes
   // the payout equal the rate). Only shown when the rate parses to a valid %.
@@ -254,9 +309,31 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
 
   return (
     <Card data-testid="seller-affiliate-program-panel" aria-busy={loading || saving}>
-      <CardHeader>
-        <CardTitle className="text-base">{t('sellerAffiliate.programTitle')}</CardTitle>
-        <p className="text-sm text-muted-foreground">{t('sellerAffiliate.programDescription')}</p>
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+        <div>
+          <CardTitle className="text-base">{t('sellerAffiliate.programTitle')}</CardTitle>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('sellerAffiliate.programDescription')}
+          </p>
+        </div>
+        {program ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="min-h-9 shrink-0"
+            onClick={() => setConfigExpandedPref(!configExpanded)}
+            aria-expanded={configExpanded}
+            data-testid="affiliate-config-toggle"
+          >
+            {configExpanded ? (
+              <X className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            )}
+            {t(configExpanded ? 'sellerAffiliate.hideSettings' : 'sellerAffiliate.editSettings')}
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
         {error ? (
@@ -276,7 +353,29 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             }
           />
         ) : null}
-        {program ? (
+        {program && !configExpanded ? (
+          <div
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-muted/20 px-3 py-2"
+            data-testid="affiliate-config-summary"
+          >
+            <span
+              className={
+                program.status === 'active'
+                  ? 'inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600'
+                  : 'inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground'
+              }
+              data-status={program.status}
+            >
+              {t(program.status === 'active' ? 'sellerAffiliate.active' : 'sellerAffiliate.paused')}
+            </span>
+            <span className="text-sm font-medium">{program.commissionRateBPS / 100}%</span>
+            <span className="text-sm text-muted-foreground">{persistedWindowSummary}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('sellerAffiliate.summaryLinks', { count: String(links.length) })}
+            </span>
+          </div>
+        ) : null}
+        {program && configExpanded ? (
           <div className="space-y-2" data-testid="affiliate-status-row">
             <p className="text-sm font-medium">{t('sellerAffiliate.status')}</p>
             <div className="flex flex-wrap items-center gap-3">
@@ -323,136 +422,228 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             ) : null}
           </div>
         ) : null}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="affiliate-rate">{t('sellerAffiliate.commissionRate')}</Label>
-            <Input
-              id="affiliate-rate"
-              inputMode="decimal"
-              value={rate}
-              onChange={event => setRate(event.target.value)}
-              disabled={loading}
-              aria-invalid={rateInvalid}
-            />
-            {rateInvalid ? (
+        {configExpanded ? (
+          <>
+            <div className="grid items-start gap-4 sm:grid-cols-2">
+              <div className="space-y-4" data-testid="affiliate-commission-column">
+                <div className="space-y-2">
+                  <Label htmlFor="affiliate-rate">{t('sellerAffiliate.commissionRate')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="affiliate-rate"
+                      className="min-h-11 pr-10"
+                      inputMode="decimal"
+                      value={rate}
+                      onChange={event => setRate(event.target.value)}
+                      disabled={loading}
+                      aria-invalid={rateInvalid}
+                    />
+                    <span
+                      className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-muted-foreground"
+                      aria-hidden="true"
+                      data-testid="affiliate-rate-suffix"
+                    >
+                      %
+                    </span>
+                  </div>
+                  {rateInvalid ? (
+                    <p
+                      className="text-xs font-medium text-destructive"
+                      data-testid="affiliate-rate-error"
+                    >
+                      {t('sellerAffiliate.invalidRate')}
+                    </p>
+                  ) : null}
+                </div>
+                {commissionExample ? (
+                  <div
+                    className="space-y-1 rounded-lg border border-border bg-muted/30 p-3 sm:p-4"
+                    data-testid="affiliate-cost-preview"
+                  >
+                    <p className="text-sm font-medium">{t('sellerAffiliate.costPreviewTitle')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('sellerAffiliate.costPreviewBody')}
+                    </p>
+                    <p
+                      className="text-xs font-medium text-foreground"
+                      data-testid="affiliate-cost-example"
+                    >
+                      {t('sellerAffiliate.costPreviewExample', {
+                        percent: rate.trim(),
+                        commission: commissionExample,
+                      })}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="space-y-2" data-testid="affiliate-attribution-column">
+                <Label id="affiliate-window-label" htmlFor="affiliate-window">
+                  {t('sellerAffiliate.attributionWindow')}
+                </Label>
+                <div className="grid grid-cols-[minmax(0,1fr)_9rem] gap-2">
+                  <Input
+                    id="affiliate-window"
+                    className="min-h-11"
+                    inputMode="decimal"
+                    value={windowValue}
+                    onChange={event => setWindowValue(event.target.value)}
+                    disabled={loading}
+                    aria-invalid={windowInvalid}
+                    aria-describedby="affiliate-window-help"
+                  />
+                  <Select
+                    value={windowUnit}
+                    onValueChange={value => setWindowUnit(value as SellerAffiliateAttributionUnit)}
+                    disabled={loading}
+                  >
+                    <SelectTrigger
+                      className="min-h-11"
+                      aria-label={t('sellerAffiliate.attributionWindowUnit')}
+                      data-testid="affiliate-window-unit"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day">{t('sellerAffiliate.unitDays')}</SelectItem>
+                      <SelectItem value="hour">{t('sellerAffiliate.unitHours')}</SelectItem>
+                      <SelectItem value="minute">{t('sellerAffiliate.unitMinutes')}</SelectItem>
+                      <SelectItem value="second">{t('sellerAffiliate.unitSeconds')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p
+                  id="affiliate-window-help"
+                  className="text-xs text-muted-foreground"
+                  data-testid="affiliate-window-help"
+                >
+                  {t('sellerAffiliate.attributionWindowHelp')}
+                </p>
+                {windowInvalid ? (
+                  <p
+                    className="text-xs font-medium text-destructive"
+                    data-testid="affiliate-window-error"
+                  >
+                    {t('sellerAffiliate.invalidWindow')}
+                  </p>
+                ) : null}
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                  aria-label={t('sellerAffiliate.attributionWindowPresets')}
+                >
+                  <span className="text-xs text-muted-foreground">
+                    {t('sellerAffiliate.attributionWindowPresets')}
+                  </span>
+                  {ATTRIBUTION_WINDOW_PRESET_DAYS.map(days => (
+                    <Button
+                      key={days}
+                      type="button"
+                      variant={effectiveWindowSeconds === days * 86_400 ? 'secondary' : 'outline'}
+                      size="sm"
+                      className="min-h-11"
+                      onClick={() => handleWindowPreset(days)}
+                      disabled={loading}
+                      aria-pressed={effectiveWindowSeconds === days * 86_400}
+                      data-testid={`affiliate-window-preset-${days}`}
+                    >
+                      {t('sellerAffiliate.windowDays', { count: String(days) })}
+                    </Button>
+                  ))}
+                </div>
+                {windowAdvice ? (
+                  <div
+                    className="flex gap-2 rounded-lg border border-amber-300 bg-amber-100 p-3 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+                    data-testid="affiliate-window-advice"
+                    data-advice={windowAdvice}
+                    role="status"
+                  >
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <p className="text-xs font-medium">
+                      {t(
+                        windowAdvice === 'too_short'
+                          ? 'sellerAffiliate.attributionWindowTooShort'
+                          : 'sellerAffiliate.attributionWindowRecommend'
+                      )}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="space-y-2" aria-busy={capabilitiesLoading}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t('sellerAffiliate.supportedRails')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('sellerAffiliate.railsSummary')}
+                  </p>
+                </div>
+                {(capabilities?.rails.length ?? 0) > 0 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="min-h-9 shrink-0"
+                    onClick={() => setRailsExpanded(value => !value)}
+                    aria-expanded={railsExpanded}
+                    data-testid="affiliate-rails-toggle"
+                  >
+                    {t(railsExpanded ? 'sellerAffiliate.railsHide' : 'sellerAffiliate.railsShow')}
+                  </Button>
+                ) : null}
+              </div>
+              {(capabilities?.rails.length ?? 0) > 0 && !railsExpanded ? (
+                <p className="text-xs text-muted-foreground" data-testid="affiliate-rails-count">
+                  {t('sellerAffiliate.railsReadyCount', { count: capabilities?.rails.length ?? 0 })}
+                </p>
+              ) : null}
+              {capabilitiesError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {t('sellerAffiliate.capabilitiesLoadFailed')}
+                </p>
+              ) : null}
+              {railsExpanded ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    {t('sellerAffiliate.noManualWorkflow')}
+                  </p>
+                  <AffiliateRailChips rails={capabilities?.rails ?? []} />
+                </div>
+              ) : null}
+              {!capabilitiesLoading && !capabilitiesError && !capabilities?.rails.length ? (
+                <p className="text-sm text-destructive">{t('sellerAffiliate.noSupportedRails')}</p>
+              ) : null}
               <p
-                className="text-xs font-medium text-destructive"
-                data-testid="affiliate-rate-error"
+                className="text-xs text-muted-foreground/80"
+                data-testid="affiliate-rails-history-note"
               >
-                {t('sellerAffiliate.invalidRate')}
+                {t('sellerAffiliate.railsHistoryNote')}
               </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="affiliate-window">{t('sellerAffiliate.attributionWindowDays')}</Label>
-            <Input
-              id="affiliate-window"
-              inputMode="decimal"
-              value={windowDays}
-              onChange={event => setWindowDays(event.target.value)}
-              disabled={loading}
-              aria-invalid={windowInvalid}
-              aria-describedby="affiliate-window-help"
-            />
-            <p
-              id="affiliate-window-help"
-              className="text-xs text-muted-foreground"
-              data-testid="affiliate-window-help"
-            >
-              {t('sellerAffiliate.attributionWindowDaysHelp')}
-            </p>
-            {windowInvalid ? (
-              <p
-                className="text-xs font-medium text-destructive"
-                data-testid="affiliate-window-error"
-              >
-                {t('sellerAffiliate.invalidWindow')}
-              </p>
-            ) : null}
-            {windowHint ? (
-              <p className="text-xs text-muted-foreground" data-testid="affiliate-window-hint">
-                {windowHint}
-              </p>
-            ) : null}
-            {windowAdvice ? (
-              <p
-                className={
-                  windowAdvice === 'too_short'
-                    ? 'text-xs font-medium text-destructive'
-                    : 'text-xs text-muted-foreground'
-                }
-                data-testid="affiliate-window-advice"
-                data-advice={windowAdvice}
-              >
-                {t(
-                  windowAdvice === 'too_short'
-                    ? 'sellerAffiliate.attributionWindowTooShort'
-                    : 'sellerAffiliate.attributionWindowRecommend'
-                )}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        {commissionExample ? (
-          <div
-            className="space-y-1 rounded-lg border border-border bg-muted/30 p-3"
-            data-testid="affiliate-cost-preview"
-          >
-            <p className="text-sm font-medium">{t('sellerAffiliate.costPreviewTitle')}</p>
-            <p className="text-xs text-muted-foreground">{t('sellerAffiliate.costPreviewBody')}</p>
-            <p className="text-xs font-medium text-foreground" data-testid="affiliate-cost-example">
-              {t('sellerAffiliate.costPreviewExample', {
-                percent: rate.trim(),
-                commission: commissionExample,
-              })}
-            </p>
-          </div>
+            </div>
+          </>
         ) : null}
-        <div className="space-y-2" aria-busy={capabilitiesLoading}>
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{t('sellerAffiliate.supportedRails')}</p>
-              <p className="text-xs text-muted-foreground">{t('sellerAffiliate.railsSummary')}</p>
-            </div>
-            {(capabilities?.rails.length ?? 0) > 0 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-9 shrink-0"
-                onClick={() => setRailsExpanded(value => !value)}
-                aria-expanded={railsExpanded}
-                data-testid="affiliate-rails-toggle"
-              >
-                {t(railsExpanded ? 'sellerAffiliate.railsHide' : 'sellerAffiliate.railsShow')}
-              </Button>
-            ) : null}
-          </div>
-          {(capabilities?.rails.length ?? 0) > 0 && !railsExpanded ? (
-            <p className="text-xs text-muted-foreground" data-testid="affiliate-rails-count">
-              {t('sellerAffiliate.railsReadyCount', { count: capabilities?.rails.length ?? 0 })}
-            </p>
-          ) : null}
-          {capabilitiesError ? (
-            <p className="text-sm text-destructive" role="alert">
-              {t('sellerAffiliate.capabilitiesLoadFailed')}
-            </p>
-          ) : null}
-          {railsExpanded ? (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                {t('sellerAffiliate.noManualWorkflow')}
-              </p>
-              <AffiliateRailChips rails={capabilities?.rails ?? []} />
-            </div>
-          ) : null}
-          {!capabilitiesLoading && !capabilitiesError && !capabilities?.rails.length ? (
-            <p className="text-sm text-destructive">{t('sellerAffiliate.noSupportedRails')}</p>
-          ) : null}
-        </div>
         {program ? (
           <div className="space-y-2" aria-busy={linksLoading}>
-            <p className="text-sm font-medium">{t('sellerAffiliate.promoterLinks')}</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">{t('sellerAffiliate.promoterLinks')}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-9"
+                onClick={() => void handleCopyPromoterInvite()}
+                aria-label={t('sellerAffiliate.copyPromoterInvite')}
+              >
+                {inviteCopied ? (
+                  <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                )}
+                {t(
+                  inviteCopied
+                    ? 'sellerAffiliate.promoterInviteCopied'
+                    : 'sellerAffiliate.copyPromoterInvite'
+                )}
+              </Button>
+            </div>
             {linksError ? (
               <p className="text-sm text-destructive" role="alert">
                 {t('sellerAffiliate.linksLoadFailed')}
@@ -468,27 +659,77 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
                 key={link.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3"
               >
-                <div className="min-w-0">
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {truncateAddress(link.promoterPeerID)}
-                  </p>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/store/${encodeURIComponent(link.promoterPeerID)}`}
+                      className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+                      title={link.promoterPeerID}
+                    >
+                      {promoterProfiles.get(link.promoterPeerID)?.name || (
+                        <span className="font-mono text-xs">
+                          {truncateAddress(link.promoterPeerID)}
+                        </span>
+                      )}
+                    </Link>
+                    <span
+                      className={
+                        link.status === 'active'
+                          ? 'rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600'
+                          : 'rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'
+                      }
+                    >
+                      {t(
+                        link.status === 'active'
+                          ? 'sellerAffiliate.linkActive'
+                          : 'sellerAffiliate.linkRevoked'
+                      )}
+                    </span>
+                  </div>
+                  {(() => {
+                    const stats = promoterStats.get(link.promoterPeerID);
+                    if (!stats || stats.orders.size === 0) {
+                      return (
+                        <p className="text-xs text-muted-foreground">
+                          {t('sellerAffiliate.noLinkActivity')}
+                        </p>
+                      );
+                    }
+                    const amounts = Array.from(stats.byCurrency.entries())
+                      .map(([currency, total]) =>
+                        renderPairedPrice(total.toString(), currency, localCurrency, {
+                          isMinimalUnit: true,
+                        })
+                      )
+                      .join(' · ');
+                    return (
+                      <p
+                        className="text-xs text-muted-foreground"
+                        data-testid="affiliate-link-stats"
+                      >
+                        {t('sellerAffiliate.linkOrdersCount', {
+                          count: String(stats.orders.size),
+                        })}
+                        {amounts ? ` · ${amounts}` : ''}
+                      </p>
+                    );
+                  })()}
                   <p className="text-xs text-muted-foreground">
-                    {t(
-                      link.status === 'active'
-                        ? 'sellerAffiliate.linkActive'
-                        : 'sellerAffiliate.linkRevoked'
-                    )}
+                    {t('sellerAffiliate.linkCreatedAt', {
+                      date: new Date(link.createdAt).toLocaleDateString(),
+                    })}
                   </p>
                 </div>
                 {link.status === 'active' ? (
                   <Button
                     type="button"
-                    variant={confirmRevokeID === link.id ? 'destructive' : 'outline'}
-                    className="min-h-11"
+                    size="sm"
+                    variant={confirmRevokeID === link.id ? 'destructive' : 'ghost'}
+                    className="min-h-9 text-xs text-muted-foreground hover:text-destructive"
                     onClick={() => void handleRevokeLink(link.id)}
                     disabled={revokingID === link.id}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                     {t(
                       confirmRevokeID === link.id
                         ? 'sellerAffiliate.confirmRevoke'
@@ -517,50 +758,42 @@ export const SellerAffiliateProgramPanel = memo(function SellerAffiliateProgramP
             }
           />
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            className="min-h-11"
-            onClick={() => void handleSave(program ? program.status : 'active', { confirm: true })}
-            disabled={loading || saving || formInvalid}
-            data-testid="seller-affiliate-program-save"
-          >
-            {savedRecently ? (
-              <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-            ) : program ? (
-              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            )}
-            {t(
-              savedRecently
-                ? 'sellerAffiliate.programSaved'
-                : program
-                  ? 'sellerAffiliate.saveProgram'
-                  : 'sellerAffiliate.createAndActivate'
-            )}
-          </Button>
-          {program ? (
+        {configExpanded ? (
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
-              variant="outline"
               className="min-h-11"
-              onClick={() => void handleCopyPromoterInvite()}
-              aria-label={t('sellerAffiliate.copyPromoterInvite')}
+              onClick={() =>
+                void handleSave(program ? program.status : 'active', { confirm: true })
+              }
+              disabled={loading || saving || formInvalid}
+              data-testid="seller-affiliate-program-save"
             >
-              {inviteCopied ? (
+              {savedRecently ? (
                 <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+              ) : program ? (
+                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
               ) : (
-                <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
               {t(
-                inviteCopied
-                  ? 'sellerAffiliate.promoterInviteCopied'
-                  : 'sellerAffiliate.copyPromoterInvite'
+                savedRecently
+                  ? 'sellerAffiliate.programSaved'
+                  : program
+                    ? 'sellerAffiliate.saveProgram'
+                    : 'sellerAffiliate.createAndActivate'
               )}
             </Button>
-          ) : null}
-        </div>
+            {dirty ? (
+              <p
+                className="text-xs font-medium text-amber-600 dark:text-amber-400"
+                data-testid="affiliate-unsaved-hint"
+              >
+                {t('sellerAffiliate.unsavedChanges')}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {!program && !loading ? (
           <p className="text-xs text-muted-foreground" data-testid="affiliate-invite-hint">
             {t('sellerAffiliate.saveBeforeInvite')}

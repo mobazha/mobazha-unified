@@ -431,6 +431,20 @@ describe('attribution window fidelity', () => {
     expect(sellerAffiliateAttributionSecondsFromDaysInput('abc')).toBeNull();
     expect(sellerAffiliateAttributionSecondsFromDaysInput('400')).toBeNull();
   });
+
+  it('round-trips an exact seller-facing value and unit', async () => {
+    const { sellerAffiliateAttributionInput, sellerAffiliateAttributionSecondsFromInput } =
+      await import('../../utils/sellerAffiliate');
+
+    expect(sellerAffiliateAttributionInput(7 * 86_400)).toEqual({ value: '7', unit: 'day' });
+    expect(sellerAffiliateAttributionInput(3_600)).toEqual({ value: '1', unit: 'hour' });
+    expect(sellerAffiliateAttributionInput(90)).toEqual({ value: '90', unit: 'second' });
+
+    expect(sellerAffiliateAttributionSecondsFromInput('14', 'day')).toBe(14 * 86_400);
+    expect(sellerAffiliateAttributionSecondsFromInput('1.5', 'hour')).toBe(5_400);
+    expect(sellerAffiliateAttributionSecondsFromInput('30', 'second')).toBeNull();
+    expect(sellerAffiliateAttributionSecondsFromInput('366', 'day')).toBeNull();
+  });
 });
 
 describe('normalizeSellerAffiliateLink payout rails', () => {
