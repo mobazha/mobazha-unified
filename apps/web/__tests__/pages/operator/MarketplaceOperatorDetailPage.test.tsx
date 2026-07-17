@@ -29,11 +29,14 @@ let mockPageLoading = false;
 let mockAttributionSummary: {
   from: string;
   to: string;
+  visits: number;
   impressions: number;
   listingClicks: number;
   checkoutHandoffs: number;
   listingClickRate: number | null;
   checkoutHandoffRate: number | null;
+  previousVisits: number;
+  previousOrders: number;
   hasData: boolean;
 } | null = null;
 let latestSettingsCardProps: {
@@ -374,11 +377,14 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockAttributionSummary = {
       from: '2026-01-01T00:00:00Z',
       to: '2026-01-31T00:00:00Z',
-      impressions: 80,
+      visits: 80,
+      impressions: 64,
       listingClicks: 30,
       checkoutHandoffs: 9,
       listingClickRate: 0.375,
       checkoutHandoffRate: 0.3,
+      previousVisits: 60,
+      previousOrders: 0,
       hasData: true,
     };
     latestSettingsCardProps = null;
@@ -920,11 +926,14 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockAttributionSummary = {
       from: '2026-01-01T00:00:00Z',
       to: '2026-01-31T00:00:00Z',
+      visits: 0,
       impressions: 0,
       listingClicks: 0,
       checkoutHandoffs: 0,
       listingClickRate: null,
       checkoutHandoffRate: null,
+      previousVisits: 0,
+      previousOrders: 0,
       hasData: false,
     };
     render(<MarketplaceOperatorDetailPage />);

@@ -688,12 +688,17 @@ export interface SubmitMarketplaceAttributionEventResponse {
 export interface MarketplaceAttributionSummary {
   from: string;
   to: string;
+  /** Distinct journeys over any event type — deep-linked traffic counts too. */
+  visits: number;
   impressions: number;
   listingClicks: number;
   checkoutHandoffs: number;
   orders: number;
   listingClickRate: number | null;
   checkoutHandoffRate: number | null;
+  /** Same-length window immediately before `from`, for trend deltas. */
+  previousVisits: number;
+  previousOrders: number;
   hasData: boolean;
   /** Per-UTM funnel so a shared link's outcome is measurable. */
   sources: MarketplaceAttributionSourceBreakdown[];
@@ -703,6 +708,7 @@ export interface MarketplaceAttributionSourceBreakdown {
   source: string;
   medium?: string;
   campaign?: string;
+  visits: number;
   impressions: number;
   listingClicks: number;
   checkoutHandoffs: number;

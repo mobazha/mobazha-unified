@@ -175,6 +175,21 @@ export default function MarketplaceOperatorDetailPage() {
     },
     [syncTabToUrl]
   );
+
+  // Metric cards are doors, not posters: each lands on the detail view that
+  // explains its number (funnel card, earnings card, or the sellers tab).
+  const handleMetricNavigate = useCallback(
+    (target: 'funnel' | 'earnings' | 'sellers') => {
+      if (target === 'sellers') {
+        handleTabChange('sellers');
+        return;
+      }
+      const anchorId =
+        target === 'funnel' ? 'operator-attribution-funnel' : 'operator-earnings-anchor';
+      document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    [handleTabChange]
+  );
   const {
     marketplace,
     stores,
@@ -785,7 +800,7 @@ export default function MarketplaceOperatorDetailPage() {
                 <button
                   type="button"
                   onClick={() => handleTabChange('settings')}
-                  className="mt-2 text-sm text-primary hover:underline"
+                  className="mt-2 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                   data-testid="operator-add-positioning"
                 >
                   {t('marketplace.operator.addPositioningCta', {
@@ -888,6 +903,7 @@ export default function MarketplaceOperatorDetailPage() {
                   summaryLoading={attributionSummaryLoading}
                   approvedSellers={counts.approved}
                   pendingSellers={counts.waiting}
+                  onNavigate={handleMetricNavigate}
                 />
               ) : (
                 <Card data-testid="operator-overview-readiness">
@@ -945,7 +961,11 @@ export default function MarketplaceOperatorDetailPage() {
                       <p className="text-sm font-medium">{overviewNextStep.title}</p>
                       <p className="text-sm text-muted-foreground">{overviewNextStep.body}</p>
                     </div>
-                    <Button size="sm" onClick={overviewNextStep.action} data-testid="operator-next-step-cta">
+                    <Button
+                      size="sm"
+                      onClick={overviewNextStep.action}
+                      data-testid="operator-next-step-cta"
+                    >
                       {overviewNextStep.cta}
                     </Button>
                   </CardContent>
@@ -962,7 +982,11 @@ export default function MarketplaceOperatorDetailPage() {
               ) : null}
 
               {canViewAttribution ? (
-                <Card className="mt-6" data-testid="operator-attribution-funnel-card">
+                <Card
+                  className="mt-6 scroll-mt-24"
+                  id="operator-attribution-funnel"
+                  data-testid="operator-attribution-funnel-card"
+                >
                   <CardHeader>
                     <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
                   </CardHeader>
@@ -994,55 +1018,72 @@ export default function MarketplaceOperatorDetailPage() {
                         </Button>
                       </div>
                     ) : attributionSummary?.hasData ? (
-                      <div className="space-y-2" data-testid="operator-attribution-has-data">
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionImpressions')}
-                          </span>
-                          <span>{attributionSummary.impressions}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionListingClicks')}
-                          </span>
-                          <span>{attributionSummary.listingClicks}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionCheckoutHandoffs')}
-                          </span>
-                          <span>{attributionSummary.checkoutHandoffs}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionListingClickRate')}
-                          </span>
-                          <span>
-                            {attributionSummary.listingClickRate == null
-                              ? t('marketplace.operator.attributionRateUnavailable')
-                              : `${(attributionSummary.listingClickRate * 100).toFixed(1)}%`}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionCheckoutRate')}
-                          </span>
-                          <span>
-                            {attributionSummary.checkoutHandoffRate == null
-                              ? t('marketplace.operator.attributionRateUnavailable')
-                              : `${(attributionSummary.checkoutHandoffRate * 100).toFixed(1)}%`}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            {t('marketplace.operator.attributionOrders', {
-                              defaultValue: 'Attributed orders',
-                            })}
-                          </span>
-                          <span data-testid="operator-attribution-orders">
-                            {attributionSummary.orders ?? 0}
-                          </span>
-                        </div>
+                      <div className="space-y-3" data-testid="operator-attribution-has-data">
+                        {(() => {
+                          const summary = attributionSummary;
+                          const rows: Array<{
+                            key: string;
+                            label: string;
+                            count: number;
+                            rate?: number | null;
+                            testId?: string;
+                          }> = [
+                            {
+                              key: 'visits',
+                              label: t('marketplace.operator.attributionVisits', {
+                                defaultValue: 'Visits',
+                              }),
+                              count: summary.visits ?? 0,
+                            },
+                            {
+                              key: 'clicks',
+                              label: t('marketplace.operator.attributionListingClicks'),
+                              count: summary.listingClicks,
+                              rate: summary.listingClickRate,
+                            },
+                            {
+                              key: 'handoffs',
+                              label: t('marketplace.operator.attributionCheckoutHandoffs'),
+                              count: summary.checkoutHandoffs,
+                              rate: summary.checkoutHandoffRate,
+                            },
+                            {
+                              key: 'orders',
+                              label: t('marketplace.operator.attributionOrders', {
+                                defaultValue: 'Attributed orders',
+                              }),
+                              count: summary.orders ?? 0,
+                              testId: 'operator-attribution-orders',
+                            },
+                          ];
+                          const maxCount = Math.max(1, ...rows.map(row => row.count));
+                          return rows.map(row => (
+                            <div key={row.key} data-testid={`operator-attribution-row-${row.key}`}>
+                              <div className="flex items-baseline justify-between gap-4">
+                                <span className="text-muted-foreground">{row.label}</span>
+                                <span className="tabular-nums">
+                                  <span data-testid={row.testId}>{row.count}</span>
+                                  {row.rate !== undefined ? (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                      {row.rate == null ? '—' : `${(row.rate * 100).toFixed(1)}%`}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </div>
+                              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary/70"
+                                  style={{
+                                    width:
+                                      row.count > 0
+                                        ? `${Math.max(3, (row.count / maxCount) * 100)}%`
+                                        : '0%',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ));
+                        })()}
                         {attributionSummary.sources && attributionSummary.sources.length > 0 ? (
                           <div
                             className="overflow-x-auto pt-2"
@@ -1062,7 +1103,9 @@ export default function MarketplaceOperatorDetailPage() {
                                     })}
                                   </th>
                                   <th className="py-1 pr-2 font-normal">
-                                    {t('marketplace.operator.attributionImpressions')}
+                                    {t('marketplace.operator.attributionVisits', {
+                                      defaultValue: 'Visits',
+                                    })}
                                   </th>
                                   <th className="py-1 pr-2 font-normal">
                                     {t('marketplace.operator.attributionCheckoutHandoffs')}
@@ -1086,12 +1129,19 @@ export default function MarketplaceOperatorDetailPage() {
                                           defaultValue: 'direct',
                                         })}
                                       {source.campaign ? (
-                                        <span className="text-muted-foreground"> · {source.campaign}</span>
+                                        <span className="text-muted-foreground">
+                                          {' '}
+                                          · {source.campaign}
+                                        </span>
                                       ) : null}
                                     </td>
-                                    <td className="py-1 pr-2">{source.impressions}</td>
-                                    <td className="py-1 pr-2">{source.checkoutHandoffs}</td>
-                                    <td className="py-1">{source.orders}</td>
+                                    <td className="py-1 pr-2 tabular-nums">
+                                      {source.visits ?? source.impressions}
+                                    </td>
+                                    <td className="py-1 pr-2 tabular-nums">
+                                      {source.checkoutHandoffs}
+                                    </td>
+                                    <td className="py-1 tabular-nums">{source.orders}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1118,10 +1168,12 @@ export default function MarketplaceOperatorDetailPage() {
               ) : null}
 
               {canViewAttribution ? (
-                <OperatorEarningsCard
-                  marketplaceId={marketplace.id}
-                  commissionBps={marketplace.operatorCommissionBps ?? 0}
-                />
+                <div id="operator-earnings-anchor" className="scroll-mt-24">
+                  <OperatorEarningsCard
+                    marketplaceId={marketplace.id}
+                    commissionBps={marketplace.operatorCommissionBps ?? 0}
+                  />
+                </div>
               ) : null}
 
               {/* Read-once knowledge, collapsed by default — it should never

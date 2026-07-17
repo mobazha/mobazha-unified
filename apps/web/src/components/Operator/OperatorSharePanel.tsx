@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -39,9 +39,11 @@ function withOperatorShareUtm(absoluteUrl: string, slug: string): string {
 }
 
 /**
- * Post-publish share panel: lets an operator copy the marketplace link (plain or
- * community/UTM) to invite buyers. Clipboard failures reveal a manual-copy input
- * instead of failing silently. (WP-B §6.3)
+ * Post-publish share bar: lets an operator copy the marketplace link (plain or
+ * community/UTM) to invite buyers. A single compact row — sharing is a frequent
+ * verb, not a destination, so it must not outrank the funnel and earnings cards
+ * below it. Clipboard failures reveal a manual-copy input instead of failing
+ * silently. (WP-B §6.3)
  */
 export function OperatorSharePanel({
   marketplaceId,
@@ -108,31 +110,31 @@ export function OperatorSharePanel({
 
   return (
     <Card data-testid="operator-share-panel">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Share2 className="h-4 w-4" />
-          {t('marketplace.operator.shareTitle', { defaultValue: 'Share your marketplace' })}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p className="text-muted-foreground">
-          {t('marketplace.operator.shareDescription', {
-            defaultValue: 'Your marketplace is live. Copy a link to invite buyers and communities.',
-          })}
-        </p>
+      <CardContent className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2 text-sm">
+            <Share2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="font-medium">
+              {t('marketplace.operator.shareTitle', { defaultValue: 'Share your marketplace' })}
+            </span>
+            <span className="hidden truncate text-muted-foreground md:inline">
+              {t('marketplace.operator.shareDescriptionShort', {
+                defaultValue: '— invite buyers and communities',
+              })}
+            </span>
+          </div>
 
-        {loading ? (
-          <p className="text-muted-foreground" data-testid="operator-share-loading">
-            {t('marketplace.operator.shareLoading', { defaultValue: 'Preparing your link…' })}
-          </p>
-        ) : loadFailed || !plainLink ? (
-          <p className="text-muted-foreground" data-testid="operator-share-error">
-            {t('marketplace.operator.shareError', {
-              defaultValue: 'We could not load your share link. Please try again shortly.',
-            })}
-          </p>
-        ) : (
-          <div className="space-y-2">
+          {loading ? (
+            <p className="text-sm text-muted-foreground" data-testid="operator-share-loading">
+              {t('marketplace.operator.shareLoading', { defaultValue: 'Preparing your link…' })}
+            </p>
+          ) : loadFailed || !plainLink ? (
+            <p className="text-sm text-muted-foreground" data-testid="operator-share-error">
+              {t('marketplace.operator.shareError', {
+                defaultValue: 'We could not load your share link. Please try again shortly.',
+              })}
+            </p>
+          ) : (
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
@@ -144,6 +146,7 @@ export function OperatorSharePanel({
                 {t('marketplace.operator.shareCopyLink', { defaultValue: 'Copy link' })}
               </Button>
               <Button
+                variant="outline"
                 size="sm"
                 onClick={() => void handleCopy(communityLink)}
                 data-testid="operator-share-copy-community"
@@ -154,24 +157,24 @@ export function OperatorSharePanel({
                 })}
               </Button>
             </div>
-            {manualCopyValue ? (
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground" htmlFor="operator-share-manual">
-                  {t('marketplace.operator.shareManualLabel', {
-                    defaultValue: 'Copy this link manually',
-                  })}
-                </label>
-                <Input
-                  id="operator-share-manual"
-                  readOnly
-                  value={manualCopyValue}
-                  onFocus={event => event.currentTarget.select()}
-                  data-testid="operator-share-manual-input"
-                />
-              </div>
-            ) : null}
+          )}
+        </div>
+        {manualCopyValue ? (
+          <div className="mt-3 space-y-1">
+            <label className="text-xs text-muted-foreground" htmlFor="operator-share-manual">
+              {t('marketplace.operator.shareManualLabel', {
+                defaultValue: 'Copy this link manually',
+              })}
+            </label>
+            <Input
+              id="operator-share-manual"
+              readOnly
+              value={manualCopyValue}
+              onFocus={event => event.currentTarget.select()}
+              data-testid="operator-share-manual-input"
+            />
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );
