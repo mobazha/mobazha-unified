@@ -27,6 +27,7 @@ import { resolveMarketplaceSellers } from '@mobazha/core/services/api/marketplac
 import { getImageUrl } from '@mobazha/core/services/api/config';
 import { Header, Footer } from '@/components';
 import { OperatorEarningsCard } from '@/components/Operator/OperatorEarningsCard';
+import { OperatorInviteLinkPanel } from '@/components/Operator/OperatorInviteLinkPanel';
 import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
 import { OperatorSharePanel } from '@/components/Operator/OperatorSharePanel';
@@ -1065,6 +1066,8 @@ export default function MarketplaceOperatorDetailPage() {
                   </p>
                 </CardContent>
               </Card>
+
+              {!isArchived ? <OperatorInviteLinkPanel marketplaceId={marketplace.id} /> : null}
 
               {!isArchived ? (
                 <Card className="mt-6" data-testid="operator-invite-store-card">

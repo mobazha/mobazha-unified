@@ -131,6 +131,11 @@ if (!__SOVEREIGN__) {
         () => import('./app/marketplace/[slug]/page')
       ),
     },
+    {
+      // Seller invite-link landing — public resolve, sign-in only to accept.
+      path: '/join/marketplace/:token',
+      element: lazyPage(() => import('./app/join/marketplace/[token]/page')),
+    },
 
     // 仲裁员列表（公开浏览）
     { path: '/moderators', element: lazyPage(() => import('./app/moderators/page')) },

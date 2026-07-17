@@ -48,7 +48,10 @@ export function resolveNativeMarketplaceSellPolicy(
   options: { isSubmitting?: boolean; isWithdrawing?: boolean } = {}
 ): NativeMarketplaceSellPolicy {
   const allowsSelfServe = isNativeMarketplaceSelfServeEligible(marketplace);
-  const requiresProductGroups = marketplace.catalogMode === 'curated';
+  // Product groups are OPTIONAL in every catalog mode: hosting accepts a
+  // group-less application, and a seller can attach catalog after joining.
+  // Curated marketplaces merely recommend selecting groups up front.
+  const requiresProductGroups = false;
   const isAutoApproval = marketplace.sellerReviewMode === 'auto';
   const membershipStatus = getNativeMarketplaceMembershipStatus(application);
 
