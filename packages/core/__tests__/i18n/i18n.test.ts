@@ -15,6 +15,31 @@ import {
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../../i18n/types';
 import { translations } from '../../i18n/locales';
 
+function flattenTranslations(
+  value: unknown,
+  prefix = '',
+  result: Record<string, string> = {}
+): Record<string, string> {
+  if (!value || typeof value !== 'object') {
+    return result;
+  }
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (typeof nestedValue === 'string') {
+      result[path] = nestedValue;
+    } else {
+      flattenTranslations(nestedValue, path, result);
+    }
+  }
+
+  return result;
+}
+
+function interpolationParams(value: string): string[] {
+  return Array.from(value.matchAll(/{{\s*([^}\s]+)\s*}}/g), match => match[1]).sort();
+}
+
 describe('i18n', () => {
   beforeEach(() => {
     // 重置为默认语言
@@ -83,6 +108,39 @@ describe('i18n', () => {
         expect(translations[locale].track?.title, locale).toBeTruthy();
         expect(translations[locale].track?.placeholder, locale).toBeTruthy();
         expect(translations[locale].track?.invalid, locale).toBeTruthy();
+      }
+    });
+
+    it('中文资源应覆盖所有英文翻译键', () => {
+      const english = flattenTranslations(translations.en);
+      const chinese = flattenTranslations(translations.zh);
+      const missingKeys = Object.keys(english).filter(key => !(key in chinese));
+
+      expect(missingKeys).toEqual([]);
+    });
+
+    it('已有翻译应保留英文资源中的全部插值参数', () => {
+      const english = flattenTranslations(translations.en);
+
+      for (const locale of SUPPORTED_LOCALES.filter(locale => locale !== DEFAULT_LOCALE)) {
+        const localized = flattenTranslations(translations[locale]);
+        const mismatchedKeys = Object.keys(localized).filter(
+          key =>
+            key in english &&
+            interpolationParams(localized[key]).join(',') !==
+              interpolationParams(english[key]).join(',')
+        );
+
+        expect(mismatchedKeys, locale).toEqual([]);
+      }
+    });
+
+    it('所有支持语言都应提供支付报价和服务订单关键文案', () => {
+      for (const locale of SUPPORTED_LOCALES) {
+        expect(translations[locale].product?.free, locale).toBeTruthy();
+        expect(translations[locale].payment?.selectionQuote?.title, locale).toBeTruthy();
+        expect(translations[locale].payment?.selectionQuote?.expiresIn, locale).toBeTruthy();
+        expect(translations[locale].admin?.orders?.guestOrderTypeService, locale).toBeTruthy();
       }
     });
   });

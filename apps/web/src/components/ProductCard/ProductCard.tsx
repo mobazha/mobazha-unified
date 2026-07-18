@@ -517,7 +517,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             )}
             {freeShipping && (
-              <span className="text-xs text-primary font-medium flex-shrink-0">Free Shipping</span>
+              <span className="text-xs text-primary font-medium flex-shrink-0">
+                {t('product.freeShipping')}
+              </span>
             )}
           </div>
         )}

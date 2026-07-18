@@ -525,7 +525,7 @@ export default function GuestCheckoutPage() {
                     <Card key={`shipping-${item.slug}`}>
                       <CardContent className="space-y-3 p-4">
                         <div>
-                          <p className="text-sm font-medium">Shipping method</p>
+                          <p className="text-sm font-medium">{t('order.shippingMethod')}</p>
                           <p className="text-xs text-muted-foreground">{item.title}</p>
                         </div>
                         {available.length ? (
@@ -599,7 +599,7 @@ export default function GuestCheckoutPage() {
                 <Card>
                   <CardContent className="space-y-2 p-4 text-sm">
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Subtotal</span>
+                      <span>{t('cart.subtotal')}</span>
                       <span>
                         {renderPairedPrice(total.amount, total.currency, total.currency, {
                           isMinimalUnit: true,
@@ -608,7 +608,7 @@ export default function GuestCheckoutPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Shipping</span>
+                      <span>{t('cart.shipping')}</span>
                       <span>
                         {selectedShippingTotal === 0
                           ? t('shipping.free')
@@ -621,7 +621,7 @@ export default function GuestCheckoutPage() {
                       </span>
                     </div>
                     <div className="flex justify-between border-t pt-2 font-semibold">
-                      <span>Total</span>
+                      <span>{t('cart.total')}</span>
                       <span>
                         {renderPairedPrice(
                           total.amount + selectedShippingTotal,

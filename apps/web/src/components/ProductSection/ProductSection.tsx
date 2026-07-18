@@ -206,8 +206,10 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">No products found</h3>
-            <p className="text-muted-foreground">Check back later for new listings.</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {t('empty.noProductsFound')}
+            </h3>
+            <p className="text-muted-foreground">{t('empty.tryAdjustingSearch')}</p>
           </div>
         )}
       </Container>
