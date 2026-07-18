@@ -333,6 +333,8 @@ export const de: PartialTranslationResource = {
     claimErrorGeneric: 'Shop konnte nicht beansprucht werden. Bitte versuchen Sie es erneut.',
     registrationFailedTitle: 'Registrierung fehlgeschlagen',
     registrationFailedDesc: 'Bitte überprüfe deine Netzwerkverbindung und versuche es erneut.',
+    collectibles: 'Sammelkarten',
+    collectiblesDesc: 'Tokenisierte Karten, die im Hub aufbewahrt werden – jederzeit einlösbar',
   },
   product: {
     title: 'Titel',
@@ -431,6 +433,56 @@ export const de: PartialTranslationResource = {
     sellerOffline: 'Verkäufer offline',
     offlineBanner:
       'Dieser Verkäufer ist derzeit offline. Sie können die Auflistung durchsuchen, der Kauf ist jedoch erst möglich, wenn sie wieder online sind.',
+    uniquePiece: {
+      badge: 'Einzigartig · 1/1',
+      hint: 'Einzigartiges Kunstwerk',
+    },
+    priceFrom: 'Von {{price}}',
+    authenticity: {
+      title: 'Echtheitszertifikat',
+      viewCertificate: 'Zertifikat ansehen',
+      description:
+        'Verifiziert durch einen unabhängigen Zertifizierungsanbieter. Details online einsehen.',
+    },
+    artSpecs: {
+      medium: 'Medium',
+      dimensions: 'Abmessungen',
+      shipping: 'Versand',
+      edition: 'Ausgabe',
+      title: 'Details zum Kunstwerk',
+      uniqueEdition: 'Einzelstück – keine nummerierten Auflagen',
+    },
+    collectibleTitle: {
+      whatYouReceiveTitle: 'Was Sie erhalten',
+      whatYouReceiveBody:
+        'Ein digitaler Eigentumstitel in Ihrem Portemonnaie sowie das exklusive Recht, die physische Karte einzulösen.',
+      sourceEscrowPaymentNote:
+        'Checkout unterstützt nur Käuferschutz-Kryptowährungen: ETH, Solana USDC und Solana USDT. Fiat-Methoden sind noch nicht für den Source-Custody-Erstverkauf verfügbar.',
+      deliveryNote:
+        'Kauflieferung ist der digitale Titel. Der physische Versand wird bei der Einlösung angefordert und angeboten – nicht an der Kasse.',
+      lifecycle: {
+        buy: 'Stöbern und bezahlen',
+        hold: 'In der Brieftasche aufbewahren',
+        title: 'Digitaler Titel in „Meine Karten“.',
+        redeem: 'Physische Karte einlösen',
+      },
+      lifecycleTitle: 'Nach dem Kauf',
+      grade: 'Grad',
+      serial: 'Seriell',
+      custody: {
+        source:
+          'Physische Karte, die bis zur Einlösung von der zugelassenen Quellverwahrstelle aufbewahrt wird.',
+        hub: 'Die physische Karte wird bis zur Einlösung im Hub aufbewahrt.',
+        unknown:
+          'Die physische Verwahrung obliegt der Depotbank für die Auflistung – bestätigen Sie die Details vor dem Kauf.',
+      },
+      titleNetwork: 'Titelnetzwerk',
+      certNumber: 'Zertifikatsnummer',
+      purchaseTitle: 'Kauftitel',
+      catalogLink: 'Verwahrungskatalog ansehen',
+      trustLimitation:
+        'Der Käuferschutz deckt die Transaktion ab – nicht die Bewertung, Authentifizierung oder den zukünftigen Weiterverkauf. Halten oder einlösen, wenn Sie bereit sind; Der sekundäre Weiterverkauf wird hier noch nicht unterstützt.',
+    },
   },
   search: {
     placeholder: 'Produkte, Shops suchen...',
@@ -575,6 +627,16 @@ export const de: PartialTranslationResource = {
       remove: 'Rabatt entfernen',
       proximityHint: 'Noch {{amount}} hinzufügen für {{reward}}!',
     },
+    refundWalletAddress: 'Empfangsadresse',
+    refundWalletHint:
+      'Wenn diese Bestellung storniert oder erstattet wird, wird das Geld hierher überwiesen.',
+    refundWallet: 'Empfangsadresse für die Rückerstattung',
+    refundWalletRequiredDesc:
+      'Geben Sie Ihre Empfangsadresse für die Rückerstattung an, bevor Sie fortfahren.',
+    refundWalletCexWarning: 'Verwenden Sie keine Exchange-Einzahlungsadresse.',
+    refundWalletPlaceholder: 'Fügen Sie Ihre persönliche Empfangsadresse ein',
+    useConnectedWallet: 'Verwenden Sie eine verbundene Geldbörse',
+    refundWalletRequired: 'Rückerstattungsadresse erforderlich',
   },
   address: {
     title: 'Lieferadressen',
@@ -651,6 +713,8 @@ export const de: PartialTranslationResource = {
       decided: 'Entschieden',
       resolved: 'Gelöst',
       declined: 'Abgelehnt',
+      released: 'Freigegeben',
+      escrowed: 'Hinterlegt',
     },
     statusLabels: {
       pending: 'Ausstehend',
@@ -678,6 +742,9 @@ export const de: PartialTranslationResource = {
       summary: 'Zusammenfassung',
       discussion: 'Diskussion',
       contract: 'Vertrag (JSON)',
+      dispute: 'Disput',
+      evidence: 'Beweis',
+      details: 'Einzelheiten',
     },
     discussionPlaceholder: 'Chatten Sie mit der anderen Partei über diese Bestellung.',
     timeline: {
@@ -695,6 +762,12 @@ export const de: PartialTranslationResource = {
       paymentSubmitted: 'Zahlung eingereicht, Prufung ausstehend',
       paymentVerificationFailed: 'Zahlungsprufung fehlgeschlagen',
       orderCancelled: 'Bestellung storniert',
+      fundsSecured: 'Zahlung des Käufers bestätigt, Gelder treuhänderisch gesichert',
+      refundOnChain: 'Rückerstattung in der Kette bestätigt',
+      fundsReleased: 'Vom Treuhandkonto an den Verkäufer freigegebene Gelder',
+      disputeFundsReleased: 'Pro Urteil freigegebene Streitgelder',
+      orderDeclined: 'Bestellung vom Verkäufer abgelehnt',
+      disputeRulingIssued: 'Moderatorentscheid erlassen',
     },
     settlementStatus: {
       submitting: 'Abwicklung wird übermittelt',
@@ -787,6 +860,62 @@ export const de: PartialTranslationResource = {
       cancelledHintSeller: 'Es wurde keine Zahlung empfangen. Der Bestand wurde wiederhergestellt.',
       orderedAt: 'Bestellt am',
       cancelledAt: 'Storniert am',
+      decided: 'Moderatorentscheid erlassen',
+      disputedHintSeller:
+        'Die Auszahlung wird angehalten, während die Streitbeilegung diesen Fall prüft. Reagieren Sie in der Diskussion und halten Sie die Lieferunterlagen griffbereit.',
+      paymentProgress: 'Zahlungsfortschritt',
+      paymentProgressOverpaid: 'Überbezahlt um {{amount}}',
+      disputedHintBuyer:
+        'Die Gelder werden zurückgehalten, während die Streitbeilegung Ihren Fall prüft. Sie können in der Diskussion Kontext hinzufügen.',
+      decidedHint:
+        'Akzeptieren Sie die Entscheidung zur Freigabe treuhänderisch verwalteter Gelder.',
+      paymentProgressReceived: '{{received}} von {{expected}} ({{percentage}} %) erhalten',
+      declinedBuyerFunded:
+        'Der Verkäufer hat diese Bestellung abgelehnt – Ihre Zahlung wird zurückerstattet',
+      decidedHintBuyer:
+        'Der Moderator hat diesen Streit entschieden. Überprüfen Sie das Ergebnis und akzeptieren Sie die Entscheidung, um Ihren Anteil zu erhalten.',
+      declinedBuyerFundedRefunded:
+        'Der Verkäufer hat diese Bestellung abgelehnt – Ihre Zahlung wurde zurückerstattet',
+      decidedHintSeller:
+        'Der Moderator hat diesen Streit entschieden. Überprüfen Sie das Ergebnis und akzeptieren Sie die Entscheidung, um Ihre Auszahlung zu erhalten.',
+      declinedBuyerUnfunded: 'Der Verkäufer lehnte diese Bestellung ab',
+      declinedSellerFunded: 'Sie haben diese Bestellung abgelehnt – Rückerstattung eingeleitet',
+      declinedSellerUnfunded: 'Sie haben diese Bestellung abgelehnt',
+      declinedHintSellerFunded: 'Der Käufer erhält eine Rückerstattung.',
+      declinedHintBuyerFunded:
+        'Ihre Zahlung wird zurückerstattet. Sie können jederzeit eine neue Bestellung aufgeben.',
+      declinedHintBuyerUnfunded:
+        'Es wurde keine Zahlung erhoben. Sie können jederzeit eine neue Bestellung aufgeben.',
+      declinedHintBuyerFundedRefunded:
+        'Ihre Zahlung wurde zurückerstattet. Sie können jederzeit eine neue Bestellung aufgeben.',
+      declinedHintSellerFundedRefunded: 'Der Käufer hat eine Rückerstattung erhalten.',
+      declinedSellerFundedRefunded:
+        'Sie haben diese Bestellung abgelehnt – Rückerstattung abgeschlossen',
+      cancelledPaidHintBuyer: 'Ihre Zahlung wird zurückerstattet.',
+      cancelledPaidHintBuyerRefunded: 'Ihre Zahlung wurde zurückerstattet.',
+      cancelledPaidHintSeller: 'Der Käufer erhält eine Rückerstattung.',
+      cancelledPaidHintSellerRefunded: 'Der Käufer hat eine Rückerstattung erhalten.',
+      cancelledPaidBuyerRefunded:
+        'Diese Bestellung wurde storniert – Ihre Zahlung wurde zurückerstattet',
+      cancelledPaidBuyer: 'Diese Bestellung wurde storniert – Ihre Zahlung wird zurückerstattet',
+      cancelledUnpaidHintBuyer:
+        'Es wurde keine Zahlung erhoben. Sie können jederzeit eine neue Bestellung aufgeben.',
+      cancelledPaidSellerRefunded:
+        'Diese Bestellung wurde storniert – Rückerstattung abgeschlossen',
+      cancelledPaidSeller: 'Diese Bestellung wurde storniert – Rückerstattung eingeleitet',
+      declinedHintSellerUnfunded:
+        'Es ist keine Zahlung eingegangen. Der Bestand wurde wiederhergestellt.',
+      paymentVerificationTimeoutBuyer:
+        'Diese Bestellung wurde storniert, da bei der Zahlungsüberprüfung eine Zeitüberschreitung aufgetreten ist',
+      paymentVerificationTimeoutHintBuyer:
+        'Bitte versuchen Sie die Zahlung erneut oder wenden Sie sich an den Support, wenn Sie bereits bezahlt haben.',
+      cancelledUnpaidSeller: 'Diese Bestellung wurde storniert – es ist keine Zahlung eingegangen',
+      cancelledUnpaidBuyer: 'Diese Bestellung wurde storniert, bevor die Zahlung abgeschlossen war',
+      paymentVerificationTimeoutSeller:
+        'Diese Bestellung wurde storniert – bei der Bestätigung der Käuferzahlung ist eine Zeitüberschreitung aufgetreten',
+      cancelledUnpaidHintSeller:
+        'Es ist keine Zahlung eingegangen. Der Bestand wurde wiederhergestellt.',
+      paymentVerificationTimeoutHintSeller: 'Der Bestand wurde wiederhergestellt.',
     },
     shipTo: 'Versand an',
     viewOnMap: 'Auf Karte anzeigen',
@@ -957,6 +1086,10 @@ export const de: PartialTranslationResource = {
         'Speichern Sie zuerst eine Rückerstattungs-Empfangsadresse, bevor Sie stornieren oder einen Streit eröffnen.',
       paymentCoinRequired:
         'Die Zahlungsmethode ist noch nicht bereit. Aktualisieren Sie die Bestellung und versuchen Sie es erneut.',
+      manageDefaults: 'Verwalten Sie Standard-Rückerstattungsadressen',
+      saveAsDefault: 'Speichern Sie es auch als meine Standard-Rückerstattungsadresse',
+      savedWithDefaultDesc:
+        'Für diese Bestellung und die Standardeinstellungen Ihres Kontos gespeichert.',
     },
     actions: {
       pay: 'Jetzt bezahlen',
@@ -1034,6 +1167,16 @@ export const de: PartialTranslationResource = {
       operationFailed: 'Operation failed',
       walletConnectionRequired: 'Wallet connection required',
       updatingStatus: 'Bestellstatus wird aktualisiert...',
+      deliverDigital: 'Stellen Sie digitale Inhalte bereit',
+      syncDelivery: 'Lieferung synchronisieren',
+      releasingFunds: 'Freigabe von Treuhandgeldern...',
+      deliveryPending: 'Warten auf automatische Lieferung',
+      manualRefundRequired:
+        'Für diese Bestellung ist keine automatische Rückerstattung mehr möglich',
+      openDiscussion: 'Offene Diskussion',
+      retryDigitalDelivery: 'Downloads bereitstellen',
+      manualRefundRequiredDesc:
+        'Bei der Bestätigung wurde das Geld auf die Wallet des Verkäufers freigegeben. Erstatten Sie diese Bestellung bei Bedarf manuell über das Verkäufer-Wallet.',
     },
     table: {
       orderId: 'Bestell-ID',
@@ -1158,6 +1301,10 @@ export const de: PartialTranslationResource = {
       photos: 'Fotos (optional)',
       addPhoto: 'Foto hinzufügen',
       photosHint: 'Bis zu {{max}} Bilder, je {{size}}MB',
+      submitAndRelease: 'Bestätigen Sie den Eingang und geben Sie das Geld frei',
+      title: 'Hinterlassen Sie eine Bewertung',
+      releaseHint:
+        'Durch die Bestätigung des Empfangs werden Treuhandgelder an den Verkäufer freigegeben. Dies kann bis zu einer Minute dauern.',
     },
     accept: {
       title: 'Bestellung annehmen',
@@ -1200,6 +1347,9 @@ export const de: PartialTranslationResource = {
       receivingAccountRequired: 'Bitte wählen Sie ein Empfangskonto',
       noReceivingAccount:
         'Keine Empfangskonten konfiguriert. Bitte fügen Sie eines in den Einstellungen hinzu, um Zahlungen zu erhalten.',
+      deliverNow: 'Jetzt liefern',
+      digitalFallbackHint:
+        'Dieses Angebot enthält keine vorkonfigurierten digitalen Assets. Geben Sie einen Download-Link ein, um ihn manuell an den Käufer zu liefern.',
     },
     dispute: {
       escrowHint:
@@ -1303,6 +1453,7 @@ export const de: PartialTranslationResource = {
       title: 'Bestellvertrag',
       description:
         'Dies sind die Rohvertragsdaten für diese Bestellung. Sie enthalten alle kryptografischen Nachweise und Signaturen.',
+      advancedTitle: 'Erweitert: Vertrag (JSON)',
     },
     shipment: {
       title: 'Erfüllungsdetails',
@@ -1344,6 +1495,10 @@ export const de: PartialTranslationResource = {
       moderatorHint:
         'Als Moderator können Sie diesen Streitfall lösen, indem Sie die Beweise prüfen und eine faire Entscheidung treffen.',
       evidence: 'Evidence',
+      releaseTx: 'Veröffentlichung in der Kette',
+      escrowTotal: 'Gesamtbetrag des Treuhandkontos',
+      platformFeeHint:
+        'Die Gebühr für die Store-Plattform wird vom Treuhandkonto abgezogen (an der Kasse gesperrt). Nicht Teil der Moderatorenaufteilung.',
     },
     payment: {
       title: 'Zahlungsdetails',
@@ -1362,6 +1517,8 @@ export const de: PartialTranslationResource = {
       transactions: 'Transaktionen',
       confirmed: 'Bestätigt',
       confirmations: 'Bestätigungen',
+      paidAmount: 'Bezahlt:',
+      listingTotal: 'Bestellsumme:',
     },
     address: {
       title: 'Lieferadresse',
@@ -1374,6 +1531,58 @@ export const de: PartialTranslationResource = {
       startDiscussion: 'Starten Sie eine Diskussion mit der anderen Partei über diese Bestellung.',
       startChat: 'Diskussion starten',
       noMessages: 'Noch keine Nachrichten. Starten Sie die Unterhaltung!',
+      backToSummary: 'Zurück zur Zusammenfassung',
+      withName: 'mit {{name}}',
+      viewOrder: 'Bestellung anzeigen',
+      orderRef: 'Bestellnummer{{orderId}}',
+      you: 'Du',
+      roleBuyer: 'Käufer',
+      roleSeller: 'Verkäufer',
+      contextHint:
+        'Verwenden Sie diesen Thread, um Fragen zu Zahlung, Versand und Kundendienst für diese Bestellung zu koordinieren.',
+      panelsHint:
+        'Dieser Thread erscheint auch in Nachrichten. Beide Ansichten teilen die gleiche Konversation.',
+      withCounterparty: 'Chatten Sie mit {{name}} ({{role}})',
+      roleModerator: 'Streitbeilegung',
+      emptyTitleEmbedded: 'Senden Sie die erste Nachricht an {{name}}',
+      connectingSecure: 'Sicheren Chat verbinden…',
+      openingDiscussion: 'Besprechung der Eröffnungsbestellung…',
+      liveUpdatesPending:
+        'Nachrichten werden normal gesendet. Live-Updates stellen die Verbindung wieder her …',
+      sendFailed: 'Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.',
+      emptyDescriptionEmbedded:
+        'Fragen zu Versand, Sendungsverfolgung und Kundendienst gehören alle in diesen Thread.',
+      roomUnavailable: 'Der Bestelldiskussionsraum konnte nicht geöffnet werden.',
+      chatUnavailableDesc: 'Secure Messaging ist für diesen Shop nicht aktiviert.',
+      imageAltPrefix: 'Chatbild bestellen',
+      chatUnavailable: 'Chat nicht verfügbar',
+      chip: {
+        payIssue: 'Zahlungsproblem',
+        tracking: 'Tracking-Nummer',
+        payIssueMsg:
+          'Hallo, ich habe Probleme, die Zahlung für diese Bestellung abzuschließen. Können Sie helfen?',
+        trackingMsg: 'Könnten Sie uns die Sendungsverfolgungsnummer für diese Sendung mitteilen?',
+        whenShip: 'Wann wird es verschickt?',
+        disputeUpdate: 'Streitaktualisierung',
+        received: 'Bestätigen Sie den Empfang',
+        afterSale: 'Frage nach dem Verkauf',
+        receivedMsg: 'Ich habe die Bestellung erhalten. Danke schön!',
+        afterSaleMsg: 'Hallo, ich habe nach der Lieferung eine Frage zu dieser Bestellung.',
+        whenShipMsg: 'Hallo, können Sie mir mitteilen, wann diese Bestellung versandt wird?',
+        hello: 'Sag Hallo',
+        disputeUpdateMsg: 'Hallo, ich möchte ein Update zu diesem Streit teilen.',
+        shipSoon: 'Versand bald',
+        shipSoonMsg: 'Vielen Dank für Ihre Bestellung! Ich werde es in Kürze versenden.',
+        shareTracking: 'Teilen-Tracking',
+        helloMsg: 'Hallo! Ich habe eine Frage zu dieser Bestellung.',
+        shareTrackingMsg: 'Ihre Bestellung wurde versandt. Hier sind die Tracking-Informationen:',
+        disputeReply: 'Streitantwort',
+        thanks: 'Vielen Dank an den Käufer',
+        thanksMsg:
+          'Vielen Dank für Ihre Bestellung! Lassen Sie mich wissen, wenn Sie Fragen haben.',
+        disputeReplyMsg: 'Vielen Dank für das Update. Hier ist meine Antwort zu diesem Streit.',
+      },
+      imagePreview: 'Chat-Bildvorschau bestellen',
     },
     paymentInstructions: {
       title: 'Zahlung abschließen',
@@ -1424,6 +1633,10 @@ export const de: PartialTranslationResource = {
       refunded: 'Erstattet',
       disputed: 'Angefochten',
       transactionId: 'Transaktions-ID',
+      timelineTitle: 'Zahlung bestätigt',
+      timelineDescription:
+        'Der Käufer hat mit Fiat bezahlt. Die Bestellung kann fortgesetzt werden.',
+      rulingPending: 'Entscheidung bis zur Annahme',
     },
     paymentLocked: {
       title: 'Zahlung gesperrt',
@@ -1490,6 +1703,194 @@ export const de: PartialTranslationResource = {
         revoked: 'Zugriff widerrufen',
         expired: 'Abgelaufen',
       },
+      restrictedReason: {
+        frozen: 'Vorübergehend nicht verfügbar',
+        disputed: 'Pausiert während der Streitbeilegung',
+        expired: 'Der Zugriff ist abgelaufen',
+        revoked: 'Der Zugriff wurde widerrufen',
+      },
+      disputeRevokedSellerWon:
+        'Der digitale Zugriff endete, nachdem der Streit zugunsten des Verkäufers beigelegt wurde.',
+      disputeResolvedRestoring:
+        'Der Streit ist beigelegt. Der Zugriff sollte in Kürze aktualisiert werden. Versuchen Sie, diese Seite zu aktualisieren.',
+      disputeFrozenNote:
+        'Downloads werden angehalten, während die Streitbeilegung läuft. Der Zugriff kann nach Abschluss des Falls wieder aufgenommen werden.',
+      disputeRevokedBuyerWon:
+        'Der digitale Zugriff endete, nachdem der Streit zu Ihren Gunsten beigelegt und eine volle Rückerstattung gewährt wurde.',
+      disputeRevokedAfterSplit:
+        'Der Zugang ist nach dem Split-Disput-Urteil eingeschränkt. Wenden Sie sich an den Verkäufer, wenn Sie weiterhin Zugriff erwarten.',
+    },
+    dealLink: {
+      title: 'Geschützte Linkreihenfolge',
+      revision: 'Überarbeitung der Bedingungen',
+      linkReference: 'Linkreferenz',
+      sellerBody:
+        'Die Artikelversion, der Preis und die Lieferbedingungen wurden gesperrt, als der Käufer Ihren Link akzeptierte. Schließen Sie die Lieferung ab und bearbeiten Sie alle Probleme im Zusammenhang mit dieser Bestellung.',
+      detailsCta: 'Referenz zum geschützten Link anzeigen',
+      buyerBody:
+        'Der Verkäufer, die Artikelversion, der Preis und die Lieferbedingungen waren gesperrt, als Sie den Link akzeptierten. Zahlung, Lieferung und etwaige Probleme werden in dieser Bestellung verfolgt.',
+    },
+    mixedContractTypesTitle: 'Teilen Sie diesen Warenkorb nach Produkttyp auf',
+    mixedContractTypesBody:
+      'Jede Bestellung unterstützt nur einen Produkttyp. Schauen Sie sich physische und digitale Waren getrennt an.',
+    missingContractTypeTitle: 'Produkttyp nicht verfügbar',
+    missingContractTypeBody:
+      'Bei einem Element fehlt der Vertragstyp. Aktualisieren Sie die Produktseite oder entfernen Sie sie vor dem Bezahlen.',
+    settlement: {
+      title: 'Abwicklung in der Kette',
+      actionComplete: 'Bestellung abschließen',
+      actionGeneric: 'Siedlung',
+      stateConfirmed: 'Bestätigt',
+      actionConfirm: 'Freigabe an den Verkäufer',
+      stateSubmitting: 'Einreichen',
+      stateSubmitted: 'Eingereicht',
+      actionCancel: 'Käufer zurückerstatten',
+      actionDisputeRelease: 'Streitige Auszahlung',
+      stateFailed: 'Fehlgeschlagen',
+      stateTimedOut: 'Zeitüberschreitung',
+      hintSubmitted: 'Warten auf Blockbestätigung.',
+      hintGenericConfirmed: 'Transaktion in der Kette bestätigt.',
+      hintCancelConfirmed: 'Die Rückerstattung wurde in der Kette bestätigt.',
+      hintSubmitting: 'Vorbereiten der On-Chain-Transaktion.',
+      hintConfirmConfirmed: 'Die Gelder wurden in der Kette freigegeben.',
+      labelTxHash: 'Transaktion',
+      labelUpdated: 'Aktualisiert',
+      technicalDetails: 'Technische Details',
+      labelRelayTask: 'Staffelaufgabe',
+      labelActionId: 'Aktions-ID',
+      labelConfirmations: 'Bestätigungen',
+      hintTimedOut:
+        'Zeitüberschreitung bei der Bestätigung. Schauen Sie später noch einmal nach oder wenden Sie sich an den Support.',
+      hintFailed: 'Die On-Chain-Transaktion ist fehlgeschlagen.',
+    },
+    disputeSummary: {
+      titleResolved: 'Streit gelöst',
+      title: 'Streit im Gange',
+      titleDecided: 'Urteil erlassen',
+      awaitingAcceptance:
+        'Der Moderator hat eine Entscheidung erlassen. Akzeptieren Sie es, um gemäß der Entscheidung Mittel freizugeben.',
+      evidence: 'Eingereichte Beweise ({{count}})',
+      noEvidenceBuyer:
+        'Dem Streit waren keine Bildbeweise beigefügt. Sie können es immer noch in der Diskussion erklären.',
+      fundsHeld: 'Die Zahlung wird sicher aufbewahrt, bis die Streitbeilegung abgeschlossen ist.',
+      resolvedHint:
+        'Die Mittel wurden gemäß der untenstehenden Entscheidung des Moderators freigegeben.',
+    },
+    footer: {
+      disputeReviewing: 'Streitfall wird geprüft',
+    },
+    releasingFunds: 'Freigabe von Treuhandgeldern...',
+    moderatorFeeOnDispute: '{{fee}} %, wenn der Streit beigelegt wird',
+    moderatorStandby: 'Schutzmoderator',
+    moderatorOnlyNotifiedOnDispute: 'Benachrichtigung erst nach Eröffnung eines Streitfalls',
+    complete: {
+      phase: {
+        releasing: 'Freigabe von Käuferschutzmitteln...',
+        completing: 'Bestellung abschließen...',
+        syncingRating: 'Deine Bewertung wird synchronisiert...',
+      },
+    },
+    digitalDelivery: {
+      readyTitle: 'Die digitale Lieferung ist fertig',
+      deliveredTitle: 'Digitale Waren werden automatisch geliefert',
+      autoTitle: 'Digitale Waren werden automatisch geliefert',
+      pendingTitle: 'Warten auf automatische Lieferung',
+      pendingDesc:
+        'Das System erstellt für den Käufer digitale Downloads. Diese Seite wird automatisch aktualisiert, wenn der Zugriff bereit ist.',
+      readyDescAwaitingPayment:
+        '{{count}} Asset(s) sind für diese Bestellung konfiguriert. Der Download-Zugang wird automatisch nach Bestätigung der Zahlung gewährt.',
+      autoDesc:
+        '{{count}} Asset(s) sind für diesen Eintrag konfiguriert. Käufer erhalten Zugriff über ihre digitalen Downloads.',
+      readyDesc:
+        '{{count}} Vermögenswerte sind für diese Bestellung konfiguriert, aber der Käuferzugriff wurde noch nicht generiert. Sie können dem Käufer jetzt Downloads liefern.',
+      checking: 'Konfiguration des digitalen Assets wird überprüft...',
+      syncAction: 'Lieferung synchronisieren',
+      manualTitle: 'Aktion erforderlich: Download-Link hinzufügen',
+      deliveredDesc:
+        '{{count}} Vermögenswerte wurden an den Käufer geliefert. Sie können über digitale Downloads darauf zugreifen.',
+      manualDesc:
+        'Für diesen Eintrag sind keine digitalen Assets konfiguriert. Verwenden Sie die manuelle Lieferung nur als Ersatz oder fügen Sie dem Angebot für zukünftige Bestellungen Assets hinzu.',
+      refreshStatus: 'Status aktualisieren',
+      manageAssets: 'Vermögenswerte verwalten',
+      hideDeliveredItems: 'Gelieferte Artikel ausblenden',
+      viewDeliveredItems: 'Gelieferte Artikel ansehen',
+      syncSuccess: 'Digitale Lieferung synchronisiert',
+      syncFailed: 'Die digitale Zustellung konnte nicht synchronisiert werden',
+      retrySuccess: 'Digitale Downloads geliefert',
+      retryFailed: 'Digitale Downloads konnten nicht bereitgestellt werden',
+      noItemsFound: 'Keine Lieferdatensätze gefunden.',
+      syncSuccessDesc: 'Der Käufer-Zugangslink wurde dieser Bestellung beigefügt.',
+      retrySuccessDesc:
+        'Der Download-Zugang für den Käufer wurde generiert und der Bestellstatus wird in Kürze aktualisiert.',
+    },
+    disputeOverview: {
+      initiatorBadge: 'Initiator',
+      evidence: 'Beweis',
+      claim: 'Beanspruchen',
+      product: 'Produkt',
+      noEvidenceHint:
+        'Bildbeweise werden hier möglicherweise nicht angezeigt, wenn sie nur im Chat geteilt wurden oder wenn dieser Knoten noch keine Streitdaten synchronisiert hat. Sehen Sie sich die Behauptung unten an und nutzen Sie die Diskussion für den vollständigen Kontext.',
+      title: 'Streitübersicht',
+      initiatedBy: 'Initiiert von',
+      disputeAmount: 'Streitwert',
+      openedOn: 'Streit eröffnet',
+      noEvidence: 'Keine Beweise vorgelegt',
+      tracking: 'Verfolgung',
+      resolvedOn: 'Gelöst am',
+      orderStatus: 'Bestellstatus',
+      favorBuyer: 'Bevorzugen Sie den Käufer',
+      resolutionUnknown: 'Als gelöst markiert; Die Ergebnisdetails werden noch synchronisiert.',
+      favorSeller: 'Bevorzugen Sie den Verkäufer',
+      resolved: 'Gelöst',
+      prompt: 'Wie würden Sie diesen Streit lösen?',
+      customSplit: 'Benutzerdefinierte Aufteilung',
+      resolvedSplit: 'Die Mittel werden zwischen den Parteien aufgeteilt',
+      resolvedFavor: 'Es wurde zugunsten von {{party}} entschieden.',
+      splitFunds: '50/50 aufgeteilt',
+      payoutSplit: 'Käufer {{buyerPercent}}% · Verkäufer {{vendorPercent}}%',
+    },
+    moderatorRuling: {
+      title: 'Urteil einreichen',
+      openSheet: 'Urteil einreichen',
+      chipSeller: 'Verkäufer 100%',
+      presetGroup: 'Schnelle Split-Voreinstellungen',
+      chipSplit: '50/50',
+      chipBuyer: 'Käufer 100 %',
+      presetHint:
+        'Ab {{preset}}. Passen Sie die Beträge an und fügen Sie Ihre schriftliche Entscheidung hinzu, bevor Sie sie absenden.',
+      vendorNotConfirmed:
+        'Der Verkäufer hat diese Bestellung nie bestätigt. Der Käufer muss 100 % der hinterlegten Mittel erhalten.',
+      presetSeller: 'Bevorzugen Sie den Verkäufer (100 %)',
+      buyerShare: 'Käuferanteil (%)',
+      presetBuyer: 'Käufer bevorzugen (100 %)',
+      submit: 'Urteil einreichen',
+      presetSplit: '50/50-Aufteilung',
+      sellerShare: 'Verkäuferanteil (%)',
+      sumHint: 'Käufer- und Verkäuferanteil müssen 100 % betragen.',
+      errors: {
+        required: 'Dieses Feld ist erforderlich.',
+        minLength: 'Bitte erläutern Sie Ihre Entscheidung in mindestens 10 Zeichen.',
+        range: 'Geben Sie einen Prozentsatz zwischen 0 und 100 ein.',
+        sum: 'Käufer- und Verkäuferanteil müssen sich zu 100 % addieren.',
+        vendorContractRequired:
+          'Der Verkäufer hat seine Vertragskopie noch nicht bereitgestellt. Geben Sie dem Käufer 100 % zu oder warten Sie, bis der Verkäufer seine Bestellung synchronisiert.',
+        vendorUnconfirmed:
+          'Der Verkäuferanteil muss 0 % betragen, da der Verkäufer diese Bestellung nie bestätigt hat.',
+        unauthorized: 'Sie sind nicht befugt, über diesen Streit zu entscheiden.',
+        generic: 'Das Urteil konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.',
+        alreadyClosed: 'Dieser Streit ist bereits entschieden. Aktualisierung des Bestellstatus.',
+        orderDataUnavailable:
+          'Die Abrechnungsdaten für diese Bestellung sind auf Ihrem Knoten nicht verfügbar. Wenn Sie bereits eine Entscheidung eingereicht haben, warten Sie, bis der Käufer oder Verkäufer diese akzeptiert.',
+        caseDetailsUnavailable:
+          'Details zum Klärungsfall konnten nicht geladen werden. Aktualisieren Sie und versuchen Sie es erneut.',
+        timeout:
+          'Bei der Anfrage ist eine Zeitüberschreitung aufgetreten. Bitte versuchen Sie es erneut.',
+      },
+      resolutionPlaceholder:
+        'Begründen Sie Ihre Entscheidung für beide Parteien (erforderlich, mindestens 10 Zeichen).',
+      submitHint:
+        'Dadurch wird Ihre Entscheidung an beide Parteien gesendet. Gelder werden erst freigegeben, nachdem sie die Entscheidung akzeptiert haben oder der Timeout-Pfad in Kraft tritt.',
+      resolutionLabel: 'Urteilserklärung',
     },
   },
   chat: {
@@ -1616,6 +2017,18 @@ export const de: PartialTranslationResource = {
       errorInvalid:
         'Ungültiges Format. Verwenden Sie eine Peer-ID, die mit "Qm"/"12D3Koo" beginnt, oder eine Matrix-ID wie @user:matrix.org.',
     },
+    inbox: {
+      orders: 'Bestellungen',
+      all: 'Alle',
+      direct: 'Direkt',
+      groups: 'Gruppen',
+      label: 'Gespräche filtern',
+    },
+    unreadBadge: '{{count}} neu',
+    startCall: 'Anruf starten',
+    emoji: 'Emoji',
+    moreOptions: 'Weitere Optionen',
+    encryptedDescription: 'Nachrichten in diesem Chat sind geschützt',
   },
   matrix: {
     events: {
@@ -1780,6 +2193,7 @@ export const de: PartialTranslationResource = {
       receiving: 'Empfangsadressen',
       chatEncryption: 'Chat-Verschlüsselung',
       advanced: 'Erweitert',
+      marketplaceMemberships: 'Marktplatzeinladungen',
     },
     refunds: {
       title: 'Standard-Rückerstattungsadressen',
@@ -1797,6 +2211,18 @@ export const de: PartialTranslationResource = {
       cleared: 'Alle Standard-Rückerstattungsadressen gelöscht',
       saveFailed: 'Speichern der Rückerstattungsadresse fehlgeschlagen',
       clearAll: 'Alle löschen',
+      contextNote:
+        'Verwenden Sie eine persönliche Wallet-Adresse, die Sie kontrollieren – keine Börseneinzahlungsadresse. Rückerstattungen werden über dasselbe Netzwerk wie die ursprüngliche Zahlung gesendet.',
+      exchangeWarning:
+        'Verwenden Sie keine Exchange-Einzahlungsadresse. Verwenden Sie Ihre persönliche Wallet-Empfangsadresse.',
+      validationEmpty: 'Geben Sie eine Empfangsadresse für die Rückerstattung ein.',
+      validationFormat:
+        'Diese Adresse stimmt nicht mit dem ausgewählten Zahlungsmethodenformat überein.',
+      validationZeroAddress: 'Die Rückerstattungsadresse darf nicht die Nulladresse sein.',
+      warningDuplicateCoin:
+        'Dieselbe Adresse ist bereits für {{coin}} gespeichert. Bestätigen Sie, dass es auch in diesem Netzwerk funktioniert.',
+      warningBchFormat:
+        'Das sieht aus wie eine Bitcoin (BTC)-Adresse. BCH verwendet normalerweise Bitcoincash: oder ältere Formate – überprüfen Sie dies vor dem Speichern noch einmal.',
     },
     accountBinding: {
       title: 'Verknüpfte Konten',
@@ -1935,6 +2361,18 @@ export const de: PartialTranslationResource = {
       reviewRequest: 'Anfrage prüfen',
       reviewNote: 'Notiz (optional)',
       reviewNotePlaceholder: 'Notiz für den Benutzer hinzufügen...',
+      selectMarketplacePlaceholder: 'Wählen Sie einen Marktplatz aus',
+      selectMarketplace: 'Wählen Sie Marktplatz aus',
+      marketplaceAuthNoEligibleDesc:
+        'Treten Sie einem nativen Marktplatz bei oder nehmen Sie eine Einladung an, bevor Sie die Marktplatzautorisierung nutzen.',
+      marketplaceAuthHelper:
+        'Mitglieder des ausgewählten Marktplatzes können Produkte in dieser Gruppe ansehen.',
+      marketplaceAuthLoading: 'Ihre Marktplatz-Mitgliedschaften werden geladen...',
+      marketplaceAuthAcceptInvitationsLink: 'Verwalten Sie Marktplatzmitgliedschaften',
+      marketplaceAuthPendingInvitationsDesc:
+        'Sie haben ausstehende Marktplatzeinladungen. Akzeptieren Sie die Nutzung dieser Marktplätze hier.',
+      marketplaceAuthNoEligible: 'Keine geeigneten Marktplätze',
+      currentCommunityMarketplace: 'Aktueller Community-Marktplatz',
     },
     storePolicies: 'Store policies',
     visibility: {
@@ -2330,6 +2768,16 @@ export const de: PartialTranslationResource = {
       cancelableEscrowedSellerDesc:
         'Die Zahlung des Käufers wird sicher verwahrt — Freigabe nach der Lieferung',
       cancelableSellerCountdown: '{{days}} Tage für die Prüfung durch den Käufer',
+      disputeRulingIssuedDesc:
+        'Akzeptieren Sie die nachstehende Entscheidung, um gemäß der Entscheidung des Moderators Gelder freizugeben.',
+      disputedModeratorAssigned:
+        '{{moderator}} prüft diesen Streit. Die Mittel bleiben zurückgestellt, bis eine Entscheidung akzeptiert wird.',
+      disputeRulingIssuedModeratorNote:
+        '{{moderator}} hat eine Entscheidung erlassen. Bevor die Mittel freigegeben werden, müssen beide Parteien zustimmen.',
+      disputeRulingIssued: 'Entscheidung erlassen – Annahme erwartet',
+      arbitrationReady: 'Bei Bedarf steht eine Streitbeilegung zur Verfügung',
+      arbitrationReadyDesc:
+        '{{moderator}} ist für diese Bestellung zugewiesen, wird jedoch nur benachrichtigt, wenn ein Streitfall eröffnet wird. Es wird keine Moderatorengebühr erhoben, es sei denn, es wird eine Streitigkeit geklärt.',
     },
   },
   marketplace: {
@@ -2417,6 +2865,176 @@ export const de: PartialTranslationResource = {
       step1: 'Ihre Bewerbung wird von den Marktplatz-Admins geprüft',
       step2: 'Sie erhalten eine Benachrichtigung bei Genehmigung',
       step3: 'Beginnen Sie mit dem Listen und Verkaufen Ihrer Produkte!',
+      pageTitleAdmissionStatus: 'Zulassungsstatus des Verkäufers',
+      pageTitleApproved: 'Verkäuferzulassung genehmigt',
+      pageTitleRejected: 'Verkäuferzulassung nicht genehmigt',
+      pageTitleApplied: 'Verkäuferantrag wird geprüft',
+      subtitleAdmissionStatus:
+        'Überprüfen Sie Ihren aktuellen Verkäuferzulassungsstatus und befolgen Sie die nachstehenden Marktplatzanweisungen.',
+      pageTitleSuspended: 'Zulassung des Verkäufers ausgesetzt',
+      pageTitleLeft: 'Verkäuferantrag zurückgezogen',
+      listingBoundaryHint:
+        'Ihre Einträge können in {{name}} erscheinen. Bestellungen, Zahlungen und Erfüllung bleiben in Ihrem Geschäft.',
+      subtitleApproved:
+        'Ihre Verkäuferzulassung wird genehmigt. Sie können jetzt Ihre Angebote für diesen Marktplatz verwalten.',
+      subtitleApplied:
+        'Ihr Verkäuferantrag wird derzeit geprüft. Wir benachrichtigen Sie, wenn es auf dem Marktplatz ein Update gibt.',
+      subtitleLeft:
+        'Sie haben Ihren Verkäuferantrag zurückgezogen. Reichen Sie eine neue Bewerbung ein, wenn Sie bereit sind.',
+      marketContextTitle: 'Marktplatz für diese Verkäuferzulassung',
+      marketBuyerAccessLabel: 'Käuferzugang',
+      marketContextInReview: 'Marktplatz überprüft Ihre Verkäuferzulassung',
+      marketSellerReviewLabel: 'Verkäuferbewertung',
+      applyingTo: 'Bewerben bei',
+      subtitleRejected:
+        'Ihre Verkäuferzulassung wurde nicht genehmigt. Überprüfen Sie das Feedback und befolgen Sie die nachstehenden Anweisungen für den nächsten Schritt.',
+      subtitleSuspended:
+        'Ihre Verkäuferzulassung ist derzeit ausgesetzt. Befolgen Sie die Richtlinien des Marktplatzes, bevor Sie sich erneut bewerben.',
+      viewMarketplace: 'Marktplatz ansehen',
+      marketVerticalLabel: 'Kategorie „Unternehmen“.',
+      marketSellerEntryLabel: 'Verkäufereintrag',
+      marketCatalogLabel: 'Katalogmodus',
+      selfServeNotAvailable:
+        'Dieser Marktplatz akzeptiert keine Self-Service-Verkäuferanträge. Die Zulassungsbestimmungen finden Sie auf der Marktplatzseite.',
+      loginRequired: 'Melden Sie sich an, um sich auf diesem Marktplatz als Verkäufer zu bewerben.',
+      selectProductGroups: 'Produktgruppen zum Auflisten',
+      reviewRequiredNote:
+        'Manuelle Prüfung: Ihre Bewerbung bleibt solange in der Schwebe, bis der Marktplatzbetreiber sie prüft.',
+      autoApprovalNote:
+        'Automatische Prüfung: Ihr Antrag wird sofort nach dem Absenden genehmigt. Produktgruppen sind optional, wenn der Katalog geöffnet ist.',
+      operatorInvitedPolicy:
+        'Der Betreiber lädt Verkäufer direkt ein. Sie können für diesen Marktplatz keinen Self-Service-Antrag einreichen.',
+      openCatalogGroupsOptional:
+        'Produktgruppen sind für offene Kataloge optional. Sie können einreichen, ohne dass Gruppen ausgewählt sind.',
+      selectProductGroupsDesc:
+        'Wählen Sie aus, welche Produktgruppen Sie auf diesem Marktplatz anbieten möchten. Erstellen Sie zunächst Gruppen in den Shop-Einstellungen.',
+      manageProductGroups: 'Produktgruppen verwalten',
+      emptyGroupsTitle: 'Noch keine Produktgruppen',
+      emptyGroupsDesc:
+        'Erstellen Sie mindestens eine eigene Produktgruppe, bevor Sie sich auf diesem kuratierten Marktplatz bewerben.',
+      emptyGroupsDescOpen:
+        'Sie können ohne Produktgruppen einreichen oder zuerst Gruppen erstellen, um zu steuern, was auf diesem Marktplatz angezeigt wird.',
+      selectProductGroupsDescOpen:
+        'Produktgruppen sind optional. Wählen Sie alle Gruppen aus, die angezeigt werden sollen, oder übermitteln Sie sie ohne Gruppen für einen offenen Katalog.',
+      selectProductGroupsDescCurated:
+        'Dieser Marktplatz verwendet einen kuratierten Katalog. Wählen Sie vor dem Absenden mindestens eine eigene Produktgruppe aus.',
+      statusApproved: 'Genehmigt',
+      statusPending: 'Ausstehende Überprüfung',
+      statusSuspended: 'Ausgesetzt',
+      statusRejected: 'Abgelehnt',
+      statusLeft: 'Zurückgezogen',
+      applicationPending: 'Ihre Bewerbung wartet auf Prüfung.',
+      completeHint: 'Wählen Sie mindestens eine Produktgruppe zum Einreichen aus.',
+      groupsRequiredCurated:
+        'Für kuratierte Marktplätze ist mindestens eine Produktgruppe erforderlich.',
+      alreadyApproved: 'Sie sind bereits ein zugelassener Verkäufer auf diesem Marktplatz.',
+      completeHintOpen:
+        'Sie können jetzt einreichen oder Produktgruppen auswählen, um Ihren Katalog zu erweitern.',
+      statusApplied: 'Antrag eingereicht',
+      autoApprovedMessage: 'Ihr Antrag wurde automatisch genehmigt.',
+      applicationSubmittedReview:
+        'Antrag eingereicht. Sie werden benachrichtigt, wenn es ein Update gibt.',
+      reapplyHint: 'Sie können Ihre Produktgruppen aktualisieren und einen neuen Antrag stellen.',
+      resultTitleApproved: 'Verkäuferzulassung genehmigt',
+      resultTitleRejected: 'Verkäuferzulassung nicht genehmigt',
+      resultTitleSuspended: 'Zulassung des Verkäufers ausgesetzt',
+      resultTitleLeft: 'Verkäuferantrag zurückgezogen',
+      applicationSubmittedApproved:
+        'Sie sind zugelassen und können mit dem Verkauf auf diesem Marktplatz beginnen.',
+      nextStepInviteOnlyRejected:
+        'Nächster Schritt: Die Self-Service-Neuanwendung ist für diesen Marktplatz nicht verfügbar. Verbessern Sie Ihr Shop-Profil und kontaktieren Sie den Marktplatzbetreiber oder warten Sie auf eine neue Einladung.',
+      nextStepSuspended:
+        'Nächster Schritt: Der Verkäuferzugriff wird pausiert. Verbessern Sie Ihr Shop-Profil und warten Sie auf die Hinweise des Marktplatzes, bevor Sie sich erneut bewerben.',
+      withdrawSuccess: 'Antrag zurückgezogen.',
+      withdrawApplication: 'Antrag zurückziehen',
+      withdrawConfirmTitle: 'Bewerbung zurückziehen?',
+      resultTitleApplied: 'Verkäuferantrag eingereicht',
+      resultTitlePending: 'Zulassung des Verkäufers läuft',
+      withdrawConfirmDesc:
+        'Ihre ausstehende Bewerbung wird zurückgezogen. Sie können die aktualisierten Produktgruppen später erneut einreichen.',
+      step2Open: 'Ausgewählte Produktgruppen werden ggf. sichtbar',
+      step1Approval: 'Marktplatzbetreiber prüfen Ihre Bewerbung',
+      step3Open: 'Beginnen Sie mit der Auflistung und dem Verkauf Ihrer Produkte!',
+      step1Open: 'Ihr Antrag wird sofort genehmigt',
+      step2Approval: 'Sie werden benachrichtigt, wenn eine Entscheidung vorliegt',
+      step3Approval:
+        'Nach der Genehmigung erscheinen Ihre ausgewählten Gruppen auf diesem Marktplatz',
+      collectibles: {
+        checklistTitle: 'Bevor Sie sich bewerben',
+        checklistLogin: 'Melden Sie sich mit Ihrem Mobazha-Konto an',
+        checklistReview:
+          'Warten Sie auf die Überprüfung durch den Betreiber – Sie können in diesem Markt erst dann auflisten, wenn die Genehmigung vorliegt',
+        checklistProducts:
+          'Erstellen Sie Angebote und fügen Sie diese mindestens einer Produktgruppe hinzu',
+        checklistApply:
+          'Wählen Sie Produktgruppen aus und reichen Sie hier Ihre Verkäuferbewerbung ein',
+        checklistListed: 'Nach der Zulassung erscheinen in diesem Markt zugelassene Produktgruppen',
+        statusNextRejected:
+          'Als Nächstes: Überprüfen Sie das Feedback, aktualisieren Sie Ihre Produktgruppen und reichen Sie, sofern zulässig, einen neuen Antrag ein.',
+        custodyProcessNote:
+          'Die Registrierung der Quellverwahrung und die Erfüllung der Materialien sind ein separater Schritt nach der Genehmigung. Mit diesem Formular wird weder die Verwahrung registriert, noch der Versand geplant, noch wird das Mint in der Kette durchgeführt.',
+        statusNextApproved:
+          'Als nächstes: Ihre genehmigten Produktgruppen sind in diesem Markt sichtbar. Verwalten Sie Einträge über Ihren Shop-Administrator.',
+        statusNextPendingBlocked:
+          'Als nächstes: Warten Sie auf die Überprüfung durch den Betreiber. Karteneinreichungen und Markteinträge bleiben bis zur Genehmigung gesperrt.',
+        statusNextPending:
+          'Als nächstes: Warten Sie auf die Bewertung durch den Kurator. Sie werden benachrichtigt, wenn es ein Update gibt.',
+        statusNextApprovedWithSubmissions:
+          'Als nächstes reichen Sie unten benotete Nachweise ein. Erstellen Sie nach der Genehmigung ein Angebot – der digitale Titel wird erst ausgegeben, wenn der Käufer bezahlt, nicht vorher.',
+        statusNextRejectedInviteOnly:
+          'Weiter: Die Self-Service-Neuanwendung ist für diesen Marktplatz nicht verfügbar. Verbessern Sie Ihr Shop-Profil und kontaktieren Sie den Marktplatzbetreiber oder warten Sie auf eine neue Einladung.',
+        statusNextSuspended:
+          'Als Nächstes: Kontaktieren Sie den Support oder die Marktbetreiber – Ihr Verkäuferzugriff ist pausiert.',
+        workspace: {
+          subtitle:
+            'Reichen Sie Note, Zertifizierung, Inhaberbrieftasche und Vorder-/Rückseiten-Beweis-URLs zur Prüfung durch den Kurator ein. Genehmigte Karten können sofort gelistet werden – kein Vorverkauf postfrisch.',
+          lifecycleAria: 'Lebenszyklus der Kartenübermittlung',
+          title: 'Karteneinreichungen',
+          lifecycle: {
+            review: 'Rezension des Kurators',
+            submit: 'Beweise einreichen',
+            listed: 'Käufer zahlt / Titel prägt',
+            list: 'Eintrag erstellen',
+            redeem: 'Einlösen und versenden',
+          },
+          certNumber: 'Zertifizierungsnummer',
+          grade: 'Grad',
+          custodyNote:
+            'Sie behalten die physische Karte, bis ein Käufer sie einlöst. Erstellen Sie nach der Genehmigung einen Eintrag. Der digitale Titel wird beim ersten bezahlten Verkauf an den Käufer ausgezahlt. Erstverkaufsgelder bleiben bis zur Abrechnung nach dem Versand gesperrt.',
+          holderWalletPlaceholder: 'Ihr aktuelles Solana-Wallet für diese Verwahrungseinreichung',
+          serial: 'Seriell (optional)',
+          holderWallet: 'Ihr Solana-Wallet (Verwahrungsdatensatz)',
+          holderWalletHint:
+            'Nur zur Verwahrung aufgezeichnet. Der Käufer erhält den digitalen Titel für die Wallet, die er beim Bezahlvorgang bereitstellt.',
+          photoFrontUrl: 'URL des vorderen Fotos',
+          photoBackUrl: 'Zurück-Foto-URL',
+          guaranteeAmount: 'Garantiebetrag (optional)',
+          submitCard: 'Karte zur Überprüfung einreichen',
+          mySubmissionsTitle: 'Ihre Einsendungen',
+          submitFailed: 'Karte konnte nicht übermittelt werden',
+          createListingCta: 'Eintrag erstellen',
+          trackingNumber: 'Tracking-Nummer',
+          guaranteeCurrency: 'Garantiewährung (optional)',
+          submitSuccess: 'Karte zur Prüfung durch den Kurator eingereicht',
+          nextActionLabel: 'Nächste',
+          markShipped: 'Mark versendet',
+          emptySubmissions: 'Noch keine Karteneinreichungen.',
+          rejectionReason: 'Ablehnungsgrund',
+          shipSuccess: 'Versand erfasst',
+          shipFailed: 'Sendung konnte nicht erfasst werden',
+          validation: {
+            certNumber: 'Geben Sie eine Zertifizierungsnummer ein.',
+            grade: 'Geben Sie eine Note ein.',
+            photosDistinct: 'Vordere und hintere URLs müssen unterschiedlich sein.',
+            photoBackUrl: 'Geben Sie eine gültige http(s)-URL für das Rückseitenfoto ein.',
+            photoFrontUrl: 'Geben Sie eine gültige http(s)-URL für das Frontfoto ein.',
+            holderWallet: 'Geben Sie Ihr Solana-Wallet für das Depotprotokoll ein.',
+            trackingNumber: 'Geben Sie eine Tracking-Nummer ein.',
+          },
+        },
+        statusNextDefault:
+          'Als Nächstes: Führen Sie die oben genannten Schritte aus oder suchen Sie noch einmal nach Updates.',
+      },
     },
     operator: {
       applicationReviewWorkspace: 'Arbeitsbereich zur Prüfung von Verkäuferanträgen',
@@ -2466,13 +3084,523 @@ export const de: PartialTranslationResource = {
       approveSuccess: 'Antrag genehmigt',
       rejectSuccess: 'Antrag abgelehnt',
       suspendSuccess: 'Verkäufer ausgesetzt',
+      createCta: 'Marktplatz erstellen',
+      badge: 'Marktplatzbetreiber',
+      listTitle: 'Von mir betriebene Marktplätze',
+      createDraftTitle: 'Entwurf erstellen',
+      listSubtitle:
+        'Verwalten Sie Marke, Domains, Veröffentlichungsstatus und Store-Zulassung. Bestellungen, Zahlungen und Erfüllung bleiben bei jedem Geschäft.',
+      subdomainPlaceholder: 'Subdomain (optional)',
+      domainCount: '{{count}} Domain(s)',
+      activeSectionTitle: 'Aktive Marktplätze',
+      emptyTitle: 'Noch keine Marktplätze',
+      verticalPlaceholder: 'Vertikal, z.B. Sammlerstück',
+      createAndConfigure: 'Erstellen und konfigurieren',
+      namePlaceholder: 'Name (erforderlich)',
+      loadFailedDesc: 'Bitte versuchen Sie es gleich noch einmal.',
+      loadFailedTitle: 'Marktplätze konnten nicht geladen werden',
+      createFailedTitle: 'Marktplatz konnte nicht erstellt werden',
+      previewDraft: 'Vorschauentwurf',
+      backToConsole: 'Zurück zur Bedienerkonsole',
+      archivedSectionTitle: 'Archivierte Geschichte',
+      emptyDesc:
+        'Erstellen Sie zunächst einen Entwurf und veröffentlichen Sie ihn dann, nachdem Sie die Einrichtung bestätigt haben.',
+      archivedSectionDesc:
+        'Archivierte Marktplätze sind schreibgeschützt und akzeptieren keine neuen Shops mehr.',
+      publishChanges: 'Änderungen veröffentlichen',
+      previewDraftNoticeTitle: 'Entwurfsvorschau – nicht live',
+      previewMissingId: 'Fehlende Marktplatz-ID für die Entwurfsvorschau.',
+      backToMarketplaceDetail: 'Zurück zu den Marktplatzdetails',
+      previewLoadFailed:
+        'Entwurfsvorschau konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+      previewDraftNoticeDesc:
+        'Auf dieser Seite werden die Kuratierung und das Branding Ihres aktuellen Entwurfs angezeigt. Käufer können es erst sehen, wenn Sie es veröffentlichen.',
+      previewBannersTitle: 'Kuratierte Banner',
+      previewListingsTitle: 'Kuratierte Angebote',
+      previewSellersTitle: 'Kuratierte Verkäufer',
+      tabs: {
+        overview: 'Überblick',
+        sellers: 'Verkäufer',
+        settings: 'Einstellungen',
+        ariaLabel: 'Abschnitte für Marktplatzbetreiber',
+        curation: 'Kuration der Homepage',
+      },
+      previewEmptyBanners: 'In diesem Entwurf sind keine kuratierten Banner enthalten.',
+      previewEmptySellers: 'In diesem Entwurf sind keine ausgewählten Verkäufer enthalten.',
+      previewEmptyListings: 'In diesem Entwurf sind keine kuratierten Einträge enthalten.',
+      overviewStatusLabel: 'Status',
+      publish: 'Veröffentlichen',
+      publishFailedTitle: 'Konnte nicht veröffentlicht werden',
+      overviewReadinessTitle: 'Status und Bereitschaft',
+      suspendMarketplace: 'Marktplatz sperren',
+      publishSuccess: 'Marktplatz veröffentlicht',
+      resumeMarketplaceSuccess: 'Der Marktplatz wurde wieder aufgenommen',
+      publishAndDomains: 'Veröffentlichen und Domains',
+      resumeMarketplaceFailedTitle: 'Der Marktplatz konnte nicht fortgesetzt werden',
+      suspendMarketplaceFailedTitle: 'Der Marktplatz konnte nicht gesperrt werden',
+      suspendMarketplaceSuccess: 'Marktplatz gesperrt',
+      resumeMarketplace: 'Lebenslauf-Marktplatz',
+      launchChecklistTitle: 'Checkliste starten',
+      launchChecklistDomainReady: 'Die verifizierte Domain ist bereit.',
+      launchChecklistSellerReady: 'Mindestens ein zugelassener sichtbarer Verkäufer ist bereit.',
+      launchChecklistSellerSelfServe:
+        'Verkäufer können sich nach dem Start bewerben; Ein Erstverkäufer wird empfohlen, ist aber nicht erforderlich.',
+      launchChecklistSellerMissing:
+        'Genehmigen Sie mindestens einen Verkäufer und machen Sie ihn vor der Veröffentlichung sichtbar.',
+      publishBlockedHint:
+        'Füllen Sie vor der Veröffentlichung die erforderlichen Checklistenpunkte für den Start aus.',
+      launchChecklistDomainMissing:
+        'Überprüfen Sie vor der Veröffentlichung mindestens eine Domain.',
+      shareCopyLink: 'Link kopieren',
+      shareTitle: 'Teilen Sie Ihren Marktplatz',
+      shareDescription:
+        'Ihr Marktplatz ist live. Kopieren Sie einen Link, um Käufer und Communities einzuladen.',
+      resumeBlockedHint:
+        'Füllen Sie die erforderlichen Punkte der Start-Checkliste aus, bevor Sie diesen Marktplatz wieder aufnehmen.',
+      shareCopyFailed:
+        'Kopieren fehlgeschlagen – wählen Sie den Link unten aus und kopieren Sie ihn manuell',
+      buyerAccessMode: 'Käuferzugang',
+      shareCopySuccess: 'Link kopiert',
+      catalogMode: 'Katalog',
+      shareManualLabel: 'Kopieren Sie diesen Link manuell',
+      shareCopyCommunity: 'Community-Link kopieren',
+      waitingCount: 'Warten auf Aktion: {{count}}',
+      discoverability: 'Auffindbarkeit',
+      shareError:
+        'Wir konnten Ihren Freigabelink nicht laden. Bitte versuchen Sie es in Kürze noch einmal.',
+      shareLoading: 'Bereiten Sie Ihren Link vor…',
+      approvedCount: 'Genehmigt: {{count}}',
+      storeAdmission: 'Eintritt in den Laden',
+      responsibilityDesc:
+        'Der Marktplatz besitzt Marke, Vertrieb, Katalog und Zulassung. In den Geschäften werden Produkte, Bestellungen, Zahlungen, Support und Erfüllung gespeichert.',
+      responsibilityBoundary: 'Verantwortungsgrenze',
+      attributionFunnelTitle: 'Attributionstrichter',
+      inviteNotApproval:
+        'Eine Einladung ist keine Zustimmung. Der Shop muss dies akzeptieren, bevor Sie den Katalogzugriff genehmigen können.',
+      attributionSummaryLoadFailed:
+        'Die Zuordnungszusammenfassung konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+      attributionSummaryLoading: 'Zuordnungszusammenfassung wird geladen...',
+      attributionVisits: 'Besuche',
+      attributionCheckoutHandoffs: 'Zur Kasse gegangen',
+      attributionListingClicks: 'Klicks auflisten',
+      attributionImpressions: 'Marktplatzbesuche',
+      attributionListingClickRate: 'Besuchen Sie -> Klicken Sie auf Conversion',
+      attributionCheckoutRate: 'Klicken Sie auf -> Checkout-Konvertierung',
+      attributionNoData: 'Es wurden noch keine echten Besuchsdaten erfasst.',
+      attributionDeepLinkNote: 'Beinhaltet direkte Produktlink-Besuche',
+      attributionRateUnavailable: 'N / A',
+      attributionSourceOperatorShare: 'Link zur Community-Freigabe',
+      attributionCheckoutMeaning:
+        'Ein eingegebener Checkout bedeutet, dass der Traffic an ein bestimmtes Geschäft weitergeleitet wurde. Es zeigt nicht an, dass eine Bestellung erstellt wurde oder ob die Zahlung erfolgreich war.',
+      inviteQueryPlaceholder: 'Shop-Link oder Shop-Name',
+      sellerIdAdvanced: 'Verwenden Sie stattdessen die Verkäufer-ID',
+      inviteStore: 'Laden einladen',
+      peerIdPlaceholder: 'Peer-ID speichern',
+      inviteStoreHint:
+        'Fügen Sie einen Store-Link ein oder geben Sie einen Store-Namen ein. Wählen Sie eine Übereinstimmung aus und senden Sie dann die Einladung.',
+      inviteConfirm: 'Laden Sie diesen Shop ein',
+      sellerIdPlaceholder: 'Verkäufer-ID einfügen',
+      inviteResolving: 'Nach Geschäften suchen…',
+      sendInvite: 'Einladung senden',
+      inviteNoMatches:
+        'Kein passender Shop gefunden. Möglicherweise haben sie noch keinen Mobazha-Laden eröffnet.',
+      inviteNoMatchesHint:
+        'Bitten Sie sie, zuerst ein Geschäft zu eröffnen und es dann noch einmal zu versuchen.',
+      inviteSuccessDesc:
+        'Der Shop muss dies akzeptieren, bevor Sie den Katalogzugriff genehmigen können.',
+      invitePickCandidate: 'Wählen Sie einen Store aus, den Sie einladen möchten',
+      inviteSuccess: 'Einladung verschickt',
+      storeMemberships: 'Store-Mitgliedschaften',
+      inviteFailedTitle: 'Einladung konnte nicht gesendet werden',
+      inviteSearchUnavailableHint:
+        'Dies ist nicht dasselbe wie „Shop nicht gefunden“. Versuchen Sie es gleich noch einmal.',
+      inviteSearchUnavailable:
+        'Die Store-Suche ist vorübergehend nicht verfügbar. Bitte versuchen Sie es in Kürze noch einmal.',
+      approve: 'Genehmigen',
+      suspend: 'Aussetzen',
+      reject: 'Ablehnen',
+      resumeSeller: 'Lebenslauf Verkäufer',
+      catalogVisible: 'Im Katalog sichtbar',
+      noStoresYet: 'Noch keine Geschäfte eingeladen.',
+      detailLoadFailed:
+        'Dieser Marktplatz konnte nicht geladen werden. Kehren Sie zur Liste zurück und versuchen Sie es erneut.',
+      accessSectionTitle: 'Zugang & Katalog',
+      noDescription: 'Noch keine Positionierung oder kein Wertversprechen für den Käufer.',
+      brandSectionTitle: 'Marke',
+      reviewFailedTitle: 'Die Mitgliedschaft konnte nicht aktualisiert werden',
+      nameLabel: 'Name',
+      descriptionLabel: 'Beschreibung',
+      settingsDesc:
+        'Konfigurieren Sie Marke, Zugriffsregeln, Katalogrichtlinien und benutzerdefinierte Domänen. Die DNS-Überprüfung für benutzerdefinierte Domänen erfolgt nach dem Speichern.',
+      domainsSectionTitle: 'Domänen',
+      logoLabel: 'Logo-URL',
+      settingsTitle: 'Marktplatzeinstellungen',
+      logoPlaceholder: 'https://… oder /images/logo.png',
+      buyerAccessModeReadOnlyHint: 'Native Marktplätze stehen allen Käufern offen.',
+      bannerPlaceholder: 'https://… oder /images/banner.jpg',
+      descriptionPlaceholder:
+        'Beschreiben Sie, für wen dieser Marktplatz gedacht ist und was Käufer erwarten können',
+      bannerLabel: 'Banner-URL',
+      platformSubdomainLabel: 'Plattform-Subdomain',
+      catalogQueryLabel: 'Katalogabfrage',
+      platformSubdomainReadOnlyHint:
+        'Wird von der Plattform vergeben und kann hier nicht geändert werden.',
+      catalogQueryPlaceholder: 'Optionaler Filterausdruck für den kuratierten Katalogbereich',
+      customDomainPendingNote:
+        'Fügen Sie den DNS-Eintrag unten hinzu, um diese Domäne zu überprüfen.',
+      customDomainSaveFirstHint:
+        'Speichern Sie zunächst Ihre Domain-Änderung. Nach dem Speichern wird ein neuer DNS-Verifizierungseintrag generiert.',
+      customDomainStatusValue: '{{host}} ({{status}})',
+      customDomainVerifiedAt: 'Verifiziert unter: {{date}}',
+      customDomainDnsRecordTypeValue: 'TXT',
+      customDomainDnsValueLabel: 'Wert',
+      customDomainDnsNameLabel: 'Gastgeber / Name',
+      customDomainVerifySuccessTitle: 'Domain verifiziert',
+      customDomainVerifyNow: 'Jetzt überprüfen',
+      customDomainDnsRecordTypeLabel: 'Datensatztyp',
+      customDomainVerifySuccessDesc:
+        'Die benutzerdefinierte Domain ist jetzt für diesen Marktplatz aktiv.',
+      customDomainAutoRetryHint:
+        'Nach der DNS-Weitergabe versucht die Plattform die Überprüfung automatisch alle 10 Minuten erneut.',
+      customDomainVerifyPendingDesc:
+        'DNS-Eintrag noch nicht gesehen. Bitte warten Sie auf die Weitergabe oder versuchen Sie es in Kürze noch einmal.',
+      customDomainVerifyLookupFailed:
+        'Die DNS-Suche ist fehlgeschlagen. Bitte überprüfen Sie den Status Ihres DNS-Anbieters und versuchen Sie es erneut.',
+      customDomainVerifyChallengeUnavailable:
+        'Die Verifizierungsherausforderung ist noch nicht verfügbar. Speichern Sie die Einstellungen erneut und versuchen Sie es später noch einmal.',
+      sellerEntryMode: 'Verkäufereintrag',
+      sellerReviewMode: 'Verkäuferbewertung',
+      customDomainVerifyPendingTitle: 'Die Verifizierung steht noch aus',
+      subdomainLabel: 'Subdomain',
+      customDomainLabel: 'Benutzerdefinierte Domäne',
+      customDomainVerifyRecordNotFound:
+        'TXT-Eintrag nicht gefunden. Überprüfen Sie, ob Host/Name und Wert genau übereinstimmen.',
+      customDomainVerifyFailedTitle: 'Die Domain konnte noch nicht bestätigt werden',
+      saveSettings: 'Einstellungen speichern',
+      discardChanges: 'Änderungen verwerfen',
+      verticalLabel: 'Vertikal',
+      validationNameRequired: 'Name ist erforderlich.',
+      customDomainPlaceholder: 'z.B. shop.example.com',
+      customDomainRemoveHint:
+        'Löschen Sie das Feld und speichern Sie es, um die benutzerdefinierte Domäne zu entfernen.',
+      sellerReviewModeHint:
+        'Durch die automatische Überprüfung werden Verkäuferanträge sofort genehmigt. Bei der manuellen Prüfung bleiben die Anträge bis zur Entscheidung des Betreibers in der Schwebe.',
+      validationInvalidMediaUrl:
+        'Verwenden Sie einen leeren Wert, einen Pfad, der mit / beginnt, oder eine http(s)-URL.',
+      validationVerticalRequired: 'Vertikal ist erforderlich.',
+      validationInvalidHostname: 'Geben Sie einen gültigen Hostnamen ein, z. B. shop.example.com.',
+      archiveDescription:
+        'Archivierte Marktplätze werden schreibgeschützt und sind für die Öffentlichkeit nicht zugänglich. Store-Mitgliedschaften bleiben erhalten, der Marktplatz akzeptiert jedoch keine Änderungen mehr.',
+      saveFailedTitle: 'Einstellungen konnten nicht gespeichert werden',
+      archiveConfirm: 'Archiv-Marktplatz',
+      curation: {
+        title: 'Kuration der Homepage',
+        add: 'Hinzufügen',
+        loadFailed: 'Kurationsdaten konnten nicht geladen werden. Bitte versuchen Sie es erneut.',
+        addSuccess: 'Kuratierter Artikel hinzugefügt',
+        loading: 'Kuration wird geladen...',
+        intro:
+          'Dies steuert, was auf der Startseite des öffentlichen Marktplatzes angezeigt wird, einschließlich hervorgehobener Einträge, empfohlener Verkäufer und Bannerplätze.',
+        reorderFailedTitle: 'Bestellung konnte nicht aktualisiert werden',
+        toggleFailedTitle: 'Der Status konnte nicht aktualisiert werden',
+        removeSuccess: 'Kuratierter Artikel entfernt',
+        addFailedTitle: 'Der kuratierte Artikel konnte nicht hinzugefügt werden',
+        toggleSuccess: 'Status aktualisiert',
+        reorderSuccess: 'Bestellung aktualisiert',
+        empty: 'Noch keine kuratierten Artikel.',
+        removeFailedTitle: 'Das kuratierte Element konnte nicht entfernt werden',
+        candidateCount: '{{count}} geeignete Kandidaten',
+        searchCandidatesPlaceholder:
+          'Suchen Sie nach der Auflistung der Slug- oder Verkäufer-Peer-ID',
+        candidatesLoadFailedTitle: 'Kurationskandidaten konnten nicht geladen werden',
+        searchCandidates: 'Suchen Sie nach Kandidaten',
+        search: 'Suchen',
+        previousPage: 'Vorherige Kandidatenseite',
+        nextPage: 'Nächste Kandidatenseite',
+        sellerFallbackTitle: 'Verkäufer',
+        pageStatus: 'Seite {{page}} von {{totalPage}} · {{total}} Einträgen',
+        selectBanner: 'Wählen Sie einen Bannerkandidaten aus',
+        selectListing: 'Wählen Sie einen Listenkandidaten aus',
+        selectSeller: 'Wählen Sie einen Verkäuferkandidaten aus',
+        deactivate: 'Deaktivieren',
+        statusInactive: 'Inaktiv',
+        statusActive: 'Aktiv',
+        activate: 'Aktivieren',
+        previewOpen: 'Offen',
+        sections: {
+          listings: 'Ausgewählte Einträge',
+          sellers: 'Ausgewählte Verkäufer',
+          banners: 'Banner',
+          listingsDesc:
+            'Priorisierte Eintragskarten, die in den Homepage-Abschnitten angezeigt werden.',
+          bannersDesc: 'Banner-Slots, die ausgewählte Angebote bewerben.',
+          sellersDesc: 'Verkäufer werden als kuratierte Schaufenster hervorgehoben.',
+        },
+        removeAria: 'Artikel entfernen',
+        missingIdentifier: 'Fehlende Kennung',
+        moveUpAria: 'Element nach oben verschieben',
+        moveDownAria: 'Element nach unten verschieben',
+        listingFallbackTitle: 'Auflistung ohne Titel',
+      },
+      archiveAction: 'Archiv-Marktplatz',
+      saveSuccess: 'Marktplatzeinstellungen gespeichert',
+      archiveTitle: 'Diesen Marktplatz archivieren?',
+      archiveFailedTitle: 'Der Marktplatz konnte nicht archiviert werden',
+      archiveSuccess: 'Marktplatz archiviert',
+      readOnlyArchived: 'Dieser Marktplatz ist archiviert und schreibgeschützt.',
     },
     memberships: {
       reviewUpdates: 'Prüfungs-Updates',
       reviewHistory: 'Prüfungsverlauf',
       reviewUpdatesUnreadBadge: '{{count}} ungelesen',
+      title: 'Marktplatzeinladungen',
+      subtitle:
+        'Überprüfen Sie die Einladungen der Betreiber zur Teilnahme an kuratierten Marktplätzen. Durch das Akzeptieren kann der Betreiber die Überprüfung fortsetzen – Ihr Shop wird nicht automatisch veröffentlicht.',
+      inviteCardTitle: '{{name}} hat Sie zur Teilnahme eingeladen',
+      loadFailedDesc: 'Bitte versuchen Sie es gleich noch einmal.',
+      accept: 'Einladung annehmen',
+      emptyDesc: 'Wenn ein Betreiber Ihr Geschäft einlädt, erscheint die Einladung hier.',
+      inviteBenefit:
+        'Erreichen Sie Käufer, die diesem Marktplatz bereits vertrauen. Ihre Produkte bleiben in Ihrem Geschäft; Bestellungen, Zahlungen und Erfüllung bleiben Ihr Eigentum.',
+      emptyTitle: 'Keine Marktplatzmitgliedschaften',
+      loadFailedTitle: 'Einladungen konnten nicht geladen werden',
+      accepting: 'Akzeptieren…',
+      decline: 'Einladung ablehnen',
+      declineSuccessDesc:
+        'Die Einladung wurde abgelehnt und aus aktiven Mitgliedschaften entfernt.',
+      declineConfirmDesc: 'Eine erneute Einladung durch den Betreiber ist später noch möglich.',
+      declineConfirmTitle: 'Diese Einladung ablehnen?',
+      declining: 'Abnehmend…',
+      declineSuccess: 'Einladung abgelehnt',
+      declineFailedTitle: 'Die Einladung konnte nicht abgelehnt werden',
+      leaveConfirmDesc:
+        'Sie verlieren den Verkäuferzugang auf diesem Marktplatz, bis Sie erneut eingeladen oder genehmigt werden.',
+      leaveSuccessDesc: 'Ihre Mitgliedschaft wurde aktualisiert und der Zugriff wurde entfernt.',
+      leaveSuccess: 'Marktplatz verlassen',
+      leaveConfirmTitle: 'Diesen Marktplatz verlassen?',
+      leaving: 'Verlassen…',
+      leave: 'Marktplatz verlassen',
+      statusAccepted: 'Akzeptiert',
+      statusApplied: 'Angewandt',
+      statusApproved: 'Genehmigt',
+      statusRejected: 'Abgelehnt',
+      statusSuspended: 'Ausgesetzt',
+      acceptFailedTitle: 'Einladung konnte nicht angenommen werden',
+      leaveFailedTitle: 'Konnte den Marktplatz nicht verlassen',
+      viewMarketplace: 'Marktplatz ansehen',
+      acceptSuccessDesc: 'Der Marktplatzbetreiber kann nun mit der Prüfung fortfahren.',
+      acceptSuccess: 'Einladung angenommen',
+      statusInvited: 'Eingeladen',
+      archivedSectionTitle: 'Archivierte Geschichte',
+      settingsCardTitle: 'Marktplatzeinladungen',
+      statusLeft: 'Links',
+      marketplaceUnavailable: 'Marktplatz nicht öffentlich zugänglich',
+      invitedAt: 'Eingeladen {{date}}',
+      activeSectionTitle: 'Aktuelle Mitgliedschaften',
+      marketplaceUnavailableDesc:
+        'Nur veröffentlichte Marktplätze haben eine öffentliche Seite. Entwurfs-, gesperrte und archivierte Marktplätze bleiben privat.',
+      settingsCardDesc:
+        'Nehmen Sie Einladungen von Betreibern an, kuratierten Marktplätzen beizutreten.',
     },
     allTypes: 'All types',
+    communitySubtitle:
+      'Entdecken Sie echte Telegram- und Discord-Community-Märkte. Kaufen Sie bei zugelassenen Verkäufern oder beantragen Sie den Verkauf.',
+    nativeIntroDesc:
+      'Durchsuchen Sie veröffentlichte öffentliche Marktplätze nach Branche. Jeder Marktplatz wird unabhängig mit eigenen Verkäufern und eigenem Katalog betrieben.',
+    nativeTitle: 'Marktplätze',
+    nativeIntroTitle: 'Gehostete Marktplätze auf Mobazha',
+    nativeSubtitle:
+      'Durchsuchen Sie gehostete Marktplätze auf Mobazha. Kaufen Sie bei zugelassenen Verkäufern in ausgewählten Branchen ein.',
+    defaultDescription:
+      'Ein gehosteter Marktplatz mit zugelassenen Verkäufern und kuratierten Angeboten.',
+    vertical: {
+      general: 'Allgemein',
+      fashion: 'Mode',
+      other: 'Andere',
+      collectible: 'Sammlerstücke',
+    },
+    platformTelegram: 'Telegramm',
+    platformDiscord: 'Zwietracht',
+    platformUnknown: 'Gemeinschaft',
+    allPlatforms: 'Alle Plattformen',
+    allVerticals: 'Alle Vertikalen',
+    emptyPublicTitle: 'Noch keine öffentlichen Gemeinschaftsmärkte',
+    moreMarketplaces: 'Weitere Marktplätze',
+    sortBySellers: 'Die meisten Verkäufer',
+    emptyPublicDesc:
+      'Die ersten Märkte erscheinen, nachdem der Betrieb sie aktiviert hat. Verbinde eine echte Telegram- oder Discord-Community, um dich zu bewerben.',
+    sortByUpdated: 'Kürzlich aktualisiert',
+    sortFeaturedFirst: 'Zuerst vorgestellt',
+    applyCreate: 'Bewerben Sie sich aus einer Gruppe',
+    emptyNativeDesc:
+      'Veröffentlichte Marktplätze werden hier angezeigt, sobald die Betreiber sie veröffentlichen.',
+    trustApprovedProducts: 'Es werden nur genehmigte, sichtbare Verkäuferangebote gezählt',
+    unavailableNativeTitle: 'Marktplätze nicht verfügbar',
+    emptyNativeTitle: 'Noch keine Marktplätze',
+    unavailableTitle: 'Community-Märkte nicht verfügbar',
+    trustMembership: 'Mitgliedschaft verifiziert über Telegram oder Discord',
+    trustOpsActivated:
+      'Für die öffentliche Auflistung ist eine Aktivierung des Betriebs erforderlich',
+    joinModeApproval: 'Genehmigung erforderlich',
+    joinModePublic: 'Offen für den Beitritt',
+    joinModeGroupMember: 'Gruppenmitglieder',
+    trustBuyerProtection:
+      'Der Checkout kann einen Käuferschutz für unterstützte Bestellungen beinhalten',
+    trustCuratedCatalog: 'Die Einträge stammen von zugelassenen Verkäufern auf jedem Marktplatz',
+    curatedIntroTitle: 'Kuratierte Community-Märkte',
+    trustPublishedStores: 'Es werden nur veröffentlichte öffentliche Marktplätze aufgeführt',
+    sellerNoGroups: 'Gesamtkatalog',
+    detail: {
+      applyToSell: 'Bewerben Sie sich zum Verkauf',
+      applySeller: 'Bewerben Sie sich zum Verkauf',
+      joinViaGroup: 'Treten Sie über die Community bei',
+      applyToSellDesc: 'Reichen Sie Ihren Shop ein, um Produkte auf diesem Marktplatz aufzulisten.',
+      accessTitle: 'Zugang & Katalog',
+      visitPublicSite: 'Besuchen Sie die Marktplatzseite',
+      catalogMode: 'Katalog',
+      sellerAdmissionInviteOnly:
+        'Der Verkäuferzugang ist nur auf Einladung möglich. Kontaktieren Sie den Marktplatzbetreiber, um eine Zulassung zu beantragen.',
+      sellerAdmissionOperatorInvited:
+        'Der Betreiber lädt Verkäufer direkt ein. Für diesen Marktplatz sind keine Self-Service-Anwendungen verfügbar.',
+      sellerAdmissionSelfServeDisabled:
+        'Der Self-Service für Verkäufer ist derzeit nicht verfügbar. Kontaktieren Sie den Marktplatzbetreiber für den Zugang.',
+      discoverability: 'Sichtweite',
+      buyerAccessPolicy: 'Käuferzugang',
+      sellerReviewMode: 'Verkäuferbewertung',
+      productsTab: 'Produkte',
+      aboutTab: 'Um',
+      sellersTab: 'Verkäufer',
+      featuredListingsTitle: 'Ausgewählte Einträge',
+      sellerEntryMode: 'Verkäuferzugang',
+      featuredBannersTitle: 'Ausgewählte Banner',
+      allListingsTitle: 'Alle Einträge',
+      featuredSellersTitle: 'Ausgewählte Verkäufer',
+      allSellersTitle: 'Alle Verkäufer',
+      noProductsDesc: 'Hier erscheinen nur genehmigte und sichtbare Verkäufereinträge.',
+      noProducts: 'Keine Produkte zum Durchsuchen',
+      searchProducts: 'Produkte in diesem Markt suchen...',
+      platformSource: 'Quelle',
+      aboutTitle: 'Über diesen Markt',
+      trustSignals: 'Vertrauenssignale',
+      sellerAdmissionPolicy: 'Zulassungsrichtlinien für Verkäufer',
+      buyerProtectionDesc:
+        'Bei Zahlungen auf Mobazha kann der Käuferschutz in Anspruch genommen werden, sodass Gelder zurückgehalten werden, bis Sie den Empfang bestätigen oder ein Streitfall geklärt ist.',
+      noSellers: 'Es sind noch keine zugelassenen Verkäufer sichtbar.',
+      publicActive: 'Öffentlicher Eintrag: aktiv',
+      rulesTitle: 'Marktregeln',
+      joinGuidanceDesc:
+        'Treten Sie zunächst der verlinkten Telegram- oder Discord-Community bei. Bei Mitgliedschaftsprüfungen und Verkäuferanträgen werden echte Gruppenberechtigungen verwendet.',
+      rulesBodyNative:
+        'Jeder Marktplatz wird unabhängig betrieben. Für die Verkäuferzulassung und Katalogverwaltung gelten die auf dieser Seite dargestellten Einstellungen.',
+      rulesBody:
+        'Es werden nur betriebsaktivierte Community-Märkte angezeigt. Verkäufer und Produkte durchlaufen den bestehenden Bewertungsablauf für den Gruppen-Marktplatz.',
+      unavailableDesc:
+        'Dieser Community-Markt existiert nicht oder wurde nicht für die öffentliche Anzeige aktiviert.',
+      unavailableDescNative:
+        'Dieser Marktplatz existiert nicht, wird nicht veröffentlicht oder ist nur auf seiner Markenseite verfügbar.',
+      trustStripTitle: 'Gehosteter Marktplatz',
+      unavailableTitle: 'Markt nicht verfügbar',
+      trustStripBody:
+        'Die Einträge stammen von zugelassenen Verkäufern auf diesem Marktplatz. Durchsuchen Sie die Produkte unten oder besuchen Sie die Markenseite, wenn Sie marktspezifische Abläufe benötigen.',
+      collectibles: {
+        applySellerCta: 'Bewerben Sie sich zum Verkauf',
+        catalogCta: 'Gehosteter Kartenkatalog',
+        browseListingsCta: 'Durchsuchen Sie die aufgelisteten Karten',
+        browseCta: 'Durchsuchen Sie Sammlerstücke',
+        badge: 'Sammelkarten',
+        intro:
+          'Durchsuchen Sie die auf diesem Markt zum Verkauf stehenden Karten. Angebote, die mit der Verwahrung digitaler Titel gekennzeichnet sind, umfassen Eigentums- und Rücknahmerechte in der Kette; Andere physische Karten werden wie gewöhnliche Waren versendet.',
+        defaultDescription:
+          'Ein kuratierter Marktplatz für Sammelkarten. Einige Angebote beinhalten die Verwahrung und Rücknahme digitaler Titel; Bei anderen handelt es sich um physische Standardgüter, sofern nicht ausdrücklich gekennzeichnet.',
+        buyerPathTitle: 'Ich möchte kaufen',
+        opsLink: 'Hub-Betrieb',
+        redemptionsCta: 'Meine Einlösungen',
+        myCardsCta: 'Meine Karten und Einlösungen',
+        sellerPathTitle: 'Ich möchte verkaufen',
+        sellerAdmission: 'Verkäuferzulassung: {{policy}}',
+        buyerStepInspect:
+          'Informieren Sie sich über die Auflistung digitaler Titel, prüfen Sie die Bewertungsstufe, das Verwahrungsabzeichen und die Einlösungsbedingungen, bevor Sie bezahlen',
+        buyerStepOwn:
+          'Nach der Zahlung erscheint der digitale Titel bei der Verwahrung in „Meine Karten“.',
+        buyerStepRedeem:
+          'Sobald der Artikel fertig ist, können Sie ihn für den physischen Versand einlösen – nur bei gekennzeichneten Angeboten mit digitalen Titeln',
+        sellerStepCustody:
+          'Versenden Sie die physische Karte, nachdem der Käufer sie eingelöst hat. Erstverkaufsgelder bleiben bis zur Abrechnung gesperrt',
+        sellerStepApply: 'Reichen Sie benotete Nachweise zur Prüfung durch den Kurator ein',
+        buyerStepBrowse: 'Durchsuchen Sie die auf diesem Markt zum Verkauf stehenden Karten',
+        sellerStepLogin: 'Melden Sie sich an und erstellen Sie Angebote in Produktgruppen',
+        sellerStepList:
+          'Erstellen Sie nach der Genehmigung ein Angebot – der digitale Titel wird geprägt, wenn ein Käufer zahlt',
+        filterAll: 'Alle',
+        sellerCustodyNote:
+          'Beweise einreichen → Kuratorbewertung → Eintrag erstellen → Käufer zahlt (Titel prägt) → Versand nach Einlösung → Abrechnung gibt Mittel frei.',
+        flowTitle: 'Wie es funktioniert',
+        filterSports: 'Sport',
+        flowToken:
+          'Eigentums- und Rücknahmerechte werden als digitaler Titel erfasst und können gehandelt werden',
+        flowRedeem:
+          'Nach der Einlösung versendet die ursprüngliche Depotbank die physische Karte pro Projektfluss',
+        flowSource: 'Physische Karte, die von einem zugelassenen Quellenverwahrer gehalten wird',
+        filterMtg: 'MTG',
+        filterPokemon: 'Pokémon',
+        filterOtherTcg: 'Andere TCG',
+        trustWhitelist: 'Marktplatzverkäufer werden anhand einer genehmigten Whitelist überprüft.',
+        poweredBy: 'Unterstützt von Mobazha',
+        noCategoryProductsDesc:
+          'Probieren Sie eine andere Kategorie aus oder durchsuchen Sie alle Einträge.',
+        noCategoryProducts: 'Keine Karten in dieser Kategorie',
+        trustDisclaimer:
+          'Der Käuferschutz deckt Ihre Transaktion ab – es handelt sich nicht um eine Bewertungs- oder Echtheitsgarantie.',
+        trustCustody:
+          'Nur Angebote, die ausdrücklich mit der Verwahrung digitaler Titel gekennzeichnet sind, umfassen On-Chain-Eigentum und -Einlösung. Bei anderen Karten handelt es sich um gewöhnliche physische Waren, sofern in der Auflistung nichts anderes angegeben ist.',
+        demo: {
+          m2Wilson: {
+            description:
+              'Kuratierte PSA-bewertete Sport-, Pokémon- und TCG-Karten. Die Karten verbleiben bei zugelassenen Quellenverwahrern; Digitale On-Chain-Titel erfassen Eigentums- und Einlösungsrechte, mit physischer Einlösung pro Projektfluss.',
+            name: 'M2 Wilson Graded Card-Markt',
+          },
+        },
+      },
+    },
+    updatedAgo: 'Aktualisiert {{time}}',
+    joinModeInvite: 'Nur mit Einladung',
+    curatedIntroDesc:
+      'Wir integrieren zunächst eine kleine Gruppe echter Communities. Qualität und Vertrauen sind wichtiger als Quantität.',
+    enums: {
+      lifecycle: {
+        draft: 'Entwurf',
+        published: 'Veröffentlicht',
+        suspended: 'Ausgesetzt',
+        archived: 'Archiviert',
+      },
+      discoverability: {
+        public: 'Öffentlich',
+        unlisted: 'Nicht gelistet',
+      },
+      catalogMode: {
+        curated: 'Kuratierter Katalog',
+        open: 'Katalog öffnen',
+      },
+      buyerAccessMode: {
+        open: 'Offen für alle Käufer',
+      },
+      sellerReviewMode: {
+        auto: 'Verkäufer automatisch genehmigen',
+        manual: 'Manuelle Überprüfung erforderlich',
+      },
+      domainVerification: {
+        verified: 'Verifiziert',
+        pending: 'Ausstehende Überprüfung',
+      },
+      sellerEntryMode: {
+        sellerSelfServe: 'Selbstbedienung durch den Verkäufer',
+        operatorInvited: 'Betreiber eingeladen',
+      },
+      domainKind: {
+        subdomain: 'Subdomain',
+        custom: 'Benutzerdefinierte Domäne',
+      },
+    },
   },
   moderator: {
     title: 'Moderatoren',
@@ -2496,6 +3624,58 @@ export const de: PartialTranslationResource = {
     noModeratorsFound: 'Keine Moderatoren gefunden, die Ihren Kriterien entsprechen',
     findModerators: 'Moderatoren finden',
     disputes: 'disputes',
+    pageIntro:
+      'Verkäufer erstellen eine Filialliste; Käufer wählen an der Kasse eines aus. Bevorzugen Sie plattformverifizierte Moderatoren oder geben Sie eine vollständige Moderator-ID ein, der Sie vertrauen.',
+    maxFeeOption: 'Bis zu {{fee}} %',
+    searchDirectoryLabel: 'Verzeichnis durchsuchen',
+    sortedBy: 'Sortiert nach: {{label}}',
+    directoryFilteredEmpty: 'Kein Moderator entspricht Ihren aktuellen Filtern.',
+    directoryUnavailable: 'Derzeit gibt es keine von der Plattform empfohlenen Moderatoren.',
+    feeDisputeNote:
+      'Wird als Prozentsatz der Bestellung berechnet, wenn eine Streitigkeit beigelegt wird',
+    addToStore: 'Zum Shop hinzufügen',
+    recommendedDirectoryTitle: 'Moderatorenverzeichnis',
+    addedToStore: 'Zum Shop hinzugefügt',
+    inYourStore: 'In Ihrem Geschäft',
+    addToStoreBanner:
+      'Die Auswahl kehrt zu den Speichereinstellungen zurück. Sie können auch eine Person Ihres Vertrauens mit ihrer vollständigen Moderator-ID hinzufügen.',
+    storeSettingsContextBanner:
+      'Auf dieser Seite können Sie Ihre Store-Mediator-Liste kuratieren. Wenn eine Streitigkeit eröffnet wird, erfolgt die Kommunikation auf der Registerkarte „Diskussion“ der Bestellung.',
+    customTabTitle: 'Nach ID hinzufügen',
+    customLookupTitle: 'Moderator nach ID hinzufügen',
+    customPeerIdLabel: 'Moderator-ID',
+    customLookupAction: 'Nach ID hinzufügen',
+    customLookupHint: 'Fügen Sie die vom Moderator bereitgestellte vollständige ID ein.',
+    customPeerIdPlaceholder: 'Vollständige ID einfügen (12D3KooW… oder Qm…)',
+    customUnverifiedBadge: 'Nicht bestätigt',
+    customLookupTrustNote:
+      'Benutzerdefinierte Moderatoren werden möglicherweise nicht plattformverifiziert. Bestätigen Sie ihre Identität, bevor Sie sie hinzufügen.',
+    directoryEmptyHint: 'Passen Sie Ihre Filter an oder setzen Sie sie zurück.',
+    customLookupReady: 'Wir zeigen das Profil an, bevor Sie es bestätigen.',
+    directoryEmpty: 'Keine von der Plattform verifizierten Moderatoren entsprechen Ihren Filtern.',
+    customLookupNeedFullPeerID:
+      'Verwenden Sie die vollständige Moderator-ID, keine verkürzte Anzeige-ID.',
+    directoryLookupNotModerator:
+      'Dieses Profil existiert, ist aber nicht als Streitmoderator registriert.',
+    backToStoreSettings: 'Zurück zu den Speichereinstellungen',
+    tabAbout: 'Um',
+    backToModerators: 'Zurück zu den Moderatoren',
+    directoryLookupSearching: 'Suche Moderator...',
+    backToBrowse: 'Zurück zur Moderatorensuche',
+    directoryError:
+      'Das Moderatorverzeichnis konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+    directoryLookupNotFound:
+      'Für diese Peer-ID wurde kein Profil gefunden. Überprüfen Sie die vollständige ID und versuchen Sie es erneut.',
+    tabTerms: 'Allgemeine Geschäftsbedingungen',
+    tabReviews: 'Rezensionen',
+    contactInformation: 'Kontaktinformationen',
+    notFoundDesc: 'Dieses Profil ist möglicherweise nicht mehr verfügbar oder der Link ist falsch.',
+    directoryExpandHint:
+      'Tippen Sie auf einen Moderator, um vor dem Hinzufügen alle Details anzuzeigen.',
+    feeOfTransaction: 'des Transaktionswerts',
+    notFound: 'Moderator nicht gefunden',
+    noReviewsForModerator: 'Für diesen Moderator liegen noch keine Bewertungen vor.',
+    viewFullProfile: 'Vollständiges Profil ansehen',
   },
   payment: {
     title: 'Zahlung',
@@ -2585,6 +3765,7 @@ export const de: PartialTranslationResource = {
       requiredTitle: 'Rückerstattungsadresse erforderlich',
       requiredDesc:
         'Tragen Sie vor der Zahlung über eine Börse Ihre Rückerstattungs-Empfangsadresse ein.',
+      saveAsDefault: 'Als meine Standard-Rückerstattungsadresse speichern',
     },
     connectWalletFirst: 'Bitte verbinden Sie zuerst Ihr Wallet',
     noPaymentAddress: 'Keine Zahlungsadresse verfügbar',
@@ -2660,6 +3841,52 @@ export const de: PartialTranslationResource = {
       gasExplanation:
         'TRX is used to pay network fees (energy) on TRON. Top up your wallet and try again.',
     },
+    cryptoReadiness: {
+      title: 'Sie haben noch kein USDT?',
+      fullGuideLinkNewTab: 'Vollständigen Leitfaden anzeigen (öffnet sich in neuem Tab)',
+      tokenHint: {
+        bsc: 'BSC USDT (BEP20) von Binance abheben. OKX unterstützt BSC USDT nicht.',
+        matic: 'Ziehen Sie USDT auf Polygon entsprechend dieser Zahlungsmethode ab.',
+        base: 'Ziehen Sie USDT im Base-Netzwerk entsprechend dieser Zahlungsmethode ab.',
+        arbitrum: 'Ziehen Sie USDT auf Arbitrum entsprechend dieser Zahlungsmethode ab.',
+        sol: 'USDT auf Solana abheben – unterstützt auf OKX, Binance und HTX.',
+        eth: 'Ethereum-Mainnet USDT – höhere Netzwerkgebühren; Für kleine Bestellungen wird BSC oder Solana empfohlen.',
+        generic: 'Passen Sie das Auszahlungsnetzwerk an die oben ausgewählte Zahlungsmethode an.',
+      },
+      summary:
+        'Kaufen Sie USDT an einer Börse (C2C, KYC normalerweise erforderlich). Heben Sie Geld über das Netzwerk ab, das Ihrer Auswahl unten entspricht.',
+      trc20Warning:
+        'Ziehen Sie sich nicht auf TRC20 zurück. Einige C2C-Flows nutzen standardmäßig TRON, was wir nicht unterstützen. Wählen Sie stattdessen BSC (BEP20) oder Solana.',
+      dismiss: 'Nicht mehr anzeigen',
+      fullGuideLink: 'Vollständige Anleitung ansehen',
+    },
+    observationStatus: {
+      confirmed: 'Bestätigt',
+      pending: 'Bestätigen',
+      unknown: 'Verarbeitung',
+      reverted: 'Zurückgesetzt',
+    },
+    observedPayments: 'Beobachtete Zahlungen',
+    preparingPaymentHint: 'Kasse einrichten. Dies dauert normalerweise einen Moment.',
+    preparingPayment: 'Zahlung wird vorbereitet…',
+    confirmingOrder: 'Bestätigung Ihrer Bestellung…',
+    checkSellerReceiptAgain: 'Überprüfen Sie es noch einmal',
+    awaitingSellerReceipt: 'Ich warte darauf, dass der Verkäufer Ihre Bestellung erhält',
+    sellerReceiptTimedOut: 'Der Verkäufer hat Ihre Bestellung noch nicht erhalten',
+    sellerReceiptTimedOutHint:
+      'Die Zustellung wird immer noch automatisch wiederholt. Sie können die Bestellung noch einmal überprüfen oder stornieren.',
+    confirmingOrderHint: 'Fast fertig. Die Zahlungsoptionen werden in Kürze angezeigt.',
+    awaitingSellerReceiptHint:
+      'Zahlungsanweisungen werden angezeigt, sobald der Verkäufer die Bestellung bestätigt. Dies dauert normalerweise einige Sekunden.',
+    retrySessionFetch: 'Versuchen Sie es erneut',
+    checkSellerReceiptAgainHint:
+      'Ich warte immer noch darauf, dass der Verkäufer Ihre Bestellung erhält.',
+    cancelUnpaidOrderConfirmDescription:
+      'Der Verkäufer hat Ihre Bestellung noch nicht bestätigt. Durch das Stornieren wird die Zahlung gestoppt und Sie kehren zur Bestellseite zurück.',
+    sessionFetchErrorHint:
+      'Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut. Dies ist keine Verzögerung der Verkäuferbestätigung.',
+    sessionFetchError: 'Der Zahlungsstatus konnte nicht geladen werden',
+    cancelUnpaidOrderConfirmTitle: 'Diese Bestellung stornieren?',
   },
   filter: {
     filters: 'Filter',
@@ -2715,6 +3942,11 @@ export const de: PartialTranslationResource = {
     popularCategories: 'Beliebte Kategorien',
     products: 'Produkte',
     stores: 'Shops',
+    productsFromStores: '{{count}} aus {{stores}} Geschäften',
+    discoverHint: 'Highlights aus dem gesamten Netzwerk – ein kuratiertes Segment pro Geschäft.',
+    browseAllActive: 'Zeigt alle {{count}} Produkte auf dem Marktplatz an.',
+    backToDiscover: 'Zurück zu den Highlights',
+    browseAllProducts: 'Durchsuchen Sie alle {{count}}-Produkte',
   },
   settingsExtended: {
     profile: 'Profil',
@@ -2959,6 +4191,38 @@ export const de: PartialTranslationResource = {
     visibilityPublicDesc: 'Sichtbar in der Marktplatzsuche und in den Empfehlungen',
     visibilityUnlistedDesc: 'Aus der Suche ausgeblendet, über Direktlink zugänglich',
     visibilityPrivateDesc: 'Für den Zugriff ist eine Autorisierung erforderlich',
+    operatorResponsibilitiesAckSectionTitle: 'Anerkennung',
+    operatorResponsibilitiesMatrixTitle: 'Plattform vs. Betreiber',
+    operatorResponsibilitiesAckConfirm: 'Verantwortlichkeiten anerkennen',
+    operatorResponsibilitiesAckVersion: 'Vertragsversion {{version}}',
+    operatorResponsibilitiesAckSectionDesc:
+      'Bestätigen Sie, dass Sie die Aufteilung der Verantwortlichkeiten verstehen. Dieser Datensatz wird auf diesem Gerät gespeichert.',
+    operatorResponsibilitiesRevokeConfirm: 'Widerrufen',
+    operatorResponsibilitiesRevokeTitle: 'Bestätigung widerrufen?',
+    operatorResponsibilitiesStandaloneBadge: 'Nur Standalone',
+    operatorResponsibilitiesRevokeAck: 'Bestätigung widerrufen',
+    operatorResponsibilitiesViewSettings: 'Gehen Sie zu den entsprechenden Einstellungen',
+    storeModeratorsLoadFailed:
+      'Store-Moderatoren konnten nicht geladen werden. Bitte versuchen Sie es erneut.',
+    operatorResponsibilitiesRevokeDesc:
+      'Nach dem Widerruf ist eine erneute Bestätigung erforderlich. Dies betrifft nur die Aufzeichnung auf diesem Gerät.',
+    moderatorAlreadyAdded: 'Dieser Moderator ist bereits auf Ihrer Liste.',
+    moderatorPreviewLoading: 'Suche Moderator...',
+    operatorResponsibilitiesVersionOutdated:
+      'Diese Seite wurde aktualisiert. Bitte überprüfen Sie die Änderungen und bestätigen Sie sie erneut.',
+    operatorResponsibilitiesDigitalLink: 'Shop-Richtlinien konfigurieren',
+    storeModeratorsEmptyDesc:
+      'Fügen Sie vertrauenswürdige Streitbeilegungsanbieter hinzu, damit Käufer den Käuferschutz für Ihre Angebote nutzen können.',
+    viewModeratorProfile: 'Profil ansehen',
+    profileUnavailable:
+      'Für diesen Moderator sind noch keine vollständigen Profildetails verfügbar.',
+    moderatorNotConfigured: 'Dieses Profil ist nicht als Streitbeilegungsmoderator registriert.',
+    moderatorPeerIdFormatHint:
+      'Fügen Sie die vollständige Moderator-ID (z. B. 12D3KooW…) ein, keine verkürzte Anzeige-ID.',
+    moderatorNotFound:
+      'Für diese ID wurde kein Profil gefunden. Überprüfen Sie die ID oder durchsuchen Sie das Moderatorenverzeichnis.',
+    storeModeratorExpandHint: 'Klicken Sie auf einen Moderator, um Details anzuzeigen',
+    addFromMarketplace: 'Durchsuchen Sie stattdessen das Moderatorenverzeichnis',
   },
   userMenu: {
     myProfile: 'Mein Profil',
@@ -2973,6 +4237,9 @@ export const de: PartialTranslationResource = {
     settings: 'Einstellungen',
     account: 'Persönliche Einstellungen',
     logout: 'Abmelden',
+    marketplaceInvitations: 'Marktplatzeinladungen',
+    myCases: 'Meine Fälle',
+    operatorMarketplaces: 'Marktplatzbetreiber',
   },
   settingsModal: {
     languageAndRegion: 'Sprache & Region',
@@ -3329,6 +4596,7 @@ export const de: PartialTranslationResource = {
       completedOrder: 'hat die Bestellung abgeschlossen',
       staleWarning: 'Die Bestellung ist seit mehreren Tagen inaktiv',
       expired: 'Die Bestellung wurde aufgrund eines Zeitlimits automatisch storniert',
+      ratedOrder: 'Ich habe eine Bewertung für Ihre Bestellung hinterlassen',
     },
     dispute: {
       startedDispute: 'hat einen Streitfall eröffnet',
@@ -3371,6 +4639,7 @@ export const de: PartialTranslationResource = {
       orderStaleWarning: 'Bestellhinweis',
       paymentCancelled: 'Zahlung abgebrochen',
       paymentExpired: 'Zahlung abgelaufen',
+      orderRated: 'Bewertung erhalten',
     },
     messages: {
       newOrderWithId: 'Sie haben eine neue Bestellung #{{orderId}} erhalten',
@@ -3415,6 +4684,9 @@ export const de: PartialTranslationResource = {
       orderStaleWarningWithId: 'Bestellung Nr. {{orderId}} erfordert möglicherweise Aufmerksamkeit',
       orderStaleWarningNoId: 'Eine Bestellung erfordert möglicherweise Aufmerksamkeit',
       defaultNotification: 'Benachrichtigung',
+      orderRatedWithId:
+        'Der Käufer hat eine Bewertung für die Bestellung Nr. {{orderId}} hinterlassen.',
+      orderRatedNoId: 'Der Käufer hat eine Bewertung für Ihre Bestellung hinterlassen',
     },
     tts: {
       newMessage: 'Neue Nachricht',
@@ -3787,6 +5059,8 @@ export const de: PartialTranslationResource = {
         duplicateOptionName: 'Optionsnamen müssen eindeutig sein',
         maxCombinations: 'Zu viele Variantenkombinationen (max. 100)',
       },
+      productId: 'SKU-Code',
+      productIdPlaceholder: 'z.B. sku-blau',
     },
     priceHierarchy: {
       title: 'Dieses Produkt nutzt variantenspezifische Preise',
@@ -4119,6 +5393,25 @@ export const de: PartialTranslationResource = {
       confirmDeleteTitle: 'Digitales Asset löschen?',
       confirmDeleteDesc:
         'Bestehende Käufer erhalten diesen Vermögenswert bei neuen Bestellungen nicht mehr. Bisherige Ansprüche bleiben erhalten.',
+      publishRequiresAssetDesc:
+        'Digitale Güter benötigen mindestens eine Datei, einen Zugangslink oder einen Lizenzschlüsselpool, damit Käufer nach dem Kauf automatisch Downloads erhalten können.',
+      publishRequiresAssetTitle: 'Fügen Sie digitale Assets vor der Veröffentlichung hinzu',
+      publishAssetCheckFailed:
+        'Digitale Assets konnten nicht überprüft werden. Bitte versuchen Sie es erneut.',
+      assetUpdated: 'Digitales Asset aktualisiert',
+      scopeHint:
+        'Wählen Sie, ob Downloads für das gesamte Angebot oder eine bestimmte Variante gelten.',
+      updateLinkFailed: 'Link konnte nicht aktualisiert werden',
+      variantScopeBadge: 'Variante: {{sku}}',
+      editLinkTitle: 'Zugangslink bearbeiten',
+      editLinkDesc:
+        'Aktualisieren Sie die URL. Änderungen wirken sich nicht auf bereits bereitgestellte Berechtigungen aus.',
+      scopeLabel: 'Digitaler Lieferumfang',
+      scopeListingWide: 'Alle Varianten',
+      variantsDesc:
+        'Optionale Varianten für unterschiedliche Download-Bundles oder Lizenzschlüsselpools. Legen Sie für jede Variante einen SKU-Code fest, um die Lieferung separat zu konfigurieren.',
+      variantSkuHint:
+        'Fügen Sie für jede Variante im Abschnitt „Varianten“ einen SKU-Code hinzu, um variantenspezifische Downloads oder Lizenzschlüssel zu konfigurieren.',
     },
     statusDraft: 'Entwurf',
     statusPublished: 'Veröffentlicht',
@@ -4147,6 +5440,22 @@ export const de: PartialTranslationResource = {
     save: 'Speichern',
     tokenAddress: 'Token-Adresse',
     uploadFailed: 'Ein oder mehrere Bilder konnten nicht hochgeladen werden.',
+    sourceDeposit: {
+      grade: 'Grad',
+      serial: 'Seriell',
+      summaryTitle: 'Herkunftsverwahrungskarte',
+      mintOnFirstSaleNote:
+        'Es existiert noch kein NFT-Mint – die Plattform prägt den digitalen Titel, wenn ein Käufer die Zahlung abschließt.',
+      summarySubtitle:
+        'Diese Auflistung ist mit Ihrer genehmigten Quelleneinlage verknüpft. Kartenmetadaten sind gesperrt; Der digitale Titel wird beim ersten bezahlten Verkauf auf das Solana-Wallet des Käufers übertragen.',
+      escrowCryptoPaymentNote:
+        'Beim Erstkauf werden nur Kryptowährungen mit Käuferschutz akzeptiert: ETH, Solana USDC und Solana USDT. Der Fiat-Checkout wird für die Quellenverwahrung noch nicht unterstützt.',
+      sourceDepositId: 'Quellenanzahlung',
+      hubSlot: 'Hub-Steckplatz',
+      certNumber: 'Zertifikatsnummer',
+      lockedTypeHint: 'Der Produkttyp ist für Quellenverwahrungslisten festgelegt.',
+      quantityLocked: 'Eine Karte pro Angebot (nur Erstverkauf).',
+    },
   },
   rwa: {
     fetchError: 'RWA-Produkte konnten nicht geladen werden',
@@ -4452,6 +5761,7 @@ export const de: PartialTranslationResource = {
     deleteLocationGroup: 'Standortgruppe löschen',
     selectLocations: 'Standorte auswählen',
     locationsSelected: 'Standort(e) ausgewählt',
+    free: 'Frei',
   },
   shippingConfig: {
     noOptions: 'Keine Versandoptionen',
@@ -4637,6 +5947,30 @@ export const de: PartialTranslationResource = {
     inputPlaceholder: 'Nachricht eingeben …',
     stopGenerating: 'Generierung stoppen',
     send: 'Nachricht senden',
+    untitledWithTime: 'Ohne Titel · {{time}}',
+    approval: {
+      title: 'Genehmigung erforderlich',
+      reject: 'Ablehnen',
+      appliedDescription: '{{action}} erfolgreich abgeschlossen.',
+      appliedTitle: 'Aktion angewendet',
+      rejectedTitle: 'Aktion abgelehnt',
+      statusApplied: 'Angewandt',
+      statusRejected: 'Abgelehnt',
+      actionLabel: 'Aktion: {{action}}',
+      approve: 'Genehmigen und bewerben',
+      applyFailed: 'Die genehmigte Aktion konnte nicht angewendet werden.',
+      rejectedDescription: 'Die AI-Anfrage wurde abgelehnt und wird nicht ausgeführt.',
+      retry: 'Wiederholen Sie die Anwendung',
+      statusFailed: 'Die Bewerbung ist fehlgeschlagen',
+      viewInChat: 'Rezension im Chat',
+      actionBanner: '{{count}} Genehmigung(en) erfordern Ihr Eingreifen',
+      rejectFailed: 'Die Anfrage konnte nicht abgelehnt werden.',
+      pendingBanner: '{{count}} Genehmigung(en) ausstehend',
+    },
+    toolAnalyzing: 'Filialdaten analysieren',
+    goToModels: 'Konfigurieren Sie KI-Modelle',
+    toolChecked: 'Shop-Daten überprüft',
+    toolFailed: 'Die Store-Daten konnten nicht überprüft werden',
   },
   moderation: {
     title: 'Moderationsfälle',
@@ -4662,6 +5996,9 @@ export const de: PartialTranslationResource = {
     noCasesFilterHint: 'Versuchen Sie, den Filter zu ändern, um mehr Fälle zu sehen.',
     noCasesDesc: 'Sie haben derzeit keine Moderationsfälle.',
     caseDetail: 'Falldetails',
+    caseIdLabel: 'Fall #:',
+    viewCase: 'Fall ansehen {{id}}',
+    copyCaseId: 'Fall-ID kopieren',
   },
   admin: {
     title: 'Shop-Admin',
@@ -4698,9 +6035,20 @@ export const de: PartialTranslationResource = {
       mainNavigation: 'Main navigation',
       sourcing: 'Beschaffung',
       storefronts: 'Schaufenster',
+      funds: 'Mittel',
+      aiSection: 'KI',
+      affiliate: 'Partner des Verkäufers',
+      dealLinks: 'Geschützte Links',
+      aiWorkspace: 'KI-Arbeitsbereich',
     },
     payments: {
       pageDesc: 'Konfigurieren Sie, wie Ihr Shop Krypto- und Kartenzahlungen empfängt.',
+      pageDescCryptoOnly:
+        'Konfigurieren Sie, wie Ihr Shop Zahlungen empfängt – Krypto-Empfangskonten, Gast-Checkout und Bestätigungsregeln.',
+      unavailableDesc:
+        'Die Zahlungsverwaltung wird von dieser Sovereign-Distribution nicht bereitgestellt.',
+      payoutInfoTitle: 'Wie werde ich bezahlt?',
+      unavailableTitle: 'Shop-Zahlungen',
     },
     dashboard: {
       welcome: 'Willkommen zurück, {{name}}',
@@ -4749,6 +6097,9 @@ export const de: PartialTranslationResource = {
       privateStoreActiveDesc:
         'Only approved users can discover and view your products. Your store is hidden from search and browsing.',
       managePrivacy: 'Manage privacy settings',
+      supplyNeedsAttentionViewAll: 'Alle anzeigen',
+      supplyNeedsAttentionCount: '{{count}} Produkte erfordern Maßnahmen',
+      supplyNeedsAttentionTitle: 'Das Angebot braucht Aufmerksamkeit',
     },
     checklist: {
       title: 'Einrichtungs-Checkliste',
@@ -4832,6 +6183,68 @@ export const de: PartialTranslationResource = {
       smartImport: 'Intelligenter Import (CSV / Tabelle)',
       priceStorefront: 'Schaufenster: {{price}}',
       priceBase: 'Basis: {{price}}',
+      filterNeedsAttention: 'Braucht Aufmerksamkeit',
+      colAvailability: 'Verfügbarkeit',
+      supplyModeExternal: 'Lieferant erfüllt',
+      availabilityManualAction: 'Braucht Ihre Aktion',
+      availabilitySupplierUnavailable: 'Lieferant nicht verfügbar',
+      createProtectedLink: 'Geschützten Link erstellen',
+      availabilitySupplierGeneric: 'Lieferant erfüllt',
+      supplyModeLicense: 'Lizenzcodes',
+      supplyModeInstant: 'Sofortiger Download',
+      availabilityKeysLeft: '{{count}} Schlüssel übrig',
+      availabilityImportKeys: 'Lizenzcodes importieren',
+      availabilityInstant: 'Sofort verfügbar',
+      availabilityAvailable: '{{count}} verfügbar',
+      availabilityBySupplier: 'Von {{provider}}',
+      supplyModeTracked: 'Verfolgter Bestand',
+      availabilityDash: '—',
+      availabilityLoading: '…',
+      availabilityStockDetailed:
+        '{{available}} verfügbar · {{onHand}} verfügbar · {{held}} gehalten',
+      availabilityStockDetailedLow:
+        '{{available}} verfügbar · {{onHand}} vorrätig · {{held}} gehalten · geringer Lagerbestand',
+      summaryInstantReady: 'Sofortiger Download nach Bezahlung',
+      summaryStock: '{{count}} verfügbar',
+      summaryKeysHeld: '{{available}} Schlüssel übrig · {{held}} zur Kasse bereitgehalten',
+      summaryKeysEmpty: 'Importieren Sie Lizenzcodes, um weiter zu verkaufen',
+      summaryStockLow: '{{count}} verfügbar · geringer Lagerbestand',
+      summaryStockDetailed: '{{available}} verfügbar · {{onHand}} verfügbar · {{held}} gehalten',
+      summaryStockDetailedLow:
+        '{{available}} verfügbar · {{onHand}} vorrätig · {{held}} gehalten · geringer Lagerbestand',
+      summaryMissingDigital: 'Komplette Einrichtung der digitalen Lieferung',
+      availabilityLowStock: 'Geringer Lagerbestand · {{count}}',
+      summaryKeys: '{{available}} Schlüssel übrig · {{dispensed}} ausgegeben',
+      summarySupplierUnavailable: 'Lieferant vorübergehend nicht verfügbar',
+      summaryStockOnHand: '{{available}} verfügbar · {{onHand}} verfügbar',
+      ctaImportKeys: 'Lizenzcodes importieren',
+      summaryManualAction: 'Komplette Einrichtung vor dem Verkauf',
+      summaryExternal: 'Erfüllt von {{provider}} · verfügbar',
+      summarySupplierGeneric: 'Lieferant erfüllt · verfügbar',
+      actionImportKeys: 'Lizenzcodes importieren',
+      summaryStockOnHandLow:
+        '{{available}} verfügbar · {{onHand}} verfügbar · geringer Lagerbestand',
+      ctaViewSourcing: 'Anbieter ansehen',
+      actionRestock: 'Auffüllen',
+      ctaManageVariants: 'Variantenbestand verwalten',
+      bulkRestockSelected: 'Auffüllen ({{count}})',
+      bulkImportSelected: 'Codes importieren ({{count}})',
+      ctaConfigureDigital: 'Konfigurieren Sie die digitale Zustellung',
+      bulkRestockDesc:
+        'Fügen Sie Einheiten zu jeder Variante der ausgewählten Produkte mit Sendungsverfolgung hinzu.',
+      bulkRestockQuantityLabel: 'Einheiten zum Hinzufügen',
+      bulkRestockTitle: 'Massenauffüllung',
+      bulkRestockConfirm: 'Fügen Sie {{quantity}} Einheiten zu {{count}} Produkten hinzu',
+      bulkRestockSuccess: '{{quantity}} Einheiten zu {{count}} Produkten hinzugefügt',
+      bulkRestockPartialFail: '{{count}} Produkte konnten nicht wieder aufgefüllt werden',
+      bulkRestockQuantityHint: 'Zu jeder Varianten-SKU wird der gleiche Betrag hinzugefügt.',
+      bulkImportConfirm: 'Importieren Sie {{count}} Schlüssel',
+      bulkImportPlaceholder: 'XXXX-XXXX-XXXX-XXXX\nJJJJ-JJJJ-JJJJ-JJJJ',
+      bulkImportPartialFail: '{{count}} Produkte konnten nicht importiert werden',
+      bulkImportDesc:
+        'Fügen Sie Schlüssel für jedes Produkt ein. Schlüssel werden im Ruhezustand gehasht.',
+      bulkImportTitle: 'Massenimport von Lizenzcodes',
+      bulkImportSuccess: '{{keys}} Schlüssel für {{products}} Produkte importiert',
     },
     orders: {
       title: 'Bestellungen',
@@ -4903,6 +6316,36 @@ export const de: PartialTranslationResource = {
       guestItemCount: '{{count}} Artikel',
       guestItemCountPlural: '{{count}} Artikel',
       noGuestOrders: 'Noch keine Gastbestellungen.',
+      allOrders: 'Alle Bestellungen',
+      statusLabel: 'Status',
+      amountLabel: 'Menge',
+      sourceStandard: 'Eingetragen',
+      sourceGuest: 'Gast',
+      buyerTypeLabel: 'Käufertyp',
+      contactLabel: 'Kontakt',
+      shippingAddress: 'Lieferadresse',
+      legacyOrders: 'Legacy-Bestellungen',
+      guestOrderDetail: 'Details zur Gastbestellung',
+      timeLabel: 'Platziert',
+      digitalDelivery: 'Digitale Bestellung, keine Lieferadresse erforderlich.',
+      coinLabel: 'Zahlungsmünze',
+      paymentRailLabel: 'Zahlungsschienen-ID',
+      technicalInfo: 'Technische Informationen',
+      tokenLabel: 'Bestelltoken',
+      guestOrderItems: 'Werbebuchungen',
+      listingCurrencyLabel: 'Auflistungswährung',
+      guestPhysicalShipSuccess: 'Bestellung als versandt markiert',
+      guestServiceDeliverHelp:
+        'Zahlung erhalten. Als geliefert markieren, sobald die vereinbarte Leistung erbracht wurde.',
+      guestFulfillmentDigitalHint:
+        'Konfigurieren Sie digitale Assets und markieren Sie die Lieferung, wenn sie bereit ist.',
+      guestDigitalDeliverSuccess: 'Digitales Produkt als geliefert markiert',
+      guestServiceDeliverSuccess: 'Service als geliefert markiert',
+      guestCopyOrderToken: 'Bestelltoken kopieren',
+      guestShareWithBuyerTitle: 'Erreichen Sie den Käufer',
+      guestCopyOrderLink: 'Link zur Bestellseite kopieren',
+      guestDigitalStatusAuthFailed:
+        'Der digitale Lieferstatus konnte nicht geladen werden. Aktualisieren Sie die Seite oder melden Sie sich erneut als Store-Administrator an.',
     },
     discounts: {
       title: 'Rabatte',
@@ -5138,6 +6581,7 @@ export const de: PartialTranslationResource = {
       manageAccess: 'Manage access settings',
       landingFeaturePrivacy: 'Privacy First',
       landingFeaturePrivacyDesc: 'Choose who can see your store — go public or stay private',
+      setupPaymentsDescCryptoOnly: 'Fügen Sie Krypto-Empfangsadressen für Ihren Shop hinzu',
     },
     settings: {
       title: 'Einstellungen',
@@ -5164,6 +6608,29 @@ export const de: PartialTranslationResource = {
       salesChannelsDesc: 'Store links, Telegram Bot, and distribution',
       guestCheckout: 'Gastkasse',
       guestCheckoutDesc: 'Ermöglichen Sie anonymen Käufern, mit Kryptowährung zu bezahlen.',
+      funds: 'Mittel',
+      fundsDesc: 'Kontostand, Abhebungen und Transaktionsverlauf',
+      preferences: 'Präferenzen',
+      security: 'Sicherheit',
+      integrationsDescNoAi: 'Benachrichtigungskanäle, Webhooks und Fulfillment-Anbieter',
+      paymentsDescCryptoOnly: 'Empfangskonten, Gast-Checkout und Bestätigungsregeln',
+      changePassword: 'Kennwort ändern',
+      currentPassword: 'Aktuelles Passwort',
+      aiModelsCard: 'KI-Modelle und Schlüssel',
+      newPassword: 'Neues Passwort',
+      preferencesDesc: 'Sprache, Region, Erscheinungsbild und Benachrichtigungen',
+      securityDesc: 'Ändern Sie das Administratorkennwort für den lokalen Store',
+      aiModelsCardDesc: 'LLM-Anbieter, API-Schlüssel und KI-Funktionsschalter',
+      changingPassword: 'Passwort ändern…',
+      confirmPassword: 'Bestätigen Sie das neue Passwort',
+      passwordSessionWarning:
+        'Durch das Ändern des Passworts wird jede Administratorsitzung abgemeldet, auch diese.',
+      passwordLength: 'Verwenden Sie zwischen 8 und 128 Zeichen.',
+      passwordMismatch: 'Die neuen Passwörter stimmen nicht überein.',
+      passwordChangeFailed: 'Das Administratorkennwort konnte nicht geändert werden.',
+      passwordAllRequired: 'Füllen Sie alle Passwortfelder aus.',
+      passwordChangedLoginAgain:
+        'Passwort geändert. Melden Sie sich erneut mit Ihrem neuen Passwort an.',
     },
     integrations: {
       title: 'Integrationen',
@@ -5365,6 +6832,11 @@ export const de: PartialTranslationResource = {
       aiDailyUsage: 'Täglicher Gebrauch',
       aiPlatformUpgrade:
         'Fügen Sie unten Ihren eigenen API-Schlüssel für unbegrenzte Nutzung hinzu',
+      aiByokExpand: 'Verwenden Sie Ihren eigenen API-Schlüssel',
+      aiMovedLink: 'Offene KI-Modelle',
+      subtitleNoAi: 'Verwalten Sie Benachrichtigungskanäle, Webhooks und Fulfillment-Anbieter',
+      aiMovedBanner:
+        'Die KI-Modelleinstellungen wurden in die Seitenleiste unter KI → Modelle verschoben.',
     },
     storeBranding: {
       pageTitle: 'Shop-Markenauftritt',
@@ -5607,6 +7079,144 @@ export const de: PartialTranslationResource = {
       resetClassicMessage:
         'Alle benutzerdefinierten Bereiche werden entfernt und das ursprüngliche Shop-Layout wiederhergestellt. Fortfahren?',
       resetClassicConfirm: 'Zurücksetzen',
+      fieldManualProducts: 'Ausgewählte Produkte',
+      selectProducts: 'Produkte auswählen',
+      noProductsFound: 'Keine passenden Produkte',
+      editProductSelection: 'Produktauswahl bearbeiten',
+      missingProduct: 'Nicht verfügbares Produkt',
+      manualProductsHint:
+        'Wählen Sie die Produkte aus, die Sie präsentieren möchten. Zum Neuordnen ziehen.',
+      selectCollections: 'Wählen Sie Sammlungen aus',
+      fieldManualCollections: 'Sammlungen zum Anzeigen',
+      searchCollections: 'Sammlungen durchsuchen…',
+      goAddProducts: 'Produkte hinzufügen',
+      editCollectionSelection: 'Sammlungsauswahl bearbeiten',
+      noProductsYet: 'Ihr Shop hat noch keine Produkte.',
+      pickerSelectedCount: '{{count}} ausgewählt',
+      moveItemUp: 'Bewegen Sie sich nach oben',
+      collectionUnpublished: 'Unveröffentlicht',
+      removeItem: 'Entfernen',
+      moveItemDown: 'Bewegen Sie sich nach unten',
+      missingCollection: 'Nicht verfügbare Sammlung',
+      addTestimonial: 'Erfahrungsbericht hinzufügen',
+      noCollectionsFound: 'Keine passenden Sammlungen',
+      addBadge: 'Abzeichen hinzufügen',
+      fieldDescription: 'Beschreibung',
+      fieldName: 'Name',
+      goAddCollections: 'Erstellen Sie eine Sammlung',
+      noCollectionsYet: 'Sie haben noch keine Sammlungen.',
+      fieldImages: 'Bilder',
+      fieldCaption: 'Untertitel',
+      fieldIcon: 'Symbol',
+      addImage: 'Bild hinzufügen',
+      iconSelfHosted: 'Selbst gehostet',
+      fieldCustomIcon: 'Benutzerdefinierte Symbol-URL',
+      iconCrypto: 'Krypto-Zahlungen',
+      fieldRating: 'Bewertung (1–5)',
+      iconEscrow: 'Treuhandschutz',
+      iconPrivacy: 'Privatsphäre',
+      uploadImage: 'Bild hochladen',
+      replaceImage: 'Ersetzen',
+      uploadFailed: 'Der Upload ist fehlgeschlagen. Bitte versuchen Sie es erneut.',
+      undo: 'Rückgängig machen',
+      iconCustom: 'Benutzerdefiniertes Bild',
+      publish: 'Veröffentlichen',
+      fieldSectionName: 'Abschnittsname (optional)',
+      redo: 'Wiederholen',
+      useImageUrl: 'Verwenden Sie stattdessen die Bild-URL',
+      iconP2p: 'Peer-to-Peer',
+      saveDraft: 'Entwurf speichern',
+      draftBadge: 'Unveröffentlichter Entwurf',
+      discardDraftTitle: 'Diesen Entwurf verwerfen?',
+      discardDraft: 'Entwurf verwerfen',
+      draftSaved: 'Entwurf gespeichert – für Käufer noch nicht sichtbar',
+      publishSuccess: 'In Ihrem Shop veröffentlicht',
+      discardDraftMessage:
+        'Ihre unveröffentlichten Änderungen werden gelöscht. Der Live-Store bleibt unverändert.',
+      presetElectronics: 'Technik und Gadgets',
+      editorEmptyManualProducts:
+        'Keine Produkte ausgewählt. Öffnen Sie diesen Abschnitt im linken Bereich und wählen Sie die Produkte aus, die Sie vorstellen möchten.',
+      presetCollectibles: 'Sammlerstücke',
+      editorEmptyManualCollections:
+        'Keine Sammlungen ausgewählt. Öffnen Sie diesen Abschnitt im linken Bereich und wählen Sie Sammlungen aus.',
+      editorEmptyCollections:
+        'Noch keine veröffentlichten Sammlungen – dieser Abschnitt wird ausgefüllt, sobald Sie eine veröffentlichen.',
+      editorEmptyGallery:
+        'Noch keine Bilder. Öffnen Sie diesen Abschnitt im linken Bereich und fügen Sie Bilder hinzu.',
+      editorEmptyProducts:
+        'Noch keine Produkte – dieser Abschnitt wird ausgefüllt, sobald Sie Produkte hinzufügen.',
+      presetApparel: 'Bekleidung',
+      presetDigital: 'Digitale Güter',
+      aiRewrite: 'Mit KI neu schreiben',
+      presetApparelDesc: 'Redaktionelles, bildgesteuertes Layout für Mode und Streetwear',
+      presetElectronicsDesc:
+        'Auffälliges, spezifikationsgerechtes Layout für Elektronik und Hardware',
+      presetDigitalDesc:
+        'Storefront mit sofortiger Lieferung für Software, Schlüssel und Downloads',
+      presetCollectiblesDesc:
+        'Vitrinenorientiertes Layout für Karten, Figuren und seltene Fundstücke',
+      refine: 'Verfeinern',
+      viewportDesktop: 'Desktop',
+      viewportTablet: 'Tablette',
+      viewportMobile: 'Mobile',
+      exitPreview: 'Vorschau beenden',
+      aiRewriting: 'Umschreiben…',
+      refining: 'Anwenden Ihrer Optimierungen …',
+      fullscreenPreview: 'Vollbildvorschau',
+      publishConfirmAction: 'Veröffentlichen',
+      previewBannerDraft: 'Entwurfsvorschau · Käufer sehen weiterhin die veröffentlichte Version',
+      previewBannerLive: 'Vorschau Ihres veröffentlichten Shops',
+      publishConfirmTitle: 'In Ihrem Live-Shop veröffentlichen?',
+      publishConfirmMessage: 'Käufer werden diese Änderungen sofort sehen:',
+      refinePlaceholder:
+        'Sagen Sie der KI, was sie ändern soll, z. „wärmere Farben, kürzere Überschrift“',
+      changeTheme: 'Thema aktualisiert',
+      changeFirstPublish: 'Erste Veröffentlichung Ihrer benutzerdefinierten Storefront',
+      changeSectionsAdded: '{{count}} Abschnitt(e) hinzugefügt',
+      changeSectionsRemoved: '{{count}} Abschnitt(e) entfernt',
+      changeSectionsUpdated: '{{count}} Abschnitt(e) aktualisiert',
+      changeSectionsReordered: 'Abschnitte neu angeordnet',
+      useDefault: 'Standard',
+      clearColor: 'Auf Standard zurücksetzen',
+      pageBackground: 'Seitenhintergrund',
+      bodyText: 'Fließtext',
+      roleBodyText: 'Fließtext',
+      autoSaved: 'Automatisch gespeichert',
+      rolePageBackground: 'Seitenhintergrund',
+      roleCardSurface: 'Kartenhintergrund',
+      pageColors: 'Seitenfarben (optional)',
+      cardSurface: 'Kartenhintergrund',
+      rolePrimary: 'Grundfarbe',
+      brokenListingRefs: '„{{section}}“ verweist auf {{count}} Produkte, die nicht mehr existieren',
+      brokenCollectionRefs:
+        '„{{section}}“ verweist auf {{count}} Sammlungen, die nicht mehr existieren',
+      contrastWarning:
+        '{{fg}} auf {{bg}} liegt nur {{ratio}}:1 – unter der Lesbarkeitsuntergrenze von 4,5:1',
+      sharePreviewExpires: 'Link gültig bis {{date}}',
+      sharePreviewRotate: 'Neuen Link generieren',
+      contrastHintSetText:
+        'Der Seitenhintergrund ist dunkel; Der Standardtext ist möglicherweise nicht lesbar. Legen Sie eine Farbe für den Textkörper fest.',
+      copyLink: 'Kopie',
+      sharePreview: 'Vorschau teilen',
+      sharePreviewTitle: 'Entwurfsvorschau teilen',
+      linkCopied: 'Kopiert',
+      sharePreviewDesc:
+        'Jeder, der über diesen Link verfügt, kann Ihren unveröffentlichten Entwurf sehen. Käufer sehen weiterhin den veröffentlichten Shop.',
+      versionHistory: 'Versionsgeschichte',
+      versionHistoryDesc:
+        'Bei jeder Veröffentlichung wird die vorherige Version archiviert. Durch die Wiederherstellung wird es als Entwurf in den Editor geladen – für Käufer ändert sich bis zur Veröffentlichung nichts.',
+      sharePreviewRotateHint: 'Durch das Generieren eines neuen Links wird der alte ungültig',
+      trustVerified: 'Verifiziert',
+      sharePreviewFailed: 'Der Vorschau-Link konnte nicht erstellt werden.',
+      versionRestore: 'Wiederherstellen',
+      versionHistoryEmpty:
+        'Noch keine früheren Versionen – sie erscheinen nach Ihrer nächsten Veröffentlichung.',
+      trustCryptoUnmet:
+        'In Ihrem Profil sind keine akzeptierten Währungen aufgeführt. Käufern wird dieses Symbol nicht angezeigt.',
+      versionRestored: 'In den Editor geladene Version – veröffentlichen, um sie live zu schalten',
+      trustEscrowUnmet:
+        'Keine Moderatoren in Ihren veröffentlichten Shop-Richtlinien – Käufer sehen dieses Abzeichen nicht.',
+      versionHistoryMeta: '{{count}} Abschnitte',
     },
     salesChannels: {
       title: 'Sales Channels',
@@ -5747,6 +7357,21 @@ export const de: PartialTranslationResource = {
           'Senden Sie /newapp, um eine Web-App zu erstellen, und legen Sie dann die URL fest auf:',
         selfBotNote:
           'Nachdem Sie den Bot erstellt haben, können Sie hierher zurückkehren, um ihn zu binden, sobald er mit der Plattform verbunden ist, oder ihn direkt über BotFather verwalten.',
+      },
+      managedTelegram: {
+        active: 'Bereit',
+        suspended: 'Nicht verfügbar',
+        bot: 'Store-Bot',
+        title: 'Telegram Mini-App',
+        pending: 'Vorbereitet sein',
+        suspendedDesc:
+          'Dieser Vertriebskanal ist vorübergehend nicht verfügbar. Wenden Sie sich an Ihren Dienstanbieter, um Hilfe zu erhalten.',
+        readyDesc:
+          'Teilen Sie diesen geschäftsspezifischen Link mit Kunden. Es öffnet Ihre Storefront direkt in Telegram.',
+        pendingDesc:
+          'Ihr privater Shop-Link wird aktiviert. Es wird hier angezeigt, wenn es zum Teilen bereit ist.',
+        open: 'Shop im Telegram eröffnen',
+        shareLink: 'Link zur Kundenfreigabe',
       },
     },
     gumroadImport: {
@@ -5913,6 +7538,14 @@ export const de: PartialTranslationResource = {
       minutes: 'Minuten',
       saving: 'Sparen...',
       saveSettings: 'Einstellungen speichern',
+      receivingAccountsLink: 'Shop-Zahlungen',
+      receivingAccountsNote: 'Konten, die Kryptowährungen empfangen, werden in konfiguriert',
+      missingAccountWarning:
+        '{{coin}} ist ausgewählt, hat aber oben kein aktives Empfangskonto konfiguriert.',
+      receivingAccountsInlineNote:
+        'Für jede akzeptierte Münze ist ein aktives Empfangskonto im obigen Abschnitt erforderlich.',
+      paymentPolicyNote: 'Die UTXO-Zahlungsbestätigung ist in konfiguriert',
+      paymentPolicyLink: 'Zahlungseinstellungen',
     },
     fulfillment: {
       title: 'Fulfillment-Anbieter',
@@ -6178,6 +7811,612 @@ export const de: PartialTranslationResource = {
       recentAlerts: 'Aktuelle Warnungen',
       viewAllAlerts: 'Alle Warnungen anzeigen',
     },
+    workspace: {
+      title: 'KI-Arbeitsbereich',
+      opportunitiesTitle: 'Braucht Aufmerksamkeit',
+      subtitle:
+        'Aufgaben auf der linken Seite speichern; Der Assistent entwirft Empfehlungen, Importe und Checklisten für Ihre Überprüfung.',
+      chatTitle: 'Filialassistent',
+      opportunitiesMobileCount: '{{count}} Artikel',
+      noOpportunities: 'Alles eingeholt',
+      chatAssistantTitle: 'Filialassistent',
+      opportunitiesShowMore: '{{count}} mehr',
+      noOpportunitiesHint:
+        'Im Moment keine dringenden Aufgaben. Importieren Sie Produkte, verbessern Sie Angebote oder fragen Sie nach dem heutigen Schwerpunkt.',
+      layoutEnterFocus: 'Konzentrieren Sie sich auf den Chat',
+      layoutShowTasks: 'Aufgaben anzeigen ({{count}})',
+      layoutHideTasks: 'Aufgaben ausblenden',
+      layoutExitFocus: 'Fokus verlassen',
+      importRunOpenChat: 'Zurück zum Chat',
+      chatAttachmentViewImage: 'Vollständiges Bild anzeigen: {{name}}',
+      chatAttachmentPreviewTitle: 'Vorschau des Anhangs · {{name}}',
+      layoutCollapseHistory: 'Geschichte ausblenden',
+      badgePlatform: 'Plattform-KI',
+      badgeAiOff: 'AI nicht konfiguriert',
+      layoutExpandHistory: 'Geschichte anzeigen',
+      badgeByok: 'Ihre KI-Schlüssel',
+      badgeLocalAi: 'Lokale KI',
+      cardNoPaymentsDesc:
+        'Käufer können erst dann zur Kasse gehen, wenn Sie eine Zahlungsmethode hinzufügen.',
+      cardNoProductsOutcome:
+        'KI kann Materialien in Angebotsentwürfe für Ihre Überprüfung umwandeln.',
+      badgeReady: 'KI bereit',
+      cardNoProducts: 'Fügen Sie Ihr erstes Produkt hinzu',
+      cardNoPayments: 'Zahlungen einrichten',
+      cardNoProductsDesc: 'Erstellen Sie ein Angebot, um mit dem Verkauf zu beginnen.',
+      setupBannerCta: 'Konfigurieren Sie KI-Modelle',
+      setupBannerDesc:
+        'Konfigurieren Sie einen Modellanbieter oder eine Plattform-KI, um zu chatten, Angebote zu optimieren und Einblicke in das Geschäft zu erhalten.',
+      cardProductImportDesc:
+        'Laden Sie CSV oder Excel hoch oder fügen Sie unordentlichen Text und Lieferantennotizen zur KI-Bereinigung ein.',
+      cardProductImport: 'Massenimportprodukte',
+      cardActionGo: 'Gehen',
+      setupBannerTitle: 'Aktivieren Sie AI, um den Assistenten zu verwenden',
+      cardProductImportOutcome:
+        'Erstellt Entwürfe und eine Überprüfungstabelle. Es wird nichts automatisch aufgelistet.',
+      valueSummary:
+        'Fragen Sie nach Bestellungen, Produkten und Analysen – oder verwenden Sie Aufgabenkarten, um Empfehlungen zu entwerfen und Checklisten zu überprüfen.',
+      cardActionPlan: 'Erstellen Sie einen Plan',
+      cardActionAsk: 'Assistent fragen',
+      cardActionImport: 'Importieren und bereinigen',
+      cardActionDraft: 'Antwortentwurf',
+      cardActionHelp: 'Entwerfen Sie die nächsten Schritte',
+      cardActionSuggest: 'Entwurfsvorschläge',
+      situationJoiner: '·',
+      emptyPrimaryCtaSpecific: 'Entwurf der nächsten Schritte für {{count}} {{task}}',
+      emptyPrimaryCtaSpecificTask: 'Entwurf der nächsten Schritte für {{task}}',
+      emptyPrimaryCta: 'Erledigen Sie zuerst das Dringendste',
+      emptyPrimaryCtaDefault: 'Sehen Sie sich den heutigen Fokus noch einmal an',
+      contextBarPrefix: 'Arbeiten an:',
+      composerDropHint: 'Zum Hinzufügen als Anhang freigeben',
+      composerHint: 'Stellen Sie eine Frage, fügen Sie Text ein oder fügen Sie einen Anhang hinzu.',
+      composerPlaceholder:
+        'Fragen Sie etwas oder fügen Sie Produktdaten ein oder laden Sie sie hoch ...',
+      composerFileDraftSummary: '{{count}} Datei(en) hinzugefügt',
+      composerFileDraftHintChat:
+        'Wird mit Ihrer Nachricht gesendet. Sagen Sie „Produkte importieren“, um Angebotsentwürfe zu organisieren.',
+      composerFileDraftRemove: 'Anhang entfernen',
+      composerFileAttachedToChatTitle: 'Anhang zum Chat hinzugefügt',
+      composerFileDraftMaxReached: 'Sie können bis zu {{count}} Dateien hinzufügen',
+      composerFileDraftTotalSizeExceeded:
+        'Die Anhänge sind insgesamt zu groß. Entfernen Sie einige Dateien vor dem Senden.',
+      composerFileAttachedToChatDescription:
+        'Der Assistent verwendet Ihre Nachricht und Ihren Anhang. Es werden keine Produkte automatisch erstellt.',
+      composerFileChatDefaultSingle: 'Bitte antworten Sie mit dem Anhang „{{name}}“.',
+      composerFileTooLargeForText:
+        'Die Datei ist zu groß zum Anhängen. Versuchen Sie es mit einer kleineren Datei.',
+      composerFileNameJoiner: ',',
+      composerSomeFilesSkipped:
+        'Einige Dateien wurden übersprungen, da ihr Typ nicht unterstützt wird.',
+      composerFileChatDefaultMultiple: 'Bitte antworten Sie mit den Anhängen ({{names}}).',
+      composerAttachReference: 'Nur als Referenz beifügen',
+      composerUnsupportedFile:
+        'Nicht unterstützter Dateityp. Verwenden Sie CSV, Excel, ZIP, Bilder oder PDF.',
+      cardAskAi: 'Fragen Sie nach Ihrem Geschäft',
+      composerUpload: 'Produktdateien hochladen',
+      cardPendingOrdersPrompt:
+        'Fassen Sie meine ausstehenden Aufträge zusammen und schlagen Sie vor, welche zuerst bearbeitet werden sollen.',
+      cardAskAiDesc:
+        'Erhalten Sie Hilfe zu Produkten, Bestellungen oder worauf Sie sich als Nächstes konzentrieren sollten.',
+      cardFulfillOrdersPrompt:
+        'Welche Aufträge müssen erfüllt werden? Listen Sie sie nach Dringlichkeit auf und empfehlen Sie die nächsten Schritte.',
+      cardSupplyAttentionPrompt:
+        'Welche Produkte sind nur noch knapp oder müssen wieder aufgefüllt werden? Geben Sie konkrete Empfehlungen.',
+      cardAskAiPrompt: 'Worauf sollte ich mich heute in meinem Geschäft konzentrieren?',
+      cardDisputedOrdersPrompt:
+        'Welche Streitigkeiten sind offen? Schlagen Sie für jede Frage vor, wie ich reagieren soll.',
+      cardSupplyAttentionOutcome:
+        'Schlägt Auffüllungs-, Pausen- oder Ersatzaktionen vor, ohne den Bestand zu ändern.',
+      chatEmptyTitle: 'Wie kann ich helfen?',
+      cardNoProductsPrompt:
+        'Ich möchte meine ersten Produkte auflisten. Schlagen Sie einen Importansatz und Preistipps für meinen Shop vor.',
+      cardPendingOrdersOutcome:
+        'Fasst zuerst Priorität und Risiken zusammen. Sie genehmigen Bestellaktionen.',
+      chatEmptyHint:
+        'Wählen Sie links eine Aufgabe aus oder fragen Sie unten. KI entwirft zunächst Empfehlungen, Importe und Checklisten.',
+      cardDisputedOrdersOutcome: 'Antworttextentwürfe. Sie bestätigen, bevor etwas gesendet wird.',
+      quickActionImport: 'Produkte importieren/reinigen',
+      quickActionFocusPrompt: 'Worauf sollte ich mich heute in meinem Geschäft konzentrieren?',
+      cardFulfillOrdersOutcome:
+        'Erstellt einen Erfüllungsauftrag und eine Prüfung auf fehlende Artikel. Keine automatische Erfüllung.',
+      quickActionOrdersPrompt: 'Welche Befehle erfordern gerade meine Aufmerksamkeit?',
+      quickActionListings: 'Einträge verbessern',
+      quickActionOrders: 'Überprüfen Sie Bestellungen',
+      quickActionFocus: 'Der heutige Fokus',
+      quickActionImportPrompt:
+        'Ich möchte Produkte in großen Mengen importieren. Mein Material kann CSV, Excel, Produktbeschreibungen oder Lieferantennotizen sein. Helfen Sie mir, daraus überprüfbare Angebotsentwürfe zu machen.',
+      quickActionListingsPrompt:
+        'Überprüfen Sie meine Produkttitel und -beschreibungen und schlagen Sie Verbesserungen vor.',
+      importRunTaskParsing: '{{status}}',
+      importRunStatusReview: 'Muss überprüft werden',
+      importRunTaskSummary: 'Geparst – {{count}} wartet auf Ihre Bewertung · {{status}}',
+      importRunStatusReady: 'Bereit',
+      importRunTaskTitle: 'Produktimport',
+      importRunStatusFailed: 'Fehlgeschlagen',
+      importRunStatusRunning: 'KI-Analyse',
+      importRunContinueReview: 'Überprüfung fortsetzen',
+      importRunStatusApproval: 'Braucht Genehmigung',
+      importRunSummary: '{{count}} zur Rezension · {{status}}',
+      importRunStatusChecking: 'Status prüfen',
+      importRunStatusCancelled: 'Abgesagt',
+      sourceMaterialImportStartedDescription:
+        'KI analysiert Ihr Material. Öffnen Sie die Workbench über die Statusleiste oben.',
+      sourceMaterialCompactPlaceholder: 'Fügen Sie CSV, Produkttext oder Lieferantennotizen ein …',
+      importRunOpenWorkbench: 'Werkbank öffnen',
+      sourceMaterialImportStartedTitle: 'Der Import wurde gestartet',
+      sourceMaterialImport: 'Importieren und überprüfen',
+      sourceMaterialImportParsingTitle: 'Material analysieren',
+      sourceMaterialTitle: 'Produktmaterial einkleben',
+      sourceMaterialImportFailed:
+        'Der Import konnte nicht gestartet werden. Überprüfen Sie das Format und versuchen Sie es erneut.',
+      sourceMaterialHint:
+        'Fügen Sie Lieferantennotizen, CSV-Zeilen oder Produktbeschreibungen ein. Der Assistent wird sie bei Ihrer nächsten Nachricht verwenden.',
+      chatNotConfigured: 'Konfigurieren Sie KI-Modelle, bevor Sie mit dem Assistenten chatten.',
+      chatInputDisabled: 'Konfigurieren Sie KI-Modelle, um mit dem Chatten zu beginnen.',
+      sourceMaterialImportParsingDescription:
+        'Wenn die Analyse abgeschlossen ist, öffnen Sie die Workbench über die Statusleiste oben. Es wurden noch keine Produkte erstellt.',
+      sourceMaterialAttachedDescription:
+        'Ihr eingefügtes Material wird in den nächsten Assistentenzug einbezogen.',
+      sourceMaterialPlaceholder:
+        'Fügen Sie hier Produkttext, CSV-Zeilen oder Lieferantennotizen ein...',
+      sourceMaterialAttach: 'An die nächste Nachricht anhängen',
+      sourceMaterialRemove: 'Anhaftendes Material entfernen',
+      sourceMaterialAttachFailed: 'Das Quellmaterial konnte nicht registriert werden.',
+      sourceMaterialAttachedTitle: 'Material beigefügt',
+      sourceMaterialUntitled: 'Eingeklebtes Material',
+      sourceMaterialMaxReached: 'Sie können bis zu 10 Materialien pro Nachricht anhängen.',
+      skillRunRemove: 'Angehängten Importlauf entfernen',
+    },
+    ai: {
+      tabs: {
+        workspace: 'Arbeitsplatz',
+        workspaceHint: 'Nutzen Sie KI im Browser für die tägliche Arbeit im Geschäft.',
+        modelsHint:
+          'Wählen Sie Ihren LLM-Anbieter und Ihre API-Schlüssel, damit KI-Funktionen ausgeführt werden können.',
+        connectHint:
+          'Verbinden Sie Cursor, Claude und andere externe Tools mit Ihrem Shop (MCP). Parallel zum Workspace – wählen Sie den Kanal aus, den Sie verwenden.',
+        modelsPending: 'Einrichtung erforderlich',
+        connect: 'Kunden verbinden',
+        models: 'Modelle und Schlüssel',
+        settings: 'KI-Einstellungen',
+        backToWorkspace: 'Zurück zum Arbeitsbereich',
+      },
+      models: {
+        subtitle:
+          'Wählen Sie Ihren LLM-Anbieter und API-Schlüssel aus und aktivieren Sie KI-Funktionen für Ihren Shop.',
+        title: 'KI-Modelle',
+      },
+    },
+    productImport: {
+      standardTitle: 'Standard-Store-Paket',
+      title: 'Produkte importieren',
+      standardCta: 'Öffnen Sie den Paketimport',
+      backToProducts: 'Zurück zu Produkten',
+      standardDesc:
+        'Vollständiger Mobazha-Export-ZIP mit Bildern, Versandprofilen und Sammlungen – deterministische Wiederherstellung.',
+      subtitle:
+        'Übernehmen Sie Katalogdaten aus Tabellenkalkulationen oder Lieferantendateien. Überprüfen Sie jede Zeile vor der Veröffentlichung.',
+      smartTitle: 'Intelligenter Import',
+      uploadTitle: 'Lieferantendateien hochladen',
+      uploadHint:
+        'Bis zu 20 Dateien, jeweils 2 MB. Wir analysieren die ersten 25 Zeilen für die Vorschau.',
+      smartDesc:
+        'Laden Sie CSV-, Excel- oder ZIP-Lieferantendateien hoch. KI ordnet Spalten zu und bereitet Listenentwürfe vor.',
+      dropzone: 'Legen Sie die Dateien hier ab oder klicken Sie zum Durchsuchen',
+      formats: 'CSV, XLSX, ZIP, TXT, JSON',
+      uploadCta: '{{count}} Datei(en) analysieren',
+      uploading: 'Dateien werden geparst…',
+      workbench: {
+        backToHub: 'Zurück zum Import',
+        title: 'Workbench importieren',
+        subtitle:
+          '{{count}} Produktentwürfe vorbereitet. Überprüfen Sie die Details, bevor Sie sie anwenden.',
+        mobileToolbarRunning: 'Dateien werden geparst…',
+        validationHideDetails: 'Verstecken',
+        mobileToolbarReviewing: 'Bewerten Sie Produkte',
+        validationCount: '{{count}} Notiz(en)',
+        validationTitle: 'Parser-Notizen',
+        sources: 'Quelldateien',
+        validationShowDetails: 'Alle anzeigen',
+        createApproval: 'Überprüfung starten',
+        createApprovalFailed: 'Die Listungsgenehmigung konnte nicht vorbereitet werden',
+        loadFailed: 'Die Import-Workbench konnte nicht geladen werden',
+        emptyRows: 'Aus diesen Dateien wurden keine Produktzeilen extrahiert.',
+        colPrice: 'Preis',
+        colSource: 'Quelle',
+        colStatus: 'Status',
+        colTitle: 'Titel',
+        colQty: 'Menge',
+        missingRun: 'Importlauf nicht gefunden.',
+        statusNeedsReview: 'Muss überprüft werden',
+        primaryApplyReadyMobile: 'Veröffentlichung {{count}} bereit',
+        goToProducts: 'Gehen Sie zu Produkte',
+        colActions: 'Aktionen',
+        chatTitle: 'KI-Assistent',
+        runStatusRunning: 'Verarbeitung',
+        skillRunMaxReached: 'Sie können bis zu 3 Importläufe pro Nachricht anhängen.',
+        continueWithAiLabel: 'Importlauf ({{count}} Zeilen)',
+        runStatusFailed: 'Fehlgeschlagen',
+        runStatusCancelled: 'Abgesagt',
+        summaryReviewable: 'Überprüfbar',
+        runStatusCompleted: 'Vollendet',
+        summaryApplied: 'Angewandt',
+        summaryFailed: 'Fehlgeschlagen',
+        statusPendingApproval: 'Bereit zur Bewerbung',
+        continueWithAi: 'Weiter mit KI',
+        statusApplied: 'Eintrag erstellt',
+        runStatusWaiting: 'Warten auf Rezension',
+        progress: {
+          review: 'Bewerten Sie Produkte',
+          apply: 'Bewerben Sie sich im Store',
+          parse: 'Dateien analysieren',
+          label: 'Fortschritt des Produktimports',
+        },
+        summaryActionable: 'Umsetzbar',
+        filterLabel: 'Filtern Sie Produkte auf dieser Seite',
+        pageScopeHint: 'Filter, Zählungen und Massenaktionen gelten für die aktuelle Seite.',
+        selectRow: 'Zeile auswählen',
+        expandRow: 'Produktdetails erweitern',
+        selectAll: 'Wählen Sie alle Zeilen auf dieser Seite aus',
+        batchPrepare: 'Rezension vorbereiten',
+        selectedCount: '{{count}} ausgewählt',
+        collapseRow: 'Produktdetails einklappen',
+        batchReject: 'Aus Import entfernen',
+        batchApproveApply: 'Bestätigen und bewerben',
+        batchPrepareSuccess: '{{count}} Zeile(n) zur Überprüfung vorbereitet',
+        batchNothingToApprove: 'Ausgewählte Zeilen können nicht genehmigt und angewendet werden',
+        batchApplyPartial:
+          'Angewendete {{applied}} Einträge; {{failed}} konnte nicht angewendet werden.',
+        batchNothingToReject:
+          'Keine ausstehenden Genehmigungen, die bei der Auswahl abgelehnt werden könnten',
+        batchNothingToPrepare: 'Für die ausgewählten Zeilen liegen bereits Genehmigungen vor',
+        batchRejectSuccess: '{{count}} Zeile(n) aus diesem Import entfernt',
+        batchApplySuccess: 'Angewendete {{count}} Einträge',
+        descriptionLabel: 'Produktbeschreibung',
+        notDetected: 'Nicht erkannt',
+        reviewChecklist: 'Überprüfen Sie die Checkliste',
+        missingField: {
+          title: 'Bestätigen Sie den Produkttitel',
+          price: 'Produktpreis hinzufügen',
+          quantity: 'Lagermenge hinzufügen',
+        },
+        fieldsToConfirm: '{{count}} zur Bestätigung',
+        fieldsComplete: 'Kernproduktdetails erkannt',
+        missingFieldLabel: {
+          title: 'Titel',
+          price: 'Preis',
+          quantity: 'Menge',
+        },
+        noDescription: 'Es wurde keine Produktbeschreibung gefunden',
+        untitledProduct: 'Produkttitel nicht erkannt',
+        noRowDetails: 'Keine zusätzlichen Details für diese Zeile',
+        assistantTitle: 'Intelligente Schecks',
+        rowMissingSummary: 'Noch benötigt: {{fields}}',
+        rowReadySummary: '{{price}} · Menge {{qty}}',
+        appliedSummary: '{{count}} Produkt(e) erfolgreich angewendet.',
+        assistantCheckRows:
+          'Erweitern Sie jedes Produkt und bestätigen Sie dessen Beschreibung und Parser-Ergebnisse.',
+        assistantProcessing: 'Analysieren der Quelldateien und Organisieren von Produktdetails.',
+        assistantNextStep: 'Empfohlener nächster Schritt',
+        assistantCheckMissing: 'Geben Sie zuerst {{fields}} ein.',
+        assistantUnavailable: 'KI-Assistent nicht konfiguriert',
+        filter: {
+          all: 'Alle',
+          needs_review: 'Muss überprüft werden',
+          pending_approval: 'Bereit zur Bewerbung',
+          applied: 'Angewandt',
+          approval_failed: 'Die Bewerbung ist fehlgeschlagen',
+        },
+        userFilter: {
+          all: 'Alle',
+          applied: 'Veröffentlicht',
+          failed: 'Fehlgeschlagen',
+          needs_fix: 'Benötigt Details',
+          ready: 'Bereit zur Veröffentlichung',
+        },
+        assistantNeedsReview:
+          '{{rows}} Produkte benötigen noch {{fieldsLabel}}. Bestätigen Sie diese vor der Bewerbung.',
+        assistantReady:
+          'Für {{count}} Produkt(e) wurden Kerndetails erkannt. Sie sind zur Überprüfung bereit.',
+        userState: {
+          needs_fix: 'Benötigt Details',
+          ready: 'Bereit zur Veröffentlichung',
+          applied: 'Veröffentlicht',
+          failed: 'Fehlgeschlagen',
+          rejected: 'ENTFERNT',
+        },
+        assistantCloseChat: 'KI-Chat ausblenden',
+        assistantOpenChat: 'Fragen Sie den KI-Assistenten',
+        pagination: '{{from}}–{{to}} von {{total}}',
+        primaryGoFix: 'Vollständige Details',
+        expandToFix: 'Vollständige Details',
+        summaryNeedsFix: '{{count}} benötigt Details',
+        singleRowApply: 'Im Store veröffentlichen',
+        summaryReady: '{{count}} bereit zur Veröffentlichung',
+        summaryAllClear: 'Alle Produkte in diesem Import werden behandelt',
+        primaryApplyReady: 'Veröffentlichen Sie {{count}} bereit auf dieser Seite',
+        fieldRequired: 'Erforderlich',
+        fieldPlaceholderQty: 'z.B. 10',
+        saveDraft: 'Änderungen speichern',
+        fixDetailsHint:
+          'Füllen Sie fehlende Felder aus, speichern Sie sie und veröffentlichen Sie sie dann in Ihrem Shop.',
+        fieldPlaceholderPrice: 'z.B. 29,99',
+        fixDetailsTitle: 'Vollständige Produktdetails',
+        saveDraftSuccess: 'Produktdetails aktualisiert',
+        saveDraftFailed: 'Produktdetails konnten nicht gespeichert werden',
+        imageSourceLabel: 'Bild',
+        invalidQuantity: 'Geben Sie eine gültige nicht negative ganzzahlige Menge ein.',
+        missingDraftVersion:
+          'Aktualisieren Sie die Import-Workbench, bevor Sie diese Änderungen speichern.',
+        invalidPrice:
+          'Geben Sie einen gültigen, nicht negativen Preis ohne zusätzliche Dezimalstellen ein.',
+        completeFieldsFirst: 'Bei ausgewählten Produkten fehlen noch Details',
+        previewUnavailable: 'Vorschau nicht verfügbar',
+        fixWithAi: 'Bitten Sie AI, auszufüllen',
+        assistantApplyReady: '{{count}} Produkte sind vollständig und bereit zur Veröffentlichung.',
+      },
+      errors: {
+        uploadFailed: 'Die hochgeladenen Dateien konnten nicht analysiert werden',
+        fileTooLarge: '{{name}} überschreitet die 2-MB-Grenze',
+      },
+    },
+    dealLinks: {
+      title: 'Geschützte Links',
+      subtitle:
+        'Erstellen Sie gemeinsam nutzbare Kauflinks, die die Produktversion, den Preis und die Käuferschutzbedingungen für ein von Ihnen vereinbartes Angebot sperren.',
+      dealCreateTitle: 'Erstellen Sie einen geschützten Kauflink',
+      productPlaceholder: 'Wählen Sie, was Sie verkaufen',
+      productTypeService: 'Service',
+      productLabel: 'Produkt oder Dienstleistung',
+      productLoading: 'Produkte werden geladen...',
+      dealCreateSubtitle:
+        'Wählen Sie ein veröffentlichtes digitales Produkt oder eine veröffentlichte digitale Dienstleistung. Der Preis und die Produktversion sind in diesem Link festgelegt.',
+      productLockedLabel: 'Gesperrt',
+      productSearchPlaceholder: 'Suchen Sie nach Produktname oder ID',
+      productNoResults: 'Keine passenden berechtigten Produkte',
+      deliveryTypeLabel: 'Wie Sie es liefern werden',
+      productTypeDigital: 'Digitales Produkt',
+      productVersionLabel: 'Produktversion',
+      productVersionUnavailable:
+        'Das aktuelle Produkt ist nicht verfügbar oder wurde geändert, seit diese Version gesperrt wurde.',
+      noEligibleProducts:
+        'Veröffentlichen Sie zunächst einen Festpreisservice oder konfigurieren Sie Lieferressourcen für ein digitales Produkt.',
+      productLockedHint:
+        'Diese Produktversion ist dauerhaft an diesen geschützten Link gebunden. Erstellen Sie einen neuen geschützten Link, um ein anderes Produkt zu verwenden.',
+      reviewDaysDigitalHint: 'Die digitale Lieferung benötigt mindestens 3 Tage.',
+      reviewDaysLabel: 'Überprüfungszeitraum des Käufers (Tage)',
+      deliveryLicenseKey: 'Lizenzschlüssel oder Zugangscode',
+      deliveryFixedService: 'Service mit festem Leistungsumfang',
+      dealCreateCta: 'Link erstellen und aktivieren',
+      deliveryDigitalFile: 'Digitale Datei',
+      dealCreateValidationError:
+        'Wählen Sie ein berechtigtes Produkt und einen gültigen Käuferbewertungszeitraum aus.',
+      reviewDaysServiceHint: 'Dienstleistungen erfordern mindestens 7 Tage.',
+      dealCreateSuccess: 'Der geschützte Kauflink ist fertig',
+      dealCreateFailed: 'Der geschützte Kauflink konnte nicht erstellt werden',
+      expiry7d: 'Läuft in 7 Tagen ab',
+      expiryLabel: 'Linkablauf',
+      expiry30d: 'Läuft in 30 Tagen ab',
+      priceLabel: 'Angebotspreis',
+      expiry24h: 'Läuft in 24 Stunden ab',
+      priceHint:
+        'Standardmäßig ist der aktuelle Listenpreis ({{currency}}). Hierbei handelt es sich um den vereinbarten Gesamtpreis für den gesamten Einkauf – nicht um den Preis pro Einheit. Wenn die Menge also mehr als eins beträgt, geben Sie die Gesamtsumme ein, nicht die Kosten einer einzelnen Einheit.',
+      expiryForever: 'Kein Ablauf',
+      sharingNotice:
+        'Jeder, der diesen Link hat, kann zu diesen Bedingungen kaufen, bis Sie ihn pausieren oder er abläuft.',
+      dealEditSubtitle:
+        'Beim Speichern wird eine neue Revision veröffentlicht. Für bereits aufgegebene Bestellungen gelten die Bedingungen, zu denen sie gekauft wurden.',
+      dealEditTitle: 'Geschützten Link bearbeiten',
+      noteLabel: 'Deal-Notiz (optional)',
+      expiryCustom: 'Benutzerdefiniertes Datum',
+      notePlaceholder:
+        'Eine kurze Notiz, die demjenigen angezeigt wird, der diesen Link öffnet, z. B. was vereinbart wurde.',
+      dealEditSuccess: 'Eine neue Revision gespeichert',
+      openDealCta: 'Offen',
+      dealEditCta: 'Revision speichern',
+      copyDealCta: 'Kopie',
+      dealCopyFailed:
+        'Der Zugriff auf die Zwischenablage wurde blockiert. Wählen Sie den Link unten aus, um ihn zu kopieren.',
+      dealEditFailed: 'Die Revision konnte nicht gespeichert werden',
+      allLinksTitle: 'Alle Links',
+      showFewerDeals: 'Weniger Links anzeigen',
+      dealCopySuccess: 'Kauflink kopiert',
+      activeDealsTitle: 'Aktiv geschützte Links',
+      manualCopyLabel: 'Kauflink',
+      showAllDeals: 'Alle {{count}}-Links anzeigen',
+      immutableEconomicsBody:
+        'Provisionssatz, Obergrenze und Zuteilungsfenster werden gesperrt, wenn ein Programm aktiv wird. Erstellen Sie ein neues Programm, wenn Sie andere Begriffe benötigen.',
+      noDealLinks: 'Erstellen Sie einen geschützten Kauflink, bevor Sie ein Werbeprogramm starten.',
+      immutableEconomicsTitle: 'Die Ökonomie wird bei der Aktivierung festgelegt',
+      dealLinkPlaceholder: 'Wählen Sie einen Deal-Link aus',
+      createTitle: 'Erstellen Sie ein Werbeprogramm',
+      dealLinkLabel: 'Deal-Link',
+      programNameLabel: 'Programmname',
+      maxCommissionPlaceholder: 'Für keine Obergrenze leer lassen',
+      programNamePlaceholder: 'z.B. Empfehlungen von Erstellern',
+      commissionLabel: 'Provisionssatz (%)',
+      maxCommissionLabel: 'Maximale Provision (optional)',
+      windowDaysLabel: 'Attributionsfenster (Tage)',
+      refresh: 'Aktualisieren',
+      createCta: 'Programm erstellen',
+      programsTitle: 'Förderprogramme',
+      createValidationError:
+        'Überprüfen Sie die Felder „Deal-Link“, „Name“, „Provision“ und „Fenster“.',
+      statusDraft: 'Entwurf',
+      statusActive: 'Aktiv',
+      loadFailed: 'Deal-Links oder Werbeprogramme konnten nicht geladen werden',
+      createFailed: 'Das Werbeprogramm konnte nicht erstellt werden',
+      createSuccess: 'Förderprogramm erstellt',
+      statusPaused: 'Angehalten',
+      activate: 'Aktivieren',
+      statusExpired: 'Abgelaufen',
+      statusClosed: 'Geschlossen',
+      statusUnknown: 'Unbekannt',
+      pause: 'Pause',
+      activateSuccess: 'Programm aktiviert',
+      pauseSuccess: 'Programm pausiert',
+      commissionRate: 'Kommission',
+      dealLinkMissing: 'Verlinkter Deal-Link nicht verfügbar',
+      activateFailed: 'Programm konnte nicht aktiviert werden',
+      noPrograms: 'Noch keine Förderprogramme.',
+      windowUnavailable: 'Nicht festgelegt',
+      attributionWindow: 'Attributionsfenster',
+      tabs: {
+        links: 'Geschützte Links',
+        programs: 'Förderprogramme',
+        attribution: 'Namensnennung',
+        attributionHint:
+          'Vorläufige Zuordnungserklärungen für Käufe, die Ihren Werbelinks gutgeschrieben werden.',
+        programsHint:
+          'Verwalten Sie Provisionsbedingungen und teilen Sie Promoter-Eintrittslinks mit Partnern.',
+        linksHint:
+          'Kopieren oder öffnen Sie Kauflinks, die Sie für digitale Waren und Dienstleistungen zum Festpreis aktiviert haben.',
+      },
+      commissionValue: '{{percent}}%',
+      windowDaysValue: '{{count}} Tage',
+      pauseFailed: 'Das Programm konnte nicht angehalten werden',
+      promoterLinkTitle: 'Veranstaltereintrag',
+      promoterLinkBody:
+        'Teilen Sie diese authentifizierte Promoterseite, damit Partner ihren direkten Link erstellen oder wiederverwenden können.',
+      createLink: 'Verknüpfung erstellen',
+      createProgram: 'Programm erstellen',
+      expandDetails: 'Einzelheiten',
+      copyPromoterLink: 'Kopie',
+      economicsLearnMore: 'Wie Promotion-Ökonomie funktioniert',
+      summary: '{{linkCount}} aktive Links · {{programCount}} Programme',
+      editDealCta: 'Bearbeiten',
+      pauseDealCta: 'Pause',
+      backToDealLinks: 'Zurück zu den Deal-Links',
+      promoterLinkCopied: 'Promoter-Link kopiert',
+      linksEmptyTitle: 'Noch keine geschützten Links',
+      reactivateDealCta: 'Reaktivieren',
+      dealExpiresLabel: 'Läuft ab',
+      noExpiryLabel: 'Kein Ablauf',
+      linksEmptyDescription:
+        'Erstellen Sie einen Link für ein veröffentlichtes digitales Produkt oder eine veröffentlichte digitale Dienstleistung, um den geschützten Checkout zu starten.',
+      activateDraftCta: 'Aktivieren',
+      closeDealCta: 'Schließen',
+      createdLabel: 'Erstellt',
+      dealReactivateFailed: 'Der Link konnte nicht reaktiviert werden',
+      programSummaryLine: '{{commission}}% · {{days}} Tage · {{product}}',
+      dealPauseSuccess: 'Link pausiert',
+      dealReactivateSuccess: 'Link reaktiviert',
+      dealPauseFailed: 'Der Link konnte nicht pausiert werden',
+      dealCloseSuccess: 'Link geschlossen',
+      viewOrdersCta: 'Bestellungen',
+      dealCloseFailed: 'Der Link konnte nicht geschlossen werden',
+      closeConfirmCta: 'Link schließen',
+      closeConfirmTitle: 'Diesen geschützten Link schließen?',
+      draftSavedActivateFailed:
+        'Entwurf gespeichert, aber die Aktivierung ist fehlgeschlagen. Bearbeiten Sie den Entwurf oder versuchen Sie erneut, ihn aus der Liste zu aktivieren.',
+      closeConfirmBody:
+        'Nach der Schließung können Käufer nicht mehr über diesen Link einkaufen und die Aktion kann nicht rückgängig gemacht werden. Der bestehende Bestellverlauf bleibt erhalten und bleibt sichtbar.',
+      orderBuyerLabel: 'Käufer',
+      ordersCountLabel: '{{count}} Bestellungen',
+      ordersTitle: 'Bestellungen über diesen Link',
+      orderStatusProcessing: 'Verarbeitung',
+      ordersLoadFailed: 'Die Bestellungen dieses Links konnten nicht geladen werden',
+      orderStatusFailed: 'Fehlgeschlagen',
+      ordersSubtitle: 'Bestellungen, die Käufer über diesen geschützten Kauflink aufgeben.',
+      ordersRangeLabel: '{{from}}–{{to}} von {{total}}',
+      orderStatusCompleted: 'Auftrag erstellt',
+      ordersNextPage: 'Nächste',
+      ordersEmpty: 'Über diesen Link wurden noch keine Bestellungen aufgegeben.',
+      orderStatusManualReview: 'Im Rückblick',
+      orderOpenCta: 'Bestellung ansehen',
+      programsFilterAll: 'Alle',
+      programsFilterActive: 'Aktiv',
+      programsFilterPaused: 'Angehalten',
+      programsFilterDraft: 'Entwurf',
+      ordersPrevPage: 'Vorherige',
+      programsFilterLabel: 'Filtern Sie Programme nach Status',
+      attributionFilterAll: 'Alle',
+      programsEmptyTitle: 'Noch keine Förderprogramme',
+      programsFilterEmpty: 'Keine Programme entsprechen diesem Filter.',
+      ordersStatusNote:
+        'Der Status spiegelt hier wider, ob der geschützte Link erfolgreich eine Bestellung erstellt hat – nicht, dass sie bezahlt, versendet oder erfüllt wurde.',
+      programsEmptyDescription:
+        'Erstellen Sie ein Programm, damit Partner Ihren geschützten Kauflink teilen und die Zuordnung verfolgen können.',
+      attributionFilterDisputed: 'In der Warteschleife',
+      attributionFilterPending: 'Plattformüberprüfung',
+      attributionFilterNotEligible: 'Nicht förderfähig',
+      attributionFilterRecorded: 'Im Schutzzeitraum',
+      attributionFilterSettled: 'Im Hauptbuch bestätigt',
+      attributionFilterCount: '{{label}} ({{count}})',
+      onboarding: {
+        title: 'Erste Schritte',
+        stepNumber: 'Schritt {{step}}',
+        step1: 'Erstellen Sie einen geschützten Link',
+        step3: 'Mit Partnern teilen',
+        step2: 'Starten Sie ein Werbeprogramm',
+      },
+      attributionFilterLabel: 'Attribution nach Status filtern',
+      attributionFilterEmpty: 'Keine Attributionsaussagen entsprechen diesem Filter.',
+      attentionBadge: '{{count}} Attributionsausnahmen',
+      navBadge: '{{count}} Attributionsausnahmen',
+      quantityHint: 'Wie viele Einheiten kauft jeder, der über diesen Link kauft?',
+      optionSelectPlaceholder: 'Wählen Sie eine Option',
+      quantityLabel: 'Menge pro Kauf',
+      revisionLabel: 'Revision',
+      whatIsBody:
+        'Ein normaler Produktlink öffnet Ihren Live-Eintrag: Jeder kann zu jedem aktuellen Preis und zu den aktuellen Bedingungen kaufen, und diese ändern sich, wann immer Sie das Produkt bearbeiten. Ein geschützter Link friert die genaue Produktversion, den Preis, die Menge, die Optionen und die Käuferschutzbedingungen in einer nummerierten Revision ein, und jede Bestellung behält die Revision, unter der sie gekauft wurde. Bei einem neuen Kauf muss es sich bei der gebundenen Produktversion immer noch um die aktuelle, veröffentlichte Version handeln: Wenn Sie das Produkt ändern oder die Veröffentlichung aufheben, akzeptiert der Link keine neuen Käufe mehr. Dieser Link kann nicht auf die neue Version umgeleitet werden. Erstellen Sie stattdessen einen neuen geschützten Link für die aktuell veröffentlichte Version. Bereits getätigte Bestellungen bleiben davon unberührt.',
+      whatIsTitle: 'Wie sich dies von einem normalen Produktlink unterscheidet',
+      optionsLockedNote:
+        'Die über diesen Link gespeicherten Produktoptionen bleiben erhalten. Sie können geändert werden, sobald das Produkt neu geladen wird.',
+      revisionSummaryTitle: 'Gesperrte Revision',
+      termsHashLabel: 'Begriffe Fingerabdruck',
+      revisionValue: '#{{revision}}',
+      feeQuoteTitle: 'Maßgebliches Honorarangebot',
+      dealErrorDenied: 'Sie sind nicht berechtigt, diesen Link zu verwalten.',
+      dealErrorConflict:
+        'Dieser Link hat sich seit dem Öffnen geändert. Aktualisieren Sie und versuchen Sie es erneut.',
+      dealErrorGone: 'Dieser Link existiert nicht mehr – aktualisieren Sie die Liste.',
+      feeQuoteSubtitle:
+        'Die genauen Beträge, die ein Käufer zahlt und die Sie für die aktuelle Revision verrechnen, werden vom Server berechnet.',
+      revisionSummaryHint:
+        'Jede gespeicherte Bearbeitung veröffentlicht eine neue Revision. Bereits aufgegebene Bestellungen behalten die Revision, unter der sie gekauft wurden.',
+      feeQuoteExpiredNotice:
+        'Das Ablaufdatum dieses Links ist abgelaufen, daher werden keine neuen Käufe mehr akzeptiert und es kann kein Angebot erstellt werden. Verlängern Sie den Ablauf oder speichern Sie eine neue Revision, um sie erneut zu aktivieren.',
+      feeQuoteInactiveNotice:
+        'Aktivieren Sie diesen Link, um ein Honorarangebot zu erstellen. Entwürfe, pausierte und geschlossene Links können nicht zitiert werden.',
+      feeQuoteEmpty:
+        'Noch kein Angebot. Erstellen Sie eine, um die Gesamtsumme des Käufers, Ihren geschätzten Nettobetrag und die Gebührenaufschlüsselung anzuzeigen.',
+      feeQuoteBuyerTotal: 'Käufer zahlt',
+      feeQuoteRefreshCta: 'Angebot aktualisieren',
+      feeQuoteRequestCta: 'Honorarangebot erstellen',
+      feeQuoteLine: {
+        discount: 'Rabatt',
+        sellerPaymentCost: 'Kosten für die Zahlungsabwicklung',
+        grossOrderAmount: 'Bruttobestellwert',
+        sellerServiceCharge: 'Plattform-Servicegebühr',
+        sellerDistributionBudget: 'Affiliate- und Vertriebsbudget',
+      },
+      feeQuoteSellerNet: 'Ihr geschätztes Netto',
+      feeQuoteExpired: 'Abgelaufen',
+      feeQuoteComponentsTitle: 'Honorarbestandteile',
+      feeQuotePolicyLabel: 'Gebührenpolitik',
+      feeQuoteExpiresLabel: 'Angebot läuft ab',
+      feeQuoteError:
+        'Wir konnten kein Honorarangebot erstellen. Versuchen Sie es gleich noch einmal.',
+      feeQuoteConflictError:
+        'Der Server hat dieses Angebot abgelehnt. Der Link ist möglicherweise inaktiv oder abgelaufen, die genau gebundene Produktversion ist möglicherweise unveröffentlicht oder nicht mehr aktuell, die ausgewählten Optionen sind möglicherweise ungültig oder die Lieferung ist möglicherweise nicht verfügbar. Überprüfen Sie den Link und versuchen Sie es dann erneut.',
+    },
+    paymentPolicy: {
+      title: 'Zahlungsbestätigung',
+      chainConfirmedTitle: 'Warten Sie auf Bestätigungen',
+      loadError: 'Die Zahlungsrichtlinie konnte nicht geladen werden',
+      mempoolAcceptedTitle: 'Akzeptieren, wenn es im Mempool angezeigt wird',
+      description:
+        'Wählen Sie, wann Bitcoin- und andere UTXO-Zahlungen als empfangen gelten. Gilt für alle Checkout-Pfade.',
+      chainConfirmedDesc:
+        'Markieren Sie die Bestellung erst als bezahlt, nachdem die Transaktion in der Kette bestätigt wurde. Sicherer gegen Neuorganisationen oder Doppelausgaben.',
+      mempoolAcceptedDesc:
+        'Führen Sie die Bestellung vor, sobald eine entsprechende Zahlung erkannt wird, bevor die Sperrung bestätigt wird. Schnellerer Checkout mit etwas höherem Risiko.',
+      scopeNote:
+        'Diese Einstellung gilt für registrierte Käufer und Gastkassen für UTXO-Münzen (z. B. BTC, BCH, LTC).',
+      saveError: 'Die Zahlungsrichtlinie konnte nicht gespeichert werden',
+      saveSuccess: 'Zahlungsrichtlinie aktualisiert.',
+    },
   },
   receivingAccounts: {
     title: 'Kryptowährungs-Empfang',
@@ -6216,6 +8455,10 @@ export const de: PartialTranslationResource = {
     networkMismatchTitle: 'Network mismatch detected',
     networkMismatchDesc:
       '{{count}} address(es) do not match current environment network ({{network}}). Please update them to avoid payment issues.',
+    saveFailed: 'Empfangsadresse konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.',
+    nameInUse:
+      'Dieser Name wird in diesem Netzwerk bereits verwendet. Wählen Sie einen anderen Namen für diese Empfangsadresse.',
+    addressInUse: 'Diese Adresse ist bereits mit einem anderen Empfängerkonto verknüpft.',
   },
   fiat: {
     creditDebitCard: 'Kredit- / Debitkarte',
@@ -6323,6 +8566,8 @@ export const de: PartialTranslationResource = {
     documentationDesc: 'Guides and tutorials for getting started',
     community: 'Community',
     communityDesc: 'Join our Telegram community for help',
+    exchangeUsdtPayment: 'USDT-Zahlungsleitfaden (Börse)',
+    exchangeUsdtPaymentDesc: 'Kaufen Sie USDT an einer Börse und zahlen Sie im richtigen Netzwerk',
   },
   store: {
     offlineBanner:
@@ -6347,6 +8592,7 @@ export const de: PartialTranslationResource = {
     storeStatus: 'Store Status',
     statusActive: 'Active',
     statusPaused: 'Paused',
+    draftPreviewBanner: 'Entwurfsvorschau – dies ist nicht der veröffentlichte Store',
   },
   aiAgents: {
     title: 'KI-Agenten',
@@ -6514,7 +8760,16 @@ export const de: PartialTranslationResource = {
             cta: 'Herunterladen',
           },
         },
+        edit: 'Bearbeiten',
+        editConfig: 'Bearbeiten Sie die AI-Endpunktkonfiguration',
+        bodySimple:
+          'Installieren Sie Ollama, um die KI auf dem Gerät einzuschalten. Ihre Geschäftsdaten verlassen niemals dieses Gerät.',
+        checking: 'Überprüfen der lokalen KI-Engine…',
+        otherEngines: 'Andere Engines (llama.cpp, LM Studio)',
+        afterInstall:
+          'Aktualisieren Sie diese Seite nach der Installation – die Engine wird automatisch erkannt.',
       },
+      developerOptions: 'Entwickleroptionen',
     },
   },
   system: {
@@ -6957,6 +9212,10 @@ export const de: PartialTranslationResource = {
     expireTimeHelpTitle: 'Zahlungstimer',
     expireTimeHelpBody:
       'Bestellungen verfallen, wenn die Zahlung nicht vor Ablauf des Timers eingeht. Senden Sie keine Zahlung, nachdem die Bestellung abgelaufen ist. Das Geld könnte verloren gehen oder eine manuelle Wiederherstellung durch den Verkäufer erfordern.',
+    addressWillBeEncrypted: 'Ihre Lieferadresse wird für diesen Verkäufer verschlüsselt.',
+    addressProtectionUnavailable:
+      'Dieser Verkäufer kann noch keine sichere Lieferadresse erhalten. Der Checkout ist pausiert.',
+    addressProtectionPreparing: 'Sicheren Adressschutz vorbereiten…',
   },
   guestOrder: {
     title: 'Bestellstatus',
@@ -7016,6 +9275,8 @@ export const de: PartialTranslationResource = {
       funded: 'Payment confirmed',
       shipped: 'Shipped',
       completed: 'Completed',
+      delivered: 'Geliefert',
+      timePending: 'Zeit ausstehend',
     },
     stages: {
       payment: 'Payment',
@@ -7025,6 +9286,7 @@ export const de: PartialTranslationResource = {
       shipped: 'Shipped',
       complete: 'Complete',
       expired: 'Payment window expired',
+      deliveredGeneric: 'Erfüllung',
     },
     confirmation: {
       poolDetected: 'Zahlung in Mempool erkannt',
@@ -7036,6 +9298,11 @@ export const de: PartialTranslationResource = {
       eta: 'Geschätzte verbleibende Zeit: ~{{minutes}} Minuten',
       funded: 'Zahlung bestätigt',
     },
+    stateServiceDeliveredDesc: 'Der Verkäufer hat diesen Service als geliefert gekennzeichnet.',
+    portalTokenMissingTitle: 'Digitaler Zugangslink erforderlich',
+    stateDigitalDeliveredDesc: 'Ihre digitale Bestellung wurde geliefert.',
+    portalTokenMissingBody:
+      'Öffnen Sie den vollständigen Bestelllink, der beim Bezahlvorgang gespeichert wurde (er enthält einen privaten Zugangsschlüssel). Wenn Sie nur über diese Seiten-URL verfügen, bitten Sie den Verkäufer, Ihren Checkout-Bestätigungslink erneut zu senden oder Lieferdetails mitzuteilen, indem Sie Ihr oben gezeigtes Bestell-Token verwenden.',
   },
   stores: {
     console: {
@@ -7109,6 +9376,1084 @@ export const de: PartialTranslationResource = {
       link: 'Zugangslink',
       license_key: 'Lizenzschlüssel',
     },
+  },
+  collectibles: {
+    title: 'Sammelkarten',
+    subtitle:
+      'Im Umlauf befindliche digitale Titelkarten mit Quell- oder Hubverwahrung. Gewöhnliche physische Angebote auf dem Markt werden hier nicht angezeigt, es sei denn, sie sind tokenisiert.',
+    catalog: {
+      custodyCatalogTitle: 'Depotkatalog',
+      title: 'Katalog gehosteter Karten',
+      custodyCatalogSubtitle:
+        'Durchsuchen Sie im Umlauf befindliche digitale Titelkarten. Verknüpfen Sie eine Wallet mit „Meine Karten“, um die von Ihnen gehaltenen Titel anzuzeigen. Nicht jede Marktnotierung ist tokenisiert.',
+      tabCatalog: 'Depotkatalog',
+      tabMyCards: 'Meine Karten',
+      myCardsConnectPrompt:
+        'Schließen Sie eine Wallet an, um digitale Titel anzuzeigen, die mit Ihrer Adresse verknüpft sind.',
+      myCardsEmpty:
+        'In diesem Katalog gibt es keine digitalen Titel, die zu Ihrer vernetzten Geldbörse passen.',
+      myCardsHoldHint:
+        'Halten, übertragen oder lösen Sie digitale Titel auf der Kartendetailseite ein.',
+      myCardsCta: 'Meine Karten und Einlösungen',
+      navAria: 'Sammleransichten',
+      connectWalletCta: 'Wallet verbinden',
+      tabRedemptions: 'Fortschritt der Einlösung',
+      subtitle:
+        'Karten mit digitalem Titel zeigen hier den Sorgerechtsnachweis. Physische Karten ohne On-Chain-Titel werden wie normale Waren gekauft und versendet.',
+      redeemableNo: 'Einlösung nicht möglich',
+      onChainProofTitle: 'Ketten- und verwahrungssicher',
+      viewCustodyCta: 'Sorgerechtsnachweis ansehen',
+      redeemableYes: 'Einlösung möglich',
+      backToMarketplace: 'Zurück zum kuratierten Markt',
+      display: {
+        m2Wilson001: {
+          name: '1909-11 T206 Honus Wagner (Demo)',
+        },
+      },
+      custody: {
+        sourceCustody: 'Wird vom Quellenverwalter aufbewahrt',
+        unknown: 'Der Sorgerechtsstatus steht noch aus',
+        inHub: 'In Hub-Gewahrsam',
+        redeemRequested: 'Einlösung läuft',
+        pending: 'Hub-Aufnahme läuft',
+        redeemed: 'Die physische Erlösung begann',
+      },
+    },
+    custody: {
+      order: {
+        invalidBody:
+          'Wir konnten die Sorgerechtsbindungen für diese Bestellung nicht überprüfen. Verlassen Sie sich nicht auf einen digitalen Titel, bis der Support die Bestellung bestätigt.',
+        cancelledUnpaidBody:
+          'Diese Bestellung wurde vor Abschluss der Zahlung storniert. Es entsteht kein Anspruch des Käufers und die Karte verbleibt beim Verwahrer.',
+        cancelledPaidBody:
+          'Diese Bestellung wurde storniert oder erstattet. Jeder digitale Titel aus diesem Kauf ist kein aktiver Bestellvorteil mehr. Überprüfen Sie Ihren Rückerstattungs- und Bestellstatus für die nächsten Schritte.',
+        cancelledUnpaidTitle: 'Es wurde kein digitaler Titel ausgegeben',
+        invalidTitle: 'Die Angaben zum Sorgerecht konnten nicht überprüft werden',
+        cancelledPaidTitle: 'Bestellung beendet – Anspruch ist nicht mehr aktiv',
+        custodyBackedBadge: 'Verwahrungssicher',
+        technicalDetails: 'Technische Details',
+        viewCardCta: 'Karte unter „Meine Karten“ anzeigen',
+        pendingPaymentBody:
+          'Nachdem die Zahlung bestätigt wurde, kann ein digitaler Titel auf Ihr Wallet geprägt werden, wenn dieses Angebot eine verwahrungssichere Erfüllung beinhaltet.',
+        pendingPaymentTitle: 'Durch die Zahlung wird Ihr verwahrungssicherer Anspruch aktiviert',
+        activeTitle: 'Custody-Backed Purchase aktiv',
+        activeBody:
+          'Ihre Zahlung ist bestätigt. Wenn diese Auflistung bei einer Quellverwahrstelle oder einem Hub verwahrt wird, wird Ihr Anspruch im digitalen Titel erfasst, bis Sie ihn einlösen oder übertragen. Der Käuferschutz ist unabhängig von der Bewertung oder Authentifizierung.',
+        technicalMint: 'Digitale Titel-ID',
+      },
+    },
+    collateral: {
+      protection: {
+        title: 'Verkäufergarantie',
+        activeHint:
+          'Diese Einzahlung verfügt über eine aktive, finanzierte Verkäufergarantie auf der konfigurierten Sicherheitenschiene.',
+        honestHint:
+          'Eine Kotierungserklärung stellt keinen Nachweis einer finanzierten Absicherung dar. Nur ein aktives Sicherheitenkonto bestätigt die Sicherheit.',
+        sellerHint:
+          'Zahlen Sie die Garantiekaution ein, um den Schutz zu aktivieren. Die angegebenen Beträge werden erst dann überprüft, wenn der Sicherheitenabgleich erfolgreich ist.',
+        buyerHint:
+          'Dieser Bestellung liegt eine Verkäufergarantieerklärung bei. Nur ein aktives, gedecktes Sicherheitenkonto bestätigt die Deckung – nicht der Listungstext allein.',
+        orderTitle: 'Verkäufergarantie für diese Bestellung',
+        orderSubtitle:
+          'Wird neben dem Käuferschutz angezeigt. Eine unterschriebene Kotierungserklärung ist kein unabhängiger Nachweis einer geförderten Unterstützung.',
+        verifiedAllocationHint:
+          'Seller Core hat einen aktuell unterzeichneten Zuteilungsnachweis bereitgestellt, der an Sie als Käufer gebunden ist. Dies bestätigt die zugewiesene Garantie für diese Bestellung – nicht das gesamte Sicherheitenkonto des Verkäufers.',
+        operatorHint:
+          'Vergleichen Sie die Erklärung, die unterzeichneten Auftragsbindungen und den Status des Live-Sicherheitenkontos. Der Hosting-Anforderungsstatus allein ist kein Finanzierungsnachweis.',
+        status: {
+          unsecured: 'Nicht finanziert',
+          funding: 'Finanzierung läuft',
+          declared: 'Deklariert – nicht verifiziert',
+          impaired: 'Garantie beeinträchtigt',
+          'verified-allocation': 'Verifizierte Zuordnung',
+          expired: 'Garantie abgelaufen',
+          active: 'Verkäufergarantie aktiv',
+        },
+        accountLookupFailed:
+          'Der Status des Live-Sicherheitenkontos konnte nicht aktualisiert werden. Die nachstehenden Erklärungsdetails gelten weiterhin.',
+      },
+      fields: {
+        requiredAmount: 'Erforderliche Garantie',
+        guaranteeAsset: 'Garantievermögenswert',
+        assetId: 'Asset-ID',
+        fundedAmount: 'Geförderter Betrag',
+        baseUnitAmount: '{{amount}} (Basiseinheiten)',
+        unlistedAssetOnChain: 'Nicht gelisteter Garantiewert am {{chain}}',
+        requiredAmountBase: 'Erforderliche Menge (Basiseinheiten)',
+        unlistedAsset: 'Nicht aufgeführter Garantiewert',
+        allocatedAmount: 'Zugewiesene Garantie',
+        expiresAt: 'Läuft ab',
+        destination: 'Finanzierungsziel',
+        accountExpiresAt: 'Konto läuft ab',
+        issuerPeerId: 'Emittent',
+        extensionId: 'Erweiterungs-ID',
+        credentialExpiresAt: 'Der Berechtigungsnachweis läuft ab',
+        fundedAmountBase: 'Geförderter Betrag (Basiseinheiten)',
+        allocationRevision: 'Überarbeitung der Zuteilung',
+        collateralRevision: 'Überarbeitung der Sicherheiten',
+        allocatedAmountBase: 'Zugeteilter Betrag (Basiseinheiten)',
+        extensionRevision: 'Überarbeitung der Erweiterung',
+        accountState: 'Kontostatus',
+        issuedAt: 'Ausgestellt am',
+        fundingError: 'Finanzierungsfehler',
+        technicalDetail: 'Technischer Code:',
+        fundingState: 'Förderstaat',
+      },
+      funding: {
+        stages: {
+          declare: 'Erklärung',
+          open: 'Konto eröffnen',
+          fund: 'Fondseinzahlung',
+          active: 'Aktiver Schutz',
+        },
+        stageTitle: 'Garantie des Fondsverkäufers',
+        stageAria: 'Phasen der Sicherheitenfinanzierung',
+        capabilitiesUnavailable:
+          'Auf diesem Knoten ist keine Sicherheitenfinanzierung verfügbar. Aus einer Erklärung allein kann kein Schutz geltend gemacht werden.',
+        openAccount: 'Sicherheitenkonto eröffnen',
+        solanaCustodyNote:
+          'Ihr Solana-Inhaber-Wallet dient ausschließlich der digitalen Aufbewahrung von Titeln. Für die Finanzierung durch Verkäufergarantien wird ein separates EVM-Wallet verwendet.',
+        openSuccess: 'Sicherheitenkonto eröffnet',
+        openFailed: 'Das Sicherheitenkonto konnte nicht eröffnet werden',
+        invalidDeclarationFallback:
+          'Garantiebetrag und Vermögenswert müssen vor der Finanzierung gültige Basiseinheitenwerte sein.',
+        accountBindingMismatch:
+          'Ein bestehendes Pfandkonto für diese Kaution stimmt nicht mit der aktuellen Garantieerklärung überein. Die Finanzierung wird blockiert, bis die Diskrepanz behoben ist.',
+        principalIdentityUnavailable:
+          'Ihre Shop-Identität ist auf diesem Knoten nicht verfügbar. Die Sicherheitenfinanzierung wird blockiert, bis Sie im richtigen Shop angemeldet sind.',
+        missingCreatedAt:
+          'Dieser Einzahlung fehlt ein Erstellungszeitstempel. Die Eröffnung eines Sicherheitenkontos ist gesperrt.',
+        invalidCreatedAt:
+          'Diese Einzahlung hat einen ungültigen Erstellungszeitstempel. Die Eröffnung eines Sicherheitenkontos ist gesperrt.',
+        principalDepositOwnerMissing:
+          'Für diese Anzahlung ist keine Verkäuferidentität bekannt. Die Sicherheitenfinanzierung wird blockiert, bis der Einlageninhaber bekannt ist.',
+        evmWalletTitle: 'EVM-Finanzierungs-Wallet',
+        invalidDeclaration: {
+          missingAmount: 'Geben Sie einen positiven Garantiebetrag in Basiseinheiten ein.',
+          missingAsset: 'Geben Sie eine gültige Garantie-Asset-ID ein.',
+          invalidAmountFormat: 'Der Garantiebetrag muss ein ganzzahliger Basiseinheitenwert sein.',
+          nonPositiveAmount:
+            'Der Garantiebetrag muss größer als Null sein und darf keine führenden Nullen enthalten.',
+        },
+        principalIdentityMismatch:
+          'Dieses Depot gehört zu einem anderen Shop als dem, der auf diesem Knoten ausgewählt wurde. Wechseln Sie zum Eigentümergeschäft, bevor Sie Sicherheiten hinterlegen.',
+        evmWalletDesc:
+          'Schließen Sie das Wallet an, das die Kaution genehmigt und sendet. Dies ist nicht Ihr Solana-Titel-Wallet.',
+        principalRequired: 'Geben Sie die EVM-Adresse ein, über die die Garantie finanziert wird.',
+        connectEvm: 'EVM-Wallet verbinden',
+        evmConnected: 'EVM-Wallet verbunden',
+        prepareTarget: 'Bereiten Sie Finanzierungsanweisungen vor',
+        principalDestination: 'Hauptziel (EVM-Adresse)',
+        prepareFailed: 'Finanzierungsanweisungen konnten nicht erstellt werden',
+        connectEvmFailed: 'EVM-Wallet konnte nicht verbunden werden',
+        confirmFund: 'Genehmigen und finanzieren',
+        fundFailed: 'Die Finanzierungstransaktion ist fehlgeschlagen',
+        signerUnavailable: 'Der Wallet-Unterzeichner ist nicht verfügbar',
+        fundSuccess: 'Eingereichte Finanzierung – Abgleichskonto',
+        confirmTitle: 'Bestätigen Sie die Garantiefinanzierung',
+        confirmBody:
+          'Überprüfen Sie den genauen Vermögenswert, den Betrag der Basiseinheit, das Ziel und das Ablaufdatum, bevor Sie die Genehmigung in Ihrem Wallet vornehmen.',
+        reconcile: 'Finanzierungsstatus abgleichen',
+        reconcileSuccess: 'Finanzierungsstatus aktualisiert',
+        principalMustMatchWallet:
+          'Das Hauptziel muss mit Ihrer verbundenen EVM-Finanzierungsmappe übereinstimmen.',
+        invalidPrincipalAddress:
+          'Geben Sie eine gültige EVM-Adresse für das Finanzierungs-Wallet ein.',
+        unsupportedAsset:
+          'Dieses Garantie-Asset wird auf der konfigurierten Sicherheitenschiene nicht unterstützt. Die Finanzierung wird blockiert, bis ein unterstütztes Asset konfiguriert ist.',
+        validation: {
+          payloadUnavailable: 'Finanzierungsanweisungen sind nicht verfügbar.',
+          amountMismatch: 'Der Finanzierungsbetrag stimmt nicht mit dem Sicherheitenkonto überein.',
+          unsupportedPayloadType: 'Das Format der Finanzierungsanweisung wird nicht unterstützt.',
+          unsupportedRail: 'Diese Finanzierungsschiene wird nicht unterstützt.',
+          invalidAmount: 'Der Finanzierungsbetrag ist ungültig.',
+          vaultMismatch: 'Das Finanzierungsziel stimmt nicht mit dem Sicherheitenkonto überein.',
+          invalidChain: 'Für die Finanzierung ist das richtige EVM-Netzwerk erforderlich.',
+          invalidCollateralKey: 'Der Sicherheitsbindungsschlüssel ist ungültig.',
+          invalidCalldata: 'Die Daten der Finanzierungstransaktion sind ungültig.',
+          selectorMismatch: 'Die Finanzierungsvertragsmethode ist nicht zulässig.',
+          invalidFundingKey: 'Der Finanzierungsbindungsschlüssel ist ungültig.',
+          calldataArgumentMismatch:
+            'Die Argumente der Finanzierungstransaktion stimmen nicht mit dem Konto überein.',
+          assetMismatch:
+            'Finanzierungsvermögenswert stimmt nicht mit dem Sicherheitenkonto überein.',
+        },
+        refreshStatus: 'Sicherheitenstatus aktualisieren',
+        reconcileFailed: 'Die Finanzierung konnte nicht abgeglichen werden',
+      },
+    },
+    detailTitle: 'Kartendetails',
+    hubSlot: 'Hub-Steckplatz',
+    tokenizedCard: 'Tokenisierte Karte',
+    backToList: 'Zurück zu Sammlerstücken',
+    viewDetails: 'Details anzeigen',
+    chain: 'Netzwerk',
+    empty: 'Noch sind keine digitalen Titelkarten im Umlauf.',
+    featureDisabled: 'Collectible Hub ist in diesem Shop noch nicht verfügbar.',
+    trustNote:
+      'In diesem Katalog werden nur digitale Titelkarten angezeigt. Der Käuferschutz deckt die Transaktion ab – nicht die Bewertung oder Authentifizierung. Die Einlösung gilt nur für Karten, die Sie hier besitzen.',
+    alreadyRedeemed:
+      'Dieser digitale Titel wurde gebrannt und eine physische Lieferung ist in Bearbeitung oder abgeschlossen.',
+    validity: {
+      burned: 'Ausweis verbrannt',
+      active: 'Anmeldeinformationen aktiv',
+      voided: 'Ausweis ungültig',
+      invalidationReason: 'Grund',
+      unknown: 'Anmeldestatus steht aus',
+      voidedDetailTitle: 'Dieser digitale Titelausweis ist ungültig',
+      voidedDetailBody:
+        'Rücknahme- und Eigentumsaktionen sind nicht verfügbar. Wenden Sie sich an den Support, wenn Sie glauben, dass es sich hierbei um einen Fehler handelt.',
+      invalidatedAt: 'Ungültig',
+    },
+    metadata: 'Metadaten',
+    onChain: {
+      mintConfirmedSlot: 'Bestätigte Sperre',
+      mintTx: 'Mint-Rekord',
+      burnTx: 'Einlösungsnachweis',
+      viewOnExplorer: 'Im Explorer anzeigen',
+    },
+    checkout: {
+      hubPrimarySaleTitle: 'Vom Hub verwalteter NFT-Primärverkauf',
+      onePerOrderTitle: 'Eine Karte pro Bestellung',
+      metadataTitle: 'Sammlerdetails',
+      onePerOrderDesc:
+        'Der Checkout mit tokenisierter Karte unterstützt eine Karte pro Bestellung (Menge 1).',
+      holderWalletConnected: 'Verbunden',
+      holderWalletTitle: 'Digitale Titelmappe',
+      switchSolanaWallet: 'Wechseln Sie die Solana-Wallet',
+      connectSolanaWallet: 'Solana-Wallet verbinden',
+      holderWalletDesc:
+        'Verbinden Sie Ihr Solana-Wallet, um den digitalen Titel zu erhalten, sobald die Zahlung abgeschlossen ist.',
+      holderWalletMissing:
+        'Schließen Sie ein Solana-Wallet an, bevor Sie diese Bestellung aufgeben.',
+      holderWalletWrongNamespace:
+        'Wechseln Sie zu einem Solana-Wallet – EVM-Adressen können diesen digitalen Titel nicht erhalten.',
+      connectingWallet: 'Verbinden…',
+      escrowCryptoOnlyNote:
+        'Der Source-Custody-First-Sale-Checkout unterstützt nur Käuferschutz-Kryptowährungen (ETH, Solana USDC, Solana USDT). Karten- und andere Fiat-Methoden sind noch nicht verfügbar.',
+    },
+    redeem: {
+      title: 'Physische Karte einlösen',
+      stepVerify: 'Überprüfen Sie den Besitz',
+      stepVerifyDesc:
+        'Wir bestätigen, dass Ihr Wallet diesen digitalen Titel enthält, bevor Sie einen Einlösungsantrag stellen können.',
+      holderOnlyNote:
+        'Rücknahmeanträge müssen vom aktuellen Inhaber des digitalen Titels stammen. Der Verwahrer oder Quellverwahrer führt den Versand aus, nachdem Ihre Einreichung angenommen wurde.',
+      description:
+        'Nur die Wallet, die diesen digitalen Titel enthält, kann eine Einlösung beantragen. Nachdem Sie es eingereicht haben, arrangiert der Verwahrer oder Quellenverwahrer den Versand pro Projektablauf – die On-Chain-Schritte erfolgen zuerst in Ihrem Wallet.',
+      mint: 'Digitaler Titel (Mint)',
+      stepWallet: 'Connect-Inhaber-Wallet',
+      stepAddress: 'Geben Sie die Lieferadresse ein',
+      connectWallet: 'Wallet verbinden',
+      connecting: 'Verbinden...',
+      wallet: 'Halter-Geldbörse',
+      walletMismatch: 'Dieses Wallet ist nicht der aktuelle Inhaber des digitalen Titels.',
+      expectedHolder: 'Voraussichtlicher Inhaber',
+      solanaWalletRequired:
+        'Schließen Sie eine Solana-Wallet an, die diesen digitalen Titel enthält.',
+      stepSubmitDesc:
+        'Ihr Wallet signiert den On-Chain-Schritt, dann verarbeitet der Verwahrer oder Quellverwahrer den physischen Versand pro Projektablauf. Die Sendungsverfolgung erfolgt nach dem Versand.',
+      stepSubmit: 'Rücknahmeantrag einreichen',
+      shippingAddress: 'Lieferadresse',
+      processing: 'Verarbeitung...',
+      shippingPlaceholder: 'Vollständiger Name, Straße, Stadt, Bundesland, Postleitzahl, Land',
+      shippingPrivacy: 'Ihre Adresse wird verschlüsselt, bevor sie an die Plattform gesendet wird.',
+      failedTitle: 'Die Einlösung ist fehlgeschlagen',
+      trackingLabel: 'Einlösungs-ID',
+      viewTracking: 'Einlösungsstatus anzeigen',
+      submit: 'Einlösung starten',
+      successDesc: 'Wir versenden Ihre Karte, nachdem der On-Chain-Schritt bestätigt wurde.',
+      successTitle: 'Einlösung eingereicht',
+    },
+    transfer: {
+      destinationPlaceholder: 'Geben Sie eine Solana-Wallet-Adresse ein',
+      walletMismatch:
+        'Verbinden Sie die Wallet des aktuellen Inhabers, um diesen Titel zu übertragen.',
+      description:
+        'Senden Sie diesen programmierbaren NFT an eine andere Solana-Wallet. Hierbei handelt es sich um eine Eigentumsübertragung in der Kette, nicht um eine Bestellung oder einen Verkauf.',
+      submit: 'Überprüfung und Übertragung',
+      destination: 'Destination Solana-Wallet',
+      title: 'Digitalen Titel übertragen',
+      successDesc:
+        'Die Kette nahm die Überweisung an. Die Inhaberdaten werden in Kürze synchronisiert.',
+      successTitle: 'Übertragung bestätigt',
+      failedTitle: 'Die Übertragung ist fehlgeschlagen',
+      processing: 'Warten auf die Brieftasche…',
+      syncNote:
+        'Nach der Bestätigung wird die Inhaberprognose beim nächsten Kettenabgleich aktualisiert.',
+    },
+    redemptions: {
+      title: 'Meine Einlösungen',
+      backToCollectibles: 'Zurück zu Sammlerstücken',
+      subtitle:
+        'Verfolgen Sie den Versand physischer Karten, nachdem Sie Ihre digitalen Titel eingelöst haben.',
+      empty: 'Sie haben noch keine Karten eingelöst.',
+      viewTracking: 'Status anzeigen',
+    },
+    tracking: {
+      statusLabel: 'Status',
+      submittedAt: 'Eingereicht',
+      title: 'Einlösungsstatus',
+      trackingNumber: 'Tracking-Nummer',
+      burnConfirmed: 'On-Chain bestätigt',
+      shippingAddress: 'Versand nach',
+      detailsTitle: 'Versanddetails',
+      shippingAddressOnFile:
+        'Ihre Lieferadresse ist gespeichert und wird für die Hub-Versandabwicklung verwendet.',
+      notFound: 'Die Einlösung wurde nicht gefunden oder Sie haben keinen Zugriff.',
+      loadFailed:
+        'Einlösungsdetails konnten nicht geladen werden. Versuchen Sie es später noch einmal.',
+      viewCard: 'Kartendetails anzeigen',
+      slaDue: 'Per Schiff versenden',
+      nftMint: 'Digitaler Titel',
+      inProgressHint:
+        'Ihre physische Karte wird nach Bestätigung in der Kette vom Hub versendet. Nach dem Versand erscheint hier die Sendungsverfolgung.',
+      phase: {
+        redeem_requested: 'Versand vom Hub aus vorbereiten',
+        shipped: 'Karte versendet – Sendungsverfolgung unten',
+        settled: 'Lieferung komplett',
+      },
+    },
+    primarySale: {
+      title: 'Tokenisierte Karte',
+      certNumber: 'Zertifikatsnummer',
+      loadFailed:
+        'Der Hub-Status konnte nicht aktualisiert werden. Versuchen Sie es später noch einmal.',
+      viewNft: 'Digitalen Titel ansehen',
+      mintErrors: {
+        onChainFailed:
+          'Die digitale Titelprägung wurde in der Kette nicht abgeschlossen. Unser Team wird es erneut versuchen oder nachfragen.',
+        generic:
+          'Die digitale Titelprägung konnte noch nicht abgeschlossen werden. Unser Team wird es erneut versuchen oder nachfragen.',
+        pendingConfirmation:
+          'Die digitale Titelprägung wurde in der Kette eingereicht und wartet noch auf die Netzwerkbestätigung. Sie können den Fortschritt unten überprüfen.',
+        interrupted:
+          'Die digitale Titelprägung wurde vor der Bestätigung unterbrochen. Wir werden es in Kürze noch einmal versuchen.',
+      },
+      supportHint:
+        'Die Auszahlung konnte nicht automatisch abgeschlossen werden. Wenden Sie sich an den Support, wenn das Problem weiterhin besteht.',
+      mintLastError: 'Letzter Münzversuch',
+      phase: {
+        awaiting_hub:
+          'Warten darauf, dass die Karte am Hub eintrifft, überprüft und als digitaler Titel geprägt wird.',
+        awaiting_hub_minting:
+          'Die Hub-Verifizierung ist abgeschlossen und die digitale Titelprägeanstalt wartet auf die Bestätigung in der Kette.',
+        payout_pending: 'Bestätigung der Auszahlung aus Käuferschutzfonds an den Verkäufer.',
+        awaiting_payment:
+          'Schließen Sie die Zahlung ab, um mit der Hub-Aufnahme und der Prägung des digitalen Titels fortzufahren.',
+        awaiting_bridge:
+          'Zahlung bestätigt. Das Verknüpfen Ihrer Bestellung mit dem Hub-Ledger dauert normalerweise einen Moment.',
+        payout_failed:
+          'Die Auszahlung an den Verkäufer konnte nicht abgeschlossen werden. Unser Team muss möglicherweise eingreifen.',
+        awaiting_hub_minted:
+          'Digitaler Titel, geprägt in der Kette. Als Nächstes werden die Hub-Verifizierung und die Auszahlung an den Verkäufer abgeschlossen.',
+        payout_complete:
+          'Die Auszahlung an den Verkäufer ist abgeschlossen. Der digitale Titel spiegelt den Hub-Status wider.',
+      },
+    },
+    hubOps: {
+      redemptionId: 'Einlösungs-ID',
+      subtitle:
+        'Versenden Sie physische Karten nach dem Brennen in der Kette. Nur Zugang durch Hub-Betreiber.',
+      fulfillmentTitle: 'Erfüllung',
+      ship: 'Mark versendet',
+      load: 'Laden',
+      trackingPlaceholder: 'Sendungsverfolgungsnummer des Spediteurs',
+      title: 'Hub-Einlösungsoperationen',
+      settle: 'Mark ließ sich nieder',
+      loadFailed: 'Einlösung konnte nicht geladen werden',
+      redemptionIdPlaceholder: 'Einlösungs-ID aus Käuferfluss einfügen',
+      shipSuccess: 'Einlösung als versendet markiert',
+      noActions:
+        'Diese Einlösung ist bereits abgeschlossen oder nicht für die Hub-Erfüllung bereit.',
+      settleSuccess: 'Die Erlösung ist erledigt',
+      viewBuyerTracking: 'Seite zur Käuferverfolgung',
+      settleFailed: 'Die Einlösung konnte nicht abgewickelt werden',
+      shipFailed: 'Konnte nicht als versandt markiert werden',
+      mintRecoveryTitle: 'Bis zur Mint-Wiederherstellung',
+      recoveryLimit: 'Limit',
+      mintRecoverySubtitle:
+        'Stellen Sie Minting-Slots wieder her, die bereits eine On-Chain-Mint-Transaktion übermittelt haben.',
+      skipped: 'Übersprungen',
+      failed: 'Fehlgeschlagen',
+      recoverFailed: 'Ausstehende Münzprägungen konnten nicht wiederhergestellt werden',
+      recovered: 'Wiederhergestellt',
+      recoverSuccess: 'Mint-Wiederherstellung abgeschlossen',
+      royaltyBps: 'Lizenzgebühren bps',
+      recoverMints: 'Pfefferminzbonbons wiederherstellen',
+      refreshQueue: 'Aktualisieren',
+      pendingRedemptionsSubtitle:
+        'Rücknahmen warten nach dem On-Chain-Burn auf den Versand oder die Abwicklung.',
+      selectRedemption: 'Offen',
+      recentResults: 'Aktuelle Ergebnisse',
+      pendingRedemptionsTitle: 'Ausstehende Hub-Einlösungen',
+      queueLoadFailed: 'Die Warteschlange konnte nicht geladen werden',
+      attempted: 'Versucht',
+      queueEmpty: 'Keine Elemente in dieser Warteschlange.',
+      releaseRetryReleased: 'Freigegeben',
+      releaseQueueSubtitle:
+        'Bestellungen wurden bezahlt und erhalten, aber die Freigabe oder Prägung des Treuhandkontos steht noch aus.',
+      orderId: 'Bestell-ID',
+      hubSlotStatus: 'Hub-Steckplatz',
+      releaseQueueTitle: 'Warteschlange für primäre Verkaufsfreigabe',
+      releaseRetrySuccess: 'Freigabewiederholung abgeschlossen',
+      releaseStatus: 'Release-Status',
+      certNumber: 'Zertifikatsnummer',
+      grade: 'Grad',
+      serial: 'Seriell',
+      releaseRetryFailed: 'Veröffentlichungen konnten nicht wiederholt werden',
+      releaseRetry: 'Versuchen Sie es erneut mit Veröffentlichungen',
+      intakeTitle: 'Nabenaufnahme',
+      currentHolder: 'NFT-Inhaber-Wallet',
+      releaseError: 'Letzter Fehler',
+      hubLocation: 'Hub-Standort',
+      currentHolderPlaceholder: 'Solana-Wallet-Adresse',
+      intakeSubtitle:
+        'Registrieren Sie eine benotete Karte nach dem physischen Erhalt. Minze erst nach bestätigter Einnahme.',
+      mintHolderRequired:
+        'Geben Sie bei der Annahme oder vor der Prägung im Feld „Standard-Münzinhaber“ ein Inhaber-Wallet ein.',
+      mintHolderDefaultHint:
+        'Wird beim Prägen eines Slots verwendet, für den bei der Aufnahme kein Halter gespeichert ist (z. B. manuelle Hub-Operationen).',
+      slotsTitle: 'Hub-Slots',
+      submitIntake: 'Aufnahme einreichen',
+      intakeSuccess: 'Karteneinzug erfasst',
+      intakeFailed: 'Aufnahme konnte nicht erfasst werden',
+      reject: 'Ablehnen',
+      mintHolderDefault: 'Standard-Münzhalter',
+      currentHolderHint:
+        'Optional bei der Einnahme. Vor der Prägung erforderlich – verwenden Sie die Käufer-Wallet, die den NFT erhalten soll.',
+      slotsSubtitle: 'Erhaltene Karten warten auf Prägung oder Ablehnung.',
+      mint: 'Mint-NFT',
+      mintFailed: 'Mint ist gescheitert',
+      slotStatus: 'Slot-Status',
+      rejectSuccess: 'Slot abgelehnt',
+      backToCollectibles: 'Zurück zu Sammlerstücken',
+      workbenchNav: 'Hub-Betrieb',
+      mintSuccess: 'Mint eingereicht',
+      alertMintError: 'Münzfehler beim Erstverkauf',
+      rejectFailed: 'Slot konnte nicht abgelehnt werden',
+      alertMintPending:
+        'Für Slots, die in der Münzprägung steckengeblieben sind, kann eine Wiederherstellung der Münzprägung erforderlich sein.',
+      alertReleaseFailed:
+        'Die Treuhandfreigabe ist fehlgeschlagen – versuchen Sie es erneut aus der Freigabewarteschlange unten.',
+    },
+    sourceOps: {
+      subtitle:
+        'Die Karte verbleibt beim Verkäufer; Käufer erhält NFT-Rücknahmerechte. Modell: Eine lange Sperre für Erstverkaufsfonds.',
+      title: 'M2 Wilson Quellenverwahrung',
+      holderWallet: 'Halter-Geldbörse',
+      holderWalletPlaceholder: 'Solana-Wallet-Adresse',
+      createSubtitle:
+        'Registrieren Sie eine beim Verkäufer gehaltene abgestufte Karte, bevor Sie den Einlösungs-NFT prägen.',
+      submitCreate: 'Quelldepot erstellen',
+      guaranteeCurrency: 'Garantiewährung',
+      guaranteeAmount: 'Garantiebetrag',
+      sellerPeerID: 'Verkäufer-ID',
+      depositStatus: 'Status',
+      seller: 'Verkäufer',
+      createTitle: 'Quelldepot erstellen',
+      createSuccess: 'Quelleneinlage erstellt',
+      holder: 'Halter',
+      tracking: 'Verfolgung',
+      order: 'Befehl',
+      defaultReason: 'Standardgrund',
+      mintRoyaltyBps: 'Lizenzgebühren bps',
+      mint: 'Mint-NFT',
+      mintSuccess: 'Mint eingereicht',
+      mintFailed: 'Mint ist gescheitert',
+      defaultReasonPlaceholder: 'Grund für den Verzug',
+      nftMint: 'NFT-Minze',
+      listTitle: 'Quelleneinlagen',
+      createFailed: 'Die Quelleneinzahlung konnte nicht erstellt werden',
+      listSubtitle:
+        'Bei Modell A bleiben Erstverkaufsgelder bis zum Abschluss der Rücknahme unter Käuferschutz gesperrt. Löst keine Auszahlung der M3-Nabenaufnahme aus.',
+      priceAmount: 'Preisbetrag',
+      recordFirstSale: 'Rekord-Erstverkauf',
+      buyerPeerID: 'Käufer-ID',
+      currencyCode: 'Währung',
+      firstSaleSubtitle:
+        'Lange Sperre – gesperrte Erstverkaufsgelder bleiben bis zum Abschluss der Rücknahme unter Käuferschutz. Löst keine Auszahlung der M3-Nabenaufnahme aus.',
+      mintHolderRequired:
+        'Geben Sie vor der Prägung ein Inhaber-Wallet bei der Einzahlung oder im Feld „Standard-Mint-Inhaber“ ein.',
+      ship: 'Mark versendet',
+      firstSaleTitle: 'Rekord-Erstverkauf (Modell A)',
+      shipFailed: 'Konnte nicht als versandt markiert werden',
+      shipSuccess: 'Quelle: Anzahlung als versandt markiert',
+      firstSaleFailed: 'Erstverkauf konnte nicht erfasst werden',
+      protectionRefId: 'Hinweis zum Käuferschutz',
+      settle: 'Freigabe nach Abschluss der Einlösung',
+      firstSaleSuccess: 'Erster Verkauf verzeichnet',
+      divisibility: 'Teilbarkeit',
+      settleFailed: 'Die Quellenanzahlung konnte nicht beglichen werden',
+      defaultSuccess: 'Quelleinzahlung als ausgefallen markiert',
+      hubTitleValidity: 'Gültigkeit des Hub-Titels',
+      markDefaulted: 'Mark als ausgefallen markiert',
+      settleSuccess: 'Quellkaution beglichen',
+      markDefaultVoidNotice:
+        'Durch die Bestätigung der Nichterfüllung erhält der Käufer eine Rückerstattung und verfällt nach Abschluss der Rückerstattung alle unverbrannten Hub-Titelberechtigungen, die mit dieser Anzahlung verknüpft sind.',
+      defaultFailed: 'Konnte nicht als Standard markiert werden',
+      refreshDefaultRefund: 'Erstattungsstatus aktualisieren',
+      defaultRefundError: 'Rückerstattungsfehler',
+      refreshQueue: 'Aktualisieren',
+      retryDefaultRefund: 'Erneut versuchen',
+      defaultRefundStatus: 'Rückerstattungsstatus',
+      releaseStatus: 'Release-Status',
+      trackingPlaceholder: 'Sendungsverfolgungsnummer des Spediteurs',
+      approve: 'Genehmigen',
+      reject: 'Ablehnen',
+      defaultRefundPendingNotice:
+        'Die Rückerstattung des Käufers wird bearbeitet. Klicken Sie später erneut auf „Aktualisieren“, um den Abschluss in der Kette zu bestätigen.',
+      defaultRefundFailed: 'Rückerstattung fehlgeschlagen',
+      approveSuccess: 'Quellenangabe genehmigt',
+      rejectSuccess: 'Quellenangabe abgelehnt',
+      rejectionReason: 'Ablehnungsgrund',
+      defaultRefundPending: 'Rückerstattung wird noch bearbeitet',
+      queueLoadFailed: 'Quelleinzahlungen konnten nicht geladen werden',
+      approveFailed: 'Quelleneinzahlung konnte nicht genehmigt werden',
+      queueEmpty: 'Keine Quellvorkommen gefunden.',
+      evidenceFront: 'Front',
+      evidenceBack: 'Zurück',
+      operatorNextAction: 'Nächste operative Aktion',
+      evidenceOpenLink: 'Vollständiges Bild öffnen',
+      rejectFailed: 'Quelleneinzahlung konnte nicht abgelehnt werden',
+      evidenceFrontAlt: 'Vorderes Foto der benoteten Karte',
+      submissionEvidence: 'Nachweis der Einreichung durch den Verkäufer',
+      rejectionReasonPlaceholder: 'Der Grund wurde dem Verkäufer angezeigt',
+      evidenceBackAlt: 'Rückseitenfoto der benoteten Karte',
+    },
+    sourceDeposit: {
+      status: {
+        rejected: 'Abgelehnt',
+        submitted: 'Zur Überprüfung eingereicht',
+        sourceHeld: 'Genehmigt – bereit zur Auflistung',
+        inCirculation: 'Der Käufer besitzt den digitalen Titel',
+        minting: 'Prägung digitaler Titel (Erstverkauf)',
+        minted: 'Digitaler Titel geprägt',
+        defaulted: 'Standardmäßig',
+        unknown: 'Status ausstehend',
+        redeemRequested: 'Umtausch erbeten – Schiffskarte',
+        settled: 'Abgeschlossen – Mittel freigegeben',
+        shipped: 'Versendet – warten Sie auf die Abrechnung',
+      },
+      nextAction: {
+        submitted: 'Warten Sie auf die Bewertung durch den Kurator',
+        sourceHeld:
+          'Erstellen Sie ein Angebot – digitale Titel werden geprägt, wenn ein Käufer zahlt',
+        shipped: 'Warten Sie nach der Lieferung auf die Abrechnung',
+        redeemRequested: 'Versenden Sie die physische Karte innerhalb des SLA',
+        rejected: 'Überprüfen Sie das Feedback und senden Sie es erneut, wenn dies zulässig ist',
+        minted: 'Live-Auflistung – warten Sie auf den Käufer oder die Einlösung',
+        minting: 'Der Erstverkauf der Prägestätte läuft – es sind keine Maßnahmen erforderlich',
+        settled: 'Vollständig',
+        inCirculation: 'Der Käufer behält das Eigentumsrecht – Versand nach Rücknahmeantrag',
+        defaulted: 'Kontaktieren Sie den Support',
+        unknown: 'Schauen Sie noch einmal vorbei, um Updates zu erhalten',
+      },
+      operatorNext: {
+        awaitingListing:
+          'Warten auf die Auflistung des Verkäufers und den ersten bezahlten Verkauf',
+        firstSale: 'Überwachen Sie den Erstverkauf / Titelmint',
+        ship: 'Versenden Sie die physische Karte zur Einlösung',
+        review: 'Bewertungseinreichung – genehmigen oder ablehnen',
+        mint: 'Bei einem erneuten Versuch wurde die Erstverkaufsprägung unterbrochen',
+        settle: 'Begleichen Sie die Zahlung, nachdem die Lieferung bestätigt wurde',
+        rejected: 'Geschlossen – Verkäufer muss erneut einreichen',
+        defaultRefundPending: 'Standardrückerstattungsstatus aktualisieren',
+        defaultRefundFailed: 'Erneut versuchen, die Rückerstattung an den Käufer zu erstatten',
+        complete: 'Keine Aktion erforderlich',
+      },
+      defaultRefund: {
+        status: {
+          failed: 'Rückerstattung fehlgeschlagen',
+          pending: 'Rückerstattungsabwicklung',
+          unknown: 'Rückerstattungsstatus ausstehend',
+          refunded: 'Rückerstattung bestätigt',
+        },
+      },
+    },
+  },
+  product_import: {
+    partially_completed: 'Der Produktimport-Workflow ist teilweise abgeschlossen.',
+    needs_input:
+      'Die Quelle wurde verarbeitet, es sind jedoch weitere Informationen erforderlich, bevor ein Produktentwurf erstellt werden kann.',
+    deliveryMetricProposals: 'Entwürfe',
+    deliveryMetricSources: 'Quellen',
+    completed: 'Der Produktimport-Workflow ist abgeschlossen.',
+    needs_approval:
+      'Produktvorschläge stehen zur Genehmigung bereit. {{pendingApprovalCount}} ausstehend.',
+    needs_review:
+      'Produktmaterialien stehen zur Überprüfung bereit. {{reviewableCount}} Entwürfe warten.',
+    failed: 'Der Produktimport-Workflow ist fehlgeschlagen.',
+    deliveryMetricPendingApproval: 'Genehmigung ausstehend',
+    deliveryOpenWorkbench: 'Öffnen Sie die Import-Workbench',
+    deliveryMetricReviewable: 'Überprüfbar',
+    itemStatus: {
+      new: 'Neu',
+      skipped: 'Übersprungen',
+      applied: 'Angewandt',
+      needs_review: 'Muss überprüft werden',
+      ready: 'Bereit',
+    },
+    nextAction: {
+      review_proposals: 'Überprüfen Sie Produktvorschläge im Entwurf',
+      unknown: 'Vorgeschlagene Aktion: {{type}}',
+      provide_product_details: 'Fügen Sie klarere Produktdetails hinzu und versuchen Sie es erneut',
+      extract_candidates: 'Extrahieren Sie Produktkandidaten aus Quellmaterial',
+    },
+    structuredStatus: 'Produktimportstatus: {{state}}',
+  },
+  onramp: {
+    title: 'Kauf von Krypto für diese Zahlung',
+    statusAwaitingPayment: 'Wir warten darauf, dass Sie den Kauf abschließen',
+    statusProcessing: 'Kauf erhalten – Umwandlung in Krypto',
+    statusForwarding: 'Krypto in Ihrer Brieftasche – Übertragen Sie sie auf ein Treuhandkonto',
+    refresh: 'Status aktualisieren',
+    statusAwaitingChain: 'Geliefert – Warten auf Bestätigung in der Kette',
+    statusDelivering: 'Krypto gekauft – Lieferung läuft',
+    statusReversed: 'Der Kauf wurde vom Anbieter storniert',
+    statusFailed: 'Der Kauf ist fehlgeschlagen – Sie können einen neuen starten',
+    chainConfirmationNote:
+      'Ihre Zahlung wird erst abgeschlossen, wenn der Betrag in der Kette an der Treuhandadresse bestätigt wird. Der Kauf von Krypto ist ein separater Schritt, der vom genannten Anbieter bereitgestellt wird.',
+    fundWithCard: 'Krypto mit Karte kaufen',
+    continuePayment: 'Kauf fortsetzen',
+    refreshFailed: 'Der aktuelle Status konnte nicht überprüft werden. Erneuter Versuch…',
+    fundWithCardBusy: 'Beginnend mit …',
+    fundWithCardError: 'Der Kauf von Krypto ist für diese Zahlung derzeit nicht möglich.',
+    fundWithCardHint:
+      'Sie haben keine Krypto? Kaufen Sie es für diese Zahlung – ein Anbieter übernimmt den Fiat-Schritt und liefert an die Treuhandadresse.',
+  },
+  help: {
+    exchangeUsdtPayment: {
+      intro:
+        'Mobazha bietet keine Fiat-zu-USDT-Konvertierung an. Verwenden Sie einen C2C/P2P-Börsenfluss, um USDT zu kaufen, und zahlen Sie dann über das entsprechende Netzwerk unten.',
+      trc20Warning:
+        'Ziehen Sie sich nicht auf TRC20 zurück. Einige C2C-Flows nutzen standardmäßig TRON, was wir nicht unterstützen. Wählen Sie stattdessen BSC (BEP20) oder Solana.',
+      title: 'Bezahlen Sie mit USDT von einer Börse',
+      step1Title: 'USDT an einer Börse kaufen (KYC normalerweise erforderlich)',
+      step3Title: 'Zurück zur Kasse und bezahlen',
+      step2Title: 'Abheben im richtigen Netzwerk',
+      step2Desc:
+        'Das Auszahlungsnetzwerk muss mit der Zahlungsmethode übereinstimmen, die Sie beim Bezahlvorgang ausgewählt haben. Dieser Shop akzeptiert kein TRON (TRC20).',
+      step1Desc:
+        'Führen Sie die Identitätsüberprüfung an der Börse durch und verwenden Sie dann C2C/P2P, sofern in Ihrer Region verfügbar. Befolgen Sie ausschließlich die offiziellen Anleitungen der einzelnen Plattformen. Mobazha bietet keine Fiat-zu-USDT-Konvertierung an.',
+      step3Desc:
+        'Wählen Sie an der Kasse das passende USDT-Netzwerk aus. Wenn Sie über eine Börse bezahlen, aktivieren Sie „Von Börse bezahlen“ und legen Sie eine persönliche Rückerstattungs-Wallet-Adresse fest.',
+      networkTableTitle: 'Kurzreferenz zum Netzwerk',
+      networkTableHeaders: {
+        binance: 'Binance-Auszahlung',
+        htx: 'HTX-Auszahlung',
+        okx: 'OKX-Auszahlung',
+        mobazha: 'Mobazha-Kasse',
+      },
+      networkRows: {
+        bsc: {
+          mobazha: 'BSC USDT (BEP20) – empfohlen',
+          okx: 'Nicht unterstützt für BSC USDT',
+          binance: 'BEP20 unterstützt',
+          htx: 'BEP20 unterstützt',
+        },
+        sol: {
+          htx: 'Solana unterstützt',
+          binance: 'Solana unterstützt',
+          okx: 'Solana unterstützt',
+          mobazha: 'Solana USDT – empfohlen',
+        },
+        matic: {
+          okx: 'Polygon unterstützt',
+          binance: 'Polygon unterstützt',
+          htx: 'Schauen Sie im HTX-Hilfecenter nach',
+          mobazha: 'Polygon USDT',
+        },
+        base: {
+          okx: 'Basisnetzwerk unterstützt',
+          htx: 'Schauen Sie im HTX-Hilfecenter nach',
+          binance: 'Basisnetzwerk unterstützt',
+          mobazha: 'Basis USDT',
+        },
+        eth: {
+          mobazha: 'Ethereum-Mainnet USDT',
+          okx: 'ERC20 unterstützt (höhere Gebühren)',
+          binance: 'ERC20 unterstützt (höhere Gebühren)',
+          htx: 'ERC20 unterstützt (höhere Gebühren)',
+        },
+      },
+      exchangeGuidesTitle: 'Offizielle Austauschführer',
+      links: {
+        okx: 'OKX C2C-Leitfaden',
+        binance: 'Häufig gestellte Fragen zu Binance P2P',
+        htx: 'HTX C2C-Anleitung',
+      },
+      faqTitle: 'FAQ',
+      faq: {
+        okxBscQ: 'Ich verwende OKX – wie bezahle ich mit BSC USDT?',
+        trc20Q: 'Warum wird TRC20 nicht unterstützt?',
+        trc20A:
+          'Mobazha Checkout nutzt ETH/L2- und Solana-Netzwerke. TRON (TRC20) wird auf Plattformebene nicht unterstützt – die Wahl von TRC20 führt zu Geldverlusten.',
+        okxBscA:
+          'OKX unterstützt keine BSC USDT-Auszahlung. Verwenden Sie Solana USDT auf OKX oder Binance C2C + BEP20-Auszahlung für BSC USDT.',
+        kycA: 'Exchange C2C/P2P erfordert normalerweise eine Identitätsprüfung. Die Regeln variieren je nach Plattform und Region – befolgen Sie den offiziellen Prozess der Börse.',
+        kycQ: 'Brauche ich KYC?',
+        refundQ: 'Bezahlen über eine Börse – was ist mit Rückerstattungen?',
+        refundA:
+          'Aktivieren Sie an der Kasse „Vom Umtausch bezahlen“ und geben Sie eine von Ihnen kontrollierte persönliche Wallet-Rückerstattungsadresse ein. Exchange Hot Wallets können keine Rückerstattungen erhalten.',
+      },
+      custodialTitle: 'Bezahlen an einer Börse',
+      custodialDesc:
+        'Nachdem Sie eine Krypto-Zahlungsmethode ausgewählt haben, aktivieren Sie „Von der Börse bezahlen“ und fügen Sie Ihre persönliche Rückerstattungsadresse hinzu, bevor Sie über die Exchange-App senden.',
+      disclaimer:
+        'Der Börsenzugriff, KYC und lokale Regeln liegen in Ihrer Verantwortung. Mobazha verlinkt nur auf offizielle Exchange-Hilfeseiten und bietet keine Fiat-zu-USDT-Umrechnung an.',
+    },
+    backToStore: 'Zurück zum Laden',
+  },
+  supplyAvailability: {
+    quoteError:
+      'Die Verfügbarkeit konnte nicht überprüft werden. Sie können trotzdem versuchen, fortzufahren.',
+    allAvailable: 'Alle Artikel sind verfügbar.',
+    checking: 'Verfügbarkeit prüfen…',
+    statusAvailable: 'Auf Lager',
+    unavailableBody:
+      'Reduzieren Sie die Mengen oder entfernen Sie nicht verfügbare Artikel, um fortzufahren.',
+    manualActionTitle: 'Möglicherweise ist eine Verkäuferbewertung erforderlich',
+    warningTitle: 'Überprüfen Sie die Verfügbarkeit, bevor Sie fortfahren',
+    manualActionBody:
+      'Für einen oder mehrere Artikel ist möglicherweise eine Verkäuferbestätigung erforderlich. Sie können versuchen, fortzufahren, der Checkout wird jedoch möglicherweise nicht abgeschlossen.',
+    statusSupplierUnavailable: 'Vorübergehend nicht verfügbar',
+    unavailableTitle: 'Einige Artikel sind nicht verfügbar',
+    statusOutOfStock: 'Ausverkauft',
+    statusManualAction: 'Verkäuferbewertung erforderlich',
+    statusLowStock: 'Nur noch {{count}} übrig',
+    orderConflictGeneric: 'Die Auftragserstellung ist fehlgeschlagen',
+    statusUnlimited: 'Verfügbar zum Download',
+    orderConflictManual:
+      'Diese Bestellung muss vor der Zahlung vom Verkäufer überprüft werden. Bitte versuchen Sie es später noch einmal.',
+    statusUnknown: 'Verfügbarkeit nicht überprüft',
+    orderConflictStock:
+      'Inventar konnte nicht reserviert werden. Aktualisieren Sie die Verfügbarkeit und versuchen Sie es erneut.',
+  },
+  dealLink: {
+    storeIdPrefix: 'Speichern',
+    loading: 'Ihr Angebot wird geladen…',
+    notFoundTitle: 'Deal-Link nicht gefunden',
+    pageEyebrow: 'Exklusives Angebot',
+    notFoundDescription: 'Dieser Link ist möglicherweise ungültig oder nicht mehr verfügbar.',
+    inactiveDescription: 'Der Verkäufer hat dieses Angebot pausiert oder deaktiviert.',
+    expiredDescription:
+      'Bitten Sie den Verkäufer um einen neuen Link, wenn Sie dennoch kaufen möchten.',
+    inactiveTitle: 'Dieses Angebot ist nicht verfügbar',
+    expiredTitle: 'Dieser Deal ist abgelaufen',
+    errorTitle: 'Das Angebot konnte nicht geladen werden',
+    retry: 'Versuchen Sie es erneut',
+    sellerFallback: 'Verkäufer',
+    quoteErrorTitle: 'Angebot nicht verfügbar',
+    quoteErrorDescription:
+      'Wir konnten kein Preisangebot erstellen. Aktualisieren Sie die Datei, um es erneut zu versuchen.',
+    networkErrorDescription:
+      'Wir konnten den Server nicht erreichen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
+    errorDescription:
+      'Beim Laden dieses Angebots ist ein Fehler aufgetreten. Versuchen Sie es gleich noch einmal.',
+    networkErrorTitle: 'Verbindungsproblem',
+    productImageAlt: 'Foto von {{product}}',
+    windowDays: '{{count}} Tage',
+    acceptedPaymentsLabel: 'Der Verkäufer akzeptiert',
+    acceptanceWindow: 'Zeit, die Lieferung zu überprüfen',
+    deliverables: 'Was Sie erhalten',
+    protectionWindow: 'Käuferschutzfrist',
+    acceptedPaymentsFallback:
+      'Nachdem Sie fortgefahren haben, werden die Zahlungsoptionen angezeigt',
+    refund: {
+      before_download: 'Rückerstattung vor Zugriff auf die digitale Lieferung',
+    },
+    termsTitle: 'Lieferung & Käuferschutz',
+    windowUnavailable: 'Wird bereitgestellt, nachdem Sie fortgefahren haben',
+    feeBreakdownHint: 'Dieses Angebot ist bis zum Ablauf gesperrt.',
+    termsDefault:
+      'Erstellen Sie weiterhin eine geschützte Bestellung. Innerhalb der Schutzfrist können Sie die Lieferung überprüfen und den Erhalt bestätigen.',
+    refundTerms: 'Rückerstattungsbedingungen',
+    feeLine: {
+      discount: 'Rabatt',
+      itemOrServiceAmount: 'Artikel oder Dienstleistung',
+      buyerServiceCharge: 'Servicegebühr für den Käufer',
+      taxOrExternalCost: 'Steuern oder externe Kosten',
+      paymentOrNetworkCost: 'Zahlungs- oder Netzwerkkosten',
+    },
+    feeBreakdownTitle: 'Preisaufschlüsselung',
+    quoteExpiryLabel: 'Das Angebot läuft ab',
+    buyerTotal: 'Gesamtbetrag fällig',
+    countdownExpired: 'Angebot abgelaufen',
+    countdownValue: '{{days}}d {{hours}}h {{minutes}}m {{seconds}}s',
+    accepting: 'Wir bereiten Ihre Bestellung vor…',
+    acceptCtaMobile: 'Fahren Sie sicher fort',
+    paymentNeutralBody:
+      'Wenn Sie fortfahren, wird Ihre Bestellung erstellt und Sie gelangen zur Standard-Zahlungsseite von Mobazha, wo Sie aus den vom Verkäufer unterstützten Zahlungsmethoden auswählen können, die für diese Bestellung verfügbar sind.',
+    paymentNeutralTitle: 'Wählen Sie „Zahlung“, nachdem Sie fortgefahren haben',
+    acceptCta: 'Fahren Sie mit dem Käuferschutz fort',
+    acceptFailed:
+      'Wir konnten mit dieser Bestellung nicht fortfahren. Aktualisieren Sie das Angebot und versuchen Sie es erneut.',
+    authRequiredHint:
+      'Melden Sie sich erst an, wenn Sie fortfahren. Das Durchsuchen dieses Angebots bleibt öffentlich.',
+    sameCurrencyNotice:
+      'Dieses Angebot wird in einer einzigen Währung angeboten. Die Zahlungsmethoden können variieren, der Gesamtbetrag bleibt jedoch in dieser Währung.',
+    deliveryType: {
+      fixed_service: 'Fester Service',
+      unknown: 'Individuelle Lieferung',
+      license_key: 'Lieferung des Lizenzschlüssels',
+      digital_file: 'Digitale Lieferung',
+    },
+  },
+  connectPlatform: {
+    title: 'Fügen Sie Mobazha-Plattformdienste hinzu',
+    button: 'Optionale Dienste anbinden',
+    description:
+      'Ihr Shop arbeitet mit einer eigenen Identität. Verbinden Sie ein Konto nur für optionale gehostete Funktionen wie Markenweiterleitung, Aggregation oder soziale Integrationen.',
+    connectFailed:
+      'Das Konto wurde angemeldet, aber der Shop war nicht verbunden. Versuchen Sie es erneut, ohne die Identität Ihres lokalen Shops zu ändern.',
+  },
+  storeCredential: {
+    storeCredentialInvalidTitle: 'Die Verbindung dieses Shops muss wiederhergestellt werden',
+    storeCredentialInvalidBody:
+      'Die Verbindung dieses Shops zur Plattform wurde abgelehnt. Stellen Sie die Verbindung erneut her, damit der lokale Knoten die Plattformanmeldeinformationen dieses Shops sicher ersetzt – die stabile Peer-Identität Ihres Shops und seine Daten bleiben erhalten und Sie müssen sich bei keinem Konto anmelden. Dies ist keine Kontoanmeldung.',
+    accountStoreMismatchTitle: 'Dieser Shop ist mit dem Konto eines anderen Shops verknüpft',
+    accountStoreMismatchSwitch: 'Konto wechseln',
+    accountStoreMismatchDisconnectCancelCta: 'Stornieren',
+    accountStoreMismatchDisconnect: 'Shop-Konto trennen',
+    accountStoreMismatchDisconnectConfirmCta: 'Shop-Konto trennen',
+    accountStoreMismatchDisconnectConfirmTitle: 'Konto dieses Shops trennen?',
+    accountSessionRequiredTitle: 'Verbinden Sie ein Konto für diese Funktion',
+    accountStoreMismatchBody:
+      'Die optionale Plattform-Konto-Zuordnung dieses Shops verweist auf einen anderen Shop, sodass dieses Konto diesen nicht verwalten kann. Wechseln Sie zu dem mit diesem Shop verknüpften Konto oder trennen Sie die Kontoverknüpfung dieses Shops, um fortzufahren. Durch das Trennen der Verbindung wird nur die optionale Plattform-Konto-Zuordnung dieses Shops entfernt – es wird kein Konto entfernt oder abgemeldet – und die Peer-Identität, Daten, Deal-Links und Bestellhistorie Ihres Shops bleiben erhalten, während der Shop selbstständig arbeitet.',
+    accountStoreMismatchDisconnectConfirmBody:
+      'Dadurch wird nur die optionale Plattform-Konto-Zuordnung dieses Shops entfernt. Die Peer-Identität, Daten, Deal-Links und Bestellhistorie Ihres Shops bleiben unverändert und es wird kein Konto abgemeldet.',
+    retryCta: 'Versuchen Sie es erneut',
+    reconnectCta: 'Shop erneut verbinden',
+    accountSessionRequiredCta: 'Konto verbinden',
+    rateLimitedTitle: 'Im Moment gibt es zu viele Anfragen',
+    accountSessionRequiredBody:
+      'Diese Aktion verwendet eine optionale Plattformkontofunktion. Das Herstellen einer Verbindung bleibt für die lokalen Tools Ihres Shops optional, für diesen speziellen Vorgang ist jedoch ein verbundenes Konto erforderlich. Schließen Sie eines an, um fortzufahren – alles andere funktioniert auch ohne.',
+    accountSessionRequiredOptionalNote:
+      'Das Herstellen einer Verbindung ist für lokale Store-Funktionen optional und nur für diese Plattform-Konto-Aktion erforderlich.',
+    connecting: 'Verbinden…',
+    rateLimitedBody:
+      'Sie haben ein vorübergehendes Anfragelimit erreicht. Warten Sie ein paar Sekunden und versuchen Sie es dann erneut – es hat sich nichts geändert.',
+    disconnecting: 'Verbindung trennen…',
+    reconnecting: 'Wieder verbinden…',
+    disconnectFailed: 'Das Konto konnte nicht getrennt werden. Bitte versuchen Sie es erneut.',
+    actionFailed: 'Diese Aktion konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.',
+    refreshFailed: 'Der Shop konnte nicht erneut verbunden werden. Bitte versuchen Sie es erneut.',
+    connectActionFailed:
+      'Das Plattformkonto konnte nicht verbunden werden. Bitte versuchen Sie es erneut.',
+  },
+  sellerAffiliate: {
+    adminTitle: 'Partner des Verkäufers',
+    status: 'Status',
+    active: 'Aktiv',
+    paused: 'Angehalten',
+    attributionWindow: 'Attributionsfenster',
+    adminSubtitle:
+      'Konfigurieren Sie ein automatisches, geschäftsweites Empfehlungsprogramm und überprüfen Sie dessen auftragsgestützte Abrechnung.',
+    attributionWindowPresets: 'Empfohlen:',
+    attributionWindowUnit: 'Attributionsfenstereinheit',
+    programTitle: 'Programmeinstellungen',
+    commissionRate: 'Provisionssatz',
+    unitHours: 'Std',
+    attributionWindowDays: 'Attributionsfenster (Tage)',
+    unitMinutes: 'Minuten',
+    unitSeconds: 'Sekunden',
+    windowDays: '{{count}} Tage',
+    windowDay: '1 Tag',
+    windowHour: '1 Stunde',
+    programDescription:
+      'Ein geschäftsweites Programm. Empfehlungszuordnung und Provisionsstatus werden automatisch anhand verifizierter Bestellungen aktualisiert.',
+    attributionWindowDaysHelp:
+      'Wie lange dauert es, nachdem ein Käufer einen gültigen Promoter-Link geöffnet hat, dass dieser Promoter eine Gutschrift für die Bestellung des Käufers erhalten kann? Nach Ablauf dieses Zeitfensters wird für eine spätere Bestellung keine Provision mehr verdient.',
+    attributionWindowHelp:
+      'Wie lange dauert es, nachdem ein Käufer einen gültigen Promoter-Link geöffnet hat, dass dieser Promoter eine Gutschrift für die Bestellung des Käufers erhalten kann? Eine spätere Bestellung bringt nach Ablauf dieses Zeitfensters keine Provision mehr.',
+    unitDays: 'Tage',
+    windowHours: '{{count}} Stunden',
+    windowSeconds: '{{count}} Sekunden',
+    windowMinutes: '{{count}} Minuten',
+    earningsInProgressLabel: 'Im Gange',
+    earningsOrders: '{{count}} Bestellungen',
+    attributionWindowExact: 'Genaues Attributionsfenster: {{window}}',
+    attributionWindowTooShort:
+      'Weniger als 24 Stunden sind für die Content-Werbung sehr kurz – die meisten Social-Media- und Videokäufer konvertieren innerhalb von Tagen. Erwägen Sie 7 Tage oder mehr.',
+    attributionWindowRecommend:
+      'Inhaltsgesteuerte Werbung führt innerhalb weniger Tage zu Conversions – typisch sind 7 bis 30 Tage. Ein kurzes Zeitfenster verwirft Verkäufe, die Ihre Promoter tatsächlich erzielt haben.',
+    earningsReversedLabel: 'Umgedreht',
+    earningsSummaryHeading: 'Zusammenfassung der Einnahmen',
+    earningsPromotersLabel: 'Konvertierende Promoter',
+    earningsPaidLabel: 'Ausgezahlt',
+    invalidProgram:
+      'Geben Sie eine Provision von 0–100 % und ein Attributionsfenster von 1 Minute bis 365 Tagen ein.',
+    invalidRate: 'Die Provision muss größer als 0 und höchstens 100 sein.',
+    programSaved: 'Gespeichert',
+    statusDirtyHint:
+      'Speichern oder verwerfen Sie Ihre Änderungen, bevor Sie das Programm aktivieren oder anhalten.',
+    pauseProgram: 'Pause',
+    activateProgram: 'Aktivieren',
+    noManualWorkflow:
+      'Wenn die Auftragsmittel freigegeben werden, zahlen die Provisionen den Veranstaltern automatisch über die unten stehenden Schienen – keine Überprüfungswarteschlange, manuelles Budget oder Anspruchsprozess.',
+    railChainOther: 'Andere',
+    invalidWindow: 'Das Attributionsfenster muss zwischen 1 Minute und 365 Tagen liegen.',
+    createAndActivate: 'Programm erstellen und aktivieren',
+    pausedHint:
+      'Während der Pause erhalten Promoter-Links keine neuen Provisionen mehr; bestehende Provisionen bleiben davon unberührt.',
+    saveProgram: 'Programm speichern',
+    getPromoterLink: 'Holen Sie sich den Promoter-Link',
+    copyPromoterInvite: 'Einladung des Promoters kopieren',
+    promoterInviteCopied: 'Einladung kopiert',
+    saveBeforeInvite:
+      'Speichern Sie das Programm, um einen Promoter-Einladungslink zu erhalten, den Sie teilen können.',
+    saveFailed: 'Das Partnerprogramm konnte nicht gespeichert werden.',
+    programLoadFailed:
+      'Das Programm für den aktiven Store konnte nicht geladen werden. Es wurden keine Änderungen vorgenommen; Überprüfen Sie den ausgewählten Store und versuchen Sie es erneut.',
+    railsShow: 'Auszahlungsmethoden anzeigen',
+    railsSummary:
+      'Ab sofort sind Auszahlungsmethoden für neue Bestellungen verfügbar – Auszahlungen werden automatisch abgewickelt, es muss nichts konfiguriert werden.',
+    railsHistoryNote:
+      'Provisionen aus früheren Bestellungen werden weiterhin nach der mit dieser Bestellung erfassten Methode abgerechnet, auch wenn diese hier nicht aufgeführt ist.',
+    railsReadyCount: '{{count}} Auszahlungsmethoden bereit',
+    supportedRails: 'Automatische Veranstalterauszahlungen',
+    copyInviteFailed: 'Die Promoter-Einladung konnte nicht kopiert werden.',
+    guestSupported: 'Gastkasse',
+    costPreviewTitle: 'Was Sie jeder Verkauf kostet',
+    railsHide: 'Auszahlungsmethoden ausblenden',
+    capabilitiesLoadFailed: 'Automatische Abrechnungsfunktionen können nicht geladen werden.',
+    costPreviewExample: 'Bei {{percent}} % zahlt jede 100 Nettowaren {{commission}} an Provision.',
+    costPreviewBody:
+      'Die Provision wird auf den Nettowarenwert einer Bestellung erhoben – nur auf die Zwischensumme des Produkts. Versand und Steuern sind ausgeschlossen, und wenn die Bestellung erstattet wird, wird die entsprechende Provision zurückerstattet.',
+    linkActive: 'Aktiv',
+    statementsLockedHint:
+      'Erstellen Sie das oben stehende Programm, um Provisionsabrechnungen zu erhalten.',
+    noSupportedRails: 'Derzeit ist keine vollständige Affiliate-Abwicklungsschiene verfügbar.',
+    linkRevoked: 'Widerrufen',
+    confirmRevoke: 'Bestätigen Sie den Widerruf',
+    promoterLinks: 'Promoter-Links',
+    revokeLink: 'Link widerrufen',
+    statementDescription:
+      'Der Status ergibt sich aus der Bestellberechtigung und der Bestätigung der Abwicklung in der Kette. „Bezahlt“ bedeutet immer eine bestätigte On-Chain-Zahlung.',
+    linksLoadFailed: 'Promoter-Links können nicht geladen werden.',
+    revokeFailed: 'Der Promoter-Link kann nicht widerrufen werden.',
+    noPromoterLinks: 'Bisher ist noch kein Veranstalter diesem Programm beigetreten.',
+    promoterStatementTitle: 'Affiliate-Einnahmen',
+    sellerStatementTitle: 'Affiliate-Provisionen',
+    statementEmpty: 'Noch keine Affiliate-Provisionen.',
+    refresh: 'Affiliate-Erklärung aktualisieren',
+    statementLoadFailed: 'Die Affiliate-Erklärung konnte nicht geladen werden.',
+    statementEmptySeller:
+      'Noch keine Affiliate-Provisionen. Zeilen werden automatisch angezeigt, sobald eine vom Veranstalter empfohlene Bestellung bezahlt wurde.',
+    payoutRailsTitle: 'Sie können eine Provision erhalten',
+    reversed: 'Umgedreht',
+    pending: 'Ausstehend',
+    commission: 'Kommission',
+    settling: 'Sich niederlassen',
+    paid: 'Bezahlt',
+    settlementStateSubmitted: 'Eingereicht',
+    statementEmptyPromoter:
+      'Noch keine Provisionen. Teilen Sie Ihren Link – nachdem ein Käufer darüber bezahlt hat, erscheint die Provision automatisch hier und wird in der Kette ausgezahlt, wenn der Bestellbetrag freigegeben wird.',
+    settlementStatePlanned: 'Geplant',
+    settlementStateFailed:
+      'Die automatische Abrechnung ist fehlgeschlagen. Überprüfen Sie den Grund und versuchen Sie es erneut.',
+    txHash: 'Transaktion',
+    settlementStateAbandoned:
+      'Zeitüberschreitung bei der automatischen Abrechnung. Überprüfen Sie den Grund und versuchen Sie es erneut.',
+    settlementAmount: 'Zahlung in der Kette',
+    copied: 'Kopiert',
+    clawbackDue: 'Rückforderung fällig',
+    failed: 'Die Abwicklung ist fehlgeschlagen',
+    tableOrder: 'Befehl',
+    confirmations: '{{count}} Bestätigungen',
+    tableStatus: 'Status',
+    tableDetails: 'Einzelheiten',
+    expandRow: 'Details anzeigen',
+    tablePromoter: 'Promoter',
+    guestOrder: 'Gast',
+    tableDate: 'Datum',
+    copyOrderID: 'Bestell-ID kopieren',
+    referralLabel: 'Empfehlungssitzung',
+    referral: 'Empfehlung {{id}}',
+    filterAll: 'Alle',
+    filterInProgress: 'Im Gange',
+    confirmedAt: 'Bestätigt {{time}}',
+    collapseRow: 'Details ausblenden',
+    copyTx: 'Transaktions-Hash kopieren',
+    filterTo: 'Miteinander ausgehen',
+    clearFilters: 'Filter löschen',
+    filterFrom: 'Ab Datum',
+    filterPromoterAll: 'Alle Veranstalter',
+    copyPromoter: 'Promoter-Peer-ID kopieren',
+    copyReferral: 'Empfehlungssitzungs-ID kopieren',
+    filterNoMatches: 'Keine Provisionen entsprechen den aktuellen Filtern.',
+    earningsAttributedOrders: '{{count}} zugeschriebene Bestellungen',
+    linkOrdersCount: '{{count}} Bestellungen',
+    noLinkActivity: 'Noch keine zugeordneten Bestellungen',
+    hideSettings: 'Einstellungen ausblenden',
+    reversalReason: 'Stornogrund',
+    detailBuyer: 'Käufer',
+    editSettings: 'Einstellungen bearbeiten',
+    linkCreatedAt: 'Erstellt {{date}}',
+    summaryLinks: '{{count}} Promoter-Links',
+    unsavedChanges: 'Nicht gespeicherte Änderungen',
+    settlementAddress: 'Auszahlungsadresse',
+    detailLines: '{{count}} Auftragszeilen',
+    copyAddress: 'Auszahlungsadresse kopieren',
+    referralSaving: 'Ihre Empfehlung wird gespeichert…',
+    detailAttributedAt: 'Zugeschrieben',
+    detailBasis: 'Provisionsbasis',
+    createLink: 'Verknüpfung erstellen',
+    referralDescription:
+      'Berechtigte Käufe von diesem Verkäufer werden beim Bezahlen automatisch zugeordnet.',
+    seller: 'Verkäufer {{id}}',
+    browseStore: 'Durchsuchen Sie diesen Verkäufer',
+    referralSaved: 'Empfehlung gespeichert',
+    programLinkDescription:
+      'Der Provisionsstatus wird automatisch aus verifizierten Bestellungen generiert. Auf unterstützten Krypto-Schienen werden Veranstalter automatisch bezahlt, wenn die Bestellmittel freigegeben werden – es gibt keine Plattform-Überprüfungswarteschlange oder manuelle Auszahlung.',
+  },
+  promote: {
+    title: 'Bewerben Sie diesen Verkäufer',
+    loadingLink: 'Bereiten Sie Ihren Link vor…',
+    retry: 'Versuchen Sie es erneut',
+    subtitle:
+      'Verwenden Sie Ihren persönlichen Link, damit berechtigte Käufe automatisch zugeordnet werden.',
+    copyCta: 'Link kopieren',
+    shareCta: 'Aktie',
+    copySuccess: 'Link kopiert',
+    disclosureBody:
+      'Wenn ein Käufer über Ihren Link startet und eine verifizierte Bestellung abschließt, wird die Provision automatisch erfasst und folgt dem Bestellschutz-Lebenszyklus.',
+    disclosureTitle: 'So funktioniert Seller Affiliate',
+    linkFailed: 'Ihr Affiliate-Link konnte nicht geladen werden.',
+    directLinkTitle: 'Ihr persönlicher Link',
+    copyFailed: 'Link konnte nicht kopiert werden',
+    signInCta: 'Melden Sie sich an, um fortzufahren',
+    shareText: 'Durchsuchen Sie diesen Verkäufer über meinen Empfehlungslink.',
+    invalidProgram: 'Partnerprogramm nicht gefunden.',
+    authRequired:
+      'Melden Sie sich an, um Ihren Verkäufer-Affiliate-Link zu erstellen oder wiederzuverwenden.',
+    entryPathHint:
+      'Berechtigte Käufe, die über diesen Link gestartet werden, werden automatisch zugeordnet.',
+    termsTitle: 'Was Sie verdienen',
+    shareTitle: 'Mobazha-Verkäufer-Partner',
+    storefrontSubtitle:
+      'Ein paar Artikel aus diesem Shop, damit Sie wissen, was Ihr Publikum kauft.',
+    termsWindowExact: 'Attributionsfenster: {{window}}, nachdem ein Käufer Ihren Link geöffnet hat',
+    termsWindow: 'Attributionsfenster {{days}} Tage, nachdem ein Käufer Ihren Link geöffnet hat',
+    storefrontTitle: 'Was Sie fördern',
+    promotingStore: 'Werbung für {{name}}',
+    commissionsLinkTitle: 'Affiliate-Einnahmen',
+    termsRate: 'Provision {{rate}} % auf qualifizierte Bestellungen',
+    termsLastTouch:
+      'Die Namensnennung erfolgt im letzten Schritt: Wenn der Käufer später einen anderen Promoter-Link öffnet, kann dieser Ihren Link ersetzen.',
+    storefrontViewAll: 'Kompletten Shop ansehen',
+    storefrontEarn: 'Sie verdienen ≈{{amount}}',
+    commissionsLinkBody:
+      'Sehen Sie sich die Ihrem Link zugeordneten Provisionen und den Status ihres automatischen Bestelllebenszyklus an.',
+    commissionsLinkCta: 'Affiliate-Einnahmen anzeigen',
+    qrCta: 'QR-Code',
+    termsUnavailable: 'Die Provisionsbedingungen sind derzeit nicht verfügbar.',
+    commissionsAuthRequired: 'Melden Sie sich an, um die Affiliate-Einnahmen anzuzeigen.',
+    longLinkTitle: 'Für Fortgeschrittene: Link in voller Länge',
+    qrDescription: 'Jeder, der diesen Code scannt, landet auf Ihrem Empfehlungslink.',
+    qrDownload: 'PNG herunterladen',
+    qrTitle: 'Per QR-Code teilen',
   },
 };
 

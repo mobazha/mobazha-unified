@@ -111,12 +111,14 @@ describe('i18n', () => {
       }
     });
 
-    it('中文资源应覆盖所有英文翻译键', () => {
+    it('所有支持语言应覆盖英文翻译键', () => {
       const english = flattenTranslations(translations.en);
-      const chinese = flattenTranslations(translations.zh);
-      const missingKeys = Object.keys(english).filter(key => !(key in chinese));
 
-      expect(missingKeys).toEqual([]);
+      for (const locale of SUPPORTED_LOCALES.filter(locale => locale !== DEFAULT_LOCALE)) {
+        const localized = flattenTranslations(translations[locale]);
+        const missingKeys = Object.keys(english).filter(key => !(key in localized));
+        expect(missingKeys, locale).toEqual([]);
+      }
     });
 
     it('已有翻译应保留英文资源中的全部插值参数', () => {
