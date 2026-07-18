@@ -166,6 +166,14 @@ function isPublicRoute(pathname: string): boolean {
     }
   }
 
+  // 特殊处理 /a/:code（affiliate 平台短链落地，解析后 replace 到 /promo/...）
+  if (pathname.startsWith('/a/')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'a') {
+      return true;
+    }
+  }
+
   return false;
 }
 

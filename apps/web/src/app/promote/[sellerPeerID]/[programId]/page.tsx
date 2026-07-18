@@ -17,6 +17,7 @@ import {
 } from '@mobazha/core';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components';
+import { AffiliateLinkQRDialog } from '@/components/SellerAffiliate/AffiliateLinkQRDialog';
 import { AffiliateRailChips } from '@/components/SellerAffiliate/AffiliateRailChips';
 import { PromoteStorefront } from '@/components/SellerAffiliate/PromoteStorefront';
 import { Button } from '@/components/ui/button';
@@ -43,10 +44,19 @@ export default function PromoteProgramPage() {
   const [programLoading, setProgramLoading] = useState(Boolean(sellerPeerID && programId));
   const [programError, setProgramError] = useState(false);
   const [sellerName, setSellerName] = useState<string | null>(null);
-  const shareHref =
+  const longHref =
     link && typeof window !== 'undefined'
       ? `${window.location.origin}/promo/${encodeURIComponent(sellerPeerID ?? '')}/${encodeURIComponent(link.publicToken)}`
       : null;
+  // Prefer the platform short link when the backend mints one; older backends
+  // omit shortPath and everything below falls back to the long link.
+  const shortHref =
+    link?.shortPath && typeof window !== 'undefined'
+      ? `${window.location.origin}${link.shortPath}`
+      : null;
+  const shareHref = shortHref ?? longHref;
+  const shortCode = link?.shortPath ? link.shortPath.split('/').filter(Boolean).pop() : undefined;
+  const qrFileStem = `promo-${shortCode ?? link?.publicToken ?? 'link'}`;
 
   const loadProgram = useCallback(
     async (isCurrent: () => boolean = () => true) => {
@@ -240,7 +250,10 @@ export default function PromoteProgramPage() {
             ) : null}
             {link && shareHref ? (
               <>
-                <p className="break-all rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <p
+                  className="break-all rounded-lg border border-border bg-muted/30 p-3 text-sm"
+                  data-testid="promote-share-href"
+                >
                   {shareHref}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -248,6 +261,16 @@ export default function PromoteProgramPage() {
                     path: `/promo/${sellerPeerID}/${link.publicToken}`,
                   })}
                 </p>
+                {shortHref && longHref ? (
+                  <details data-testid="promote-long-link-details">
+                    <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                      {t('promote.longLinkTitle')}
+                    </summary>
+                    <p className="mt-2 break-all rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs text-muted-foreground">
+                      {longHref}
+                    </p>
+                  </details>
+                ) : null}
                 {activeTerms ? (
                   <div
                     className="space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3"
@@ -298,6 +321,11 @@ export default function PromoteProgramPage() {
                     <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
                     {t('promote.shareCta')}
                   </Button>
+                  <AffiliateLinkQRDialog
+                    url={shareHref}
+                    fileStem={qrFileStem}
+                    storeName={sellerName}
+                  />
                 </div>
               </>
             ) : null}

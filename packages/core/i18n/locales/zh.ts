@@ -9683,5 +9683,10 @@ export const zh: PartialTranslationResource = {
     commissionsLinkBody: '查看归因到你链接的佣金及其自动更新的订单生命周期状态。',
     commissionsLinkCta: '查看推广收益',
     commissionsAuthRequired: '登录后查看推广收益。',
+    longLinkTitle: '高级：完整长链接',
+    qrCta: '二维码',
+    qrTitle: '扫码分享',
+    qrDescription: '扫描此二维码即可打开你的推广链接。',
+    qrDownload: '下载 PNG',
   },
 };

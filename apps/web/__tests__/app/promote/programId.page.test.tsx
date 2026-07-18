@@ -215,6 +215,59 @@ describe('PromoteProgramPage (/promote/:sellerPeerID/:programId)', () => {
     );
   });
 
+  it('prefers the platform short link and folds the long link into advanced', async () => {
+    createSellerAffiliateLinkMock.mockResolvedValue({
+      id: 'link-1',
+      programID: 'program-1',
+      promoterPeerID: 'promoter-1',
+      publicToken: 'token-1',
+      publicPath: '/promo/token-1',
+      shortPath: '/a/Ab3xKz9m',
+      status: 'active',
+      createdAt: '2026-07-11T00:00:00Z',
+      updatedAt: '2026-07-11T00:00:00Z',
+    });
+
+    render(<PromoteProgramPage />);
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
+
+    const shareBox = await screen.findByTestId('promote-share-href');
+    expect(shareBox).toHaveTextContent('https://example.test/a/Ab3xKz9m');
+
+    // Long link survives, folded away for compatibility/debugging.
+    const details = screen.getByTestId('promote-long-link-details');
+    expect(details).toHaveTextContent('https://example.test/promo/seller-1/token-1');
+
+    // Copy targets what is displayed: the short link.
+    fireEvent.click(screen.getByTestId('promote-copy-link'));
+    await waitFor(() =>
+      expect(copyToClipboardMock).toHaveBeenCalledWith('https://example.test/a/Ab3xKz9m')
+    );
+
+    // Phase B: the QR entry point rides along with the short link.
+    expect(screen.getByTestId('promote-qr-link')).toBeInTheDocument();
+  });
+
+  it('falls back to the long link when the backend does not mint shortPath', async () => {
+    createSellerAffiliateLinkMock.mockResolvedValue({
+      id: 'link-1',
+      programID: 'program-1',
+      promoterPeerID: 'promoter-1',
+      publicToken: 'token-1',
+      publicPath: '/promo/token-1',
+      status: 'active',
+      createdAt: '2026-07-11T00:00:00Z',
+      updatedAt: '2026-07-11T00:00:00Z',
+    });
+
+    render(<PromoteProgramPage />);
+    fireEvent.click(await screen.findByText('sellerAffiliate.createLink'));
+
+    const shareBox = await screen.findByTestId('promote-share-href');
+    expect(shareBox).toHaveTextContent('https://example.test/promo/seller-1/token-1');
+    expect(screen.queryByTestId('promote-long-link-details')).not.toBeInTheDocument();
+  });
+
   it('uses the native share sheet when available and does not fall back to copy', async () => {
     createSellerAffiliateLinkMock.mockResolvedValue({
       id: 'link-1',

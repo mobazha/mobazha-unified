@@ -678,6 +678,11 @@ export const HOSTING_API = {
   // MS2a.2b: public slug → (peerID, storefront) resolver.
   STOREFRONTS_BY_SLUG: (slug: string) => `/platform/v1/storefronts/by-slug/${slug}`,
 
+  // Affiliate share surface (Phase A): public short-code → (sellerPeerID, token)
+  // resolver behind the /a/<code> landing route.
+  AFFILIATE_SHORT_LINKS: (code: string) =>
+    `/platform/v1/affiliate-short-links/${encodeURIComponent(code)}`,
+
   // --- Collectibles Hub+NFT (P1 · SaaS only · collectiblesHubEnabled) ---
   // Compatibility aliases retain the original singular names while every
   // canonical path comes from the generated Hosting OpenAPI contract above.

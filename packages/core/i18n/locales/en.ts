@@ -10506,6 +10506,11 @@ export const en: TranslationResource = {
       'View commissions attributed to your link and their automatic order lifecycle status.',
     commissionsLinkCta: 'View affiliate earnings',
     commissionsAuthRequired: 'Sign in to view affiliate earnings.',
+    longLinkTitle: 'Advanced: full-length link',
+    qrCta: 'QR code',
+    qrTitle: 'Share via QR code',
+    qrDescription: 'Anyone scanning this code lands on your referral link.',
+    qrDownload: 'Download PNG',
   },
 };
 

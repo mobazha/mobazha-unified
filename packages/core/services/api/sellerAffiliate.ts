@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
-import { NODE_API } from '../../config/apiPaths';
+import { HOSTING_API, NODE_API } from '../../config/apiPaths';
 import type {
+  AffiliateShortLinkResolution,
   SellerAffiliateProgramRequest,
   SellerAffiliatePromoterStatementTarget,
 } from '../../types/sellerAffiliate';
 import {
+  normalizeAffiliateShortLinkResolution,
   normalizePublicSellerAffiliateLink,
   normalizeSellerAffiliateCapabilities,
   normalizeSellerAffiliateLink,
@@ -18,6 +20,7 @@ import {
 import {
   crossStoreAnonymousGet,
   crossStoreAnonymousPost,
+  hostingGet,
   nodeAuthGet,
   nodeAuthPost,
   nodeAuthPut,
@@ -80,6 +83,20 @@ export async function revokeSellerAffiliateLink(_programID: string, linkID: stri
 export async function reissueSellerAffiliateLink(linkID: string) {
   return normalizeSellerAffiliateLink(
     await nodeAuthPost<unknown>(NODE_API.SELLER_AFFILIATE_LINK_REISSUE(linkID))
+  );
+}
+
+/**
+ * Resolve a platform short code (/a/<code>) to its long-link facts. Anonymous;
+ * the platform answers 404 for unknown codes and while short links are disabled.
+ */
+export async function resolveAffiliateShortLink(
+  code: string
+): Promise<AffiliateShortLinkResolution> {
+  const trimmed = (code || '').trim();
+  if (!trimmed) throw new Error('short code is required');
+  return normalizeAffiliateShortLinkResolution(
+    await hostingGet<unknown>(HOSTING_API.AFFILIATE_SHORT_LINKS(trimmed))
   );
 }
 

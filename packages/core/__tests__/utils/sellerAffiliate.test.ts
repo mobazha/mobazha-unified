@@ -488,6 +488,48 @@ describe('normalizeSellerAffiliateLink payout rails', () => {
   });
 });
 
+describe('normalizeSellerAffiliateLink shortPath', () => {
+  const base = {
+    id: 'link-1',
+    programID: 'program-1',
+    promoterPeerID: 'promoter-1',
+    publicToken: 'token-1',
+    publicPath: '/promo/token-1',
+    status: 'active',
+    createdAt: '2026-07-13T00:00:00Z',
+    updatedAt: '2026-07-13T00:00:00Z',
+  };
+
+  it('carries the platform short path when the gateway mints one', async () => {
+    const { normalizeSellerAffiliateLink } = await import('../../utils/sellerAffiliate');
+    const link = normalizeSellerAffiliateLink({ ...base, shortPath: '/a/Ab3xKz9m' });
+    expect(link.shortPath).toBe('/a/Ab3xKz9m');
+  });
+
+  it('omits shortPath on backends that predate it or send junk', async () => {
+    const { normalizeSellerAffiliateLink } = await import('../../utils/sellerAffiliate');
+    expect(normalizeSellerAffiliateLink(base).shortPath).toBeUndefined();
+    expect(normalizeSellerAffiliateLink({ ...base, shortPath: '  ' }).shortPath).toBeUndefined();
+    expect(normalizeSellerAffiliateLink({ ...base, shortPath: 42 }).shortPath).toBeUndefined();
+  });
+});
+
+describe('normalizeAffiliateShortLinkResolution', () => {
+  it('unwraps the resolver envelope', async () => {
+    const { normalizeAffiliateShortLinkResolution } = await import('../../utils/sellerAffiliate');
+    expect(
+      normalizeAffiliateShortLinkResolution({
+        data: { sellerPeerID: 'QmSeller1', token: 'token-1' },
+      })
+    ).toEqual({ sellerPeerID: 'QmSeller1', token: 'token-1' });
+  });
+
+  it('rejects responses missing the link facts', async () => {
+    const { normalizeAffiliateShortLinkResolution } = await import('../../utils/sellerAffiliate');
+    expect(() => normalizeAffiliateShortLinkResolution({ data: { token: 'token-1' } })).toThrow();
+  });
+});
+
 describe('unwrapSellerAffiliateList envelopes', () => {
   it('unwraps the paginated statements envelope — the shape that silently emptied every statement', async () => {
     const { unwrapSellerAffiliateList } = await import('../../utils/sellerAffiliate');

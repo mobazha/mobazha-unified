@@ -45,6 +45,9 @@ export const PUBLIC_ROUTES = [
 
   // Deal promotion entry（公开解析并签发短期 claim，再跳转 Deal Link）
   '/promo/:sellerPeerID/:token',
+
+  // Affiliate 平台短链落地（公开解析短码后 replace 到 /promo/...）
+  '/a/:code',
 ] as const;
 
 /**

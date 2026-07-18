@@ -275,6 +275,7 @@ export { getPublicDealLink, createDealLinkFeeQuote, acceptPublicDealLink } from 
 // Seller affiliate API (automation-first referral and three-state ledger)
 export * as sellerAffiliateApi from './sellerAffiliate';
 export type {
+  AffiliateShortLinkResolution,
   PublicSellerAffiliateLink,
   SellerAffiliateLink,
   SellerAffiliateCapabilities,
@@ -294,6 +295,7 @@ export {
   listSellerAffiliateStatements,
   putSellerAffiliateProgram,
   reissueSellerAffiliateLink,
+  resolveAffiliateShortLink,
 } from './sellerAffiliate';
 
 // Seller Deal Link API (authenticated hosting endpoints)

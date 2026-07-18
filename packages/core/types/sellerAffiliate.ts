@@ -54,11 +54,19 @@ export interface SellerAffiliateLink {
   promoterPeerID: string;
   publicToken: string;
   publicPath: string;
+  /** Platform short path ("/a/<code>"); absent on backends that predate short links. */
+  shortPath?: string;
   status: 'active' | 'revoked';
   /** Rails this link can pay commissions on; absent on backends that predate it. */
   payoutRails?: SellerAffiliatePayoutRail[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** Resolution of a platform short code (/a/<code>) back to its long-link facts. */
+export interface AffiliateShortLinkResolution {
+  sellerPeerID: string;
+  token: string;
 }
 
 export interface PublicSellerAffiliateLink {

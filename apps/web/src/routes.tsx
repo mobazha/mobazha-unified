@@ -204,6 +204,10 @@ if (!__SOVEREIGN__) {
       element: lazyPage(() => import('./app/deal/[token]/page')),
     },
     {
+      path: '/a/:code',
+      element: lazyPage(() => import('./app/a/[code]/page')),
+    },
+    {
       path: '/promo/:sellerPeerID/:token',
       element: lazyPage(() => import('./app/promo/[sellerPeerID]/[token]/page')),
     },
@@ -769,6 +773,10 @@ if (__SOVEREIGN__ && !__ROUTED_TMA__) {
     {
       path: '/deal/:token',
       element: lazyPage(() => import('./app/deal/[token]/page')),
+    },
+    {
+      path: '/a/:code',
+      element: lazyPage(() => import('./app/a/[code]/page')),
     },
     {
       path: '/promo/:sellerPeerID/:token',

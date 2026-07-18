@@ -6399,6 +6399,11 @@ export interface TranslationResource {
     commissionsLinkBody?: string;
     commissionsLinkCta?: string;
     commissionsAuthRequired?: string;
+    longLinkTitle?: string;
+    qrCta?: string;
+    qrTitle?: string;
+    qrDescription?: string;
+    qrDownload?: string;
   };
 
   // Digital asset shared labels (Supply Chain Phase 1.0)

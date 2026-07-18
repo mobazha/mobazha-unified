@@ -376,16 +376,31 @@ export function normalizeSellerAffiliateLink(value: unknown): SellerAffiliateLin
   if (status !== 'active' && status !== 'revoked')
     throw new Error('Invalid seller affiliate link status');
   const payoutRails = normalizePayoutRails(raw.payoutRails);
+  // Defensive optional read: shortPath is minted by the hosting gateway and
+  // absent on older backends — the long link must keep working without it.
+  const shortPath = typeof raw.shortPath === 'string' && raw.shortPath.trim() ? raw.shortPath : '';
   return {
     id: stringField(raw, 'id'),
     programID: stringField(raw, 'programID'),
     promoterPeerID: stringField(raw, 'promoterPeerID'),
     publicToken: stringField(raw, 'publicToken'),
     publicPath: stringField(raw, 'publicPath'),
+    ...(shortPath ? { shortPath } : {}),
     status,
     ...(payoutRails.length ? { payoutRails } : {}),
     createdAt: stringField(raw, 'createdAt'),
     updatedAt: stringField(raw, 'updatedAt'),
+  };
+}
+
+export function normalizeAffiliateShortLinkResolution(value: unknown): {
+  sellerPeerID: string;
+  token: string;
+} {
+  const raw = data(value);
+  return {
+    sellerPeerID: stringField(raw, 'sellerPeerID'),
+    token: stringField(raw, 'token'),
   };
 }
 
