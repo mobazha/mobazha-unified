@@ -34,6 +34,7 @@ declare global {
       on: boolean;
     };
     __demoCardState?: { big: string; small: string; on: boolean };
+    __demoPrecoverStop?: () => void;
   }
 }
 
@@ -105,6 +106,39 @@ const OVERLAY_INIT = `
 
 // ─── Off-camera auth ────────────────────────────────────────────────
 
+// Interface scale for embed readability (STYLE §3): render the app 25%
+// larger inside the 1920×1080 frame — small players stay legible.
+const ZOOM_INIT = `
+(() => {
+  const apply = () => { document.documentElement.style.zoom = '1.25'; };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+  else apply();
+})();
+`;
+
+// Opaque dark floor under the hook card from the recorded page's first
+// frame — the film never flashes the raw UI while it loads. Removed by
+// fullCard once the hook card has faded in above it.
+const PRECOVER_INIT = `
+(() => {
+  const put = () => {
+    if (!document.documentElement || document.getElementById('demo-precover')) return;
+    const d = document.createElement('div');
+    d.id = 'demo-precover';
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;transition:opacity .3s ease';
+    document.documentElement.appendChild(d);
+  };
+  put();
+  const obs = new MutationObserver(put);
+  obs.observe(document, { childList: true, subtree: true });
+  window.__demoPrecoverStop = () => {
+    obs.disconnect();
+    const d = document.getElementById('demo-precover');
+    if (d) { d.style.opacity = '0'; setTimeout(() => d.remove(), 400); }
+  };
+})();
+`;
+
 async function makeContext(browser: import('@playwright/test').Browser): Promise<BrowserContext> {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const context = await browser.newContext({
@@ -112,6 +146,7 @@ async function makeContext(browser: import('@playwright/test').Browser): Promise
     recordVideo: { dir: OUT_DIR, size: { width: 1920, height: 1080 } },
   });
   await context.addInitScript(OVERLAY_INIT);
+  await context.addInitScript(ZOOM_INIT);
   return context;
 }
 
@@ -181,12 +216,85 @@ async function fullCard(page: Page, big: string, small: string, holdMs: number) 
     },
     { big, small }
   );
-  await page.waitForTimeout(holdMs);
+  await page.waitForTimeout(450);
+  await page.evaluate(() => {
+    if (window.__demoPrecoverStop) window.__demoPrecoverStop();
+    else document.getElementById('demo-precover')?.remove();
+  });
+  await page.waitForTimeout(Math.max(0, holdMs - 450));
   await page.evaluate(() => {
     if (window.__demoCardState) window.__demoCardState.on = false;
     document.getElementById('demo-card')?.classList.remove('on');
   });
   await page.waitForTimeout(450);
+}
+
+// End card: fades in and HOLDS — the film ends on it (no fade-out, no
+// return to the UI, no black tail).
+async function endCard(page: Page, big: string, small: string, holdMs: number) {
+  await page.evaluate(
+    args => {
+      window.__demoCardState = { big: args.big, small: args.small, on: true };
+      const card = document.getElementById('demo-card');
+      if (card) {
+        card.querySelector('.big')!.textContent = args.big;
+        card.querySelector('.small')!.textContent = args.small;
+        card.classList.add('on');
+      }
+    },
+    { big, small }
+  );
+  await page.waitForTimeout(holdMs);
+}
+
+// Dark-floor helpers: loading states never go on camera. armCover() raises
+// the floor before an on-camera navigation; reveal() fades it away once the
+// destination content is ready. Segment openings get the floor from
+// PRECOVER_INIT at document-start.
+async function armCover(page: Page) {
+  await page.evaluate(() => {
+    let d = document.getElementById('demo-precover') as HTMLElement | null;
+    if (!d) {
+      d = document.createElement('div');
+      d.id = 'demo-precover';
+      d.style.cssText =
+        'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;opacity:0;transition:opacity .3s ease';
+      document.documentElement.appendChild(d);
+    }
+    requestAnimationFrame(() => {
+      d!.style.opacity = '1';
+    });
+  });
+  await page.waitForTimeout(400);
+}
+
+async function reveal(page: Page) {
+  await page.evaluate(() => {
+    if (window.__demoPrecoverStop) {
+      window.__demoPrecoverStop();
+      window.__demoPrecoverStop = undefined;
+    } else {
+      const d = document.getElementById('demo-precover') as HTMLElement | null;
+      if (d) {
+        d.style.opacity = '0';
+        setTimeout(() => d.remove(), 400);
+      }
+    }
+  });
+  await page.waitForTimeout(500);
+}
+
+// The p2p store-connect dialog can pop moments AFTER navigation settles;
+// poll twice so it cannot photobomb the reveal.
+async function settleNoConnecting(page: Page) {
+  for (let i = 0; i < 2; i += 1) {
+    await page
+      .waitForFunction(() => !document.body.innerText.includes('Connecting'), undefined, {
+        timeout: 25000,
+      })
+      .catch(() => {});
+    await page.waitForTimeout(500);
+  }
 }
 
 async function dwell(page: Page, ms = 1300) {
@@ -218,6 +326,7 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   // ── Segment 1 · Operator: create → rate → publish → invite link ──
   const opCtx = await loginContext(browser, 'testuser1');
   const op = await opCtx.newPage();
+  await op.addInitScript(PRECOVER_INIT);
   await op.goto('/operator/marketplaces');
   // Wait for the REAL page, not a spinner, before anything is on camera.
   await expect(op.getByRole('button', { name: /create marketplace/i }).first()).toBeVisible({
@@ -321,9 +430,11 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   // ── Segment 2 · Seller: invite landing → join ──
   const sellerCtx = await loginContext(browser, 'testuser3');
   const seller = await sellerCtx.newPage();
+  await seller.addInitScript(PRECOVER_INIT);
   await seller.goto(inviteUrl!.trim());
   const inviteCard = seller.getByTestId('invite-card');
   await expect(inviteCard).toBeVisible({ timeout: 30000 });
+  await reveal(seller);
   await chapter(
     seller,
     5,
@@ -343,17 +454,18 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   // Reuse the same operator page — go STRAIGHT to the detail URL (skip the
   // slow list page) so there is no spinner gap.
   const op2 = await opCtx.newPage();
+  await op2.addInitScript(PRECOVER_INIT);
   await op2.goto(`/operator/marketplaces/${marketplaceId}`);
   await expect(op2.getByRole('heading', { name: MARKET_NAME, level: 1 })).toBeVisible({
     timeout: 30000,
   });
+  await reveal(op2);
   await chapter(op2, 6, 'operator', 'Curate and share', 'Your storefront, your picks, your link.');
   await op2.getByTestId('operator-tab-curation').click();
-  const listingSelect = op2.getByTestId('operator-curation-select-listing');
-  await focusOn(op2, listingSelect, 800);
-  await listingSelect.selectOption({ index: 1 });
-  await dwell(op2, 900);
-  await op2.getByTestId('operator-curation-add-listing').click();
+  // Current curation UI: eligible candidates render as click-to-feature cards.
+  const candidate = op2.locator('[data-testid^="operator-curation-candidate-"]').first();
+  await focusOn(op2, candidate, 900);
+  await candidate.click();
   await dwell(op2, 1500);
   await op2.getByTestId('operator-tab-overview').click();
   const publishAgain = op2.getByRole('button', { name: /^publish$/i }).first();
@@ -370,11 +482,39 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
 
   // ── Segment 4 · Buyer: arrive via share link ──
   const buyerCtx = await loginContext(browser, 'testuser2');
+  {
+    // Warm the submarket home + product routes OFF CAMERA with a plain URL
+    // (no utm), so no attribution event fires and the recorded pages open
+    // on content instead of a cold transform.
+    const warm = await buyerCtx.newPage();
+    await warm.goto(`http://${subdomain}.localhost:3000/`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 45000,
+    });
+    await warm
+      .getByText(HERO_TITLE)
+      .first()
+      .click({ timeout: 30000 })
+      .catch(() => {});
+    await warm.waitForLoadState('domcontentloaded');
+    await warm.waitForTimeout(2500);
+    await warm.close();
+  }
   const buyer = await buyerCtx.newPage();
+  await buyer.addInitScript(PRECOVER_INIT);
   // The community share link — the operator's real submarket subdomain.
   const shareUrl = `http://${subdomain}.localhost:3000/?utm_source=operator_share&utm_medium=community&utm_campaign=${DEMO_SLUG}`;
   await buyer.goto(shareUrl);
   await buyer.waitForLoadState('domcontentloaded');
+  // Wait for the real submarket home (branded hero + product), not a spinner
+  // or the "unavailable" fallback — THEN narrate over the ready page.
+  await expect(buyer.getByText(HERO_TITLE).first()).toBeVisible({ timeout: 25000 });
+  await buyer
+    .waitForFunction(() => Array.from(document.images).every(i => i.complete), undefined, {
+      timeout: 4500,
+    })
+    .catch(() => {});
+  await reveal(buyer);
   // CH7 — THIS is the storefront the operator built, as buyers see it.
   await chapter(
     buyer,
@@ -383,9 +523,6 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
     'This is the storefront buyers see',
     `${MARKET_NAME} — the operator's brand, the seller's product.`
   );
-  // Wait for the real submarket home (branded hero + product), not a spinner
-  // or the "unavailable" fallback.
-  await expect(buyer.getByText(HERO_TITLE).first()).toBeVisible({ timeout: 25000 });
   await dwell(buyer, 2800);
 
   // CH8 — open the product: price, seller, and buyer protection.
@@ -396,11 +533,23 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
     'Every order is escrow-protected',
     'Funds stay in escrow until the buyer confirms delivery.'
   );
+  await armCover(buyer);
   await buyer.getByText(HERO_TITLE).first().click();
   await buyer.waitForLoadState('domcontentloaded');
+  await buyer
+    .getByText(/^Connecting/)
+    .waitFor({ state: 'hidden', timeout: 20000 })
+    .catch(() => {});
   await expect(buyer.getByRole('heading', { name: HERO_TITLE }).first()).toBeVisible({
     timeout: 25000,
   });
+  await buyer
+    .waitForFunction(() => Array.from(document.images).every(i => i.complete), undefined, {
+      timeout: 4500,
+    })
+    .catch(() => {});
+  await settleNoConnecting(buyer);
+  await reveal(buyer);
   await dwell(buyer, 3000);
   if (includePayment) {
     await buyer
@@ -454,10 +603,12 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
 
   // Reuse the operator page again — straight to the detail URL.
   const op3 = await opCtx.newPage();
+  await op3.addInitScript(PRECOVER_INIT);
   await op3.goto(`/operator/marketplaces/${marketplaceId}`);
   await expect(op3.getByRole('heading', { name: MARKET_NAME, level: 1 })).toBeVisible({
     timeout: 30000,
   });
+  await reveal(op3);
   await chapter(
     op3,
     9,
@@ -474,10 +625,10 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await dwell(op3, 4200);
 
   // END CARD
-  await fullCard(
+  await endCard(
     op3,
     'Mobazha',
-    'Your community. Your market. Your cut. · mobazha.com · recorded on Mobazha test network',
+    'Your community. Your market. Your cut. · mobazha.org · recorded on Mobazha test network',
     3200
   );
   await saveSegment(op3, 'seg5-operator-payoff.webm');
