@@ -71,11 +71,9 @@ describe('createOrderPaymentSelectionQuote', () => {
       vendorPeerID: 'QmVendor',
     });
 
-    expect(authPost).toHaveBeenCalledWith(
-      NODE_API.ORDER_PAYMENT_SELECTION_QUOTES('order-1'),
-      { paymentCoin: expect.any(String) },
-      { 'X-Store-PeerID': 'QmVendor' }
-    );
+    expect(authPost).toHaveBeenCalledWith(NODE_API.ORDER_PAYMENT_SELECTION_QUOTES('order-1'), {
+      paymentCoin: expect.any(String),
+    });
     expect(quote.id).toBe('psq-1');
     expect(quote.buyerPaymentTotal).toBe('250000');
   });

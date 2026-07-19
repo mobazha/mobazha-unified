@@ -527,13 +527,15 @@ export async function createOrderPaymentSelectionQuote(
   payload: CreateOrderPaymentSelectionQuoteData
 ): Promise<PaymentSelectionQuote> {
   const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
-  const vendorPeerID = payload.vendorPeerID?.trim();
 
   const realFn = async () => {
+    // The quote authorizes a buyer-owned payment-session mutation, so both
+    // records must be created against the buyer's local order projection.
+    // Routing only the quote to the seller makes the quote ID unusable when
+    // the buyer later creates the session.
     return authPost<PaymentSelectionQuote>(
       NODE_API.ORDER_PAYMENT_SELECTION_QUOTES(payload.orderId),
-      { paymentCoin },
-      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+      { paymentCoin }
     );
   };
 
@@ -578,26 +580,26 @@ export async function createOrderPaymentSession(
 ): Promise<PaymentSession> {
   const realFn = async () => {
     const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
-    const vendorPeerID = payload.vendorPeerID?.trim();
-    return authPost<PaymentSession>(
-      NODE_API.ORDER_PAYMENT_SESSION(payload.orderId),
-      {
-        paymentCoin,
-        ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
-        ...(payload.payFromCustodial ? { payFromCustodial: true } : {}),
-        ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
-        ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
-        ...(payload.moderator ? { moderator: payload.moderator } : {}),
-        ...(payload.paymentSelectionQuoteID
-          ? { paymentSelectionQuoteID: payload.paymentSelectionQuoteID }
-          : {}),
-        ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
-        ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
-        ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
-        ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
-      },
-      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
-    );
+    // Settlement authorization is a buyer-owned mutation and must start from
+    // the buyer's local order. Routing this POST to X-Store-PeerID targets the
+    // seller's replicated order and the crypto facade correctly rejects it.
+    // vendorPeerID remains useful to the read/quote calls, but never routes
+    // creation of the payment session itself.
+    return authPost<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(payload.orderId), {
+      paymentCoin,
+      ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
+      ...(payload.payFromCustodial ? { payFromCustodial: true } : {}),
+      ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
+      ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
+      ...(payload.moderator ? { moderator: payload.moderator } : {}),
+      ...(payload.paymentSelectionQuoteID
+        ? { paymentSelectionQuoteID: payload.paymentSelectionQuoteID }
+        : {}),
+      ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
+      ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
+      ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
+      ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
+    });
   };
 
   const mockFn = async (): Promise<PaymentSession> => {

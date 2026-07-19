@@ -58,6 +58,7 @@ import {
   loadRefundReceivingPreferencesSafe,
   persistRefundReceivingAddressBestEffort,
   isRetiredPaymentChain,
+  tryNormalizePaymentCoinToAssetId,
   useFiatPaymentVisible,
   sanitizeCheckoutTokenId,
   resolveCheckoutPaymentPolicyFromCheckoutItems,
@@ -701,10 +702,38 @@ export default function PaymentPage() {
   const showMobileBottomBar =
     Boolean(orderDetails) && !visibleFiatProvider && !externalWalletInfo && !isPaymentBlocked;
 
-  // 切换支付方式时清除外部钱包信息
+  // Keep an existing address-monitored session visible after creation or a
+  // page reload. Clear it only when the buyer really switches away from the
+  // session's payment coin (or to a fiat provider).
   useEffect(() => {
-    setExternalWalletInfo(null);
-  }, [visibleTokenId, visibleFiatProvider]);
+    const rawSessionCoin = paymentSession?.paymentCoin?.trim() || '';
+    const rawSelectedCoin = selectedPaymentCoin.trim();
+    const sessionCoin =
+      tryNormalizePaymentCoinToAssetId(rawSessionCoin)?.toLowerCase() ||
+      rawSessionCoin.toLowerCase();
+    const selectedCoin =
+      tryNormalizePaymentCoinToAssetId(rawSelectedCoin)?.toLowerCase() ||
+      rawSelectedCoin.toLowerCase();
+    if (
+      !paymentSession ||
+      visibleFiatProvider ||
+      !selectedCoin ||
+      sessionCoin !== selectedCoin ||
+      paymentSession.settlementMode !== 'address_monitored' ||
+      paymentSession.fundingTarget.type !== 'address'
+    ) {
+      setExternalWalletInfo(null);
+      return;
+    }
+
+    try {
+      setExternalWalletInfo(
+        externalWalletInfoFromSession(paymentSession, visibleTokenId ?? null, selectedPaymentCoin)
+      );
+    } catch {
+      setExternalWalletInfo(null);
+    }
+  }, [paymentSession, selectedPaymentCoin, visibleFiatProvider, visibleTokenId]);
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
@@ -1376,7 +1405,7 @@ export default function PaymentPage() {
         paymentProtectionEnabled && paymentModerator?.peerID ? paymentModerator.peerID : undefined;
 
       if (usesPaymentSessionFlow) {
-        const session = await ordersApi.createOrderPaymentSession({
+        let session = await ordersApi.createOrderPaymentSession({
           orderId: orderID!,
           paymentCoin: selectedPaymentCoin,
           vendorPeerID: paymentVendorPeerID,
@@ -1400,6 +1429,20 @@ export default function PaymentPage() {
             title: t('settings.refunds.saveFailed'),
             description: t('order.refundAddress.defaultSaveFailedDesc'),
           });
+        }
+
+        if (session.paymentReadiness?.status === 'awaiting_seller_receipt') {
+          const storeOptions = paymentVendorPeerID
+            ? { vendorPeerID: paymentVendorPeerID }
+            : undefined;
+          for (let attempt = 0; attempt < 20; attempt += 1) {
+            await new Promise(resolve => window.setTimeout(resolve, 500));
+            const refreshedSession = await ordersApi.getOrderPaymentSession(orderID!, storeOptions);
+            if (!refreshedSession) continue;
+            session = refreshedSession;
+            setPaymentSession(session);
+            if (session.paymentReadiness?.status !== 'awaiting_seller_receipt') break;
+          }
         }
 
         if (session.paymentReadiness?.status === 'awaiting_seller_receipt') {
@@ -1995,6 +2038,7 @@ export default function PaymentPage() {
                       </div>
                     ) : (
                       <Button
+                        data-testid="payment-create-session"
                         className="w-full touch-feedback hidden sm:flex"
                         size="default"
                         onClick={handlePayment}
