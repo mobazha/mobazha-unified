@@ -324,7 +324,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="sm:max-w-md" data-testid="ship-order-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>
             {deliveryMode === 'physical' && t('order.dialogs.shipOrder.title')}
@@ -362,6 +362,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
                 </label>
                 <div className="relative">
                   <input
+                    data-testid="ship-order-carrier"
                     ref={carrierInputRef}
                     type="text"
                     role="combobox"
@@ -461,6 +462,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
                   {t('order.ship.trackingNumber')} *
                 </label>
                 <input
+                  data-testid="ship-order-tracking"
                   type="text"
                   value={trackingInfo.trackingNumber}
                   onChange={e => {
@@ -534,6 +536,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
               {t('order.ship.note')}
             </label>
             <textarea
+              data-testid="ship-order-note"
               value={trackingInfo.note}
               onChange={e => setTrackingInfo(prev => ({ ...prev, note: e.target.value }))}
               rows={3}
@@ -546,7 +549,11 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSubmit} disabled={isLoading}>
+          <AlertDialogAction
+            onClick={handleSubmit}
+            disabled={isLoading}
+            data-testid="ship-order-confirm"
+          >
             {isLoading
               ? t('common.processing')
               : deliveryMode === 'digital'

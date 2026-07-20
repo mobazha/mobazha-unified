@@ -28,6 +28,7 @@ export const CryptoTokenCard: React.FC<CryptoTokenCardProps> = ({
 
   return (
     <button
+      data-testid={`payment-token-${token.id}`}
       type="button"
       onClick={onClick}
       disabled={disabled}

@@ -7,21 +7,27 @@
  * Shot list & copy: mobazha-docs/demos/0001-operator-commission-flywheel/demo.md
  * Style authority:  mobazha-docs/demos/STYLE.md
  *
- * Records five segments (per-page videos) to be concatenated in order:
+ * Records seven segments (per-page videos) to be concatenated in order:
  *   seg1 operator  ch1-4  create → rate → publish → invite link
  *   seg2 seller    ch5    invite landing → join
  *   seg3 operator  ch6    curate → republish → share link
- *   seg4 buyer     ch7    browse via share link → buy   (DEMO_PAYMENT=1 only)
- *   seg5 operator  ch8    attribution + earnings payoff
+ *   seg4 buyer     ch7-10 browse → checkout → real Anvil payment
+ *   seg5 seller    ch11-12 accept paid order → ship
+ *   seg6 buyer     ch13   confirm receipt → complete
+ *   seg7 operator  ch14   exact order attribution + estimate payoff
  *
  * Logins happen OFF CAMERA: tokens come from the Casdoor code-exchange API and
  * are injected into localStorage before any recorded page loads.
  */
 
-import { randomUUID } from 'node:crypto';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  DEMO_INTERFACE_SCALE,
+  installDemoInterfaceScale,
+  setDemoInterfaceScale,
+} from './demo-recording-scale';
 
 declare global {
   interface Window {
@@ -39,6 +45,7 @@ declare global {
 }
 
 const BACKEND = 'http://localhost:18080';
+const ANVIL = 'http://localhost:18545';
 const CASDOOR = 'http://localhost:18000';
 const CLIENT_ID = 'e2e-mobazha-client-id';
 const APP_NAME = 'app-mobazha';
@@ -70,7 +77,7 @@ const OVERLAY_INIT = `
   if (window.__demoOverlayInstalled) return;
   window.__demoOverlayInstalled = true;
   const CSS = \`
-    #demo-chip{position:fixed;left:32px;bottom:32px;z-index:2147483647;pointer-events:none;max-width:600px;background:rgba(15,23,42,.95);color:#fff;padding:16px 22px;border-radius:14px;border-left:5px solid var(--demo-accent,#7c3aed);font-family:system-ui,-apple-system,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.45);opacity:0;transition:opacity .3s ease}
+    #demo-chip{position:fixed;left:32px;bottom:32px;z-index:2147483647;pointer-events:none;max-width:520px;background:rgba(15,23,42,.95);color:#fff;padding:14px 20px;border-radius:14px;border-left:5px solid var(--demo-accent,#7c3aed);font-family:system-ui,-apple-system,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.45);opacity:0;transition:opacity .3s ease}
     #demo-chip.on{opacity:1}
     #demo-chip .persona{font:600 12px/1 system-ui;letter-spacing:.06em;text-transform:uppercase;color:var(--demo-accent,#7c3aed);margin-bottom:6px}
     #demo-chip .title{font:700 20px/1.25 system-ui;margin-bottom:4px}
@@ -106,16 +113,6 @@ const OVERLAY_INIT = `
 
 // ─── Off-camera auth ────────────────────────────────────────────────
 
-// Interface scale for embed readability (STYLE §3): render the app 25%
-// larger inside the 1920×1080 frame — small players stay legible.
-const ZOOM_INIT = `
-(() => {
-  const apply = () => { document.documentElement.style.zoom = '1.25'; };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
-  else apply();
-})();
-`;
-
 // Opaque dark floor under the hook card from the recorded page's first
 // frame — the film never flashes the raw UI while it loads. Removed by
 // fullCard once the hook card has faded in above it.
@@ -139,14 +136,17 @@ const PRECOVER_INIT = `
 })();
 `;
 
-async function makeContext(browser: import('@playwright/test').Browser): Promise<BrowserContext> {
+async function makeContext(
+  browser: import('@playwright/test').Browser,
+  interfaceScale: number = DEMO_INTERFACE_SCALE.public
+): Promise<BrowserContext> {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     recordVideo: { dir: OUT_DIR, size: { width: 1920, height: 1080 } },
   });
   await context.addInitScript(OVERLAY_INIT);
-  await context.addInitScript(ZOOM_INIT);
+  await installDemoInterfaceScale(context, interfaceScale);
   return context;
 }
 
@@ -154,21 +154,88 @@ async function makeContext(browser: import('@playwright/test').Browser): Promise
 // segment is discarded; the context keeps the session for on-camera pages.
 async function loginContext(
   browser: import('@playwright/test').Browser,
-  username: string
+  username: string,
+  interfaceScale: number = DEMO_INTERFACE_SCALE.workflow,
+  warmUrl = '/operator/marketplaces'
 ): Promise<BrowserContext> {
-  const context = await makeContext(browser);
+  const context = await makeContext(browser, interfaceScale);
+  // Derive the app origin from the requested destination before navigation.
+  // An unauthenticated protected route may redirect to Casdoor before
+  // DOMContentLoaded, so warm.url() is not a stable source for this value.
+  const returnOrigin = new URL(warmUrl, 'http://localhost:3000').origin;
   const warm = await context.newPage();
-  await warm.goto('/operator/marketplaces');
+  await warm.goto(warmUrl);
   await warm.waitForLoadState('domcontentloaded');
+
+  // Authentication is origin-scoped in the SaaS web app. Public marketplace
+  // and invite URLs can live on a subdomain, so log in on the exact origin
+  // that the recorded page will use instead of assuming localhost auth carries
+  // over. All of this remains on the discarded warm-up page.
+  const inviteLogin = warm.getByTestId('invite-login');
+  if (await inviteLogin.isVisible().catch(() => false)) {
+    await inviteLogin.click();
+  } else {
+    const headerLogin = warm.getByTestId('header-login-btn');
+    if (await headerLogin.isVisible().catch(() => false)) await headerLogin.click();
+  }
+
+  const standaloneLogin = warm.getByTestId('login-standalone-buyer');
+  if (await standaloneLogin.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await standaloneLogin.click();
+  }
+
+  await warm.waitForTimeout(500);
   if (warm.url().includes(':18000') || /casdoor|login/i.test(warm.url())) {
     await warm.getByRole('textbox', { name: /username|email/i }).fill(username);
     await warm.getByRole('textbox', { name: /password/i }).fill('123');
     await warm.getByRole('button', { name: /sign in/i }).click();
-    await warm.waitForURL(/localhost:3000/, { timeout: 45000 });
+    // Match the callback origin, not a localhost:3000 substring inside
+    // Casdoor's redirect_uri query parameter. The loose regex could close the
+    // warm page before the callback persisted the authenticated session.
+    await warm.waitForURL(url => url.origin === returnOrigin, { timeout: 45000 });
     await warm.waitForLoadState('domcontentloaded');
+    await expect
+      .poll(
+        () =>
+          warm.evaluate(() => window.localStorage.getItem('mobazha_auth_token')).catch(() => null),
+        {
+          timeout: 30000,
+          intervals: [250, 500, 1000],
+        }
+      )
+      .toBeTruthy();
+  }
+
+  if (warmUrl !== '/operator/marketplaces') {
+    const authenticatedOrigin = new URL(warm.url()).origin;
+    const sessionEntries = await warm.evaluate(() => Object.entries(window.sessionStorage));
+    await context.addInitScript(
+      ({ origin, entries }) => {
+        if (window.location.origin !== origin) return;
+        for (const [name, value] of entries) window.sessionStorage.setItem(name, value);
+      },
+      { origin: authenticatedOrigin, entries: sessionEntries }
+    );
   }
   await warm.close();
   return context;
+}
+
+async function mirrorMainAppAuthToLocalSubdomains(context: BrowserContext) {
+  const storage = await context.storageState();
+  const mainOrigin = storage.origins.find(origin => origin.origin === 'http://localhost:3000');
+  const localStorage = mainOrigin?.localStorage || [];
+  expect(localStorage.length, 'main-app login should persist browser auth').toBeGreaterThan(0);
+
+  // Casdoor's local client intentionally allows localhost:3000 but cannot
+  // enumerate the runtime-generated *.localhost marketplace hosts. Mirror the
+  // already-issued main-app session into those local subdomains before their
+  // first document loads. This is an E2E-environment bridge, not a fake user or
+  // bypass: the credentials and tokens still come from the real login above.
+  await context.addInitScript(entries => {
+    if (!window.location.hostname.endsWith('.localhost')) return;
+    for (const { name, value } of entries) window.localStorage.setItem(name, value);
+  }, localStorage);
 }
 
 // ─── Chapter + card control (state persisted across navigations) ────
@@ -297,6 +364,54 @@ async function settleNoConnecting(page: Page) {
   }
 }
 
+function asRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} is not an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function decimalToSmallestUnit(amount: string, decimals: number): string {
+  const parts = amount.trim().split('.');
+  if (parts.length > 2 || !/^\d+$/.test(parts[0] || '') || !/^\d*$/.test(parts[1] || '')) {
+    throw new Error(`invalid decimal amount: ${amount}`);
+  }
+  const whole = BigInt(parts[0]);
+  const fraction = (parts[1] || '').padEnd(decimals, '0').slice(0, decimals);
+  return (whole * BigInt(10) ** BigInt(decimals) + BigInt(fraction || '0')).toString();
+}
+
+async function anvilRPC<T>(method: string, params: unknown[]): Promise<T> {
+  const response = await fetch(ANVIL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  if (!response.ok) throw new Error(`Anvil ${method}: HTTP ${response.status}`);
+  const payload = asRecord((await response.json()) as unknown, `Anvil ${method} response`);
+  if (payload.error) {
+    throw new Error(`Anvil ${method}: ${JSON.stringify(payload.error)}`);
+  }
+  return payload.result as T;
+}
+
+async function fundAddressOnAnvil(address: string, decimalAmount: string): Promise<string> {
+  const accounts = await anvilRPC<string[]>('eth_accounts', []);
+  const payer = accounts[1] || accounts[0];
+  if (!payer) throw new Error('Anvil returned no funded account');
+  const value = `0x${BigInt(decimalToSmallestUnit(decimalAmount, 18)).toString(16)}`;
+  const txHash = await anvilRPC<string>('eth_sendTransaction', [
+    { from: payer, to: address, value },
+  ]);
+  await expect
+    .poll(() => anvilRPC<unknown>('eth_getTransactionReceipt', [txHash]), {
+      timeout: 30000,
+      intervals: [500, 1000, 1500],
+    })
+    .not.toBeNull();
+  return txHash;
+}
+
 async function dwell(page: Page, ms = 1300) {
   await page.waitForTimeout(ms);
 }
@@ -321,7 +436,7 @@ async function saveSegment(page: Page, name: string) {
 // ─── The demo ───────────────────────────────────────────────────────
 
 test('Demo 0001: operator commission flywheel', async ({ browser }) => {
-  const includePayment = process.env.DEMO_PAYMENT === '1';
+  test.setTimeout(12 * 60 * 1000);
 
   // ── Segment 1 · Operator: create → rate → publish → invite link ──
   const opCtx = await loginContext(browser, 'testuser1');
@@ -428,7 +543,12 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await saveSegment(op, 'seg1-operator-setup.webm');
 
   // ── Segment 2 · Seller: invite landing → join ──
-  const sellerCtx = await loginContext(browser, 'testuser3');
+  const sellerCtx = await loginContext(
+    browser,
+    'testuser3',
+    DEMO_INTERFACE_SCALE.workflow,
+    inviteUrl!.trim()
+  );
   const seller = await sellerCtx.newPage();
   await seller.addInitScript(PRECOVER_INIT);
   await seller.goto(inviteUrl!.trim());
@@ -481,7 +601,12 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await saveSegment(op2, 'seg3-operator-share.webm');
 
   // ── Segment 4 · Buyer: arrive via share link ──
-  const buyerCtx = await loginContext(browser, 'testuser2');
+  const buyerCtx = await loginContext(browser, 'testuser2', DEMO_INTERFACE_SCALE.public);
+  await mirrorMainAppAuthToLocalSubdomains(buyerCtx);
+  // Authenticate the seller before the buyer segment starts. The context is
+  // reused after checkout for the real order-receipt handshake, so Casdoor
+  // latency never turns into dead time in the recorded buyer journey.
+  const fulfillmentCtx = await loginContext(browser, 'testuser3');
   {
     // Warm the submarket home + product routes OFF CAMERA with a plain URL
     // (no utm), so no attribution event fires and the recorded pages open
@@ -530,8 +655,8 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
     buyer,
     8,
     'buyer',
-    'Every order is escrow-protected',
-    'Funds stay in escrow until the buyer confirms delivery.'
+    'One order stays traceable end to end',
+    'Checkout, payment, fulfillment, and attribution share the same order.'
   );
   await armCover(buyer);
   await buyer.getByText(HERO_TITLE).first().click();
@@ -551,55 +676,190 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await settleNoConnecting(buyer);
   await reveal(buyer);
   await dwell(buyer, 3000);
-  if (includePayment) {
-    await buyer
-      .getByRole('button', { name: /buy now/i })
-      .first()
-      .click();
-    await dwell(buyer, 4000);
+  await armCover(buyer);
+  await buyer.getByTestId('product-detail-buy-now').first().click();
+  await buyer.waitForURL(url => url.pathname === '/checkout', { timeout: 30000 });
+  const checkout = buyer.getByTestId('checkout-page');
+  await expect(checkout).toBeVisible({ timeout: 30000 });
+  const submitOrder = buyer.getByTestId('checkout-submit-btn');
+  await expect(submitOrder).toBeEnabled({ timeout: 30000 });
+  await reveal(buyer);
+  await chapter(
+    buyer,
+    9,
+    'buyer',
+    'Place one real order',
+    'The 0.012 ETH item, delivery address, and shipping stay together.'
+  );
+  await dwell(buyer, 1800);
+
+  await armCover(buyer);
+  // A returning buyer's saved method avoids an asynchronous selector catalog
+  // race on runtime-generated *.localhost hosts. The payment page restores the
+  // same standard session key used by its real selector and still verifies ETH
+  // in the visible summary before creating a session.
+  await buyer.evaluate(() => window.sessionStorage.setItem('checkout_selected_token', 'ETH'));
+  await submitOrder.click();
+  await buyer.waitForURL(url => url.pathname === '/payment' && url.searchParams.has('orderID'), {
+    timeout: 60000,
+  });
+  const orderID = new URL(buyer.url()).searchParams.get('orderID') || '';
+  expect(orderID, 'checkout must create a real order').toBeTruthy();
+
+  await expect(buyer.getByTestId('payment-method-summary')).toContainText(/ETH/, {
+    timeout: 45000,
+  });
+
+  // The local search service does not publish a verified moderator catalog.
+  // Disable the optional moderator layer off camera so the demo exercises the
+  // supported direct crypto path instead of presenting unavailable protection.
+  const protectionToggle = buyer.getByTestId('payment-protection-toggle');
+  await expect(protectionToggle).toBeVisible({ timeout: 45000 });
+  if ((await protectionToggle.getAttribute('data-state')) === 'checked') {
+    await protectionToggle.click();
   }
-  await saveSegment(buyer, 'seg4-buyer.webm');
+
+  // Complete the real seller-receipt handshake in a non-recorded page while
+  // the buyer sees the ready payment page and chapter copy. The work is still
+  // end to end and uses the same order ID; only its waiting time is off camera.
+  const sellerReceiptReady = (async () => {
+    const sellerWarm = await fulfillmentCtx.newPage();
+    await sellerWarm.goto(`/orders/${encodeURIComponent(orderID)}?role=sale`);
+    await expect(sellerWarm.getByTestId('order-status-card')).toBeVisible({ timeout: 60000 });
+    await sellerWarm.close();
+  })();
+
+  await reveal(buyer);
+  await chapter(
+    buyer,
+    10,
+    'buyer',
+    'Create a monitored payment',
+    'The exact ETH total becomes a unique address for this order.'
+  );
+  await sellerReceiptReady;
+
+  const createPaymentSession = buyer.getByTestId('payment-create-session');
+  await expect(createPaymentSession).toBeEnabled({ timeout: 45000 });
+  await dwell(buyer, 500);
+  await createPaymentSession.click();
+  const paymentCard = buyer.getByTestId('external-wallet-payment');
+  if (!(await paymentCard.isVisible({ timeout: 4000 }).catch(() => false))) {
+    // Selection restoration can clear the first rendered card even though the
+    // backend already persisted the session. The endpoint is idempotent: a
+    // second request returns that same address after the selector has settled.
+    // Cover only this exceptional retry, never the normal seller handshake.
+    await armCover(buyer);
+    const closeError = buyer.getByRole('button', { name: /^close$/i });
+    if (await closeError.isVisible().catch(() => false)) await closeError.click();
+    await expect(createPaymentSession).toBeEnabled({ timeout: 30000 });
+    await createPaymentSession.click();
+    await expect(paymentCard).toBeVisible({ timeout: 45000 });
+    await reveal(buyer);
+  }
+  await expect(paymentCard).toBeVisible({ timeout: 45000 });
+  const paymentAddress = (
+    (await buyer.getByTestId('external-wallet-payment-address').textContent()) || ''
+  ).trim();
+  const paymentAmount = (
+    (await buyer.getByTestId('external-wallet-payment-amount').textContent()) || ''
+  ).trim();
+  expect(paymentAddress).toMatch(/^0x[0-9a-f]{40}$/i);
+  expect(paymentAmount).toMatch(/^\d+(?:\.\d+)?$/);
+  await dwell(buyer, 2200);
+
+  const paymentTxHash = await fundAddressOnAnvil(paymentAddress, paymentAmount);
+  expect(paymentTxHash).toMatch(/^0x[0-9a-f]{64}$/i);
+  await buyer.waitForURL(url => url.pathname === '/checkout/confirmation', { timeout: 120000 });
+  const confirmation = buyer.getByTestId('order-confirmation-page');
+  await expect(confirmation).toBeVisible({ timeout: 30000 });
+  await chapter(
+    buyer,
+    11,
+    'buyer',
+    'Payment verified',
+    'The seller now receives this exact paid order.'
+  );
+  await dwell(buyer, 2600);
+  await saveSegment(buyer, 'seg4-buyer-checkout-payment.webm');
+
+  // ── Segment 5 · Seller: accept the paid order → ship ──
+  const fulfillment = await fulfillmentCtx.newPage();
+  await fulfillment.addInitScript(PRECOVER_INIT);
+  await fulfillment.goto(`/orders/${encodeURIComponent(orderID)}?role=sale`);
+  const sellerStatus = fulfillment.getByTestId('order-status-card');
+  await expect(sellerStatus).toBeVisible({ timeout: 60000 });
+  const acceptOrder = fulfillment.getByTestId('order-action-accept');
+  await reveal(fulfillment);
+  await chapter(
+    fulfillment,
+    12,
+    'seller',
+    'A paid order arrives',
+    'Payment and managed settlement are already confirmed.'
+  );
+  if (await acceptOrder.isVisible().catch(() => false)) {
+    await acceptOrder.click();
+    const acceptDialog = fulfillment.getByTestId('accept-order-dialog');
+    await expect(acceptDialog).toBeVisible();
+    await expect(acceptDialog.getByTestId('receiving-account-select')).not.toHaveValue('');
+    await dwell(fulfillment, 1200);
+    await acceptDialog.getByTestId('accept-order-confirm').click();
+    await expect(acceptDialog).toBeHidden({ timeout: 120000 });
+  }
+
+  const shipOrder = fulfillment.getByTestId('order-action-ship');
+  await expect(shipOrder).toBeVisible({ timeout: 60000 });
+  await chapter(
+    fulfillment,
+    13,
+    'seller',
+    'Fulfill the same order',
+    'Tracking moves the buyer timeline forward.'
+  );
+  await shipOrder.click();
+  const shipDialog = fulfillment.getByTestId('ship-order-dialog');
+  await expect(shipDialog).toBeVisible();
+  await shipDialog.getByTestId('ship-order-tracking').fill('1Z999AA10123456784');
+  await shipDialog.getByTestId('ship-order-note').fill('Packed securely in recycled paper.');
+  await dwell(fulfillment, 1200);
+  await shipDialog.getByTestId('ship-order-confirm').click();
+  await expect(shipDialog).toBeHidden({ timeout: 60000 });
+  await expect(sellerStatus).toContainText(/shipped|fulfilled/i, { timeout: 60000 });
+  await dwell(fulfillment, 2600);
+  await saveSegment(fulfillment, 'seg5-seller-fulfillment.webm');
+  await fulfillmentCtx.close();
+
+  // ── Segment 6 · Buyer: confirm receipt → completed ──
+  const completion = await buyerCtx.newPage();
+  await completion.addInitScript(PRECOVER_INIT);
+  await completion.goto(`/orders/${encodeURIComponent(orderID)}?role=purchase`);
+  const buyerStatus = completion.getByTestId('order-status-card');
+  await expect(buyerStatus).toBeVisible({ timeout: 60000 });
+  const completeOrder = completion.getByTestId('order-action-complete');
+  await expect(completeOrder).toBeVisible({ timeout: 60000 });
+  await reveal(completion);
+  await chapter(
+    completion,
+    14,
+    'buyer',
+    'Confirm receipt',
+    'The shipped order reaches its completed state.'
+  );
+  await completeOrder.click();
+  const receiptDialog = completion.getByTestId('confirm-receipt-dialog');
+  await expect(receiptDialog).toBeVisible();
+  await dwell(completion, 1000);
+  await receiptDialog.getByTestId('confirm-receipt-submit').click();
+  await expect(receiptDialog).toBeHidden({ timeout: 90000 });
+  await expect(
+    completion.getByTestId('rating-invite-banner').or(buyerStatus.getByText(/completed/i))
+  ).toBeVisible({ timeout: 60000 });
+  await focusOn(completion, buyerStatus, 3200);
+  await saveSegment(completion, 'seg6-buyer-complete.webm');
   await buyerCtx.close();
 
-  // ── Segment 5 · Operator: attribution + earnings payoff ──
-  if (!includePayment) {
-    // Stage one ledger row through the REAL public API (same request a buyer
-    // browser sends), gated by the real handoff/listing-availability checks —
-    // this triggers genuine ledger accounting, it does not fabricate a result.
-    const journeyID = randomUUID();
-    const sellerPeer = process.env.DEMO_SELLER_PEER || '';
-    const base = `${BACKEND}/platform/v1/public-marketplaces/${marketplaceId}`;
-    await fetch(`${base}/attribution-events`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventID: randomUUID(),
-        journeyID,
-        eventType: 'checkout_handoff',
-        listingSlug: 'handmade-ceramic-teacup',
-        peerID: sellerPeer,
-        source: 'operator_share',
-        medium: 'community',
-        campaign: DEMO_SLUG,
-      }),
-    });
-    await fetch(`${base}/order-attributions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderID: `demo-rehearsal-${Date.now()}`,
-        journeyID,
-        listingSlug: 'handmade-ceramic-teacup',
-        peerID: sellerPeer,
-        pricingCoin: 'ETH',
-        amount: '12000000000000000',
-        currencyDivisibility: 18,
-        source: 'operator_share',
-        medium: 'community',
-        campaign: DEMO_SLUG,
-      }),
-    });
-  }
+  // ── Segment 7 · Operator: exact order attribution + estimate payoff ──
 
   // Reuse the operator page again — straight to the detail URL.
   const op3 = await opCtx.newPage();
@@ -608,19 +868,25 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await expect(op3.getByRole('heading', { name: MARKET_NAME, level: 1 })).toBeVisible({
     timeout: 30000,
   });
+  await setDemoInterfaceScale(op3, DEMO_INTERFACE_SCALE.proof);
   await reveal(op3);
   await chapter(
     op3,
-    9,
+    15,
     'operator',
-    'Watch it come back',
-    'Every share, click, and sale — attributed and paid.'
+    'The completed order comes back',
+    'Attributed to the share link, with an estimated 10% commission.'
   );
   const earnings = op3.getByTestId('operator-earnings-card');
   await focusOn(op3, earnings, 800);
   await expect(earnings.getByTestId('operator-earnings-rate')).toHaveText(/10/);
-  // Wait for the ledger row (real number) to render before the hold.
-  await expect(earnings.getByText(/0\.0012/)).toBeVisible({ timeout: 15000 });
+  // This new marketplace has exactly one on-camera order, so the total is the
+  // proof for that order. Phase 1 is explicitly an estimate, not a balance.
+  await expect(earnings.getByTestId('operator-earnings-totals')).toBeVisible({ timeout: 30000 });
+  await expect(earnings.getByText(/0\.0020/)).toBeVisible({ timeout: 30000 });
+  await expect(earnings.getByTestId('operator-earnings-estimate-note')).toContainText(
+    /estimate|not a payable balance/i
+  );
   // PAYOFF hold — the frame people remember.
   await dwell(op3, 4200);
 
@@ -628,9 +894,9 @@ test('Demo 0001: operator commission flywheel', async ({ browser }) => {
   await endCard(
     op3,
     'Mobazha',
-    'Your community. Your market. Your cut. · mobazha.org · recorded on Mobazha test network',
+    'Your community. Your market. One completed order. · mobazha.org · test network',
     3200
   );
-  await saveSegment(op3, 'seg5-operator-payoff.webm');
+  await saveSegment(op3, 'seg7-operator-payoff.webm');
   await opCtx.close();
 });

@@ -329,6 +329,7 @@ const SingleTokenRow: React.FC<SingleTokenRowProps> = ({ token, selected, onSele
   const chain = getChainById(token.chain);
   return (
     <button
+      data-testid={`payment-token-${token.id}`}
       type="button"
       onClick={() => onSelect(token.id)}
       disabled={disabled}

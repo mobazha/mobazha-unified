@@ -190,6 +190,7 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
     <Card
       ref={cardRef}
       className="border-primary/30 bg-gradient-to-b from-primary/5 to-transparent"
+      data-testid="external-wallet-payment"
     >
       <CardContent className="p-4 sm:p-6">
         <VStack gap="md" align="center">
@@ -220,7 +221,12 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
               onClick={() => copyToClipboard(displayAmount, 'amount')}
               title="Click to copy"
             >
-              <span className="text-xl font-mono font-bold text-foreground">{displayAmount}</span>
+              <span
+                className="text-xl font-mono font-bold text-foreground"
+                data-testid="external-wallet-payment-amount"
+              >
+                {displayAmount}
+              </span>
               <span className="text-base font-semibold text-muted-foreground">{coinSymbol}</span>
               {copied === 'amount' ? (
                 <Check className="w-4 h-4 text-green-500" />
@@ -240,7 +246,10 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
                 className="flex items-center gap-2 p-3 bg-background rounded-lg border border-border cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => copyToClipboard(paymentInfo.paymentAddress, 'address')}
               >
-                <code className="flex-1 text-xs sm:text-sm font-mono text-foreground break-all">
+                <code
+                  className="flex-1 text-xs sm:text-sm font-mono text-foreground break-all"
+                  data-testid="external-wallet-payment-address"
+                >
                   {paymentInfo.paymentAddress}
                 </code>
                 <div className="shrink-0">
@@ -281,7 +290,10 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
           )}
 
           {/* Status hint */}
-          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg w-full">
+          <div
+            className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg w-full"
+            data-testid="external-wallet-payment-status"
+          >
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
             <p className="text-xs text-muted-foreground">
               {hasObservedTransfer

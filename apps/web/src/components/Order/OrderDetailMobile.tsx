@@ -859,6 +859,8 @@ export function OrderDetailMobile({
               </button>
               {displayOrder.userRole === 'seller' && displayOrder.status !== 'awaiting_payment' && (
                 <button
+                  type="button"
+                  data-testid="order-packing-slip"
                   onClick={() => {
                     setShowMoreMenu(false);
                     setShowPackingSlip(true);

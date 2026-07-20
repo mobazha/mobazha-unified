@@ -242,6 +242,7 @@ export const DealLinkRow = memo(function DealLinkRow({
             size="sm"
             className="min-h-11 sm:min-h-9"
             onClick={() => onCopy(link.publicToken)}
+            data-testid={`deal-link-copy-${link.id}`}
           >
             <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {t('admin.dealLinks.copyDealCta')}
@@ -249,7 +250,12 @@ export const DealLinkRow = memo(function DealLinkRow({
         ) : null}
         {link.status === 'closed' ? null : isLive ? (
           <Button asChild variant="outline" size="sm" className="min-h-11 sm:min-h-9">
-            <a href={href} target="_blank" rel="noreferrer">
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              data-testid={`deal-link-open-${link.id}`}
+            >
               <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
               {t('admin.dealLinks.openDealCta')}
             </a>

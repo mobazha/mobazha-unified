@@ -117,6 +117,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         {t('order.ship.receivingAccount')} {required && '*'}
       </label>
       <select
+        data-testid="receiving-account-select"
         value={selectedAccountId || ''}
         onChange={handleChange}
         className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"

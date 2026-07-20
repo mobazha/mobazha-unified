@@ -131,7 +131,11 @@ export function ConfirmReceiptDialog({
         )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={isLoading}>
+          <AlertDialogAction
+            onClick={handleConfirm}
+            disabled={isLoading}
+            data-testid="confirm-receipt-submit"
+          >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {confirmLabel}
           </AlertDialogAction>

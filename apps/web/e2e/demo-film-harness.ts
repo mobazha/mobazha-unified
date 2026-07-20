@@ -49,12 +49,57 @@ const OVERLAY_INIT = `
 
 export const PRECOVER_INIT = `
 (() => {
+  const shell = '<div data-film-transition style="max-width:920px;padding:0 72px;text-align:center;font-family:system-ui,-apple-system,sans-serif;color:#fff"><div data-film-title style="font:700 36px/1.25 system-ui;white-space:pre-line"></div><div data-film-support style="font:400 18px/1.5 system-ui;color:#94a3b8;margin-top:14px"></div></div>';
+  const readTransition = () => {
+    try { return JSON.parse(sessionStorage.getItem('__demoFilmTransition') || 'null'); } catch (_) { return null; }
+  };
+  const consumeTransition = () => {
+    try {
+      sessionStorage.removeItem('__demoFilmTransition');
+      sessionStorage.setItem('__demoFilmTransitionConsumed', '1');
+    } catch (_) {}
+  };
+  const paint = (d) => {
+    const payload = readTransition();
+    const title = payload && payload.title ? String(payload.title) : '';
+    const support = payload && payload.support ? String(payload.support) : '';
+    if (!d.querySelector('[data-film-transition]')) d.innerHTML = shell;
+    const titleEl = d.querySelector('[data-film-title]');
+    const supportEl = d.querySelector('[data-film-support]');
+    if (titleEl && titleEl.textContent !== title) titleEl.textContent = title;
+    if (supportEl && supportEl.textContent !== support) supportEl.textContent = support;
+    // One-shot: after the labeled floor paints, never re-inject on SPA remounts.
+    if (title || support) consumeTransition();
+  };
   const put = () => {
     if (!document.documentElement || document.getElementById('demo-film-precover')) return;
-    const d=document.createElement('div'); d.id='demo-film-precover'; d.style.cssText='position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;transition:opacity .3s ease'; document.documentElement.appendChild(d);
+    const payload = readTransition();
+    const hasLabel = !!(payload && payload.title);
+    const d = document.createElement('div');
+    d.id = 'demo-film-precover';
+    // Labeled floors (hook) paint immediately. Silent PRECOVER stays invisible —
+    // armCover() raises it intentionally; otherwise warm navigations must not
+    // become multi-second blank pages.
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;transition:opacity .18s ease;opacity:' + (hasLabel ? '1' : '0') + ';display:flex;align-items:center;justify-content:center';
+    d.innerHTML = shell;
+    paint(d);
+    document.documentElement.appendChild(d);
   };
-  put(); const observer=new MutationObserver(put); observer.observe(document,{childList:true,subtree:true});
-  window.__demoFilmPrecoverStop=()=>{ observer.disconnect(); const d=document.getElementById('demo-film-precover'); if(d){d.style.opacity='0';setTimeout(()=>d.remove(),400);} };
+  put();
+  // Only recreate the floor if something removed it — never rewrite on every DOM tick.
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById('demo-film-precover')) put();
+  });
+  observer.observe(document, { childList:true, subtree:true });
+  window.__demoFilmPrecoverStop = () => {
+    observer.disconnect();
+    try {
+      sessionStorage.removeItem('__demoFilmTransition');
+      sessionStorage.setItem('__demoFilmTransitionConsumed', '1');
+    } catch (_) {}
+    const d = document.getElementById('demo-film-precover');
+    if (d) { d.style.opacity = '0'; setTimeout(() => d.remove(), 400); }
+  };
 })();
 `;
 
@@ -122,8 +167,12 @@ export async function showCard(
   small: string,
   holdMs = 3200
 ): Promise<void> {
+  // Drop precover instantly so hook text is never double-painted (precover + card).
   await page.evaluate(
     ({ bigText, smallText }) => {
+      window.__demoFilmPrecoverStop?.();
+      const pre = document.getElementById('demo-film-precover');
+      if (pre) pre.remove();
       const card = document.getElementById('demo-film-card');
       if (!card) return;
       (card.querySelector('.big') as HTMLElement).textContent = bigText;
@@ -133,9 +182,7 @@ export async function showCard(
     { bigText: big, smallText: small }
   );
   await expect(page.locator('#demo-film-card')).toBeVisible();
-  await page.waitForTimeout(450);
-  await page.evaluate(() => window.__demoFilmPrecoverStop?.());
-  await page.waitForTimeout(Math.max(0, holdMs - 450));
+  await page.waitForTimeout(Math.max(450, holdMs));
   await page.evaluate(() => document.getElementById('demo-film-card')?.classList.remove('on'));
   await page.waitForTimeout(450);
 }
@@ -148,6 +195,7 @@ export async function showEndCard(
 ): Promise<void> {
   await page.evaluate(
     ({ bigText, smallText }) => {
+      document.getElementById('demo-film-chip')?.classList.remove('on');
       const card = document.getElementById('demo-film-card');
       if (!card) return;
       (card.querySelector('.big') as HTMLElement).textContent = bigText;
@@ -191,8 +239,123 @@ export async function showChapter(
 }
 
 export async function reveal(page: Page): Promise<void> {
-  await page.evaluate(() => window.__demoFilmPrecoverStop?.());
-  await page.waitForTimeout(500);
+  await page.evaluate(() => {
+    window.__demoFilmPrecoverStop?.();
+    try {
+      sessionStorage.removeItem('__demoFilmTransition');
+    } catch {
+      /* ignore */
+    }
+    const d = document.getElementById('demo-film-precover') as HTMLElement | null;
+    if (d) {
+      d.style.transition = 'opacity .18s ease';
+      d.style.opacity = '0';
+      setTimeout(() => d.remove(), 200);
+    }
+  });
+  await page.waitForTimeout(220);
+}
+
+/**
+ * Persist transition copy for the *next* document load only.
+ * Must be one-shot: a permanent addInitScript would re-stamp the same
+ * full-screen copy on every later navigation (e.g. product click after hook).
+ */
+export async function primeTransition(page: Page, title: string, support: string): Promise<void> {
+  await page.addInitScript(
+    ({ titleText, supportText }) => {
+      try {
+        if (sessionStorage.getItem('__demoFilmTransitionConsumed') === '1') return;
+      } catch {
+        /* ignore */
+      }
+      sessionStorage.setItem(
+        '__demoFilmTransition',
+        JSON.stringify({ title: titleText, support: supportText })
+      );
+    },
+    { titleText: title, supportText: support }
+  );
+}
+
+/**
+ * Raise the dark floor before an on-camera navigation so loading UI never
+ * flashes. STYLE §5: same-persona cuts are a short silent dip — keep title/
+ * support empty. Full-screen labeled cards are reserved for the opening hook
+ * ({@link showCard}) and rare persona switches via {@link primeTransition}.
+ */
+export async function armCover(page: Page, title = '', support = ''): Promise<void> {
+  await page.evaluate(
+    ({ titleText, supportText }) => {
+      if (titleText) {
+        sessionStorage.setItem(
+          '__demoFilmTransition',
+          JSON.stringify({ title: titleText, support: supportText })
+        );
+        try {
+          sessionStorage.removeItem('__demoFilmTransitionConsumed');
+        } catch {
+          /* ignore */
+        }
+      } else {
+        try {
+          sessionStorage.removeItem('__demoFilmTransition');
+        } catch {
+          /* ignore */
+        }
+      }
+      // Hide chapter chip during silent dips so the floor is not a floating chip on void.
+      if (!titleText) {
+        document.getElementById('demo-film-chip')?.classList.remove('on');
+      }
+      let d = document.getElementById('demo-film-precover') as HTMLElement | null;
+      if (!d) {
+        d = document.createElement('div');
+        d.id = 'demo-film-precover';
+        d.style.cssText =
+          'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;opacity:0;transition:opacity .22s ease;display:flex;align-items:center;justify-content:center';
+        document.documentElement.appendChild(d);
+      }
+      d.innerHTML =
+        '<div data-film-transition style="max-width:920px;padding:0 72px;text-align:center;font-family:system-ui,-apple-system,sans-serif;color:#fff"><div data-film-title style="font:700 36px/1.25 system-ui;white-space:pre-line"></div><div data-film-support style="font:400 18px/1.5 system-ui;color:#94a3b8;margin-top:14px"></div></div>';
+      d.querySelector('[data-film-title]')!.textContent = titleText;
+      d.querySelector('[data-film-support]')!.textContent = supportText;
+      d.style.display = 'flex';
+      d.style.alignItems = 'center';
+      d.style.justifyContent = 'center';
+      requestAnimationFrame(() => {
+        d!.style.opacity = '1';
+      });
+    },
+    { titleText: title, supportText: support }
+  );
+  // STYLE §5: silent same-persona dip ≈300ms — do not linger on empty black.
+  await page.waitForTimeout(title ? 300 : 180);
+}
+
+/** Store-connect "Connecting…" can appear after navigation settles — poll briefly. */
+export async function settleNoConnecting(page: Page): Promise<void> {
+  await page
+    .getByText(/^Connecting/)
+    .waitFor({ state: 'hidden', timeout: 8000 })
+    .catch(() => {});
+  await page.waitForTimeout(150);
+}
+
+/**
+ * Wait for destination content, then lift precover.
+ * Caps any visible silent floor at ~350ms so slow loads never hold blank.
+ */
+export async function revealReady(page: Page, ready: Locator, timeout = 60000): Promise<void> {
+  const cap = page.waitForTimeout(350).then(() => reveal(page));
+  await Promise.race([
+    expect(ready)
+      .toBeVisible({ timeout })
+      .then(() => reveal(page)),
+    cap,
+  ]);
+  await expect(ready).toBeVisible({ timeout });
+  await settleNoConnecting(page);
 }
 
 export async function focusOn(locator: Locator, holdMs = 1400): Promise<void> {

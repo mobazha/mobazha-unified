@@ -44,7 +44,10 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
   }, [selectedModerator]);
 
   return (
-    <div className={cn('rounded-xl border border-border bg-surface overflow-hidden', className)}>
+    <div
+      data-testid="payment-protection-card"
+      className={cn('rounded-xl border border-border bg-surface overflow-hidden', className)}
+    >
       {/* 头部：启用开关 */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -70,7 +73,11 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
             </span>
           </div>
         </div>
-        <Switch checked={enabled} onCheckedChange={onEnabledChange} />
+        <Switch
+          data-testid="payment-protection-toggle"
+          checked={enabled}
+          onCheckedChange={onEnabledChange}
+        />
       </div>
 
       {/* 仲裁员信息（仅当启用时显示） */}

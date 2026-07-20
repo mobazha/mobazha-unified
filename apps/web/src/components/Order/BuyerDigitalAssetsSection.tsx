@@ -246,8 +246,10 @@ export function BuyerDigitalAssetsSection({
 
   const hasAssets = useMemo(() => Array.isArray(assets) && assets.length > 0, [assets]);
 
-  // Render nothing if there are no entitlements (avoids empty card noise on physical-only orders)
-  if (!loading && !error && !hasAssets) {
+  // Physical-only / no entitlements: hide the section after the initial lookup
+  // establishes that no assets exist. Keep the initial loading state visible so
+  // buyers of digital goods do not see a blank gap while entitlements load.
+  if (assets !== null && !hasAssets && !error) {
     return null;
   }
 

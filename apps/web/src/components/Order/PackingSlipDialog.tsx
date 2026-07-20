@@ -84,7 +84,10 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        data-testid="packing-slip-dialog"
+        className="max-w-2xl max-h-[85vh] overflow-y-auto"
+      >
         <DialogHeader className="pr-10">
           <DialogTitle className="flex items-center justify-between">
             <span>{t('order.packingSlip.title')}</span>

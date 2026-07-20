@@ -16,6 +16,7 @@ import {
   useCurrency,
   useDealLinkCheckout,
   useI18n,
+  useProfile,
   useUserStore,
 } from '@mobazha/core';
 import { Header } from '@/components';
@@ -108,12 +109,18 @@ export default function DealLinkPage() {
 
   const catalog = deal?.catalog;
   const productTitle = catalog?.title || deal?.title || '';
+  // Signed listing VendorID.name is often empty in SaaS; fall back to live profile.
+  const needsSellerProfile = Boolean(deal?.sellerPeerID) && !catalog?.sellerName?.trim();
+  const { profile: sellerProfile } = useProfile(needsSellerProfile ? deal!.sellerPeerID : null);
   const sellerName = formatUserName(
-    { name: catalog?.sellerName, peerID: deal?.sellerPeerID },
+    {
+      name: catalog?.sellerName?.trim() || sellerProfile?.name || sellerProfile?.handle,
+      peerID: deal?.sellerPeerID,
+    },
     { prefix: t('dealLink.storeIdPrefix'), fallback: t('dealLink.sellerFallback') }
   );
   const productImage = getImageUrl(catalog?.image);
-  const sellerAvatar = getImageUrl(catalog?.sellerAvatar);
+  const sellerAvatar = getImageUrl(catalog?.sellerAvatar || sellerProfile?.avatarHashes?.tiny);
   const acceptedCurrencies = catalog?.acceptedCurrencies?.filter(Boolean) ?? [];
 
   const acceptanceDays = deal ? resolveDealLinkAcceptanceWindowDays(deal) : undefined;

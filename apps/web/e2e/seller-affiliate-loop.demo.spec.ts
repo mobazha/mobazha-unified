@@ -8,11 +8,11 @@
  * Style authority:  mobazha_hosting docs/demos/STYLE.md
  *
  * Records five segments (per-page videos) to be concatenated in order:
- *   seg1 seller    ch1    affiliate terms (5% / 7 days / payout methods)
- *   seg2 promoter  ch2-3  earnings shelf → short link + QR
- *   seg3 buyer     ch4-5  short link → referral saved → store → product
- *   seg4 seller    ch6    statement rollup + one expanded settlement row
- *   seg5 promoter  ch7    earnings payoff + end card
+ *   seg1 seller    ch1  set 5% once
+ *   seg2 promoter  ch2  see the return → use one short link
+ *   seg3 buyer     ch3  follow link → normal checkout → real Anvil payment
+ *   seg4 seller    ch4  accept the paid order → automatic affiliate split
+ *   seg5 promoter  ch5  the SAME order's Paid row + transaction hash
  *
  * Logins happen OFF CAMERA on a throwaway warm page; identifiers come from
  * tests/e2e/demos/0003-seller-affiliate-loop/seed.py via DEMO_* env vars.
@@ -21,6 +21,11 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  DEMO_INTERFACE_SCALE,
+  installDemoInterfaceScale,
+  setDemoInterfaceScale,
+} from './demo-recording-scale';
 
 declare global {
   interface Window {
@@ -41,8 +46,12 @@ const SELLER_PEER = process.env.DEMO_SELLER_PEER_ID || '';
 const PROGRAM_ID = process.env.DEMO_PROGRAM_ID || '';
 const PROMO_TOKEN = process.env.DEMO_PROMO_TOKEN || '';
 const SHORT_PATH = process.env.DEMO_SHORT_PATH || '';
-const HERO_TITLE = 'Titan Leather Hardware Wallet Case';
+const HERO_TITLE = process.env.DEMO_PRODUCT_TITLE || 'Titan Leather Hardware Wallet Case';
 const OUT_DIR = path.join(__dirname, '..', 'demo-output', 'affiliate-loop');
+const ANVIL = 'http://localhost:18545';
+const TIMINGS_PATH = path.join(OUT_DIR, 'timings.json');
+
+const trimSeconds: Record<string, number> = {};
 
 const PERSONA = {
   seller: { label: 'Seller · Alice', accent: '#d97706' },
@@ -57,7 +66,7 @@ const OVERLAY_INIT = `
   if (window.__demoOverlayInstalled) return;
   window.__demoOverlayInstalled = true;
   const CSS = \`
-    #demo-chip{position:fixed;left:32px;bottom:32px;z-index:2147483647;pointer-events:none;max-width:600px;background:rgba(15,23,42,.95);color:#fff;padding:16px 22px;border-radius:14px;border-left:5px solid var(--demo-accent,#7c3aed);font-family:system-ui,-apple-system,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.45);opacity:0;transition:opacity .3s ease}
+    #demo-chip{position:fixed;left:32px;bottom:32px;z-index:2147483647;pointer-events:none;max-width:520px;background:rgba(15,23,42,.95);color:#fff;padding:14px 20px;border-radius:14px;border-left:5px solid var(--demo-accent,#7c3aed);font-family:system-ui,-apple-system,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.45);opacity:0;transition:opacity .3s ease}
     #demo-chip.on{opacity:1}
     #demo-chip .persona{font:600 12px/1 system-ui;letter-spacing:.06em;text-transform:uppercase;color:var(--demo-accent,#7c3aed);margin-bottom:6px}
     #demo-chip .title{font:700 20px/1.25 system-ui;margin-bottom:4px}
@@ -91,16 +100,6 @@ const OVERLAY_INIT = `
 })();
 `;
 
-// Interface scale for embed readability (STYLE §3): render the app 25%
-// larger inside the 1920×1080 frame — small players stay legible.
-const ZOOM_INIT = `
-(() => {
-  const apply = () => { document.documentElement.style.zoom = '1.25'; };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
-  else apply();
-})();
-`;
-
 // Opaque dark floor under the hook card, present from the first frame of the
 // recorded page, so the film never flashes the raw UI while it loads.
 // Removed by fullCard once the hook card has faded in above it.
@@ -110,7 +109,16 @@ const PRECOVER_INIT = `
     if (!document.documentElement || document.getElementById('demo-precover')) return;
     const d = document.createElement('div');
     d.id = 'demo-precover';
-    d.style.cssText = 'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;transition:opacity .3s ease';
+    const transition = window.sessionStorage.getItem('__mobazhaDemoTransition');
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483645;background:#0f172a;color:#fff;pointer-events:none;transition:opacity .3s ease;display:flex;align-items:center;justify-content:center;text-align:center;font-family:system-ui,-apple-system,sans-serif';
+    if (transition) {
+      try {
+        const copy = JSON.parse(transition);
+        d.innerHTML = '<div style="max-width:900px;padding:0 80px"><div data-transition-title style="font-size:38px;font-weight:700;line-height:1.25"></div><div data-transition-copy style="font-size:18px;line-height:1.5;color:#94a3b8;margin-top:14px"></div></div>';
+        d.querySelector('[data-transition-title]').textContent = copy.big;
+        d.querySelector('[data-transition-copy]').textContent = copy.small;
+      } catch {}
+    }
     document.documentElement.appendChild(d);
   };
   put();
@@ -124,14 +132,17 @@ const PRECOVER_INIT = `
 })();
 `;
 
-async function makeContext(browser: import('@playwright/test').Browser): Promise<BrowserContext> {
+async function makeContext(
+  browser: import('@playwright/test').Browser,
+  interfaceScale: number = DEMO_INTERFACE_SCALE.public
+): Promise<BrowserContext> {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     recordVideo: { dir: OUT_DIR, size: { width: 1920, height: 1080 } },
   });
   await context.addInitScript(OVERLAY_INIT);
-  await context.addInitScript(ZOOM_INIT);
+  await installDemoInterfaceScale(context, interfaceScale);
   return context;
 }
 
@@ -139,9 +150,10 @@ async function makeContext(browser: import('@playwright/test').Browser): Promise
 async function loginContext(
   browser: import('@playwright/test').Browser,
   username: string,
-  warmPath?: string
+  warmPath?: string,
+  interfaceScale: number = DEMO_INTERFACE_SCALE.workflow
 ): Promise<BrowserContext> {
-  const context = await makeContext(browser);
+  const context = await makeContext(browser, interfaceScale);
   const warm = await context.newPage();
   // Deterministic OAuth entry — /login always bounces to the Casdoor form.
   await warm.goto('/login');
@@ -195,6 +207,7 @@ async function chapter(
         support: args.support,
         on: true,
       };
+      window.sessionStorage.setItem('__mobazhaDemoChip', JSON.stringify(window.__demoChipState));
       const chip = document.getElementById('demo-chip');
       if (chip) {
         chip.style.setProperty('--demo-accent', args.accent);
@@ -207,6 +220,43 @@ async function chapter(
     { n, personaLabel: PERSONA[persona].label, accent: PERSONA[persona].accent, title, support }
   );
   await page.waitForTimeout(1900);
+}
+
+async function prepareSegment(
+  page: Page,
+  n: number,
+  persona: keyof typeof PERSONA,
+  title: string,
+  support: string
+) {
+  const state = {
+    persona: PERSONA[persona].label,
+    accent: PERSONA[persona].accent,
+    title: `${n} · ${title}`,
+    support,
+    on: true,
+  };
+  await page.addInitScript(PRECOVER_INIT);
+  await page.addInitScript(scene => {
+    window.__demoChipState = scene;
+    window.sessionStorage.setItem('__mobazhaDemoChip', JSON.stringify(scene));
+    const paint = () => {
+      const chip = document.getElementById('demo-chip');
+      if (!chip) return;
+      chip.style.setProperty('--demo-accent', scene.accent);
+      chip.querySelector('.persona')!.textContent = scene.persona;
+      chip.querySelector('.title')!.textContent = scene.title;
+      chip.querySelector('.support')!.textContent = scene.support;
+      chip.classList.add('on');
+    };
+    paint();
+    document.addEventListener('DOMContentLoaded', paint, { once: true });
+  }, state);
+}
+
+function markReadyForEdit(segment: string, startedAt: number, leadSeconds = 0.8) {
+  trimSeconds[segment] = Math.max(0.5, (Date.now() - startedAt) / 1000 - leadSeconds);
+  fs.writeFileSync(TIMINGS_PATH, `${JSON.stringify(trimSeconds, null, 2)}\n`);
 }
 
 async function fullCard(page: Page, big: string, small: string, holdMs: number) {
@@ -257,25 +307,34 @@ async function endCard(page: Page, big: string, small: string, holdMs: number) {
 // the floor before an on-camera navigation; reveal() fades it away once the
 // destination content is ready. Segment openings get the floor from
 // PRECOVER_INIT at document-start.
-async function armCover(page: Page) {
-  await page.evaluate(() => {
-    let d = document.getElementById('demo-precover') as HTMLElement | null;
-    if (!d) {
-      d = document.createElement('div');
-      d.id = 'demo-precover';
-      d.style.cssText =
-        'position:fixed;inset:0;z-index:2147483645;background:#0f172a;pointer-events:none;opacity:0;transition:opacity .3s ease';
-      document.documentElement.appendChild(d);
-    }
-    requestAnimationFrame(() => {
-      d!.style.opacity = '1';
-    });
-  });
+async function armCover(page: Page, big: string, small: string) {
+  await page.evaluate(
+    ({ big, small }) => {
+      window.sessionStorage.setItem('__mobazhaDemoTransition', JSON.stringify({ big, small }));
+      let d = document.getElementById('demo-precover') as HTMLElement | null;
+      if (!d) {
+        d = document.createElement('div');
+        d.id = 'demo-precover';
+        d.style.cssText =
+          'position:fixed;inset:0;z-index:2147483645;background:#0f172a;color:#fff;pointer-events:none;opacity:0;transition:opacity .3s ease;display:flex;align-items:center;justify-content:center;text-align:center;font-family:system-ui,-apple-system,sans-serif';
+        document.documentElement.appendChild(d);
+      }
+      d.innerHTML =
+        '<div style="max-width:900px;padding:0 80px"><div data-transition-title style="font-size:38px;font-weight:700;line-height:1.25"></div><div data-transition-copy style="font-size:18px;line-height:1.5;color:#94a3b8;margin-top:14px"></div></div>';
+      d.querySelector('[data-transition-title]')!.textContent = big;
+      d.querySelector('[data-transition-copy]')!.textContent = small;
+      requestAnimationFrame(() => {
+        d!.style.opacity = '1';
+      });
+    },
+    { big, small }
+  );
   await page.waitForTimeout(400);
 }
 
 async function reveal(page: Page) {
   await page.evaluate(() => {
+    window.sessionStorage.removeItem('__mobazhaDemoTransition');
     if (window.__demoPrecoverStop) {
       window.__demoPrecoverStop();
       window.__demoPrecoverStop = undefined;
@@ -303,6 +362,52 @@ async function settleNoConnecting(page: Page) {
   }
 }
 
+function asRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} is not an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function decimalToSmallestUnit(amount: string, decimals: number): string {
+  const parts = amount.trim().split('.');
+  if (parts.length > 2 || !/^\d+$/.test(parts[0] || '') || !/^\d*$/.test(parts[1] || '')) {
+    throw new Error(`invalid decimal amount: ${amount}`);
+  }
+  const whole = BigInt(parts[0]);
+  const fraction = (parts[1] || '').padEnd(decimals, '0').slice(0, decimals);
+  return (whole * BigInt(10) ** BigInt(decimals) + BigInt(fraction || '0')).toString();
+}
+
+async function anvilRPC<T>(method: string, params: unknown[]): Promise<T> {
+  const response = await fetch(ANVIL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  if (!response.ok) throw new Error(`Anvil ${method}: HTTP ${response.status}`);
+  const payload = asRecord((await response.json()) as unknown, `Anvil ${method} response`);
+  if (payload.error) throw new Error(`Anvil ${method}: ${JSON.stringify(payload.error)}`);
+  return payload.result as T;
+}
+
+async function fundAddressOnAnvil(address: string, decimalAmount: string): Promise<string> {
+  const accounts = await anvilRPC<string[]>('eth_accounts', []);
+  const payer = accounts[1] || accounts[0];
+  if (!payer) throw new Error('Anvil returned no funded account');
+  const value = `0x${BigInt(decimalToSmallestUnit(decimalAmount, 18)).toString(16)}`;
+  const txHash = await anvilRPC<string>('eth_sendTransaction', [
+    { from: payer, to: address, value },
+  ]);
+  await expect
+    .poll(() => anvilRPC<unknown>('eth_getTransactionReceipt', [txHash]), {
+      timeout: 30000,
+      intervals: [500, 1000, 1500],
+    })
+    .not.toBeNull();
+  return txHash;
+}
+
 async function dwell(page: Page, ms = 1300) {
   await page.waitForTimeout(ms);
 }
@@ -326,20 +431,25 @@ async function saveSegment(page: Page, name: string) {
 
 test('Demo 0003: seller affiliate loop', async ({ browser }) => {
   test.setTimeout(600000);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.writeFileSync(TIMINGS_PATH, '{}\n');
   expect(SELLER_PEER, 'DEMO_SELLER_PEER_ID required (run seed.py)').toBeTruthy();
   expect(PROGRAM_ID, 'DEMO_PROGRAM_ID required').toBeTruthy();
   expect(PROMO_TOKEN, 'DEMO_PROMO_TOKEN required').toBeTruthy();
 
-  // ── Segment 1 · Seller: the offer ──
+  // ── Segment 1 · Seller: set the offer once ──
   const sellerCtx = await loginContext(browser, 'testuser1', '/admin/affiliate');
   const seller = await sellerCtx.newPage();
+  const sellerStartedAt = Date.now();
   await seller.addInitScript(PRECOVER_INIT);
   await seller.goto('/admin/affiliate');
   const programPanel = seller.getByTestId('seller-affiliate-program-panel');
   await expect(programPanel).toBeVisible({ timeout: 45000 });
   await expect(seller.getByTestId('affiliate-config-summary')).toBeVisible({ timeout: 30000 });
 
-  // HOOK — over a ready page, never over a spinner.
+  // The edit trims cold-start time to a short dark lead, then the hook opens
+  // over the ready product. No loading interval survives into the master.
+  markReadyForEdit('seg1-seller-terms', sellerStartedAt, 0.45);
   await fullCard(
     seller,
     'Your followers buy the gear you review.\nThe brand keeps everything.',
@@ -351,100 +461,76 @@ test('Demo 0003: seller affiliate loop', async ({ browser }) => {
     seller,
     1,
     'seller',
-    'Offer promoters a cut',
-    '5% on every attributed order, storefront-wide.'
+    'Set 5% once',
+    'Every attributed order uses the same storefront-wide offer.'
   );
   const configToggle = seller.getByTestId('affiliate-config-toggle');
   if (await configToggle.isVisible().catch(() => false)) {
     await configToggle.click();
   }
-  await focusOn(seller, seller.getByTestId('affiliate-commission-column'), 1800);
-  await focusOn(seller, seller.getByTestId('affiliate-attribution-column'), 1800);
-  await dwell(seller, 900);
+  await focusOn(seller, seller.getByTestId('affiliate-commission-column'), 2300);
   await saveSegment(seller, 'seg1-seller-terms.webm');
 
-  // ── Segment 2 · Promoter: shelf → link → QR ──
+  // ── Segment 2 · Promoter: concrete return → one reusable link ──
   const promoCtx = await loginContext(
     browser,
     'testuser3',
-    `/promote/${SELLER_PEER}/${PROGRAM_ID}`
+    `/promote/${SELLER_PEER}/${PROGRAM_ID}`,
+    DEMO_INTERFACE_SCALE.public
   );
   const promo = await promoCtx.newPage();
-  await promo.addInitScript(PRECOVER_INIT);
-  await promo.goto(`/promote/${SELLER_PEER}/${PROGRAM_ID}`);
-  await expect(promo.getByTestId('promote-program-page')).toBeVisible({ timeout: 45000 });
-  await reveal(promo);
-
-  await chapter(
+  const promoStartedAt = Date.now();
+  await prepareSegment(
     promo,
     2,
     'promoter',
-    'See what each sale pays',
-    'Every item shows your cut before you commit.'
+    'Use one link everywhere',
+    'See the 5% return, then copy one wallet-bound link.'
   );
-  const shelf = promo.getByTestId('promote-storefront');
-  await focusOn(promo, shelf, 1500);
-  await focusOn(promo, promo.getByTestId('promote-storefront-earn').first(), 2600);
-
-  await chapter(
-    promo,
-    3,
-    'promoter',
-    'Grab your link — and a QR',
-    'One short link, bound to your wallet.'
-  );
-  // The link already exists (seed enrolled it); surface it if a create button gates it.
-  const createBtn = promo.getByRole('button', { name: /create link/i }).first();
-  if (await createBtn.isVisible().catch(() => false)) {
-    await createBtn.click();
+  await promo.goto(`/promote/${SELLER_PEER}/${PROGRAM_ID}`);
+  await expect(promo.getByTestId('promote-program-page')).toBeVisible({ timeout: 45000 });
+  const shortLink = promo.getByTestId('promote-share-href');
+  if (!(await shortLink.isVisible({ timeout: 1500 }).catch(() => false))) {
+    const createLink = promo.getByRole('button', { name: /create.*link|generate.*link/i });
+    await expect(createLink).toBeVisible({ timeout: 30000 });
+    await createLink.click();
   }
-  const shortLink = promo.getByText(/\/a\//).first();
+  await expect(shortLink).toContainText(/\/a\//, { timeout: 30000 });
+  markReadyForEdit('seg2-promoter-link', promoStartedAt);
+  await reveal(promo);
   await focusOn(promo, shortLink, 2200);
-  const qrBtn = promo.getByRole('button', { name: /qr/i }).first();
-  if (await qrBtn.isVisible().catch(() => false)) {
-    await qrBtn.click();
-    const qrDialog = promo.getByRole('dialog');
-    await expect(qrDialog).toBeVisible({ timeout: 10000 });
-    await dwell(promo, 2800);
-    await promo.keyboard.press('Escape');
-    await dwell(promo, 700);
-  }
-  await focusOn(promo, promo.getByTestId('promote-earn-terms'), 2200);
+  await focusOn(promo, promo.getByTestId('promote-storefront-earn').first(), 2300);
   await saveSegment(promo, 'seg2-promoter-link.webm');
 
-  // ── Segment 3 · Buyer (guest): short link → store → product ──
-  const buyerCtx = await makeContext(browser);
-  {
-    // Warm the store + product routes OFF CAMERA (no referral entry, no
-    // utm) so the recorded pages open on content, not a cold transform.
-    const warm = await buyerCtx.newPage();
-    await warm.goto(`/store/${SELLER_PEER}`, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await warm
-      .getByText(HERO_TITLE)
-      .first()
-      .click({ timeout: 30000 })
-      .catch(() => {});
-    await warm.waitForLoadState('domcontentloaded');
-    await warm.waitForTimeout(2500);
-    await warm.close();
-  }
+  // ── Segment 3 · Buyer: referral → ordinary checkout → real payment ──
+  const buyerCtx = await loginContext(
+    browser,
+    'testuser2',
+    `/store/${SELLER_PEER}`,
+    DEMO_INTERFACE_SCALE.public
+  );
   const buyer = await buyerCtx.newPage();
-  await buyer.addInitScript(PRECOVER_INIT);
+  const buyerStartedAt = Date.now();
+  await prepareSegment(
+    buyer,
+    3,
+    'buyer',
+    'Shop normally from the link',
+    'Referral, checkout, and crypto payment stay in one real order.'
+  );
   const entryPath = SHORT_PATH || `/promo/${SELLER_PEER}/${PROMO_TOKEN}`;
   await buyer.goto(entryPath);
   await expect(buyer.getByTestId('seller-affiliate-entry-ready')).toBeVisible({ timeout: 45000 });
+  markReadyForEdit('seg3-buyer-purchase', buyerStartedAt);
   await reveal(buyer);
-  await chapter(
-    buyer,
-    4,
-    'buyer',
-    'One tap from a post',
-    'The referral is saved — shopping stays normal.'
-  );
-  await dwell(buyer, 2400);
+  await dwell(buyer, 1300);
 
   const storeLink = buyer.locator('a[href*="/store/"]').first();
-  await armCover(buyer);
+  await armCover(
+    buyer,
+    'The referral travels with the buyer.',
+    'Jordan lands in Alice’s normal storefront — no affiliate-only funnel.'
+  );
   await storeLink.click();
   await buyer.waitForLoadState('domcontentloaded');
   await expect(buyer.getByText(HERO_TITLE).first()).toBeVisible({ timeout: 30000 });
@@ -455,10 +541,13 @@ test('Demo 0003: seller affiliate loop', async ({ browser }) => {
     })
     .catch(() => {});
   await reveal(buyer);
-  await dwell(buyer, 2600);
+  await dwell(buyer, 1700);
 
-  await chapter(buyer, 5, 'buyer', 'Buy as usual', 'Escrow-protected checkout, paid in crypto.');
-  await armCover(buyer);
+  await armCover(
+    buyer,
+    'One link. A normal product page.',
+    'The customer experience stays focused on the product, not the tracking.'
+  );
   await buyer.getByText(HERO_TITLE).first().click();
   await buyer.waitForLoadState('domcontentloaded');
   // The store-connect dialog ("Connecting…") must be gone before dwelling.
@@ -476,60 +565,170 @@ test('Demo 0003: seller affiliate loop', async ({ browser }) => {
     .catch(() => {});
   await settleNoConnecting(buyer);
   await reveal(buyer);
-  await dwell(buyer, 2800);
-  await buyer.mouse.wheel(0, 420);
-  await dwell(buyer, 2200);
-  await saveSegment(buyer, 'seg3-buyer.webm');
-  await buyerCtx.close();
+  await dwell(buyer, 1800);
 
-  // ── Segment 4 · Seller: the ledger runs itself ──
-  const seller2 = await sellerCtx.newPage();
-  await seller2.addInitScript(PRECOVER_INIT);
-  await seller2.goto('/admin/affiliate');
-  const statements = seller2.getByTestId('seller-affiliate-statements-seller');
-  await expect(statements).toBeVisible({ timeout: 45000 });
-  await reveal(seller2);
-  await chapter(
-    seller2,
-    6,
-    'seller',
-    'No invoices, no spreadsheets',
-    'Commissions settle when funds release.'
+  await armCover(
+    buyer,
+    'No special affiliate checkout.',
+    'Address, shipping, and the attributed order stay together.'
   );
-  await focusOn(seller2, seller2.getByTestId('seller-affiliate-earnings-summary-seller'), 2400);
-  const firstRow = seller2.locator('[data-testid^="seller-affiliate-statement-row-"]').first();
-  await focusOn(seller2, firstRow, 900);
-  await firstRow.click();
-  await dwell(seller2, 3000);
-  await seller2.mouse.wheel(0, 320);
-  await dwell(seller2, 2000);
-  await saveSegment(seller2, 'seg4-seller-ledger.webm');
+  await buyer.getByTestId('product-detail-buy-now').first().click();
+  await buyer.waitForURL(url => url.pathname === '/checkout', { timeout: 30000 });
+  const checkout = buyer.getByTestId('checkout-page');
+  const submitOrder = buyer.getByTestId('checkout-submit-btn');
+  await expect(checkout).toBeVisible({ timeout: 30000 });
+  await expect(submitOrder).toBeEnabled({ timeout: 30000 });
+  await reveal(buyer);
+  await dwell(buyer, 1900);
+
+  await armCover(
+    buyer,
+    'One real crypto payment.',
+    'The same order will fund Alice and Kai automatically.'
+  );
+  await buyer.evaluate(() => window.sessionStorage.setItem('checkout_selected_token', 'ETH'));
+  await submitOrder.click();
+  await buyer.waitForURL(url => url.pathname === '/payment' && url.searchParams.has('orderID'), {
+    timeout: 60000,
+  });
+  const orderID = new URL(buyer.url()).searchParams.get('orderID') || '';
+  expect(orderID, 'checkout must create a real order').toBeTruthy();
+  await expect(buyer.getByTestId('payment-method-summary')).toContainText(/ETH/, {
+    timeout: 45000,
+  });
+  const protectionToggle = buyer.getByTestId('payment-protection-toggle');
+  await expect(protectionToggle).toBeVisible({ timeout: 45000 });
+  if ((await protectionToggle.getAttribute('data-state')) === 'checked') {
+    await protectionToggle.click();
+  }
+  await reveal(buyer);
+
+  const createPaymentSession = buyer.getByTestId('payment-create-session');
+  await expect(createPaymentSession).toBeEnabled({ timeout: 45000 });
+  await createPaymentSession.click();
+  const paymentCard = buyer.getByTestId('external-wallet-payment');
+  if (!(await paymentCard.isVisible({ timeout: 4000 }).catch(() => false))) {
+    await armCover(
+      buyer,
+      'Reconnecting payment…',
+      'The order and affiliate attribution remain intact.'
+    );
+    const closeError = buyer.getByRole('button', { name: /^close$/i });
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      if (await paymentCard.isVisible({ timeout: 1500 }).catch(() => false)) break;
+      if (await closeError.isVisible().catch(() => false)) await closeError.click();
+      await buyer.waitForTimeout(1200);
+      await expect(createPaymentSession).toBeEnabled({ timeout: 30000 });
+      await createPaymentSession.click();
+    }
+    await expect(paymentCard).toBeVisible({ timeout: 45000 });
+    await reveal(buyer);
+  }
+  await expect(paymentCard).toBeVisible({ timeout: 45000 });
+  const paymentAddress = (
+    (await buyer.getByTestId('external-wallet-payment-address').textContent()) || ''
+  ).trim();
+  const paymentAmount = (
+    (await buyer.getByTestId('external-wallet-payment-amount').textContent()) || ''
+  ).trim();
+  expect(paymentAddress).toMatch(/^0x[0-9a-f]{40}$/i);
+  expect(paymentAmount).toMatch(/^\d+(?:\.\d+)?$/);
+  await dwell(buyer, 1800);
+
+  const fundingTxHash = await fundAddressOnAnvil(paymentAddress, paymentAmount);
+  expect(fundingTxHash).toMatch(/^0x[0-9a-f]{64}$/i);
+  await buyer.waitForURL(url => url.pathname === '/checkout/confirmation', { timeout: 120000 });
+  await expect(buyer.getByTestId('order-confirmation-page')).toBeVisible({ timeout: 30000 });
+  await dwell(buyer, 2200);
+  await saveSegment(buyer, 'seg3-buyer-purchase.webm');
+
+  // ── Segment 4 · Seller: paid order settles without a second workflow ──
+  const seller2 = await sellerCtx.newPage();
+  const settlementStartedAt = Date.now();
+  await prepareSegment(
+    seller2,
+    4,
+    'seller',
+    'Settle automatically',
+    'One payment releases the seller payout and 5% affiliate leg together.'
+  );
+  await seller2.goto(`/orders/${encodeURIComponent(orderID)}?role=sale`);
+  const sellerStatus = seller2.getByTestId('order-status-card');
+  const acceptOrder = seller2.getByTestId('order-action-accept');
+  await expect(sellerStatus).toBeVisible({ timeout: 60000 });
+  // Payment policy may already have accepted and settled the order by the time
+  // Alice opens it. If a manual accept is still offered, perform it; otherwise
+  // show the stronger real outcome: the on-chain settlement is already confirmed.
+  if (await acceptOrder.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await acceptOrder.click();
+    const acceptDialog = seller2.getByTestId('accept-order-dialog');
+    await expect(acceptDialog).toBeVisible();
+    await expect(acceptDialog.getByTestId('receiving-account-select')).not.toHaveValue('');
+    await dwell(seller2, 900);
+    await acceptDialog.getByTestId('accept-order-confirm').click();
+    await expect(acceptDialog).toBeHidden({ timeout: 120000 });
+  }
+  await expect(seller2.getByRole('button', { name: /ship order/i })).toBeVisible({
+    timeout: 60000,
+  });
+  const settlementTitle = seller2.getByText('On-chain settlement', { exact: true });
+  let settlementCard = settlementTitle.locator(
+    'xpath=ancestor::div[contains(@class, "border-border")][1]'
+  );
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    if (/confirmed/i.test((await settlementCard.textContent().catch(() => '')) || '')) break;
+    await seller2.waitForTimeout(1500);
+    await seller2.reload({ waitUntil: 'domcontentloaded' });
+    await expect(sellerStatus).toBeVisible({ timeout: 30000 });
+    settlementCard = seller2
+      .getByText('On-chain settlement', { exact: true })
+      .locator('xpath=ancestor::div[contains(@class, "border-border")][1]');
+  }
+  await expect(settlementCard).toContainText(/confirmed/i, { timeout: 60000 });
+  markReadyForEdit('seg4-auto-settlement', settlementStartedAt);
+  await reveal(seller2);
+  await focusOn(seller2, seller2.getByText('On-chain settlement', { exact: true }), 1800);
+  await dwell(seller2, 2600);
+  await saveSegment(seller2, 'seg4-auto-settlement.webm');
   await sellerCtx.close();
 
-  // ── Segment 5 · Promoter: payoff + end card ──
+  // ── Segment 5 · Promoter: exact-order, on-chain proof ──
   const promo2 = await promoCtx.newPage();
-  await promo2.addInitScript(PRECOVER_INIT);
+  const payoffStartedAt = Date.now();
+  await prepareSegment(
+    promo2,
+    5,
+    'promoter',
+    'Get paid on-chain',
+    'This order is Paid, with its settlement transaction attached.'
+  );
   await promo2.goto(`/promote/${SELLER_PEER}/${PROGRAM_ID}/commissions`);
   await expect(promo2.getByTestId('promote-commissions-page')).toBeVisible({ timeout: 45000 });
+  const exactRow = promo2.getByTestId(`seller-affiliate-statement-row-${orderID}`);
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const rowText = (await exactRow.textContent().catch(() => '')) || '';
+    if (/paid/i.test(rowText)) break;
+    await promo2.waitForTimeout(2500);
+    await promo2.reload({ waitUntil: 'domcontentloaded' });
+  }
+  await expect(exactRow).toBeVisible({ timeout: 60000 });
+  await expect(exactRow).toContainText(/paid/i, { timeout: 60000 });
+  await setDemoInterfaceScale(promo2, DEMO_INTERFACE_SCALE.proof);
+  markReadyForEdit('seg5-promoter-payoff', payoffStartedAt);
   await reveal(promo2);
-  await chapter(
-    promo2,
-    7,
-    'promoter',
-    'Paid on-chain, automatically',
-    'Confirmed commissions land in your wallet.'
-  );
   const rollup = promo2.getByTestId('seller-affiliate-earnings-summary-promoter');
   await focusOn(promo2, rollup, 2200);
-  await expect(promo2.getByText(/paid/i).first()).toBeVisible({ timeout: 20000 });
-  await promo2.mouse.wheel(0, 380);
-  await dwell(promo2, 2400);
-  await promo2.mouse.wheel(0, -380);
-  // PAYOFF hold on the rollup + paid rows.
+  await focusOn(promo2, exactRow, 1300);
+  await exactRow.click();
+  const exactDetail = exactRow.locator('xpath=following-sibling::tr[1]');
+  await expect(exactDetail.getByRole('button', { name: /copy transaction hash/i })).toBeVisible({
+    timeout: 60000,
+  });
   await dwell(promo2, 4200);
 
   await promo2.evaluate(() => {
     if (window.__demoChipState) window.__demoChipState.on = false;
+    window.sessionStorage.removeItem('__mobazhaDemoChip');
     document.getElementById('demo-chip')?.classList.remove('on');
   });
   await promo2.waitForTimeout(400);
@@ -541,4 +740,5 @@ test('Demo 0003: seller affiliate loop', async ({ browser }) => {
   );
   await saveSegment(promo2, 'seg5-promoter-payoff.webm');
   await promoCtx.close();
+  await buyerCtx.close();
 });

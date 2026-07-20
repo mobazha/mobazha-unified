@@ -199,6 +199,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       return (
         <Button
           key={action}
+          data-testid={`order-action-${action.toLowerCase()}`}
           size="sm"
           onClick={() => onAction(action)}
           className="whitespace-nowrap px-4 sm:px-6 h-11 sm:h-10 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-full"
@@ -214,6 +215,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     return (
       <Button
         key={action}
+        data-testid={`order-action-${action.toLowerCase()}`}
         variant={isDanger ? 'outline' : variantMap[config.variant] || 'outline'}
         size="sm"
         onClick={() => onAction(action)}

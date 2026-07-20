@@ -640,7 +640,7 @@ export const en: TranslationResource = {
     loadFailedDesc: 'Something went wrong while preparing your order. Please try again later.',
     nextStepsTitle: 'What happens next',
     nextStepsSeller:
-      "The seller will review and confirm your order. You'll receive a notification once it's processed.",
+      'Your order is confirmed. Open order details to follow payment verification and delivery.',
     nextStepsEscrow: 'Your payment is protected by buyer protection until you confirm delivery.',
     nextStepsTrack: 'Track your order status anytime from your order details page.',
     // TRON

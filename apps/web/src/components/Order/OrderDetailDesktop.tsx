@@ -694,6 +694,8 @@ export function OrderDetailDesktop({
               </button>
               {displayOrder.userRole === 'seller' && !isPrePayment && (
                 <button
+                  type="button"
+                  data-testid="order-packing-slip"
                   onClick={() => setShowPackingSlip(true)}
                   className="text-muted-foreground hover:text-foreground text-xs font-medium flex items-center gap-1 flex-shrink-0 ml-2"
                 >

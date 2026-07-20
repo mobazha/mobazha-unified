@@ -36,6 +36,7 @@ export const PaymentMethodSummary: React.FC<PaymentMethodSummaryProps> = ({
 
   return (
     <button
+      data-testid="payment-method-summary"
       type="button"
       onClick={onEdit}
       disabled={disabled}

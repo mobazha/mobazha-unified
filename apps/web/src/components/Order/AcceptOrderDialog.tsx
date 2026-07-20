@@ -149,7 +149,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md" data-testid="accept-order-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>{t('order.accept.title')}</AlertDialogTitle>
           <AlertDialogDescription>
@@ -171,7 +171,11 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSubmit} disabled={isLoading}>
+          <AlertDialogAction
+            onClick={handleSubmit}
+            disabled={isLoading}
+            data-testid="accept-order-confirm"
+          >
             {isLoading ? t('common.processing') : t('order.actions.accept')}
           </AlertDialogAction>
         </AlertDialogFooter>
