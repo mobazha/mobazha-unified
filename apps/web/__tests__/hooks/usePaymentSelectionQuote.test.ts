@@ -59,13 +59,12 @@ describe('usePaymentSelectionQuote', () => {
     vi.useRealTimers();
   });
 
-  it('stays idle for non-Deal orders', async () => {
+  it('stays idle when disabled', async () => {
     const { result } = renderHook(() =>
       usePaymentSelectionQuote({
-        enabled: true,
+        enabled: false,
         orderID: 'order-1',
         paymentCoin: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
-        isDealBacked: false,
       })
     );
 
@@ -78,7 +77,7 @@ describe('usePaymentSelectionQuote', () => {
     expect(result.current.canUseQuote).toBe(false);
   });
 
-  it('loads quote for Deal-backed orders and exposes quote id', async () => {
+  it('loads quote when enabled and exposes quote id', async () => {
     createOrderPaymentSelectionQuote.mockResolvedValue(mockQuote);
 
     const { result } = renderHook(() =>
@@ -86,7 +85,6 @@ describe('usePaymentSelectionQuote', () => {
         enabled: true,
         orderID: 'order-1',
         paymentCoin: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
-        isDealBacked: true,
       })
     );
 
@@ -112,7 +110,6 @@ describe('usePaymentSelectionQuote', () => {
         enabled: true,
         orderID: 'order-1',
         paymentCoin: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
-        isDealBacked: true,
       })
     );
 

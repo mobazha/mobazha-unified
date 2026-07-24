@@ -311,40 +311,62 @@ export function AuthProvider({
   // 处理 OAuth 回调（在任何页面都可能发生）
   // Uses oauthProcessingRef (synchronous) to prevent React Strict Mode
   // double-invocation from consuming the authorization code twice.
+  //
+  // IMPORTANT: always clear isProcessingOAuth in `finally`. Without it, any
+  // throw / early return / hung await leaves the full-screen "Signing in…"
+  // spinner forever (no auth request visible if we fail before fetch).
   useEffect(() => {
-    const handleOAuthCallback = async () => {
-      if (hasOAuthCallback() && !oauthProcessingRef.current) {
-        oauthProcessingRef.current = true;
-        setIsProcessingOAuth(true);
+    const OAUTH_TIMEOUT_MS = 45_000;
 
+    const handleOAuthCallback = async () => {
+      if (!hasOAuthCallback() || oauthProcessingRef.current) return;
+
+      oauthProcessingRef.current = true;
+      setIsProcessingOAuth(true);
+
+      try {
         const { code, state } = getOAuthParams();
         clearOAuthParams();
 
-        if (code && state) {
-          const [, sfReturnUrl] = extractStorefrontReturn(state);
+        if (!code || !state) return;
 
-          const success = await loginWithOAuth(code, state);
+        const [, sfReturnUrl] = extractStorefrontReturn(state);
 
-          if (success && sfReturnUrl) {
-            const token = useUserStore.getState().token;
-            if (token) {
-              window.location.href = buildStorefrontAuthRedirect(sfReturnUrl, token);
-              return;
-            }
-          }
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const success = await Promise.race([
+          loginWithOAuth(code, state),
+          new Promise<boolean>((_, reject) => {
+            timeoutId = setTimeout(
+              () => reject(new Error('Sign-in timed out. Please try again.')),
+              OAUTH_TIMEOUT_MS
+            );
+          }),
+        ]).finally(() => {
+          if (timeoutId !== undefined) clearTimeout(timeoutId);
+        });
 
-          if (success) {
-            hasRestoredSession.current = true;
-
-            const currentState = useUserStore.getState();
-            if (currentState.needsOnboarding) {
-              router.push('/onboarding');
-            } else {
-              const redirectPath = getRedirectPath(searchParams);
-              router.push(redirectPath);
-            }
+        if (success && sfReturnUrl) {
+          const token = useUserStore.getState().token;
+          if (token) {
+            window.location.href = buildStorefrontAuthRedirect(sfReturnUrl, token);
+            return;
           }
         }
+
+        if (success) {
+          hasRestoredSession.current = true;
+
+          const currentState = useUserStore.getState();
+          if (currentState.needsOnboarding) {
+            router.push('/onboarding');
+          } else {
+            const redirectPath = getRedirectPath(searchParams);
+            router.push(redirectPath);
+          }
+        }
+      } catch (err) {
+        console.error('[AuthProvider] OAuth callback failed:', err);
+      } finally {
         oauthProcessingRef.current = false;
         setIsProcessingOAuth(false);
         setIsInitialized(true);
@@ -352,7 +374,9 @@ export function AuthProvider({
     };
 
     handleOAuthCallback();
-  }, [loginWithOAuth, router, isProcessingOAuth, searchParams]);
+    // Intentionally omit isProcessingOAuth from deps — including it re-fires the
+    // effect on the setState(true) and races with the in-flight callback.
+  }, [loginWithOAuth, router, searchParams]);
 
   // Delay auth initialization until Discord SDK is ready (avoids premature anonymous mode)
   const discordPending = isDiscordActivity && !discord.isReady;

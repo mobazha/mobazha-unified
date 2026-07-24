@@ -11,6 +11,7 @@ import {
   isDealBackedOrder,
   isPaymentSelectionQuoteExpired,
   isPaymentSelectionQuoteProvisioned,
+  isPaymentSelectionQuoteRequired,
   resolveCheckoutCanonicalPaymentCoin,
 } from '../../utils/paymentSelectionQuote';
 
@@ -33,6 +34,33 @@ describe('paymentSelectionQuote utils', () => {
       isDealBackedOrder({ contract: { orderOpen: { feeQuoteID: 'x' } }, state: 'AWAITING_PAYMENT' })
     ).toBe(false);
     expect(isDealBackedOrder(null)).toBe(false);
+  });
+
+  it('requires a selection quote for cross-currency payment assets', () => {
+    expect(
+      isPaymentSelectionQuoteRequired({
+        pricingCurrency: 'USD',
+        paymentCoin: 'crypto:eip155:1:native',
+      })
+    ).toBe(true);
+    expect(
+      isPaymentSelectionQuoteRequired({
+        pricingCurrency: 'ETH',
+        paymentCoin: 'crypto:eip155:1:native',
+      })
+    ).toBe(false);
+    expect(
+      isPaymentSelectionQuoteRequired({
+        pricingCurrency: 'USD',
+        paymentCoin: 'fiat:stripe:USD',
+      })
+    ).toBe(false);
+    expect(
+      isPaymentSelectionQuoteRequired({
+        pricingCurrency: 'EUR',
+        paymentCoin: 'fiat:stripe:USD',
+      })
+    ).toBe(true);
   });
 
   it('builds canonical fiat payment coin', () => {

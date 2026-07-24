@@ -4,6 +4,7 @@
 import type { Order } from '../types/order';
 import type { PaymentSelectionQuote } from '../types/paymentSelectionQuote';
 import type { PaymentSession } from '../types/paymentSession';
+import { getPaymentCoinDisplayLabel } from '../data/tokens';
 import { formatMinimalUnitAmountString } from './transforms/minimalUnit';
 
 function readNonEmptyString(value: unknown): string | undefined {
@@ -30,6 +31,30 @@ export function isDealBackedOrder(order: Order | null | undefined): boolean {
     Number.isInteger(dealRevision) &&
     dealRevision > 0
   );
+}
+
+/**
+ * True when payment-session provisioning needs an immutable selection quote.
+ * Mirrors Core MatchesPricingCurrency: same pricing currency skips the quote;
+ * cross-currency (including Deal and standard catalog checkout) requires one.
+ */
+export function isPaymentSelectionQuoteRequired(options: {
+  pricingCurrency?: string | null;
+  paymentCoin?: string | null;
+}): boolean {
+  const pricingCurrency = (options.pricingCurrency || '').trim();
+  const paymentCoin = (options.paymentCoin || '').trim();
+  if (!pricingCurrency || !paymentCoin) return false;
+  if (paymentCoin.toLowerCase() === pricingCurrency.toLowerCase()) return false;
+
+  if (paymentCoin.toLowerCase().startsWith('fiat:')) {
+    const fiatCurrency = paymentCoin.split(':')[2]?.trim() || '';
+    return Boolean(fiatCurrency) && fiatCurrency.toUpperCase() !== pricingCurrency.toUpperCase();
+  }
+
+  const paymentLabel = getPaymentCoinDisplayLabel(paymentCoin).trim();
+  if (!paymentLabel) return true;
+  return paymentLabel.toUpperCase() !== pricingCurrency.toUpperCase();
 }
 
 export function isPaymentSelectionQuoteExpired(

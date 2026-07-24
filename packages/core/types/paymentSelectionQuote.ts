@@ -2,8 +2,9 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 /**
- * Immutable server-authored payment selection quote for Deal-backed orders.
- * Monetary fields are decimal strings in smallest units — never use Number/float.
+ * Immutable server-authored payment selection quote for Deal and standard
+ * cross-currency orders. Monetary fields are decimal strings in smallest units
+ * — never use Number/float.
  */
 export interface PaymentSelectionQuote {
   id: string;

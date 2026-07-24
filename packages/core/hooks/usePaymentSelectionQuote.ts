@@ -15,8 +15,6 @@ export interface UsePaymentSelectionQuoteOptions {
   orderID?: string;
   paymentCoin?: string;
   vendorPeerID?: string;
-  /** When false (normal orders), hook stays idle and returns no quote. */
-  isDealBacked?: boolean;
 }
 
 export interface UsePaymentSelectionQuoteReturn {
@@ -33,10 +31,9 @@ export interface UsePaymentSelectionQuoteReturn {
 export function usePaymentSelectionQuote(
   options: UsePaymentSelectionQuoteOptions = {}
 ): UsePaymentSelectionQuoteReturn {
-  const { enabled = true, orderID, paymentCoin, vendorPeerID, isDealBacked = false } = options;
+  const { enabled = true, orderID, paymentCoin, vendorPeerID } = options;
 
-  const active =
-    enabled && isDealBacked && Boolean(orderID?.trim()) && Boolean(paymentCoin?.trim());
+  const active = enabled && Boolean(orderID?.trim()) && Boolean(paymentCoin?.trim());
 
   const [quote, setQuote] = useState<PaymentSelectionQuote | null>(null);
   const [loading, setLoading] = useState(false);

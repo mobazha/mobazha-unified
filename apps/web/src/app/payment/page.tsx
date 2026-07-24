@@ -66,6 +66,7 @@ import {
   parseCollectibleListingMetadata,
   normalizeOrderOpenListings,
   isDealBackedOrder,
+  isPaymentSelectionQuoteRequired,
   usePaymentSelectionQuote,
   useOnrampFunding,
   buildCanonicalFiatPaymentCoin,
@@ -567,9 +568,24 @@ export default function PaymentPage() {
     [selectedPaymentCoin, visibleFiatProvider, orderDetails?.currency]
   );
 
-  const dealQuoteRequired =
-    isDealBacked && Boolean(orderID) && isPaymentOpenState(orderDetails?.status);
-  const paymentSelectionQuoteEnabled = dealQuoteRequired && Boolean(checkoutCanonicalPaymentCoin);
+  const orderPricingCurrency =
+    (typeof rawOrder?.contract?.orderOpen?.pricingCoin === 'string'
+      ? rawOrder.contract.orderOpen.pricingCoin.trim()
+      : '') ||
+    orderDetails?.currency ||
+    '';
+  const crossCurrencyQuoteRequired = isPaymentSelectionQuoteRequired({
+    pricingCurrency: orderPricingCurrency,
+    paymentCoin: checkoutCanonicalPaymentCoin,
+  });
+  // Deal checkout always freezes a selection quote; standard checkout only when
+  // pricing currency differs from the selected payment asset (RFC-0014 v2).
+  const paymentSelectionQuoteRequired =
+    Boolean(orderID) &&
+    isPaymentOpenState(orderDetails?.status) &&
+    (isDealBacked || crossCurrencyQuoteRequired);
+  const paymentSelectionQuoteEnabled =
+    paymentSelectionQuoteRequired && Boolean(checkoutCanonicalPaymentCoin);
 
   const {
     quote: paymentSelectionQuote,
@@ -584,7 +600,6 @@ export default function PaymentPage() {
     orderID: orderID ?? undefined,
     paymentCoin: checkoutCanonicalPaymentCoin,
     vendorPeerID: paymentVendorPeerID,
-    isDealBacked,
   });
 
   const paymentSelectionQuoteProvisioned = isPaymentSelectionQuoteProvisioned(
@@ -600,7 +615,8 @@ export default function PaymentPage() {
       : undefined;
 
   const dealQuoteBlocksPayment =
-    dealQuoteRequired && (!checkoutCanonicalPaymentCoin || !paymentSelectionQuoteAuthorizesPayment);
+    paymentSelectionQuoteRequired &&
+    (!checkoutCanonicalPaymentCoin || !paymentSelectionQuoteAuthorizesPayment);
   const showFiatPaymentForm =
     Boolean(visibleFiatProvider) &&
     isReadyToPay &&
@@ -1771,7 +1787,7 @@ export default function PaymentPage() {
                         </CardContent>
                       </Card>
 
-                      {isDealBacked && paymentSelectionQuoteEnabled && (
+                      {paymentSelectionQuoteEnabled && (
                         <PaymentSelectionQuoteReview
                           quote={paymentSelectionQuote}
                           loading={paymentSelectionQuoteLoading}
@@ -1793,12 +1809,12 @@ export default function PaymentPage() {
                               vendorPeerID={paymentVendorPeerID}
                               orderID={orderDetails.orderID}
                               amount={
-                                isDealBacked
+                                paymentSelectionQuoteEnabled
                                   ? 0
                                   : toMinimalUnit(orderDetails.total, orderDetails.currency)
                               }
                               currency={
-                                isDealBacked && paymentSelectionQuote
+                                paymentSelectionQuoteEnabled && paymentSelectionQuote
                                   ? paymentSelectionQuote.paymentCurrency
                                   : orderDetails.currency
                               }
@@ -1806,12 +1822,12 @@ export default function PaymentPage() {
                               returnUrl={fiatVerificationReturnUrl!}
                               cancelUrl={fiatCancelReturnUrl!}
                               canCreateSession={
-                                isDealBacked
+                                paymentSelectionQuoteEnabled
                                   ? isReadyToPay && paymentSelectionQuoteAuthorizesPayment
                                   : isReadyToPay
                               }
                               dealPaymentSessionRequest={
-                                isDealBacked &&
+                                paymentSelectionQuoteEnabled &&
                                 paymentSelectionQuoteID &&
                                 checkoutCanonicalPaymentCoin
                                   ? {
@@ -1827,7 +1843,10 @@ export default function PaymentPage() {
                               onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
                                 setPaymentStep('submitted');
 
-                                if (!isDealBacked) {
+                                // Quote-bound PaymentSession (Deal or standard cross-currency)
+                                // is confirmed by provider webhook / session state — do not
+                                // re-submit a client amount through the legacy payment path.
+                                if (!paymentSelectionQuoteEnabled) {
                                   try {
                                     const submitResult = await ordersApi.submitPayment({
                                       orderID: orderDetails.orderID,
