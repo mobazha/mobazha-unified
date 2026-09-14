@@ -62,6 +62,18 @@ corepack pnpm dev:vite
 The development server listens on `http://127.0.0.1:3000` by default. Connection profiles and local
 backend configuration are covered in the repository documentation.
 
+## Payment networks in checkout
+
+Checkout, order tracking, and wallet flows render whichever payment networks the connected backend
+advertises. Across a [Mobazha Node](https://github.com/mobazha/mobazha) or hosted backend that
+covers UTXO chains (Bitcoin, Bitcoin Cash, Litecoin, Zcash) and EVM networks, including **BNB Smart
+Chain** (BNB Chain, chain ID 56) with native **BNB** and BEP-20 stablecoins such as USDT, USDC, and
+BUSD.
+
+On BNB Smart Chain and other EVM networks, checkout presents a per-order Safe multisig escrow
+address; Unified never holds keys or funds, and the backend that owns the order validates every
+state transition.
+
 ## Go deeper
 
 - [Product model](https://docs.mobazha.org/project/product-map)

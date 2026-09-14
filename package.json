@@ -3,6 +3,17 @@
   "version": "0.0.1",
   "private": true,
   "description": "Mobazha unified React Web platform",
+  "keywords": [
+    "ecommerce",
+    "marketplace",
+    "web3",
+    "bnb-chain",
+    "bnb-smart-chain",
+    "bsc",
+    "safe-multisig",
+    "escrow",
+    "self-hosted"
+  ],
   "scripts": {
     "dev": "turbo dev",
     "dev:remote-test": "pnpm --filter @mobazha/web dev:remote-test",
