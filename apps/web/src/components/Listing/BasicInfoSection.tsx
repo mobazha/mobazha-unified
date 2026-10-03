@@ -11,6 +11,7 @@ import {
   projectRuntimeCryptoPaymentMethods,
 } from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
+import { FieldError } from '@/components/ui/field-error';
 import {
   Select,
   SelectContent,
@@ -230,7 +231,7 @@ export function BasicInfoSection({
           />
           <div className="flex justify-between mt-1">
             {errors.title ? (
-              <p className="text-destructive text-xs">{errors.title}</p>
+              <FieldError message={errors.title} className="mt-0" />
             ) : !compact ? (
               <p className="text-xs text-muted-foreground">{t('listing.titleHelper')}</p>
             ) : (
@@ -329,7 +330,7 @@ export function BasicInfoSection({
                 </SelectContent>
               </Select>
             </div>
-            {errors.price && <p className="text-destructive text-xs mt-1">{errors.price}</p>}
+            <FieldError message={errors.price} />
             <p className="text-xs text-muted-foreground mt-1">{t('listing.priceHelper')}</p>
           </div>
 
@@ -352,9 +353,7 @@ export function BasicInfoSection({
                 placeholder="0.00"
               />
             </div>
-            {errors.compareAtPrice && (
-              <p className="text-destructive text-xs mt-1">{errors.compareAtPrice}</p>
-            )}
+            {errors.compareAtPrice && <FieldError message={errors.compareAtPrice} />}
             <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground">{t('listing.compareAtPriceHelper')}</p>
               {discountPercent && (
@@ -388,9 +387,7 @@ export function BasicInfoSection({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.condition && (
-                <p className="text-destructive text-xs mt-1">{errors.condition}</p>
-              )}
+              {errors.condition && <FieldError message={errors.condition} />}
               {!compact && (
                 <p className="text-xs text-muted-foreground mt-1">{t('listing.conditionHelper')}</p>
               )}

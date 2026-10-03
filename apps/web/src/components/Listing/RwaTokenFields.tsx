@@ -5,6 +5,7 @@ import { Search, Plus, X, CheckCircle } from 'lucide-react';
 import type { BlockchainNetwork, RwaTokenInfo } from '@mobazha/core';
 import { useI18n, useCurrency, mustAssetIdFromTokenId } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -263,9 +264,7 @@ export function RwaTokenFields({
               ))}
             </SelectContent>
           </Select>
-          {errors.blockchain && (
-            <p className="text-destructive text-sm mt-1">{errors.blockchain}</p>
-          )}
+          {errors.blockchain && <FieldError message={errors.blockchain} className="text-sm" />}
           <p className="text-xs text-muted-foreground mt-1">{t('listing.blockchainHelper')}</p>
         </div>
 
@@ -275,7 +274,7 @@ export function RwaTokenFields({
             {t('listing.selectRwaToken')} <span className="text-destructive">*</span>
           </label>
           {errors.cryptoListingCurrencyCode && (
-            <p className="text-destructive text-sm mb-2">{errors.cryptoListingCurrencyCode}</p>
+            <FieldError message={errors.cryptoListingCurrencyCode} className="mb-2 text-sm" />
           )}
 
           <Tabs
@@ -432,7 +431,7 @@ export function RwaTokenFields({
                 </SelectContent>
               </Select>
             </div>
-            {errors.price && <p className="text-destructive text-sm mt-1">{errors.price}</p>}
+            <FieldError message={errors.price} className="text-sm" />
           </div>
         </div>
 
@@ -442,7 +441,7 @@ export function RwaTokenFields({
             {t('listing.acceptedCurrencies')} <span className="text-destructive">*</span>
           </label>
           {errors.acceptedCurrencies && (
-            <p className="text-destructive text-sm mb-2">{errors.acceptedCurrencies}</p>
+            <FieldError message={errors.acceptedCurrencies} className="mb-2 text-sm" />
           )}
           <div className="space-y-2">
             {acceptedCurrencies.map((currency, index) => (

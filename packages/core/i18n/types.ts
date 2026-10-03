@@ -2350,6 +2350,16 @@ export interface TranslationResource {
     required: string;
     titleRequired: string;
     priceRequired: string;
+    /** Filled in but not a usable value (e.g. price <= 0) */
+    priceInvalid?: string;
+    imageRequired?: string;
+    compareAtPriceInvalid?: string;
+    conditionRequired?: string;
+    blockchainRequired?: string;
+    tokenRequired?: string;
+    paymentCurrencyRequired?: string;
+    /** Heading of the inline error summary shown after a failed submit */
+    summaryTitle?: string;
   };
 
   // RWA Digital Assets Tab & Atomic Swap flows

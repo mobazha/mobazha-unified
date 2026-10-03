@@ -5,6 +5,7 @@ import { Upload, X, File, GripVertical } from 'lucide-react';
 import { useI18n, getGatewayUrl } from '@mobazha/core';
 import type { DigitalFile } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field-error';
 import { useToast } from '@/components/ui/use-toast';
 
 interface DigitalFileSectionProps {
@@ -149,9 +150,7 @@ export function DigitalFileSection({
         aria-label={t('listing.digital.uploadFiles')}
       />
 
-      {errors.digitalFiles && (
-        <p className="text-destructive text-sm mt-2">{errors.digitalFiles}</p>
-      )}
+      {errors.digitalFiles && <FieldError message={errors.digitalFiles} className="mt-2 text-sm" />}
     </Card>
   );
 }

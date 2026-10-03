@@ -5,6 +5,7 @@ import { Sparkles, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import type { ListingFormData } from '@mobazha/core';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { TokenInput } from '@/components/ui/TokenInput';
@@ -113,7 +114,7 @@ export function AiReviewStep({
           placeholder={t('listing.title')}
           className={errors.title ? 'border-destructive' : ''}
         />
-        {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
+        <FieldError message={errors.title} className="mt-0" />
       </div>
 
       {/* Short Description */}
@@ -177,7 +178,7 @@ export function AiReviewStep({
             className={`flex-1 ${errors.price ? 'border-destructive' : ''}`}
           />
         </div>
-        {errors.price && <p className="text-xs text-destructive">{errors.price}</p>}
+        <FieldError message={errors.price} className="mt-0" />
       </div>
     </div>
   );

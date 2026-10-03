@@ -230,6 +230,14 @@ export const en: TranslationResource = {
   },
 
   validation: {
+    priceInvalid: 'Enter a price greater than 0',
+    imageRequired: 'Add at least one image',
+    compareAtPriceInvalid: 'Compare-at price must be higher than the price',
+    conditionRequired: 'Select the item condition',
+    blockchainRequired: 'Select a blockchain',
+    tokenRequired: 'Select a token',
+    paymentCurrencyRequired: 'Select at least one payment currency',
+    summaryTitle: 'Fix these fields before publishing',
     required: 'This field is required',
     titleRequired: 'Title is required',
     priceRequired: 'Price is required',

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
+  AlertCircle,
   Save,
   X,
   Tag,
@@ -24,6 +25,7 @@ import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
 import { useToast } from '@/components/ui';
 import {
   Dialog,
@@ -84,6 +86,7 @@ import { ListingPriceHierarchyBanner } from '@/components/Listing/ListingPriceHi
 import { ListingFulfillmentPricingPanel } from '@/components/Listing/ListingFulfillmentPricingPanel';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useScrollToFirstError } from '@/hooks/useScrollToFirstError';
 
 // Sovereign is single-store: /store (no peerID) is the clean storefront URL.
 // SaaS /profile redirects to /store/:peerID — same intent, different path.
@@ -107,6 +110,35 @@ interface TabItem {
   icon: React.ReactNode;
   showFor?: ContractType[];
 }
+
+/**
+ * 校验失败时，把每个错误字段映射到它所在的页签，以及用于汇总条的字段名 key。
+ */
+const ERROR_FIELD_SECTIONS: Record<string, TabKey> = {
+  title: 'general',
+  price: 'general',
+  compareAtPrice: 'general',
+  condition: 'general',
+  images: 'photos',
+  shippingProfile: 'shipping',
+  digitalFiles: 'files',
+  blockchain: 'other',
+  cryptoListingCurrencyCode: 'other',
+  acceptedCurrencies: 'other',
+};
+
+const ERROR_FIELD_LABELS: Record<string, string> = {
+  title: 'listing.title',
+  price: 'listing.price',
+  compareAtPrice: 'listing.compareAtPrice',
+  condition: 'listing.condition',
+  images: 'listing.photos',
+  shippingProfile: 'listing.tabs.shipping',
+  digitalFiles: 'listing.tabs.files',
+  blockchain: 'listing.blockchain',
+  cryptoListingCurrencyCode: 'listing.tokenAddress',
+  acceptedCurrencies: 'listing.acceptedCurrencies',
+};
 
 const tabs: TabItem[] = [
   { key: 'general', labelKey: 'listing.tabs.general', icon: <FileText className="w-4 h-4" /> },
@@ -213,6 +245,17 @@ export default function EditListingPage() {
 
   // 当前激活的标签
   const [activeTab, setActiveTab] = useState<TabKey>('general');
+
+  // 只有点过保存、且校验没过时才展示错误汇总
+  const [validationAttempted, setValidationAttempted] = useState(false);
+  // Counts failed submits so that a repeat attempt re-runs the auto-scroll below.
+  const [validationAttempts, setValidationAttempts] = useState(0);
+  // A fixed field keeps its key with an `undefined` value, so filter on the value.
+  const errorFields = useMemo(
+    () => Object.keys(errors).filter(field => Boolean(errors[field])),
+    [errors]
+  );
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -253,12 +296,24 @@ export default function EditListingPage() {
 
   // 滚动到指定区域
   const scrollToSection = useCallback((key: TabKey) => {
-    setActiveTab(key);
+    // RWA listings do not render every section (e.g. 'other'): fall back to the first
+    // section, and to the top of the page (where the error summary sits) if that is absent too.
     const ref = sectionRefs.current[key];
-    if (ref) {
-      ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveTab(ref ? key : 'general');
+    const target = ref ?? sectionRefs.current.general;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, []);
+
+  // 校验失败后自动定位：每次失败的提交，切到第一个错误字段所在的页签。
+  // 只按提交次数触发——否则用户修改字段、第一个错误前移时，页面会被拽到下一个错误处。
+  useScrollToFirstError(validationAttempts, errorFields[0], field => {
+    const section = ERROR_FIELD_SECTIONS[field];
+    if (section) scrollToSection(section);
+  });
 
   const {
     context: supplyContext,
@@ -375,13 +430,12 @@ export default function EditListingPage() {
       e?.preventDefault();
 
       if (!validate()) {
-        toast({
-          title: t('common.error'),
-          description: t('listing.validationFailed'),
-          variant: 'destructive',
-        });
+        // 改为就地提示 + 自动定位，不再用右下角弹窗
+        setValidationAttempted(true);
+        setValidationAttempts(count => count + 1);
         return;
       }
+      setValidationAttempted(false);
 
       if (formData.contractType === 'DIGITAL_GOOD') {
         try {
@@ -753,6 +807,34 @@ export default function EditListingPage() {
 
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
+              {/* 校验错误汇总：点哪条跳到哪个字段，替代右下角弹窗 */}
+              {validationAttempted && errorFields.length > 0 && (
+                <Card className="border-destructive/40 bg-destructive/5 p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-destructive">
+                        {t('validation.summaryTitle')}
+                      </p>
+                      <ul className="flex flex-wrap gap-2">
+                        {errorFields.map(field => (
+                          <li key={field}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                scrollToSection(ERROR_FIELD_SECTIONS[field] ?? 'general')
+                              }
+                              className="rounded-md border border-destructive/40 px-2 py-0.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                            >
+                              {t(ERROR_FIELD_LABELS[field] ?? field)}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </Card>
+              )}
               {supplyAvailabilityEnabled && resolveProductSupplyMode(supplyContext) !== 'none' && (
                 <SupplySummaryBar
                   context={supplyContext}
@@ -864,9 +946,7 @@ export default function EditListingPage() {
                           maxLength={140}
                           className={errors.title ? 'border-destructive' : ''}
                         />
-                        {errors.title && (
-                          <p className="text-destructive text-sm mt-1">{errors.title}</p>
-                        )}
+                        <FieldError message={errors.title} className="text-sm" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">

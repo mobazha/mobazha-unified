@@ -357,23 +357,26 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
       // 草稿模式：仅需标题
       if (isDraft) {
         if (!formData.title.trim()) {
-          newErrors.title = 'Title is required';
+          newErrors.title = 'validation.titleRequired';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
       }
 
-      // 必填字段验证
+      // 必填字段验证。错误值保存的是 i18n key，由 <FieldError> 负责渲染，
+      // 这样语言切换后提示会跟着变，也避免把英文写死。
       if (!formData.title.trim()) {
-        newErrors.title = 'Title is required';
+        newErrors.title = 'validation.titleRequired';
       }
 
-      if (!formData.price || parseFloat(formData.price) <= 0) {
-        newErrors.price = 'Valid price is required';
+      if (!formData.price || !formData.price.trim()) {
+        newErrors.price = 'validation.priceRequired';
+      } else if (parseFloat(formData.price) <= 0) {
+        newErrors.price = 'validation.priceInvalid';
       }
 
       if (formData.images.length === 0) {
-        newErrors.images = 'At least one image is required';
+        newErrors.images = 'validation.imageRequired';
       }
 
       // 划线价验证: 必须 > 售价
@@ -381,28 +384,28 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         const compareAt = parseFloat(formData.compareAtPrice);
         const price = parseFloat(formData.price);
         if (compareAt > 0 && price > 0 && compareAt <= price) {
-          newErrors.compareAtPrice = 'Compare at price must be greater than price';
+          newErrors.compareAtPrice = 'validation.compareAtPriceInvalid';
         }
       }
 
       // 物理商品特定验证
       if (formData.contractType === 'PHYSICAL_GOOD') {
         if (!formData.condition) {
-          newErrors.condition = 'Condition is required';
+          newErrors.condition = 'validation.conditionRequired';
         }
       }
 
       // RWA Token 特定验证
       if (formData.contractType === 'RWA_TOKEN') {
         if (!formData.blockchain) {
-          newErrors.blockchain = 'Blockchain is required';
+          newErrors.blockchain = 'validation.blockchainRequired';
         }
         const isSourceCustodyListing = Boolean(formData.sourceDepositID?.trim());
         if (!isSourceCustodyListing && !formData.cryptoListingCurrencyCode) {
-          newErrors.cryptoListingCurrencyCode = 'Token selection is required';
+          newErrors.cryptoListingCurrencyCode = 'validation.tokenRequired';
         }
         if (!formData.acceptedCurrencies || formData.acceptedCurrencies.length === 0) {
-          newErrors.acceptedCurrencies = 'At least one payment currency is required';
+          newErrors.acceptedCurrencies = 'validation.paymentCurrencyRequired';
         }
       }
 
