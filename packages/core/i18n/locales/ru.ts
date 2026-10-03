@@ -5,7 +5,82 @@
 import type { PartialTranslationResource } from '../types';
 
 export const ru: PartialTranslationResource = {
+  adminDecrypt: {
+    cancel: 'Отмена',
+    clearAndClose: 'Очистить и закрыть',
+    decryptButton: 'Расшифровать адрес',
+    decryptedSuccess: 'Адрес расшифрован (только в браузере)',
+    decrypting: 'Расшифровка...',
+    decryptNow: 'Расшифровать',
+    decryptionFailed:
+      'Не удалось расшифровать: {{msg}}. Убедитесь, что вы используете правильный закрытый ключ.',
+    encryptedNotice:
+      'Адрес доставки зашифрован. Разблокируйте его с помощью парольной фразы восстановления (только в этом браузере).',
+    passphrasePlaceholder: 'Парольная фраза восстановления',
+    printLabel: 'Печать этикетки',
+    privateKeyHint:
+      'Введите парольную фразу восстановления, созданную с помощью защиты адреса. Он никогда не отправляется в магазин.',
+  },
+  marketplaceStarter: {
+    bannerSubtitle: 'Объявления в центре внимания оператора',
+    bannerTitle: 'Рекомендуемые баннеры',
+    coldStart: {
+      becomeSeller: 'Подать заявку, чтобы стать продавцом',
+      howItWorks1: 'Каждый заказ остается у выбранного вами продавца.',
+      howItWorks2: 'Защита покупателя и безопасные платежи применяются магазин за магазином.',
+      howItWorks3: 'Продавцы проверяются до того, как их продукты появятся здесь.',
+      howItWorksTitle: 'Как работает этот маркетплейс',
+      inventoryPreparing: 'Инвентаризация готовится',
+      inviteOnly: 'Этот маркетплейс на борту продавцов по приглашению.',
+      notifyCta: 'Уведомить меня',
+      notifyDone: 'Вы в списке.',
+      notifyFailed: 'Это не сработало — проверьте адрес и попробуйте еще раз.',
+      notifyHint: 'Получите одно электронное письмо, когда продукты выйдут в эфир. Никакого спама.',
+      notifyPlaceholder: 'you@example.com',
+      subtitle: 'Этот рынок только начинается. Попробуйте поискать объявления в ближайшее время.',
+    },
+    curatedSubtitle: 'Выбранные оператором основные моменты',
+    defaultName: 'Ярмарка',
+    curatedTitle: 'Кураторские подборки',
+    degraded: {
+      title: 'Не удалось загрузить объявления',
+      description: 'При загрузке торговой площадки произошла ошибка. Повторите попытку.',
+    },
+    errorTitle: 'Торговая площадка недоступна',
+    errorDescription:
+      'В данный момент мы не можем загрузить эту торговую площадку. Повторите попытку.',
+    latestTitle: 'Последние объявления',
+    latestSubtitle: 'Только от одобренных продавцов',
+    loadingDescription: 'Подготовка кураторского открытия...',
+    loadingTitle: 'Загрузка маркетплейса',
+    popularSubtitle: 'Популярное на этом рынке',
+    popularTitle: 'Популярные подборки',
+    searchPlaceholder: 'Искать на этой торговой площадке',
+    sparse: {
+      notice:
+        'Отображение доступных объявлений, в то время как этот маркетплейс выстраивает свои избранные варианты.',
+    },
+    storesSubtitle: 'Делайте покупки напрямую у проверенных продавцов',
+    storesTitle: 'Рекомендуемые Магазины',
+    trustCopy:
+      'Каждый заказ остается у выбранного вами продавца. Защита покупателя и безопасные платежи применяются магазин за магазином.',
+    visitStore: 'Перейти в магазин',
+  },
+  sovereign: {
+    privacyHintDesc:
+      'Ваш магазин не делает никаких внешних сетевых запросов. Для максимальной конфиденциальности обращайтесь к нему через Tor .onion или I2P eepsite. Настройте конечные точки платежей в настройках → Платежи.',
+    privacyHint: 'Уведомление о конфиденциальности',
+    setup: {
+      regionTitle: 'Местоположение',
+      regionDesc: 'Укажите страну для расчетов доставки',
+    },
+  },
   common: {
+    connecting: 'Подключение...',
+    loadingInterrupted: 'Загрузка прервана',
+    or: 'или',
+    slowNetworkRetry: 'Соединение медленное. Повторите попытку...',
+    unexpectedError: 'Произошла ошибка',
     loading: 'Загрузка...',
     redirecting: 'Перенаправление...',
     error: 'Ошибка',
@@ -154,11 +229,20 @@ export const ru: PartialTranslationResource = {
     showLess: 'Показать меньше',
   },
   validation: {
+    priceInvalid: 'Введите цену больше 0',
+    imageRequired: 'Добавьте хотя бы одно изображение',
+    compareAtPriceInvalid: 'Зачёркнутая цена должна быть выше цены',
+    conditionRequired: 'Выберите состояние товара',
+    blockchainRequired: 'Выберите блокчейн',
+    tokenRequired: 'Выберите токен',
+    paymentCurrencyRequired: 'Выберите хотя бы одну валюту для оплаты',
+    summaryTitle: 'Исправьте эти поля перед публикацией',
     required: 'Это поле обязательно',
     titleRequired: 'Название обязательно',
     priceRequired: 'Цена обязательна',
   },
   nav: {
+    back: 'Назад',
     home: 'Главная',
     market: 'Маркет',
     search: 'Поиск',
@@ -194,6 +278,8 @@ export const ru: PartialTranslationResource = {
     lastUpdated: 'Обновлено {{date}}',
   },
   login: {
+    signInWithMobazha: 'Войти с помощью учетной записи Mobazha',
+    socialLoginNotAdmin: 'У этой учетной записи нет доступа администратора к этому магазину.',
     title: 'Mobazha',
     subtitle: 'Децентрализованный маркетплейс',
     hostedMode: 'Облачный режим',
@@ -336,6 +422,7 @@ export const ru: PartialTranslationResource = {
     collectiblesDesc: 'Токенизированные карты, хранящиеся в Hub, — погашайте их в любое время.',
   },
   product: {
+    storeOffline: 'Этот магазин в настоящее время не в сети. Повторите попытку позже.',
     title: 'Название',
     description: 'Описание',
     price: 'Цена',
@@ -1609,6 +1696,10 @@ export const ru: PartialTranslationResource = {
       claimRefund: 'Запросить возврат',
     },
     fulfillment: {
+      carrier: 'Перевозчик',
+      copyTracking: 'Номер отслеживания ',
+      packageShipped: 'Посылка отправлена',
+      trackingNumber: 'Трек номер',
       title: 'Выполнение поставщиком',
       loading: 'Загрузка статуса выполнения...',
       supplierCost: 'Стоимость поставщика',
@@ -2000,6 +2091,9 @@ export const ru: PartialTranslationResource = {
     },
   },
   wallet: {
+    accountAndNetworks: 'Аккаунт и сети',
+    switchWallet: 'Подключить другой кошелёк',
+    addressCopied: 'Адрес скопирован',
     title: 'Кошелёк',
     balance: 'Баланс',
     totalBalance: 'Общий баланс',
@@ -2173,6 +2267,11 @@ export const ru: PartialTranslationResource = {
         'Это похоже на биткойн-адрес (BTC). BCH обычно использует bitcoincash: или устаревшие форматы — дважды проверьте перед сохранением.',
     },
     accountBinding: {
+      closeTabHint:
+        'Аккаунт успешно привязан. Вы можете закрыть эту вкладку и вернуться в свой магазин.',
+      standaloneConnectDesc:
+        'Подключите свой аккаунт Telegram, Discord или Google, чтобы быстро войти в социальную сеть. Сначала войдите в платформу Mobazha, чтобы управлять связанными учетными записями.',
+      standaloneSocialTitle: 'Привязка аккаунта в социальных сетях',
       title: 'Связанные аккаунты',
       description: 'Управление способами входа',
       linked: 'Связанные аккаунты',
@@ -2727,6 +2826,31 @@ export const ru: PartialTranslationResource = {
     },
   },
   marketplace: {
+    invite: {
+      accept: 'Присоединиться в качестве продавца',
+      acceptedApproved: 'Вы присоединились к маркетплейсу.',
+      acceptedPending: 'Запрос отправлен — оператор рассмотрит его.',
+      acceptFailed: 'Не удалось присоединиться по этой ссылке. Повторите попытку.',
+      accepting: 'Воссоединение',
+      approvalLabel: 'Воссоединение',
+      autoApprove: 'Немедленно утверждено',
+      commissionLabel: 'Комиссия оператора',
+      exhausted: 'Эта ссылка более не действительна.',
+      goToSellPage: 'Управлять моим участием',
+      headline: 'Вас приглашают продать на',
+      invalidBody:
+        'Возможно, срок его действия истек, он был отозван или достиг лимита использования. Спросите оператора маркетплейса о новой ссылке.',
+      invalidTitle: 'Эта ссылка для приглашения недействительна',
+      loadFailedBody: 'Повторите попытку через минуту.',
+      loadFailedTitle: 'Не удалось загрузить это приглашение',
+      loading: 'Проверка приглашения...',
+      loginToAccept: 'Войдите, чтобы принять приглашение',
+      manualReview: 'Проверено оператором',
+      resultApproved: 'Вы в! Ваш магазин теперь является участником.',
+      resultPending: 'Запрос отправлен. Оператор рассмотрит его.',
+      termsNote:
+        'Комиссия взимается с заказов, которые приносит вам маркетплейс, из вашей выручки. Присоединение никогда не переводит ваш магазин, объявления или средства оператору.',
+    },
     title: 'Маркетплейсы сообщества',
     subtitle: 'Откройте для себя маркетплейсы, управляемые сообществом.',
     searchPlaceholder: 'Поиск маркетплейсов...',
@@ -2756,6 +2880,10 @@ export const ru: PartialTranslationResource = {
       searchPlaceholder: 'Поиск участников...',
     },
     sell: {
+      marketCommissionLabel: 'Комиссия оператора',
+      marketCommissionNone: '0 процентов',
+      marketCommissionNote:
+        'Комиссия оператора взимается с заказов, которые этот маркетплейс приносит вам из ваших доходов. Показанная скорость - это опубликованная скорость; изменения требуют повторной публикации оператором.',
       backToMarketplace: 'Назад к маркетплейсу',
       title: 'Стать продавцом',
       subtitle: 'Заполните профиль продавца, чтобы начать продавать в этом маркетплейсе',
@@ -2922,6 +3050,24 @@ export const ru: PartialTranslationResource = {
         statusNextPendingBlocked:
           'Далее: дождаться рассмотрения оператора. Отправка карт и листинг на рынке остаются заблокированными до тех пор, пока они не будут одобрены.',
         workspace: {
+          activeSection: 'Действующая',
+          cardLocation: 'Местоположение',
+          cardChecked: 'Пров.',
+          countsAria: 'Подсчет содержания под стражей',
+          currentStatus: 'Текущее состояние',
+          emptySubmitCta: 'Отправить карту',
+          historySection: 'История',
+          lastUpdated: 'Последнее обновление',
+          listingBindingsBlockedDesc: 'Прежде чем продолжить, добавьте этот элемент в объявление.',
+          listingBindingsBlockedTitle: 'Ссылка на объявление недоступна',
+          showAllCases: 'Показать все {{count}}случаев',
+          nextActionSection: 'Следующее действие',
+          submitIntro: 'Отправьте карту на хранение и сдачу жилья.',
+          showFewerCases: 'Показать меньше',
+          tabSubmit: 'Отправить',
+          tabTrack: 'Трек',
+          trackIntro: 'Отслеживайте статус карт.',
+          viewAria: 'Виды рабочего стола',
           subtitle:
             'Отправьте на рассмотрение куратора оценку, сертификат, кошелек держателя и URL-адреса доказательств на лицевой и оборотной сторонах. Утвержденные карты готовы к листингу — предварительная продажа не требуется.',
           title: 'Представление карт',
@@ -2975,6 +3121,79 @@ export const ru: PartialTranslationResource = {
       },
     },
     operator: {
+      attributionConversionTitle: 'Конвертация',
+      addPositioningCta: '+ Добавить линию позиционирования, которую увидят покупатели',
+      attributionSource: 'Источник:',
+      attributionOrders: 'Атрибутивные заказы',
+      attributionSourceDirect: 'Прямой',
+      attributionSourcesTitle: 'По источнику общего доступа',
+      commissionRate: 'Комиссия оператора',
+      attributionWindowLabel: 'Диапазон времени',
+      commissionRateHint:
+        'Начисляется продавцам по заказам, которые производит этот маркетплейс. Вступает в силу для новых заказов после повторной публикации; продавцы видят фиксированный курс перед присоединением.',
+      commissionRateInvalid: 'Введите ставку от 0 до 30 (до 2 знаков после запятой).',
+      earningsCommission: 'Комиссии',
+      earningsCurrency: 'назначения',
+      earningsCurrentRate: 'Текущая ставка',
+      earningsEmpty: 'В этом окне пока нет атрибутированных заказов.',
+      earningsEstimateNote:
+        'Цифры являются оценками, зафиксированными при оформлении заказа, и подтверждаются при расчете. Они еще не являются кредиторским балансом.',
+      earningsGross: 'Брутто',
+      earningsLoadFailed: 'Не удалось загрузить книгу доходов.',
+      earningsLoading: 'Загрузка доходов...',
+      earningsRatePendingPublish: 'Загрузка доходов...',
+      earningsOrders: 'Заказы',
+      inviteLinkAutoApprove: 'Автоутверждение продавцов по этой ссылке',
+      earningsTitle: 'Комиссионные доходы',
+      inviteLinkCopied: 'Ссылка скопирована.',
+      inviteLinkCreated: 'Создана ссылка для приглашения.',
+      inviteLinkCreate: 'Cоздать ссылку',
+      inviteLinkCreatedCopied: 'Ссылка для приглашения создана и скопирована.',
+      inviteLinkCreateFailed: 'Не удалось создать ссылку для приглашения.',
+      inviteLinkMaxUses: 'Максимальное использование (0 = неограниченное)',
+      inviteLinkMaxUsesInvalid:
+        'Максимальное использование должно быть целым числом от 0 (неограниченное) до 10000.',
+      inviteLinkModeAuto: 'Автоматически',
+      inviteLinkModeReview: 'Проверка вручную',
+      inviteLinkRevoked: 'Ссылка для приглашения отозвана.',
+      inviteLinkRevokeFailed: 'Не удалось отозвать ссылку.',
+      inviteLinksDescription:
+        'Поделитесь ссылкой в своем сообществе, а не приглашайте продавцов одного за другим. Любой, кто откроет его, увидит ваши рыночные условия, включая ставку комиссии, и может присоединиться напрямую.',
+      inviteLinksEmpty: 'Активных ссылок для приглашения пока нет.',
+      inviteLinksTitle: 'Пригласительные ссылки продавца',
+      metricCommission: 'Комиссии',
+      inviteLinkUses: 'Использование',
+      metricCommissionEmpty: 'Начисляется по мере того, как заказы приземляются',
+      metricOrders: 'Атрибутивные заказы',
+      metricDeltaTitle: 'против предыдущих',
+      metricOrdersEmpty: 'Пока нет',
+      metricSellers: 'ПРОДАВЦЫ',
+      metricSellersEmpty: 'Пригласите первого продавца',
+      metricSellersPending: 'Пригласите первого продавца',
+      metricVisits: 'Посещения',
+      metricVisitsEmpty: 'Поделитесь ссылкой, чтобы начать',
+      monetizationSectionTitle: 'Монетизация',
+      nextStepCurateBody:
+        'Выберите то, что покупатели видят первыми — кураторские домашние страницы лучше конвертируются.',
+      nextStepCurateCta: 'Кураторская домашняя страница',
+      nextStepCurateTitle: 'Покажите свои первые продукты',
+      nextStepRecruitBody:
+        'Придумайте пригласительную ссылку и поделитесь ею там, где уже есть ваше сообщество.',
+      nextStepRecruitCta: 'Пригласить продавцов',
+      nextStepRecruitTitle: 'Наймите своего первого продавца',
+      nextStepReviewBody:
+        'Продавцы ждут вашего решения, прежде чем они смогут поступить в продажу.',
+      nextStepReviewTitle:
+        'Продавцы ждут вашего решения, прежде чем они смогут поступить в продажу.',
+      nextStepReviewCta: 'Просмотр продавцов',
+      performanceTitle: 'Эффективность работы',
+      shareDescriptionShort: '— пригласить покупателей и сообщества',
+      startModeInvite: 'Curated — приглашаем продавцов',
+      startModeInviteDesc:
+        'Вы выбираете каждого продавца и продукт. Сначала опубликуйте, а затем вербуйте по пригласительным ссылкам.',
+      startModeOpen: 'Открыто — продавцы присоединяются',
+      startModeOpenDesc:
+        'Продавцы подают заявки самостоятельно, и каталог заполняется из сети. Самый быстрый путь к укомплектованному рынку.',
       applicationReviewWorkspace: 'Панель проверки заявок продавцов',
       filterAll: 'Все',
       filterPending: 'На рассмотрении',
@@ -3224,6 +3443,12 @@ export const ru: PartialTranslationResource = {
       archiveDescription:
         'Архивированные торговые площадки становятся доступными только для чтения и скрыты от публичного доступа. Членство в магазине сохраняется, но торговая площадка больше не принимает изменения.',
       curation: {
+        allFeaturedBadge: 'Показать все рекомендуемые',
+        allListingsFeatured: 'Каждый подходящий продукт уже представлен.',
+        clickToFeature: 'ХАРАКТЕРИСТИКА',
+        noImage: 'Отсутствует изображение',
+        noListingCandidates:
+          'Товаров пока нет — они появятся здесь, как только у одобренных продавцов появятся товары в продаже.',
         title: 'Курирование домашней страницы',
         add: 'Добавлять',
         loading: 'Загрузка курирования...',
@@ -4763,6 +4988,8 @@ export const ru: PartialTranslationResource = {
       requiredMissing: '{{field}} is required',
     },
     quickCreate: {
+      tagsTitle: 'Теги',
+      tagsPlaceholder: 'Добавить метку',
       title: 'Быстрое создание',
       subtitle: 'Загрузите фото — остальное сделает ИИ',
       stepPhotos: 'Фото',
@@ -5205,6 +5432,8 @@ export const ru: PartialTranslationResource = {
     barcodePlaceholder: 'UPC, EAN, ISBN...',
     barcodeHelper: 'Штрихкод товара для учёта запасов',
     digital: {
+      uploadCancelled: 'Caricamente anullato',
+      uploadProgress: 'Прогресс выгрузки',
       title: 'Цифровые файлы',
       description: 'Загрузите файлы, которые покупатели получат после покупки.',
       uploadFiles: 'Нажмите для загрузки файлов',
@@ -5475,6 +5704,7 @@ export const ru: PartialTranslationResource = {
     },
   },
   shipping: {
+    noShippingOptionsConfigured: 'Для этого адреса не настроены параметры доставки.',
     shippingProfiles: 'Профили доставки',
     shippingOptions: 'вариант(ов) доставки',
     upgradeToProfiles: 'Перейти на профили доставки',
@@ -5869,6 +6099,7 @@ export const ru: PartialTranslationResource = {
     viewCase: 'Посмотреть дело {{id}}',
   },
   admin: {
+    statusDraft: 'ПРОЕКТ',
     title: 'Админ магазина',
     nav: {
       dashboard: 'Панель',
@@ -6486,6 +6717,8 @@ export const ru: PartialTranslationResource = {
         'Изменение пароля приводит к выходу из каждого сеанса администратора, включая этот.',
     },
     integrations: {
+      aiTextRoute: 'Text AI',
+      aiVisionRoute: 'Vision AI',
       title: 'Интеграции',
       subtitle: 'Каналы уведомлений, ИИ-помощник, вебхуки',
       tabPayments: 'Платежи',
@@ -7353,6 +7586,10 @@ export const ru: PartialTranslationResource = {
       defaultArchiveError: 'Витрину по умолчанию нельзя заархивировать.',
     },
     guestCheckout: {
+      pgpKeySave: 'Управление защитой адресов',
+      pgpKeyDescription:
+        'Адреса физических заказов шифруются в браузере покупателя. Создайте и создайте резервную копию ключа восстановления магазина из платежей магазина.',
+      pgpKeyTitle: 'Шифрование адресов 🔒 PGP',
       title: 'Гостевая касса',
       description:
         'Разрешите анонимным покупателям платить криптовалютой без создания учетной записи.',
@@ -8591,6 +8828,13 @@ export const ru: PartialTranslationResource = {
     },
   },
   system: {
+    rpc: {
+      connected: 'Подключено',
+      disconnected: 'Отключено',
+      noneConfigured:
+        'Платежный RPC не настроен. Чтобы продолжить, перейдите в Настройки → Оплата.',
+      title: 'Статус RPC платежа',
+    },
     network: {
       title: 'Сеть и конфиденциальность',
       connectivity: 'Подключение',
@@ -8964,6 +9208,8 @@ export const ru: PartialTranslationResource = {
       'Каждый щелчок создает живой снимок вашего магазина. CSV-файлы открываются непосредственно в Excel, Numbers и Google Sheets; JSON лучше всего подходит для сценариев миграции. Мы никогда не отправляем эти файлы по электронной почте — загрузка остается на этом устройстве.',
   },
   guestCheckout: {
+    noPaymentMethodsAvailable:
+      'Нет доступных способов оплаты. Продавец еще не настроил принятые криптовалюты.',
     cartEmpty: 'Ваша корзина пуста',
     cartEmptyHint: 'Просмотрите магазин и добавьте товары, чтобы начать',
     reviewCart: 'Проверьте свою корзину ({{count}} {{itemWord}})',
@@ -9190,10 +9436,32 @@ export const ru: PartialTranslationResource = {
     },
   },
   collectibles: {
+    experience: {
+      assurances: {
+        title: 'Гарантии сохранности',
+      },
+      ops: {
+        metricsAria: 'Показатели депонирования',
+      },
+      summary: {
+        catalogTotal: 'Всего позиций',
+        custodyReady: 'Опека готова',
+        myHoldings: 'Мои активы',
+      },
+      technicalDetails: 'Технические детали',
+      trust: {
+        title: 'Почему этому можно доверять',
+      },
+    },
     title: 'Коллекционные карты',
     subtitle:
       'Цифровые титульные карточки, находящиеся в обращении у источника или на хранении в Центре. Обычные физические листинги на рынке здесь не показаны, если они не токенизированы.',
     catalog: {
+      heroEyebrow: 'Находки',
+      storefrontSubtitle:
+        'Проверенные физические предметы коллекционирования с записями о хранении',
+      storefrontTitle: 'Каталог предметов коллекционирования',
+      unnamedCard: 'Безымянная карта',
       custodyCatalogSubtitle:
         'Просмотрите имеющиеся в обращении цифровые титульные карточки. Подключите кошелек к Моим картам, чтобы увидеть принадлежащие вам титулы. Не каждый листинг на рынке токенизирован.',
       tabCatalog: 'Каталог хранения',
@@ -9226,6 +9494,9 @@ export const ru: PartialTranslationResource = {
         pending: 'Забор концентратора в процессе',
       },
       display: {
+        gradedCollectible: 'Оценка {{grade}}',
+        serialCard: 'Серийный номер {{serial}}',
+        referenceCard: 'Ссылка {{reference}}',
         m2Wilson001: {
           name: '1909-11 T206 Хонус Вагнер (демо)',
         },

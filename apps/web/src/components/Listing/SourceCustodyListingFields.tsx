@@ -8,6 +8,7 @@ import { Plus, X } from 'lucide-react';
 import type { SourceDepositListingPrefillInput } from '@mobazha/core';
 import { mustAssetIdFromTokenId, useI18n } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -153,7 +154,7 @@ export function SourceCustodyListingFields({
                 </SelectContent>
               </Select>
             </div>
-            {errors.price ? <p className="mt-1 text-sm text-destructive">{errors.price}</p> : null}
+            <FieldError message={errors.price} className="text-sm" />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
@@ -171,7 +172,7 @@ export function SourceCustodyListingFields({
             {t('listing.acceptedCurrencies')} <span className="text-destructive">*</span>
           </label>
           {errors.acceptedCurrencies ? (
-            <p className="mb-2 text-sm text-destructive">{errors.acceptedCurrencies}</p>
+            <FieldError message={errors.acceptedCurrencies} className="mb-2 text-sm" />
           ) : null}
           <div className="space-y-2">
             {acceptedCurrencies.map((currency, index) => (

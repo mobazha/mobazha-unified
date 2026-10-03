@@ -5,7 +5,84 @@
 import type { PartialTranslationResource } from '../types';
 
 export const fr: PartialTranslationResource = {
+  adminDecrypt: {
+    cancel: 'Annuler',
+    clearAndClose: 'Effacer le croquis',
+    decryptButton: "Décrypter l'adresse",
+    decryptedSuccess: 'Adresse décryptée (dans le navigateur uniquement)',
+    decrypting: 'Décryptage',
+    decryptNow: 'Déchiffrer',
+    decryptionFailed:
+      "Échec du déchiffrement : {{msg}}. Assurez-vous d'utiliser la bonne clé privée.",
+    encryptedNotice:
+      "L'adresse de livraison est cryptée. Déverrouillez-le avec votre mot de passe de récupération (dans ce navigateur uniquement).",
+    passphrasePlaceholder: 'Phrase de passe de récupération',
+    printLabel: 'Imprimer Etiquette',
+    privateKeyHint:
+      "Entrez la phrase secrète de récupération que vous avez créée avec la protection d'adresse. Il n'est jamais envoyé au magasin.",
+  },
+  marketplaceStarter: {
+    bannerSubtitle: "Annonces phares de l'opérateur",
+    bannerTitle: 'Sélection Bannières',
+    coldStart: {
+      becomeSeller: 'Postulez pour devenir un',
+      howItWorks1: 'Chaque commande reste chez le vendeur de votre choix.',
+      howItWorks2:
+        "La protection des acheteurs et les paiements sécurisés s'appliquent magasin par magasin.",
+      howItWorks3: "Les vendeurs sont examinés avant que leurs produits n'apparaissent ici.",
+      howItWorksTitle: 'Fonctionnement de cette place de marché',
+      inventoryPreparing: "L'inventaire est en cours de préparation",
+      inviteOnly: 'Cette place de marché accueille les vendeurs sur invitation.',
+      notifyCta: 'Prévenez-moi',
+      notifyDone: 'You are on The List!',
+      notifyFailed: "Cela n'a pas fonctionné — vérifiez l'adresse et réessayez.",
+      notifyHint: 'Recevez un e-mail lorsque les produits sont mis en ligne. Pas de spam.',
+      notifyPlaceholder: 'you@example.com',
+      subtitle: 'Cette place de marché ne fait que commencer. Revenez bientôt pour les annonces.',
+    },
+    curatedSubtitle: "Points forts sélectionnés par l'opérateur",
+    defaultName: 'Place de marché',
+    curatedTitle: 'Sélection organisée',
+    degraded: {
+      title: "Nous n'avons pas pu charger les annonces",
+      description:
+        "Une erreur s'est produite lors du chargement de cette place de marché. Veuillez réessayer.",
+    },
+    errorTitle: 'Marketplace indisponible',
+    errorDescription:
+      "Nous n'avons pas pu charger cette place de marché pour le moment. Veuillez réessayer.",
+    latestTitle: 'Dernières sites inscrits ',
+    latestSubtitle: 'Frais provenant de vendeurs agréés',
+    loadingDescription: 'Préparation de la découverte organisée...',
+    loadingTitle: 'Chargement de la place de marché',
+    popularSubtitle: 'Tendance sur ce marché',
+    popularTitle: 'Choix populaires',
+    searchPlaceholder: 'Rechercher sur ce marché',
+    sparse: {
+      notice:
+        'Affichage des annonces disponibles pendant que cette plateforme élabore ses sélections en vedette.',
+    },
+    storesSubtitle: 'Achetez directement auprès de vendeurs sélectionnés',
+    storesTitle: 'Boutiques à la une',
+    trustCopy:
+      "Chaque commande reste chez le vendeur de votre choix. La protection des acheteurs et les paiements sécurisés s'appliquent magasin par magasin.",
+    visitStore: 'Visiter la boutique',
+  },
+  sovereign: {
+    privacyHintDesc:
+      'Votre magasin ne fait aucune demande de réseau externe. Pour une confidentialité maximale, accédez-y via une adresse Tor .onion ou un eepsite I2P. Configurez les points de terminaison de paiement dans Paramètres → Paiements.',
+    privacyHint: 'Politique de confidentialité',
+    setup: {
+      regionTitle: 'Emplacement',
+      regionDesc: "Définissez votre pays pour les calculs d'expédition",
+    },
+  },
   common: {
+    connecting: 'Connexion en cours…',
+    loadingInterrupted: 'Chargement interrompu',
+    or: 'ou',
+    slowNetworkRetry: 'La connexion est lente. Nouvelle tentative...',
+    unexpectedError: 'Une erreur s’est produite',
     loading: 'Chargement...',
     redirecting: 'Redirection...',
     error: 'Erreur',
@@ -154,11 +231,20 @@ export const fr: PartialTranslationResource = {
     showLess: 'Voir moins',
   },
   validation: {
+    priceInvalid: 'Saisissez un prix supérieur à 0',
+    imageRequired: 'Ajoutez au moins une image',
+    compareAtPriceInvalid: 'Le prix barré doit être supérieur au prix',
+    conditionRequired: "Sélectionnez l'état de l'article",
+    blockchainRequired: 'Sélectionnez une blockchain',
+    tokenRequired: 'Sélectionnez un jeton',
+    paymentCurrencyRequired: 'Sélectionnez au moins une devise de paiement',
+    summaryTitle: 'Corrigez ces champs avant de publier',
     required: 'Ce champ est obligatoire',
     titleRequired: 'Le titre est obligatoire',
     priceRequired: 'Le prix est obligatoire',
   },
   nav: {
+    back: 'Retour',
     home: 'Accueil',
     market: 'Marché',
     search: 'Rechercher',
@@ -194,6 +280,8 @@ export const fr: PartialTranslationResource = {
     lastUpdated: 'Mise à jour {{date}}',
   },
   login: {
+    signInWithMobazha: 'Se connecter avec un compte Mobazha',
+    socialLoginNotAdmin: "Ce compte n'a pas d'accès administrateur à cette boutique.",
     title: 'Mobazha',
     subtitle: 'Place de marché décentralisée',
     hostedMode: 'Mode hébergé',
@@ -336,6 +424,7 @@ export const fr: PartialTranslationResource = {
     collectiblesDesc: 'Cartes tokenisées conservées dans le Hub : échangez-les à tout moment',
   },
   product: {
+    storeOffline: 'Cette boutique est actuellement hors ligne. Veuillez réessayer plus tard.',
     title: 'Titre',
     description: 'Description',
     price: 'Prix',
@@ -1631,6 +1720,10 @@ export const fr: PartialTranslationResource = {
       claimRefund: 'Demander le remboursement',
     },
     fulfillment: {
+      carrier: 'Transporteur',
+      copyTracking: 'Copier le numéro de suivi',
+      packageShipped: 'Colis expédié',
+      trackingNumber: 'Numéro de suivi',
       title: 'Exécution des fournisseurs',
       loading: "Chargement du statut d'exécution...",
       supplierCost: 'Coût du fournisseur',
@@ -2029,6 +2122,9 @@ export const fr: PartialTranslationResource = {
     },
   },
   wallet: {
+    accountAndNetworks: 'Compte et réseaux',
+    switchWallet: 'Connecter un autre portefeuille',
+    addressCopied: 'Adresse copiée',
     title: 'Portefeuille',
     balance: 'Solde',
     totalBalance: 'Solde Total',
@@ -2204,6 +2300,11 @@ export const fr: PartialTranslationResource = {
         'Cela ressemble à une adresse Bitcoin (BTC). BCH utilise généralement Bitcoincash : ou des formats hérités – vérifiez avant de sauvegarder.',
     },
     accountBinding: {
+      closeTabHint:
+        'Compte lié avec succès. Vous pouvez fermer cet onglet et revenir à votre boutique.',
+      standaloneConnectDesc:
+        "Connectez votre compte Telegram, Discord ou Google pour permettre une connexion rapide aux réseaux sociaux. Connectez-vous d'abord à Mobazha Platform pour gérer vos comptes liés.",
+      standaloneSocialTitle: 'Liaison de compte social',
       title: 'Comptes liés',
       description: 'Gérez vos méthodes de connexion',
       linked: 'Comptes liés',
@@ -2768,6 +2869,31 @@ export const fr: PartialTranslationResource = {
     },
   },
   marketplace: {
+    invite: {
+      accept: 'Rejoindre en tant que vendeur',
+      acceptedApproved: 'Vous avez rejoint le marché.',
+      acceptedPending: "Demande envoyée — l'opérateur l'examinera.",
+      acceptFailed: 'Impossible de rejoindre avec ce lien. Veuillez réessayer.',
+      accepting: 'Jonction en cours…',
+      approvalLabel: 'Liant ',
+      autoApprove: 'Approuvé immédiatement',
+      commissionLabel: 'Commission opérateur',
+      exhausted: "Ce lien n'est plus valide. ",
+      goToSellPage: 'Gérer ma participation',
+      headline: 'Vous êtes invité à vendre sur',
+      invalidBody:
+        "Il peut avoir expiré, avoir été révoqué ou avoir atteint sa limite d'utilisation. Demandez à l'opérateur de la place de marché un nouveau lien.",
+      invalidTitle: 'De link is niet geldig',
+      loadFailedBody: 'Veuillez réessayer dans un instant.',
+      loadFailedTitle: 'Impossible de charger cette invitation',
+      loading: 'Vérification de votre invitation…',
+      loginToAccept: "Connectez-vous pour accepter l'invitation",
+      manualReview: "Révisé par l'opérateur",
+      resultApproved: 'Vous y êtes ! Votre boutique est maintenant membre.',
+      resultPending: "Demande envoyée. L'opérateur l'examinera.",
+      termsNote:
+        "La commission est facturée sur les commandes que la place de marché vous apporte, à partir de vos revenus. Rejoindre ne transfère jamais votre établissement, vos annonces ou vos fonds à l'opérateur.",
+    },
     title: 'Marchés Communautaires',
     subtitle: 'Découvrez et rejoignez des marchés animés par la communauté.',
     searchPlaceholder: 'Rechercher des marchés...',
@@ -2797,6 +2923,10 @@ export const fr: PartialTranslationResource = {
       searchPlaceholder: 'Rechercher des membres...',
     },
     sell: {
+      marketCommissionLabel: 'Commission opérateur',
+      marketCommissionNone: '0 %',
+      marketCommissionNote:
+        "La commission de l'opérateur est facturée sur les commandes que cette place de marché vous rapporte, sur vos produits. Le tarif affiché est le tarif publié ; les modifications nécessitent que l'opérateur republie.",
       backToMarketplace: 'Retour au marché',
       title: 'Devenir vendeur',
       subtitle: 'Complétez votre profil vendeur pour commencer à vendre dans ce marché',
@@ -2972,6 +3102,24 @@ export const fr: PartialTranslationResource = {
         statusNextDefault:
           'Ensuite : suivez les étapes ci-dessus ou revenez pour les mises à jour.',
         workspace: {
+          activeSection: 'Actif',
+          cardLocation: 'Emplacement',
+          cardChecked: 'Coché',
+          countsAria: 'Comptes de garde',
+          currentStatus: 'État actuel',
+          emptySubmitCta: 'Envoyer une carte',
+          historySection: 'Historique',
+          lastUpdated: 'Dernière mise à jour',
+          listingBindingsBlockedDesc: 'Ajoutez cet objet à une annonce avant de continuer.',
+          listingBindingsBlockedTitle: "Lien de l'annonce indisponible",
+          showAllCases: 'Afficher tous les cas {{count}}',
+          nextActionSection: 'Prochaine action',
+          submitIntro: "Envoyez une carte pour la garde et l'annonce.",
+          showFewerCases: 'Afficher moins',
+          tabSubmit: 'Valider',
+          tabTrack: 'Suivre',
+          trackIntro: "Suivez le statut de garde et d'annonce de vos cartes.",
+          viewAria: "Vues de l'espace de travail",
           subtitle:
             'Soumettez la note, la certification, le portefeuille du titulaire et les URL des preuves recto/verso pour examen par le conservateur. Les cartes approuvées sont prêtes à être répertoriées – pas de menthe en prévente.',
           title: 'Soumissions de cartes',
@@ -3024,6 +3172,79 @@ export const fr: PartialTranslationResource = {
         'Après approbation, vos groupes sélectionnés apparaissent sur cette place de marché',
     },
     operator: {
+      attributionConversionTitle: 'Conversion',
+      addPositioningCta: '+ Ajouter une ligne de positionnement que les acheteurs verront',
+      attributionSource: 'Source',
+      attributionOrders: 'Commandes attribuées',
+      attributionSourceDirect: 'Direct',
+      attributionSourcesTitle: 'Par source de partage',
+      commissionRate: 'Commission opérateur',
+      attributionWindowLabel: 'Intervalle de temps',
+      commissionRateHint:
+        'Facturé aux vendeurs sur les commandes produites par ce marché. Prend effet pour les nouvelles commandes une fois que vous les avez republiées ; les vendeurs voient le taux engagé avant de les rejoindre.',
+      commissionRateInvalid: "Entrez un taux compris entre 0 et 30 (jusqu'à 2 décimales).",
+      earningsCommission: 'Commission',
+      earningsCurrency: 'Devise',
+      earningsCurrentRate: 'Taux actuel',
+      earningsEmpty: 'Aucune commande attribuée dans cette fenêtre pour le moment.',
+      earningsEstimateNote:
+        "Les chiffres sont des estimations enregistrées au moment du paiement et confirmées au moment du règlement. Il ne s'agit pas encore d'un solde à payer.",
+      earningsGross: 'Brute',
+      earningsLoadFailed: 'Impossible de charger le registre des revenus.',
+      earningsLoading: 'Chargement des revenus...',
+      earningsRatePendingPublish: 'Chargement des revenus...',
+      earningsOrders: 'Commandes',
+      inviteLinkAutoApprove: 'Approuver automatiquement les vendeurs à partir de ce lien',
+      earningsTitle: 'rémunération à la commission',
+      inviteLinkCopied: 'Lien copié.',
+      inviteLinkCreated: "Lien d'invitation créé.",
+      inviteLinkCreate: 'Créer un lien',
+      inviteLinkCreatedCopied: "Lien d'invitation créé et copié.",
+      inviteLinkCreateFailed: "Impossible de créer le lien d'invitation.",
+      inviteLinkMaxUses: 'Utilisation max : illimité',
+      inviteLinkMaxUsesInvalid:
+        'Les utilisations maximales doivent être un nombre entier compris entre 0 (illimité) et 10 000.',
+      inviteLinkModeAuto: 'Approbation automatique',
+      inviteLinkModeReview: 'Examen manuel',
+      inviteLinkRevoked: "Lien d'invitation révoqué.",
+      inviteLinkRevokeFailed: 'Impossible de révoquer le lien.',
+      inviteLinksDescription:
+        "Partagez un lien dans votre communauté au lieu d'inviter les vendeurs un par un. Toute personne qui l'ouvre voit les conditions de votre place de marché, y compris votre taux de commission, et peut s'y inscrire directement.",
+      inviteLinksEmpty: "Aucun lien d'invitation actif pour le moment.",
+      inviteLinksTitle: "Liens d'invitation du vendeur",
+      metricCommission: 'Commission',
+      inviteLinkUses: 'Utilisation',
+      metricCommissionEmpty: 'Les charges à payer au fur et à mesure que les commandes',
+      metricOrders: 'Commandes attribuées',
+      metricDeltaTitle: 'VS Précedent',
+      metricOrdersEmpty: "Aucun pour l'instant",
+      metricSellers: 'Vendeurs',
+      metricSellersEmpty: 'Invitez votre premier vendeur',
+      metricSellersPending: 'Invitez votre premier vendeur',
+      metricVisits: 'Visites',
+      metricVisitsEmpty: 'Partagez votre lien pour commencer',
+      monetizationSectionTitle: 'Monétisation',
+      nextStepCurateBody:
+        "Choisissez ce que les acheteurs voient en premier — les pages d'accueil organisées convertissent mieux.",
+      nextStepCurateCta: "Page D'ACCUEIL DU curat",
+      nextStepCurateTitle: 'Mettez en avant vos premiers produits',
+      nextStepRecruitBody:
+        "Créez un lien d'invitation et partagez-le là où se trouve déjà votre communauté.",
+      nextStepRecruitCta: 'Inviter des vendeurs',
+      nextStepRecruitTitle: 'Recrutez votre premier vendeur',
+      nextStepReviewBody:
+        'Les vendeurs attendent votre décision avant de pouvoir les mettre en vente.',
+      nextStepReviewTitle:
+        'Les vendeurs attendent votre décision avant de pouvoir les mettre en vente.',
+      nextStepReviewCta: 'Évaluer les vendeurs',
+      performanceTitle: 'Performance',
+      shareDescriptionShort: '— inviter les acheteurs et les communautés',
+      startModeInvite: 'Organisé — invitez des vendeurs',
+      startModeInviteDesc:
+        "Vous choisissez chaque vendeur et produit. Publiez d'abord, puis recrutez avec des liens d'invitation.",
+      startModeOpen: 'Ouvert — les vendeurs se joignent',
+      startModeOpenDesc:
+        "Les vendeurs postulent seuls et le catalogue se remplit à partir du réseau. Le moyen le plus rapide d'accéder à une place de marché approvisionnée.",
       applicationReviewWorkspace: 'Espace de revue des candidatures vendeurs',
       filterAll: 'Tous',
       filterPending: 'En attente',
@@ -3274,6 +3495,12 @@ export const fr: PartialTranslationResource = {
       archiveAction: 'Marché des archives',
       archiveConfirm: 'Marché des archives',
       curation: {
+        allFeaturedBadge: 'Toutes les annonces A la Une',
+        allListingsFeatured: 'Tous les produits éligibles sont déjà en vedette.',
+        clickToFeature: 'Caractéristiques',
+        noImage: "Pas d'image",
+        noListingCandidates:
+          'Aucun produit à présenter pour le moment — ils apparaissent ici une fois que les vendeurs approuvés ont des articles en vente.',
         title: "Conservation de la page d'accueil",
         add: 'Ajouter',
         loading: 'Chargement de la curation...',
@@ -4840,6 +5067,8 @@ export const fr: PartialTranslationResource = {
       requiredMissing: '{{field}} is required',
     },
     quickCreate: {
+      tagsTitle: 'Balises',
+      tagsPlaceholder: 'Ajouter un nouveau mot-clé...',
       title: 'Création rapide',
       subtitle: "Téléchargez des photos, l'IA fait le reste",
       stepPhotos: 'Photos',
@@ -5284,6 +5513,8 @@ export const fr: PartialTranslationResource = {
     barcodePlaceholder: 'UPC, EAN, ISBN...',
     barcodeHelper: 'Code-barres du produit pour le suivi des stocks',
     digital: {
+      uploadCancelled: 'Téléchargement annulé',
+      uploadProgress: 'Télécharger les progrès',
       title: 'Fichiers numériques',
       description: "Téléchargez les fichiers que les acheteurs recevront après l'achat.",
       uploadFiles: 'Cliquez pour télécharger',
@@ -5559,6 +5790,7 @@ export const fr: PartialTranslationResource = {
     },
   },
   shipping: {
+    noShippingOptionsConfigured: "Aucune option d'expédition n'est configurée pour cette adresse.",
     shippingProfiles: "Profils d'expédition",
     shippingOptions: "option(s) d'expédition",
     upgradeToProfiles: "Passer aux profils d'expédition",
@@ -5970,6 +6202,7 @@ export const fr: PartialTranslationResource = {
     viewCase: 'Afficher le cas {{id}}',
   },
   admin: {
+    statusDraft: 'Brouillon',
     title: 'Administration boutique',
     nav: {
       dashboard: 'Tableau de bord',
@@ -6598,6 +6831,8 @@ export const fr: PartialTranslationResource = {
         'Mot de passe modifié. Connectez-vous à nouveau avec votre nouveau mot de passe.',
     },
     integrations: {
+      aiTextRoute: 'Text AI',
+      aiVisionRoute: 'Vision AI',
       title: 'Intégrations',
       subtitle: "Gérer les canaux de notification, l'assistant IA et les webhooks",
       tabPayments: 'Paiements',
@@ -7472,6 +7707,10 @@ export const fr: PartialTranslationResource = {
       defaultArchiveError: 'La vitrine par défaut ne peut pas être archivée.',
     },
     guestCheckout: {
+      pgpKeySave: "Gérer la protection de l'adresse",
+      pgpKeyDescription:
+        "Les adresses de commande physique sont cryptées dans le navigateur de l'acheteur. Créez et sauvegardez la clé de récupération du magasin à partir des paiements du magasin.",
+      pgpKeyTitle: "Chiffrement d'adresse 🔒 PGP",
       title: 'Paiement des invités',
       description:
         'Permettez aux acheteurs anonymes de payer avec des crypto-monnaies sans créer de compte.',
@@ -8731,6 +8970,13 @@ export const fr: PartialTranslationResource = {
     },
   },
   system: {
+    rpc: {
+      connected: 'Connecté',
+      disconnected: 'Déconnecté',
+      noneConfigured:
+        'Aucun paiement RPC configuré. Accédez à Paramètres → Paiements pour continuer.',
+      title: 'Statut RPC du paiement',
+    },
     network: {
       title: 'Réseau et confidentialité',
       connectivity: 'Connectivité',
@@ -9107,6 +9353,8 @@ export const fr: PartialTranslationResource = {
       "Chaque clic extrait un instantané en direct de votre boutique. Les CSV s'ouvrent directement dans Excel, Numbers et Google Sheets ; JSON est le meilleur pour les scripts de migration. Nous n’envoyons jamais ces fichiers par courrier électronique – le téléchargement reste sur cet appareil.",
   },
   guestCheckout: {
+    noPaymentMethodsAvailable:
+      "Aucun mode de paiement disponible. Le vendeur n'a pas encore configuré les crypto-monnaies acceptées.",
     cartEmpty: 'Votre panier est vide',
     cartEmptyHint: 'Parcourez la boutique et ajoutez des articles pour commencer',
     reviewCart: 'Vérifiez votre panier ({{count}} {{itemWord}})',
@@ -9335,10 +9583,32 @@ export const fr: PartialTranslationResource = {
     },
   },
   collectibles: {
+    experience: {
+      assurances: {
+        title: 'Assurances de garde',
+      },
+      ops: {
+        metricsAria: 'Indicateurs de garde',
+      },
+      summary: {
+        catalogTotal: 'Total Prestations',
+        custodyReady: 'Garde prête',
+        myHoldings: 'Mes avoirs',
+      },
+      technicalDetails: 'Données techniques',
+      trust: {
+        title: 'Pourquoi vous pouvez lui faire confiance',
+      },
+    },
     title: 'Cartes à collectionner',
     subtitle:
       "Cartes de titres numériques en circulation avec conservation à la source ou au Hub. Les cotations physiques ordinaires sur le marché ne sont pas affichées ici à moins qu'elles ne soient symbolisées.",
     catalog: {
+      heroEyebrow:
+        'Art - Objets de collection &#10152; Choisissez parmi {count} petites annonces ici &#10152; Acheter des objets d’art d’occasion - Objets de collection de personnes réelles{region} | {domain}',
+      storefrontSubtitle: 'Objets de collection physiques vérifiés avec registres de garde',
+      storefrontTitle: 'Catalogue des objets de collection',
+      unnamedCard: 'Carte sans nom',
       custodyCatalogSubtitle:
         'Parcourez les fiches de titres numériques en circulation. Connectez un portefeuille sur Mes cartes pour voir les titres que vous détenez. Toutes les cotations sur le marché ne sont pas symbolisées.',
       tabCatalog: 'Catalogue de garde',
@@ -9362,6 +9632,9 @@ export const fr: PartialTranslationResource = {
       onChainProofTitle: 'Preuve en chaîne et en garde',
       viewCustodyCta: 'Consulter le justificatif de garde',
       display: {
+        gradedCollectible: 'Noté {{grade}}',
+        serialCard: 'Série {{serial}}',
+        referenceCard: 'Référence {{reference}}',
         m2Wilson001: {
           name: '1909-11 T206 Honus Wagner (démo)',
         },

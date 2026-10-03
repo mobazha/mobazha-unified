@@ -147,12 +147,12 @@ export function AiReviewStep({
       {/* Tags */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-foreground">
-          {t('listing.tags.title', { defaultValue: 'Tags' })}
+          {t('listing.quickCreate.tagsTitle', { defaultValue: 'Tags' })}
         </label>
         <TokenInput
           tokens={formData.tags}
           onTokensChange={onTagsChange}
-          placeholder={t('listing.tags.addPlaceholder', { defaultValue: 'Add a tag...' })}
+          placeholder={t('listing.quickCreate.tagsPlaceholder', { defaultValue: 'Add a tag...' })}
         />
       </div>
 

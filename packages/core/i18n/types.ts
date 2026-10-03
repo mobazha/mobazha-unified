@@ -755,6 +755,9 @@ export interface TranslationResource {
     };
     // 账号绑定
     accountBinding?: {
+      closeTabHint?: string;
+      standaloneConnectDesc?: string;
+      standaloneSocialTitle?: string;
       title: string;
       description: string;
       linked: string;
@@ -2347,6 +2350,16 @@ export interface TranslationResource {
     required: string;
     titleRequired: string;
     priceRequired: string;
+    /** Filled in but not a usable value (e.g. price <= 0) */
+    priceInvalid?: string;
+    imageRequired?: string;
+    compareAtPriceInvalid?: string;
+    conditionRequired?: string;
+    blockchainRequired?: string;
+    tokenRequired?: string;
+    paymentCurrencyRequired?: string;
+    /** Heading of the inline error summary shown after a failed submit */
+    summaryTitle?: string;
   };
 
   // RWA Digital Assets Tab & Atomic Swap flows
@@ -2485,10 +2498,72 @@ export interface TranslationResource {
     };
   };
 
+  adminDecrypt?: {
+    cancel?: string;
+    clearAndClose?: string;
+    decryptButton?: string;
+    decryptedSuccess?: string;
+    decrypting?: string;
+    decryptionFailed?: string;
+    decryptNow?: string;
+    encryptedNotice?: string;
+    passphrasePlaceholder?: string;
+    printLabel?: string;
+    privateKeyHint?: string;
+  };
+
+  marketplaceStarter?: {
+    bannerTitle?: string;
+    bannerSubtitle?: string;
+    curatedTitle?: string;
+    curatedSubtitle?: string;
+    defaultName?: string;
+    errorTitle?: string;
+    errorDescription?: string;
+    loadingTitle?: string;
+    loadingDescription?: string;
+    latestTitle?: string;
+    latestSubtitle?: string;
+    popularTitle?: string;
+    popularSubtitle?: string;
+    searchPlaceholder?: string;
+    storesTitle?: string;
+    storesSubtitle?: string;
+    trustCopy?: string;
+    visitStore?: string;
+    coldStart?: {
+      becomeSeller?: string;
+      howItWorks1?: string;
+      howItWorks2?: string;
+      howItWorks3?: string;
+      howItWorksTitle?: string;
+      inventoryPreparing?: string;
+      inviteOnly?: string;
+      notifyCta?: string;
+      notifyDone?: string;
+      notifyFailed?: string;
+      notifyHint?: string;
+      notifyPlaceholder?: string;
+      subtitle?: string;
+    };
+    degraded?: { title?: string; description?: string };
+    sparse?: { notice?: string };
+  };
+
   collectibles?: {
+    experience?: {
+      assurances?: { title?: string };
+      ops?: { metricsAria?: string };
+      summary?: { catalogTotal?: string; custodyReady?: string; myHoldings?: string };
+      technicalDetails?: string;
+      trust?: { title?: string };
+    };
     title: string;
     subtitle: string;
     catalog?: {
+      heroEyebrow?: string;
+      storefrontTitle?: string;
+      storefrontSubtitle?: string;
       title: string;
       custodyCatalogTitle?: string;
       custodyCatalogSubtitle?: string;
@@ -3233,6 +3308,7 @@ export interface TranslationResource {
     copyCaseId?: string;
   };
   admin?: {
+    statusDraft?: string;
     title?: string;
     nav?: {
       dashboard?: string;
@@ -4437,6 +4513,9 @@ export interface TranslationResource {
       walletStatusUnknown?: string;
     };
     guestCheckout?: {
+      pgpKeyTitle?: string;
+      pgpKeyDescription?: string;
+      pgpKeySave?: string;
       title?: string;
       description?: string;
       loadError?: string;
@@ -4477,6 +4556,8 @@ export interface TranslationResource {
       saveSuccess?: string;
     };
     integrations?: {
+      aiTextRoute?: string;
+      aiVisionRoute?: string;
       title?: string;
       subtitle?: string;
       subtitleNoAi?: string;
@@ -5814,6 +5895,7 @@ export interface TranslationResource {
   };
 
   guestCheckout?: {
+    noPaymentMethodsAvailable?: string;
     cartEmpty?: string;
     cartEmptyHint?: string;
     reviewCart?: string;

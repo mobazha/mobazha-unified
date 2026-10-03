@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
+  AlertCircle,
   Save,
   X,
   Eye,
@@ -96,6 +97,36 @@ interface TabItem {
   icon: React.ReactNode;
   showFor?: ContractType[];
 }
+
+/**
+ * 校验失败时，把每个错误字段映射到它所在的页签，以及用于汇总条的字段名 key。
+ * 顺序即校验顺序，第一条错误就是需要跳转过去的位置。
+ */
+const ERROR_FIELD_SECTIONS: Record<string, TabKey> = {
+  title: 'general',
+  price: 'general',
+  compareAtPrice: 'general',
+  condition: 'general',
+  images: 'photos',
+  shippingProfile: 'shipping',
+  digitalFiles: 'files',
+  blockchain: 'other',
+  cryptoListingCurrencyCode: 'other',
+  acceptedCurrencies: 'other',
+};
+
+const ERROR_FIELD_LABELS: Record<string, string> = {
+  title: 'listing.title',
+  price: 'listing.price',
+  compareAtPrice: 'listing.compareAtPrice',
+  condition: 'listing.condition',
+  images: 'listing.photos',
+  shippingProfile: 'listing.tabs.shipping',
+  digitalFiles: 'listing.tabs.files',
+  blockchain: 'listing.blockchain',
+  cryptoListingCurrencyCode: 'listing.tokenAddress',
+  acceptedCurrencies: 'listing.acceptedCurrencies',
+};
 
 const tabs: TabItem[] = [
   { key: 'general', labelKey: 'listing.tabs.general', icon: <FileText className="w-4 h-4" /> },
@@ -242,6 +273,10 @@ function CreateListingContent() {
   // 当前激活的标签
   const [activeTab, setActiveTab] = useState<TabKey>('general');
 
+  // 只有点过发布、且校验没过时才展示错误汇总，避免一进页面就满屏报红
+  const [validationAttempted, setValidationAttempted] = useState(false);
+  const errorFields = useMemo(() => Object.keys(errors), [errors]);
+
   // 移动端检测
   const isMobile = useIsMobile();
 
@@ -285,6 +320,14 @@ function CreateListingContent() {
       ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
+
+  // 校验失败后自动定位：切到第一个错误字段所在的页签并滚动过去。
+  const firstErrorField = errorFields[0];
+  useEffect(() => {
+    if (!validationAttempted || !firstErrorField) return;
+    const section = ERROR_FIELD_SECTIONS[firstErrorField];
+    if (section) scrollToSection(section);
+  }, [validationAttempted, firstErrorField, scrollToSection]);
 
   const {
     pendingSync,
@@ -379,14 +422,12 @@ function CreateListingContent() {
       }
 
       if (!validate()) {
-        toast({
-          title: t('common.error'),
-          description: t('listing.validationFailed'),
-          variant: 'destructive',
-        });
-        // 滚动到第一个错误字段
+        // 不再用右下角弹窗提示校验失败：改为在出错字段旁就地提示，
+        // 并由下面的 effect 自动切换到出错页签、滚动到第一个错误字段。
+        setValidationAttempted(true);
         return;
       }
+      setValidationAttempted(false);
 
       const result = await submit();
 
@@ -705,6 +746,34 @@ function CreateListingContent() {
 
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
+              {/* 校验错误汇总：点哪条跳到哪个字段，替代右下角弹窗 */}
+              {validationAttempted && errorFields.length > 0 && (
+                <Card className="border-destructive/40 bg-destructive/5 p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-destructive">
+                        {t('validation.summaryTitle')}
+                      </p>
+                      <ul className="flex flex-wrap gap-2">
+                        {errorFields.map(field => (
+                          <li key={field}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                scrollToSection(ERROR_FIELD_SECTIONS[field] ?? 'general')
+                              }
+                              className="rounded-md border border-destructive/40 px-2 py-0.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                            >
+                              {t(ERROR_FIELD_LABELS[field] ?? field)}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </Card>
+              )}
               {/* 商品类型选择 */}
               {isSourceDepositListingMode ? (
                 <Card className="border-primary/20 bg-primary/5 p-6">

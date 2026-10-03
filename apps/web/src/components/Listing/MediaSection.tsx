@@ -2,6 +2,7 @@
 
 /* global FileList */
 import React, { useCallback, useRef, useState } from 'react';
+import { FieldError } from '@/components/ui/field-error';
 import {
   Plus,
   X,
@@ -301,7 +302,7 @@ export function MediaSection({
           </span>
         </div>
 
-        {errors.images && <p className="text-destructive text-sm mb-3">{errors.images}</p>}
+        <FieldError message={errors.images} className="mb-3 text-sm" />
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
           {/* 已上传的图片 */}

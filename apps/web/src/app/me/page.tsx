@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui';
 import {
   useI18n,
   useUserStore,
+  useWallet,
   useCartStore,
   useTheme,
   useMiniAppRole,
@@ -234,12 +235,32 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
     frontendComposition,
     UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview
   );
+  // 手机端头部没有钱包入口（窄屏下整组头部按钮被底部导航取代），
+  // 因此在「我」页面提供一个显式入口。
+  const { isConnected: isWalletConnected, walletInfo, openModal: openWalletModal } = useWallet();
+  const walletAddress = walletInfo?.address ?? '';
+  const walletLabel =
+    isWalletConnected && walletAddress
+      ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`
+      : t('wallet.connect');
+
   const showMaasMenu = authenticated && (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 
   return (
     <>
+      {/* 手机端头部没有钱包入口（窄屏下整组头部按钮被底部导航取代），
+          这里提供一个显式入口；钱包与登录状态无关，所以放在登录区块之外。 */}
+      <div className="bg-card rounded-xl border overflow-hidden">
+        <FeatureItem
+          icon={<Wallet className="w-5 h-5" />}
+          title={t('nav.wallet')}
+          description={walletLabel}
+          onClick={() => void openWalletModal({ view: isWalletConnected ? 'Account' : 'Connect' })}
+          testId="me-wallet-entry"
+        />
+      </div>
       {authenticated && (
         <>
           <SectionLabel>{t('me.sectionAccount')}</SectionLabel>

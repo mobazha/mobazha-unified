@@ -5,7 +5,80 @@
 import type { TranslationResource } from '../types';
 
 export const en: TranslationResource = {
+  sovereign: {
+    privacyHint: 'Privacy Notice',
+    privacyHintDesc:
+      'Your store makes zero external network requests. For maximum privacy, access it via a Tor .onion address or I2P eepsite. Configure payment endpoints in Settings → Payments.',
+    setup: {
+      regionDesc: 'Set your country for shipping calculations',
+      regionTitle: 'Location',
+    },
+  },
+  marketplaceStarter: {
+    bannerSubtitle: 'Operator spotlight listings',
+    bannerTitle: 'Featured banners',
+    coldStart: {
+      becomeSeller: 'Apply to become a seller',
+      howItWorks1: 'Every order stays with the seller you choose.',
+      howItWorks2: 'Buyer protection and secure payments apply store by store.',
+      howItWorks3: 'Sellers are reviewed before their products appear here.',
+      howItWorksTitle: 'How this marketplace works',
+      inventoryPreparing: 'Inventory is being prepared',
+      inviteOnly: 'This marketplace onboards sellers by invitation.',
+      notifyCta: 'Notify me',
+      notifyDone: 'You are on the list.',
+      notifyFailed: 'That did not work — check the address and try again.',
+      notifyHint: 'Get one email when products go live. No spam.',
+      notifyPlaceholder: 'you@example.com',
+      subtitle: 'This marketplace is just getting started. Check back soon for listings.',
+    },
+    curatedSubtitle: 'Operator-selected highlights',
+    curatedTitle: 'Curated picks',
+    defaultName: 'Marketplace',
+    degraded: {
+      description: 'Something went wrong loading this marketplace. Please try again.',
+      title: 'We could not load listings',
+    },
+    errorDescription: 'We could not load this marketplace right now. Please try again.',
+    errorTitle: 'Marketplace unavailable',
+    latestSubtitle: 'Fresh from approved sellers',
+    latestTitle: 'Latest listings',
+    loadingDescription: 'Preparing curated discovery…',
+    loadingTitle: 'Loading marketplace',
+    popularSubtitle: 'Trending in this marketplace',
+    popularTitle: 'Popular picks',
+    searchPlaceholder: 'Search this marketplace',
+    sparse: {
+      notice: 'Showing available listings while this marketplace builds out its featured picks.',
+    },
+    storesSubtitle: 'Shop directly from curated sellers',
+    storesTitle: 'Featured stores',
+    trustCopy:
+      'Every order stays with the seller you choose. Buyer protection and secure payments apply store by store.',
+    visitStore: 'Visit store',
+  },
+  adminDecrypt: {
+    cancel: 'Cancel',
+    clearAndClose: 'Clear & Close',
+    decryptButton: 'Decrypt Address',
+    decryptedSuccess: 'Address decrypted (in browser only)',
+    decrypting: 'Decrypting…',
+    decryptionFailed:
+      'Decryption failed: {{msg}}. Make sure you are using the correct private key.',
+    decryptNow: 'Decrypt',
+    encryptedNotice:
+      'Shipping address is encrypted. Unlock it with your recovery passphrase (in this browser only).',
+    passphrasePlaceholder: 'Recovery passphrase',
+    printLabel: 'Print Label',
+    privateKeyHint:
+      'Enter the recovery passphrase you created with address protection. It is never sent to the store.',
+  },
   common: {
+    connecting: 'Connecting...',
+    loadingInterrupted: 'Loading interrupted',
+    or: 'or',
+    slowNetworkRetry: 'The connection is slow. Retrying…',
+    unexpectedError: 'Something went wrong',
     loading: 'Loading...',
     redirecting: 'Redirecting...',
     error: 'Error',
@@ -157,12 +230,21 @@ export const en: TranslationResource = {
   },
 
   validation: {
+    priceInvalid: 'Enter a price greater than 0',
+    imageRequired: 'Add at least one image',
+    compareAtPriceInvalid: 'Compare-at price must be higher than the price',
+    conditionRequired: 'Select the item condition',
+    blockchainRequired: 'Select a blockchain',
+    tokenRequired: 'Select a token',
+    paymentCurrencyRequired: 'Select at least one payment currency',
+    summaryTitle: 'Fix these fields before publishing',
     required: 'This field is required',
     titleRequired: 'Title is required',
     priceRequired: 'Price is required',
   },
 
   nav: {
+    back: 'Back',
     home: 'Home',
     market: 'Market',
     search: 'Search',
@@ -200,6 +282,8 @@ export const en: TranslationResource = {
   },
 
   login: {
+    signInWithMobazha: 'Sign in with Mobazha Account',
+    socialLoginNotAdmin: 'This account does not have admin access to this store.',
     // Page title and subtitle
     title: 'Mobazha',
     subtitle: 'Decentralized Marketplace',
@@ -362,6 +446,7 @@ export const en: TranslationResource = {
   },
 
   product: {
+    storeOffline: 'This store is currently offline. Please try again later.',
     title: 'Title',
     description: 'Description',
     price: 'Price',
@@ -791,6 +876,10 @@ export const en: TranslationResource = {
     },
     // Fulfillment (supply chain)
     fulfillment: {
+      carrier: 'Carrier',
+      copyTracking: 'Copy tracking number',
+      packageShipped: 'Package shipped',
+      trackingNumber: 'Tracking number',
       title: 'Supplier Fulfillment',
       loading: 'Loading fulfillment status...',
       supplierCost: 'Supplier cost',
@@ -2106,6 +2195,9 @@ export const en: TranslationResource = {
   },
 
   wallet: {
+    accountAndNetworks: 'Account & networks',
+    switchWallet: 'Connect a different wallet',
+    addressCopied: 'Address copied',
     title: 'Wallet',
     balance: 'Balance',
     totalBalance: 'Total Balance',
@@ -2294,6 +2386,10 @@ export const en: TranslationResource = {
     },
     // Account binding
     accountBinding: {
+      closeTabHint: 'Account linked successfully. You can close this tab and return to your store.',
+      standaloneConnectDesc:
+        'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
+      standaloneSocialTitle: 'Social Account Binding',
       title: 'Linked Accounts',
       description: 'Manage your linked login methods',
       linked: 'Linked Accounts',
@@ -2852,6 +2948,31 @@ export const en: TranslationResource = {
   },
 
   marketplace: {
+    invite: {
+      accept: 'Join as a seller',
+      acceptedApproved: 'You joined the marketplace.',
+      acceptedPending: 'Request sent — the operator will review it.',
+      acceptFailed: 'Could not join with this link. Please try again.',
+      accepting: 'Joining…',
+      approvalLabel: 'Joining',
+      autoApprove: 'Approved immediately',
+      commissionLabel: 'Operator commission',
+      exhausted: 'This invite link is no longer valid.',
+      goToSellPage: 'Manage my participation',
+      headline: 'You are invited to sell on',
+      invalidBody:
+        'It may have expired, been revoked, or reached its usage limit. Ask the marketplace operator for a new link.',
+      invalidTitle: 'This invite link is not valid',
+      loadFailedBody: 'Please retry in a moment.',
+      loadFailedTitle: 'Could not load this invitation',
+      loading: 'Checking your invitation…',
+      loginToAccept: 'Sign in to accept the invitation',
+      manualReview: 'Reviewed by the operator',
+      resultApproved: 'You are in! Your store is now a member.',
+      resultPending: 'Request sent. The operator will review it.',
+      termsNote:
+        'The commission is charged on orders the marketplace brings you, from your proceeds. Joining never transfers your store, listings, or funds to the operator.',
+    },
     title: 'Community Marketplaces',
     subtitle:
       'Discover and join community-driven marketplaces. Buy from trusted sellers or become a seller yourself.',
@@ -3037,6 +3158,10 @@ export const en: TranslationResource = {
       searchPlaceholder: 'Search members...',
     },
     sell: {
+      marketCommissionLabel: 'Operator commission',
+      marketCommissionNone: '0%',
+      marketCommissionNote:
+        'The operator commission is charged on orders this marketplace brings you, out of your proceeds. The rate shown is the published rate; changes require the operator to republish.',
       backToMarketplace: 'Back to marketplace',
       title: 'Apply to sell',
       pageTitleAdmissionStatus: 'Seller admission status',
@@ -3204,6 +3329,24 @@ export const en: TranslationResource = {
           'Next: contact support or market operators — your seller access is paused.',
         statusNextDefault: 'Next: complete the steps above or check back for updates.',
         workspace: {
+          activeSection: 'Active',
+          cardChecked: 'Checked',
+          cardLocation: 'Location',
+          countsAria: 'Custody counts',
+          currentStatus: 'Current status',
+          emptySubmitCta: 'Submit a card',
+          historySection: 'History',
+          lastUpdated: 'Last updated',
+          listingBindingsBlockedDesc: 'Add this item to a listing before continuing.',
+          listingBindingsBlockedTitle: 'Listing link unavailable',
+          nextActionSection: 'Next action',
+          showAllCases: 'Show all {{count}} cases',
+          showFewerCases: 'Show fewer',
+          submitIntro: 'Submit a card for custody and listing.',
+          tabSubmit: 'Submit',
+          tabTrack: 'Track',
+          trackIntro: 'Track the custody and listing status of your cards.',
+          viewAria: 'Workspace views',
           title: 'Card submissions',
           subtitle:
             'Submit grade, certification, holder wallet, and front/back evidence URLs for curator review. Approved cards are ready to list — no pre-sale mint.',
@@ -3289,6 +3432,74 @@ export const en: TranslationResource = {
       },
     },
     operator: {
+      addPositioningCta: '+ Add a positioning line buyers will see',
+      attributionConversionTitle: 'Conversion',
+      attributionOrders: 'Attributed orders',
+      attributionSource: 'Source',
+      attributionSourceDirect: 'Direct',
+      attributionSourcesTitle: 'By share source',
+      attributionWindowLabel: 'Time range',
+      commissionRate: 'Operator commission',
+      commissionRateHint:
+        'Charged to sellers on orders this marketplace produces. Takes effect for new orders after you republish; sellers see the committed rate before joining.',
+      commissionRateInvalid: 'Enter a rate between 0 and 30 (up to 2 decimals).',
+      earningsCommission: 'Commission',
+      earningsCurrency: 'Currency',
+      earningsCurrentRate: 'Current rate',
+      earningsEmpty: 'No attributed orders in this window yet.',
+      earningsEstimateNote:
+        'Figures are estimates recorded at checkout and are confirmed at settlement. They are not a payable balance yet.',
+      earningsGross: 'Gross',
+      earningsLoadFailed: 'Could not load the earnings ledger.',
+      earningsLoading: 'Loading earnings…',
+      earningsOrders: 'Orders',
+      earningsRatePendingPublish: 'Loading earnings…',
+      earningsTitle: 'Commission earnings',
+      inviteLinkAutoApprove: 'Auto-approve sellers from this link',
+      inviteLinkCopied: 'Link copied.',
+      inviteLinkCreate: 'Create link',
+      inviteLinkCreated: 'Invite link created.',
+      inviteLinkCreatedCopied: 'Invite link created and copied.',
+      inviteLinkCreateFailed: 'Could not create the invite link.',
+      inviteLinkMaxUses: 'Max uses (0 = unlimited)',
+      inviteLinkMaxUsesInvalid: 'Max uses must be a whole number between 0 (unlimited) and 10000.',
+      inviteLinkModeAuto: 'Auto-approve',
+      inviteLinkModeReview: 'Manual review',
+      inviteLinkRevoked: 'Invite link revoked.',
+      inviteLinkRevokeFailed: 'Could not revoke the link.',
+      inviteLinksDescription:
+        'Share a link in your community instead of inviting sellers one by one. Anyone opening it sees your marketplace terms — including your commission rate — and can join directly.',
+      inviteLinksEmpty: 'No active invite links yet.',
+      inviteLinksTitle: 'Seller invite links',
+      inviteLinkUses: 'Uses',
+      metricCommission: 'Commission',
+      metricCommissionEmpty: 'Accrues as orders land',
+      metricDeltaTitle: 'vs previous',
+      metricOrders: 'Attributed orders',
+      metricOrdersEmpty: 'None yet',
+      metricSellers: 'Sellers',
+      metricSellersEmpty: 'Invite your first seller',
+      metricSellersPending: 'Invite your first seller',
+      metricVisits: 'Visits',
+      metricVisitsEmpty: 'Share your link to start',
+      monetizationSectionTitle: 'Monetization',
+      nextStepCurateBody: 'Pick what buyers see first — curated homepages convert better.',
+      nextStepCurateCta: 'Curate homepage',
+      nextStepCurateTitle: 'Feature your first products',
+      nextStepRecruitBody: 'Mint an invite link and share it where your community already is.',
+      nextStepRecruitCta: 'Invite sellers',
+      nextStepRecruitTitle: 'Recruit your first seller',
+      nextStepReviewBody: 'Sellers are waiting on your decision before they can go on sale.',
+      nextStepReviewCta: 'Review sellers',
+      nextStepReviewTitle: 'Sellers are waiting on your decision before they can go on sale.',
+      performanceTitle: 'Performance',
+      shareDescriptionShort: '— invite buyers and communities',
+      startModeInvite: 'Curated — invite sellers',
+      startModeInviteDesc:
+        'You pick every seller and product. Publish first, then recruit with invite links.',
+      startModeOpen: 'Open — sellers join themselves',
+      startModeOpenDesc:
+        'Sellers apply on their own and the catalog fills from the network. Fastest way to a stocked marketplace.',
       badge: 'Marketplace Operator',
       listTitle: 'Marketplaces I operate',
       listSubtitle:
@@ -3528,6 +3739,12 @@ export const en: TranslationResource = {
       archiveSuccess: 'Marketplace archived',
       archiveFailedTitle: 'Could not archive marketplace',
       curation: {
+        allFeaturedBadge: 'All featured',
+        allListingsFeatured: 'Every eligible product is already featured.',
+        clickToFeature: '+ Feature',
+        noImage: 'No image',
+        noListingCandidates:
+          'No products to feature yet — they appear here once approved sellers have items on sale.',
         title: 'Homepage curation',
         intro:
           'This controls what appears on the public marketplace homepage, including featured listings, featured sellers, and banner slots.',
@@ -4991,6 +5208,8 @@ export const en: TranslationResource = {
 
     // Quick Create
     quickCreate: {
+      tagsTitle: 'Tags',
+      tagsPlaceholder: 'Add a tag...',
       title: 'Quick Create',
       subtitle: 'Upload photos, let AI do the rest',
       stepPhotos: 'Photos',
@@ -5552,6 +5771,8 @@ export const en: TranslationResource = {
 
     // Digital downloads (Supply Chain Phase 1.0)
     digital: {
+      uploadCancelled: 'Upload cancelled',
+      uploadProgress: 'Upload progress',
       title: 'Digital downloads',
       description: 'Provide files, access links, or license keys delivered after purchase.',
       // Legacy keys used by DigitalFileSection in MobileListingWizard
@@ -5796,10 +6017,31 @@ export const en: TranslationResource = {
   },
 
   collectibles: {
+    experience: {
+      assurances: {
+        title: 'Custody assurances',
+      },
+      ops: {
+        metricsAria: 'Custody metrics',
+      },
+      summary: {
+        catalogTotal: 'Total items',
+        custodyReady: 'Custody ready',
+        myHoldings: 'My holdings',
+      },
+      technicalDetails: 'Technical details',
+      trust: {
+        title: 'Why you can trust this',
+      },
+    },
     title: 'Collectible Cards',
     subtitle:
       'Digital-title cards in circulation with source or Hub custody. Ordinary physical listings in the market are not shown here unless tokenized.',
     catalog: {
+      heroEyebrow: 'Collectibles',
+      storefrontSubtitle: 'Verified physical collectibles with custody records',
+      storefrontTitle: 'Collectibles catalog',
+      unnamedCard: 'Unnamed card',
       title: 'Hosted cards catalog',
       custodyCatalogTitle: 'Custody catalog',
       custodyCatalogSubtitle:
@@ -5821,6 +6063,9 @@ export const en: TranslationResource = {
       redeemableYes: 'Redemption available',
       redeemableNo: 'Redemption unavailable',
       display: {
+        gradedCollectible: 'Graded {{grade}}',
+        referenceCard: 'Reference {{reference}}',
+        serialCard: 'Serial {{serial}}',
         m2Wilson001: {
           name: '1909-11 T206 Honus Wagner (demo)',
         },
@@ -6367,6 +6612,7 @@ export const en: TranslationResource = {
 
   // Shipping settings
   shipping: {
+    noShippingOptionsConfigured: 'No shipping options are configured for this address.',
     // Shipping Profiles (Shopify-style)
     shippingProfiles: 'Shipping Profiles',
     shippingOptions: 'shipping option(s)',
@@ -6821,6 +7067,7 @@ export const en: TranslationResource = {
     copyCaseId: 'Copy case ID',
   },
   admin: {
+    statusDraft: 'Draft',
     title: 'Store Admin',
     nav: {
       dashboard: 'Dashboard',
@@ -8139,6 +8386,10 @@ export const en: TranslationResource = {
         'Changing the password signs out every administrator session, including this one.',
     },
     guestCheckout: {
+      pgpKeyDescription:
+        'Physical-order addresses are encrypted in the buyer’s browser. Create and back up the store recovery key from Store payments.',
+      pgpKeySave: 'Manage address protection',
+      pgpKeyTitle: '🔒 PGP Address Encryption',
       title: 'Guest Checkout',
       description: 'Allow anonymous buyers to pay with cryptocurrency without creating an account.',
       loadError: 'Failed to load settings',
@@ -8189,6 +8440,8 @@ export const en: TranslationResource = {
       saveSuccess: 'Payment policy updated.',
     },
     integrations: {
+      aiTextRoute: 'Text AI',
+      aiVisionRoute: 'Vision AI',
       title: 'Integrations',
       subtitle: 'Manage notification channels, AI assistant, and webhooks',
       subtitleNoAi: 'Manage notification channels, webhooks, and fulfillment providers',
@@ -9805,6 +10058,12 @@ export const en: TranslationResource = {
   },
 
   system: {
+    rpc: {
+      connected: 'Connected',
+      disconnected: 'Disconnected',
+      noneConfigured: 'No payment RPC configured. Go to Settings → Payments to continue.',
+      title: 'Payment RPC Status',
+    },
     title: 'System',
     subtitle: 'Server status and maintenance tools for your standalone store',
     status: {
@@ -9970,6 +10229,8 @@ export const en: TranslationResource = {
   },
 
   guestCheckout: {
+    noPaymentMethodsAvailable:
+      'No payment methods available. The seller has not configured accepted cryptocurrencies yet.',
     cartEmpty: 'Your cart is empty',
     cartEmptyHint: 'Browse the store and add items to get started',
     reviewCart: 'Review Your Cart ({{count}} {{itemWord}})',

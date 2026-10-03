@@ -63,6 +63,14 @@ vi.mock('@mobazha/core', async importOriginal => {
       return selector ? selector(state) : state;
     },
     useTheme: () => ({ isDark: false, toggleDarkMode: vi.fn() }),
+    // The page renders a wallet entry, and `useWallet` requires an AppKit
+    // provider that this unit test does not mount. Return a disconnected
+    // wallet so the entry renders its "connect" label.
+    useWallet: () => ({
+      isConnected: false,
+      walletInfo: null,
+      openModal: vi.fn(),
+    }),
     useFeatureFlags: () => ({ isEnabled: () => false }),
     useFeature: () => false,
     useMiniAppRole: () => ({

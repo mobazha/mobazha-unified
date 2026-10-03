@@ -21,9 +21,15 @@ import {
   DEFAULT_LOCAL_CURRENCY,
   resolveProductSupplyMode,
 } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile, SourceDepositListingPrefillInput } from '@mobazha/core';
+import type {
+  ContractType,
+  Image,
+  ShippingProfile,
+  SourceDepositListingPrefillInput,
+} from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
+import { FieldError } from '@/components/ui/field-error';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { STANDARD_PRODUCT_TYPES } from '@mobazha/core';
@@ -547,9 +553,7 @@ export function MobileListingWizard({
                           errors.title ? 'border-destructive' : 'border-border'
                         )}
                       />
-                      {errors.title && (
-                        <p className="text-destructive text-xs mt-1">{errors.title}</p>
-                      )}
+                      {errors.title && <FieldError message={errors.title} />}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">
@@ -599,9 +603,7 @@ export function MobileListingWizard({
                           errors.title ? 'border-destructive' : 'border-border'
                         )}
                       />
-                      {errors.title && (
-                        <p className="text-destructive text-xs mt-1">{errors.title}</p>
-                      )}
+                      {errors.title && <FieldError message={errors.title} />}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">

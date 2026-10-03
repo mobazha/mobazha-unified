@@ -5,7 +5,79 @@
 import type { PartialTranslationResource } from '../types';
 
 export const ko: PartialTranslationResource = {
+  adminDecrypt: {
+    cancel: '취소',
+    clearAndClose: '삭제 및 닫기',
+    decryptButton: '주소 해독',
+    decryptedSuccess: '주소가 해독됨 (브라우저에서만)',
+    decrypting: '암호 해독 중...',
+    decryptNow: '기밀 해제',
+    decryptionFailed: '암호 해독 실패: {{msg}}. 올바른 개인 키를 사용하고 있는지 확인하십시오.',
+    encryptedNotice:
+      '배송 주소가 암호화되어 있습니다. 복구 암호를 사용하여 잠금을 해제합니다 (이 브라우저에서만).',
+    passphrasePlaceholder: '복구 암호',
+    printLabel: '라벨 인쇄',
+    privateKeyHint:
+      '주소 보호 기능을 사용하여 생성한 복구 암호를 입력합니다. 매장에 절대 발송되지 않습니다.',
+  },
+  marketplaceStarter: {
+    bannerSubtitle: '운영자가 주목하는 숙소',
+    bannerTitle: '추천 배너',
+    coldStart: {
+      becomeSeller: '판매자가 되려면 신청하세요',
+      howItWorks1: '모든 주문은 선택한 판매자와 함께 유지됩니다.',
+      howItWorks2: '매장별로 구매자 보호 및 보안 결제가 적용됩니다.',
+      howItWorks3: '판매자는 상품이 여기에 표시되기 전에 검토를 받습니다.',
+      howItWorksTitle: '마켓플레이스 이용 방법',
+      inventoryPreparing: '재고 준비 중',
+      inviteOnly: '이 마켓플레이스는 초대를 통해 판매자를 온보딩합니다.',
+      notifyCta: '알림 받기',
+      notifyDone: '귀하는 목록에 있습니다.',
+      notifyFailed: '그래도 문제가 해결되지 않았습니다. 주소를 확인하고 다시 시도하세요.',
+      notifyHint: '제품이 출시되면 하나의 이메일을 받으세요. 스팸이 없습니다.',
+      notifyPlaceholder: 'you@example.com',
+      subtitle: '이 마켓플레이스는 이제 막 시작되었습니다. 곧 다시 확인하여 숙소를 찾아보세요.',
+    },
+    curatedSubtitle: '오퍼레이터가 선택한 하이라이트',
+    defaultName: '마켓',
+    curatedTitle: '엄선된 추천 상품',
+    degraded: {
+      title: '숙소를 불러올 수 없습니다',
+      description: '이 마켓플레이스를 로드하는 중에 문제가 발생했습니다. 다시 시도해주세요.',
+    },
+    errorTitle: '마켓플레이스 이용 불가',
+    errorDescription: '현재 이 마켓플레이스를 로드할 수 없습니다. 다시 시도해주세요.',
+    latestTitle: '최신 목록',
+    latestSubtitle: '승인된 판매자의 신선한 제품',
+    loadingDescription: '엄선된 발견 준비 중…',
+    loadingTitle: '마켓플레이스 로딩 중',
+    popularSubtitle: '이 마켓플레이스에서 인기 급상승',
+    popularTitle: '인기 추천 상품',
+    searchPlaceholder: '이 마켓플레이스 검색',
+    sparse: {
+      notice: '이 마켓플레이스가 추천 상품을 구축하는 동안 예약 가능한 숙소를 표시합니다.',
+    },
+    storesSubtitle: '엄선된 판매자로부터 직접 쇼핑하기',
+    storesTitle: '추천 매장',
+    trustCopy:
+      '모든 주문은 선택한 판매자와 함께 유지됩니다. 매장별로 구매자 보호 및 보안 결제가 적용됩니다.',
+    visitStore: '상점을 방문해 보세요',
+  },
+  sovereign: {
+    privacyHintDesc:
+      '스토어에서 외부 네트워크 요청을 0으로 만듭니다. 개인 정보를 최대한 보호하려면 Tor .onion 주소 또는 I2P eepsite를 통해 액세스하십시오. 설정 결제에서 결제 엔드포인트를 → 구성합니다.',
+    privacyHint: '쿠키알림',
+    setup: {
+      regionTitle: '근무지',
+      regionDesc: '배송료 계산을 위해 국가를 설정하세요.',
+    },
+  },
   common: {
+    connecting: '연결 중...',
+    loadingInterrupted: '로딩 중단됨',
+    or: '또는',
+    slowNetworkRetry: '연결이 느립니다. 다시 시도하는 중...',
+    unexpectedError: '문제가 발생했습니다',
     loading: '로딩 중...',
     redirecting: '리디렉션 중...',
     error: '오류',
@@ -153,11 +225,20 @@ export const ko: PartialTranslationResource = {
     showLess: '간략히',
   },
   validation: {
+    priceInvalid: '0보다 큰 가격을 입력하세요',
+    imageRequired: '이미지를 하나 이상 추가하세요',
+    compareAtPriceInvalid: '비교 가격은 판매 가격보다 높아야 합니다',
+    conditionRequired: '상품 상태를 선택하세요',
+    blockchainRequired: '블록체인을 선택하세요',
+    tokenRequired: '토큰을 선택하세요',
+    paymentCurrencyRequired: '결제 통화를 하나 이상 선택하세요',
+    summaryTitle: '게시하기 전에 다음 항목을 수정하세요',
     required: '이 필드는 필수입니다',
     titleRequired: '제목은 필수입니다',
     priceRequired: '가격은 필수입니다',
   },
   nav: {
+    back: '뒤로',
     home: '홈',
     market: '마켓',
     search: '검색',
@@ -193,6 +274,8 @@ export const ko: PartialTranslationResource = {
     lastUpdated: '{{date}} 업데이트',
   },
   login: {
+    signInWithMobazha: 'Mobazha 계정으로 로그인',
+    socialLoginNotAdmin: '이 계정에는 이 스토어에 대한 관리자 액세스 권한이 없습니다.',
     title: 'Mobazha',
     subtitle: '탈중앙화 마켓플레이스',
     hostedMode: '호스팅 모드',
@@ -334,6 +417,7 @@ export const ko: PartialTranslationResource = {
     collectiblesDesc: '허브에 보관된 토큰화된 카드 — 언제든지 사용 가능',
   },
   product: {
+    storeOffline: '이 매장은 현재 오프라인 상태입니다. 나중에 다시 시도해주세요.',
     title: '제목',
     description: '설명',
     price: '가격',
@@ -1584,6 +1668,10 @@ export const ko: PartialTranslationResource = {
       claimRefund: '환불 청구',
     },
     fulfillment: {
+      carrier: '운송자',
+      copyTracking: '배송 추적 번호',
+      packageShipped: '물품 배송 완료',
+      trackingNumber: '송장',
       title: '공급업체 이행',
       loading: '이행 상태 로드 중...',
       supplierCost: '공급업체 비용',
@@ -1967,6 +2055,9 @@ export const ko: PartialTranslationResource = {
     },
   },
   wallet: {
+    accountAndNetworks: '계정 및 네트워크',
+    switchWallet: '다른 지갑 연결',
+    addressCopied: '주소를 복사했습니다',
     title: '지갑',
     balance: '잔액',
     totalBalance: '총 잔액',
@@ -2138,6 +2229,10 @@ export const ko: PartialTranslationResource = {
         '비트코인(BTC) 주소인 것 같습니다. BCH는 일반적으로 bitcoincash 또는 레거시 형식을 사용합니다. 저장하기 전에 다시 확인하세요.',
     },
     accountBinding: {
+      closeTabHint: '계정이 성공적으로 연결되었습니다. 이 탭을 닫고 매장으로 돌아갈 수 있습니다.',
+      standaloneConnectDesc:
+        '텔레그램, Discord 또는 Google 계정을 연결하여 빠른 소셜 로그인을 활성화하세요. 먼저 Mobazha 플랫폼에 로그인하여 연결된 계정을 관리하세요.',
+      standaloneSocialTitle: '소셜 계정 바인딩',
       title: '연결된 계정',
       description: '로그인 방법 관리',
       linked: '연결된 계정',
@@ -2681,6 +2776,31 @@ export const ko: PartialTranslationResource = {
     },
   },
   marketplace: {
+    invite: {
+      accept: '판매자로 가입하기',
+      acceptedApproved: '마켓플레이스에 가입하셨습니다.',
+      acceptedPending: '요청 전송 완료 — 운영자가 검토합니다.',
+      acceptFailed: '이 링크로 참여할 수 없습니다. 다시 시도해주세요.',
+      accepting: '살펴볼게요',
+      approvalLabel: '살펴볼게요',
+      autoApprove: '즉시 승인됨',
+      commissionLabel: '운영자 수수료',
+      exhausted: '이 초대 링크는 더 이상 유효하지 않습니다.',
+      goToSellPage: '내 참여 관리',
+      headline: '에 판매하도록 초대되었습니다.',
+      invalidBody:
+        '만료되었거나, 취소되었거나, 사용 한도에 도달했을 수 있습니다. 마켓플레이스 운영자에게 새 링크를 요청하세요.',
+      invalidTitle: '이 초대 링크는 유효하지 않습니다',
+      loadFailedBody: '잠시 후 다시 시도해 주세요.',
+      loadFailedTitle: '이 초대를 로드할 수 없습니다',
+      loading: '초대장 확인 중...',
+      loginToAccept: '초대를 수락하려면 로그인하세요.',
+      manualReview: '운영자가 검토함',
+      resultApproved: '가입되었습니다! 이제 스토어가 회원입니다.',
+      resultPending: '요청이 전송되었습니다. 운영자가 검토할 것입니다.',
+      termsNote:
+        '수수료는 마켓플레이스가 귀하에게 제공하는 주문, 귀하의 수익금에서 부과됩니다. 가입하면 매장, 숙소 또는 자금이 운영자에게 이체되지 않습니다.',
+    },
     title: '커뮤니티 마켓플레이스',
     subtitle:
       '커뮤니티 기반 마켓플레이스를 발견하고 참여하세요. 신뢰할 수 있는 판매자로부터 구매하거나 판매자가 되세요.',
@@ -2710,6 +2830,10 @@ export const ko: PartialTranslationResource = {
       searchPlaceholder: '멤버 검색...',
     },
     sell: {
+      marketCommissionLabel: '운영자 수수료',
+      marketCommissionNone: '0%',
+      marketCommissionNote:
+        '이 마켓플레이스에서 발생하는 주문에 대해 운영자 수수료가 청구되며, 이는 수익금에서 차감됩니다. 표시된 요금은 게시된 요금입니다. 변경하려면 운영자가 다시 게시해야 합니다.',
       backToMarketplace: '마켓플레이스로 돌아가기',
       title: '판매자 되기',
       subtitle: '이 마켓플레이스에서 상품을 등록하려면 판매자 프로필을 완성하세요',
@@ -2874,6 +2998,24 @@ export const ko: PartialTranslationResource = {
         statusNextApprovedWithSubmissions:
           '다음: 아래 등급 카드 증거를 제출하세요. 승인 후 목록을 만듭니다. 디지털 타이틀은 구매자가 지불하기 전이 아니라 지불할 때 발행됩니다.',
         workspace: {
+          activeSection: '활성화',
+          cardLocation: '근무지',
+          cardChecked: '검토자',
+          countsAria: '보관 횟수',
+          currentStatus: '상태변경',
+          emptySubmitCta: '카드 제출하기',
+          historySection: '기록',
+          lastUpdated: '마지막 업데이트',
+          listingBindingsBlockedDesc: '계속하기 전에 이 항목을 숙소 페이지에 추가하세요.',
+          listingBindingsBlockedTitle: '숙소 링크 이용 불가',
+          showAllCases: '{{count}}건 모두 보기',
+          nextActionSection: '다음 작업',
+          submitIntro: '양육권 및 숙소 등록을 위해 카드를 제출하세요.',
+          showFewerCases: '간략히 표시',
+          tabSubmit: '제출',
+          tabTrack: '추적',
+          trackIntro: '카드의 보관 상태와 숙소 상태를 확인하세요.',
+          viewAria: '작업 공간 보기',
           lifecycleAria: '카드 제출 수명 주기',
           title: '카드 제출',
           lifecycle: {
@@ -2923,6 +3065,76 @@ export const ko: PartialTranslationResource = {
       },
     },
     operator: {
+      attributionConversionTitle: '변환',
+      addPositioningCta: '+ 포지셔닝 라인 추가 구매자는',
+      attributionSource: '출처',
+      attributionOrders: '귀속 주문',
+      attributionSourceDirect: '소',
+      attributionSourcesTitle: '공유 소스별',
+      commissionRate: '운영자 수수료',
+      attributionWindowLabel: '시간',
+      commissionRateHint:
+        '이 마켓플레이스에서 생산되는 주문에 대해 판매자에게 청구됩니다. 재게시 후 신규 주문에 적용됩니다. 판매자는 가입하기 전에 약정 요금을 확인할 수 있습니다.',
+      commissionRateInvalid: '0 ~ 30 사이의 비율을 입력하세요 (소수점 2자리까지).',
+      earningsCommission: '위임장',
+      earningsCurrency: '화폐',
+      earningsCurrentRate: '현재 시세',
+      earningsEmpty: '이 창에 아직 귀속 주문이 없습니다.',
+      earningsEstimateNote:
+        '수치는 결제 시 기록된 추정치이며 결제 시 확인됩니다. 아직 미지급 잔액이 아닙니다.',
+      earningsGross: '합계',
+      earningsLoadFailed: '수입 원장을 로드할 수 없습니다.',
+      earningsLoading: '수입 불러오는 중...',
+      earningsRatePendingPublish: '수입 불러오는 중...',
+      earningsOrders: 'ÀÎ¿ø',
+      inviteLinkAutoApprove: '이 링크에서 판매자 자동 승인',
+      earningsTitle: '커미션 수입',
+      inviteLinkCopied: '링크가 복사되었습니다.',
+      inviteLinkCreated: '초대 링크가 생성되었습니다.',
+      inviteLinkCreate: '링크 만들기',
+      inviteLinkCreatedCopied: '초대 링크가 생성되고 복사되었습니다.',
+      inviteLinkCreateFailed: '초대 링크를 만들 수 없습니다.',
+      inviteLinkMaxUses: '최대 사용 (0 = 무제한)',
+      inviteLinkMaxUsesInvalid: '최대 사용량은 0 (무제한) 에서 10000 사이의 정수여야 합니다.',
+      inviteLinkModeAuto: '자동승인',
+      inviteLinkModeReview: '수동 검토',
+      inviteLinkRevoked: '초대 링크가 취소되었습니다.',
+      inviteLinkRevokeFailed: '링크를 취소할 수 없습니다.',
+      inviteLinksDescription:
+        '판매자를 하나씩 초대하는 대신 커뮤니티에 링크를 공유하세요. 개설자는 누구나 수수료율을 포함한 마켓플레이스 약관을 볼 수 있으며 직접 가입할 수 있습니다.',
+      inviteLinksEmpty: '아직 활성 초대 링크가 없습니다.',
+      inviteLinksTitle: '판매자 초대 링크',
+      metricCommission: '위임장',
+      inviteLinkUses:
+        '이 백업 세트는 이 사이트의 것이지만 백업 시 %s를 사용하고 있었지만 사이트는 이제 %s를 사용합니다.',
+      metricCommissionEmpty: '주문 땅으로 미지급',
+      metricOrders: '귀속 주문',
+      metricDeltaTitle: '이전과 비교',
+      metricOrdersEmpty: '아직, 아무 말도 하지 마십시오.',
+      metricSellers: '판매자',
+      metricSellersEmpty: '첫 번째 판매자 초대하기',
+      metricSellersPending: '첫 번째 판매자 초대하기',
+      metricVisits: '방문수',
+      metricVisitsEmpty: '시작하려면 링크를 공유하세요',
+      monetizationSectionTitle: '수익화 ',
+      nextStepCurateBody:
+        '구매자에게 먼저 표시되는 항목 선택 — 엄선된 홈페이지가 더 잘 변환됩니다.',
+      nextStepCurateCta: '큐레이트 홈페이지',
+      nextStepCurateTitle: '첫 상품을 소개하세요',
+      nextStepRecruitBody: '초대 링크를 생성하고 커뮤니티가 이미 있는 곳에 공유하세요.',
+      nextStepRecruitCta: '판매자 초대',
+      nextStepRecruitTitle: '첫 번째 판매자를 모집하세요',
+      nextStepReviewBody: '판매자는 판매를 시작하기 전에 귀하의 결정을 기다리고 있습니다.',
+      nextStepReviewTitle: '판매자는 판매를 시작하기 전에 귀하의 결정을 기다리고 있습니다.',
+      nextStepReviewCta: '리뷰 판매자',
+      performanceTitle: '실적',
+      shareDescriptionShort: '— 구매자와 커뮤니티 초대',
+      startModeInvite: '엄선된 — 판매자 초대',
+      startModeInviteDesc:
+        '당신은 모든 판매자와 제품을 선택합니다. 먼저 게시한 다음 초대 링크로 모집하세요.',
+      startModeOpen: '영업 — 판매자가 직접 참여',
+      startModeOpenDesc:
+        '판매자는 스스로 신청하고 카탈로그는 네트워크에서 채워집니다. 재고가 있는 마켓플레이스로 가는 가장 빠른 방법.',
       applicationReviewWorkspace: '판매자 신청 검토 워크스페이스',
       filterAll: '전체',
       filterPending: '검토 대기',
@@ -3159,6 +3371,12 @@ export const ko: PartialTranslationResource = {
       archiveTitle: '이 마켓플레이스를 보관하시겠습니까?',
       archiveAction: '아카이브 마켓플레이스',
       curation: {
+        allFeaturedBadge: '모든 추천',
+        allListingsFeatured: '요건을 충족하는 모든 상품은 이미 소개되어 있습니다.',
+        clickToFeature: '추천',
+        noImage: '이미지 없음',
+        noListingCandidates:
+          '아직 선보일 제품이 없습니다. 승인된 판매자에게 판매 중인 상품이 있으면 여기에 표시됩니다.',
         title: '홈페이지 큐레이션',
         intro:
           '이는 주요 목록, 주요 판매자 및 배너 슬롯을 포함하여 공개 마켓플레이스 홈페이지에 표시되는 내용을 제어합니다.',
@@ -4663,6 +4881,8 @@ export const ko: PartialTranslationResource = {
       requiredMissing: '{{field}}은(는) 필수입니다',
     },
     quickCreate: {
+      tagsTitle: '태그',
+      tagsPlaceholder: '태그 추가...',
       title: '빠른 등록',
       subtitle: '사진만 올리면 AI가 나머지를 처리',
       stepPhotos: '사진',
@@ -5097,6 +5317,8 @@ export const ko: PartialTranslationResource = {
     barcodePlaceholder: 'UPC, EAN, ISBN...',
     barcodeHelper: '재고 추적용 상품 바코드',
     digital: {
+      uploadCancelled: '업로드가 취소되었습니다.',
+      uploadProgress: '업로드 진행 중',
       title: '디지털 파일',
       description: '구매 후 구매자가 받을 파일을 업로드하세요.',
       uploadFiles: '클릭하여 파일 업로드',
@@ -5364,6 +5586,7 @@ export const ko: PartialTranslationResource = {
     },
   },
   shipping: {
+    noShippingOptionsConfigured: '이 주소에 대해 구성된 배송 옵션이 없습니다.',
     shippingProfiles: '배송 프로필',
     shippingOptions: '배송 옵션',
     upgradeToProfiles: '배송 프로필로 업그레이드',
@@ -5761,6 +5984,7 @@ export const ko: PartialTranslationResource = {
     copyCaseId: '케이스 ID 복사',
   },
   admin: {
+    statusDraft: '검토 대기 중',
     title: '스토어 관리자',
     nav: {
       dashboard: '대시보드',
@@ -6376,6 +6600,8 @@ export const ko: PartialTranslationResource = {
         '비밀번호를 변경하면 이 세션을 포함하여 모든 관리자 세션이 로그아웃됩니다.',
     },
     integrations: {
+      aiTextRoute: '텍스트 AI',
+      aiVisionRoute: '비전 AI',
       title: '연동',
       subtitle: '알림 채널, AI 어시스턴트, 웹훅 관리',
       tabPayments: '결제',
@@ -7227,6 +7453,10 @@ export const ko: PartialTranslationResource = {
       defaultArchiveError: '기본 상점 첫화면은 보관할 수 없습니다.',
     },
     guestCheckout: {
+      pgpKeySave: '주소 보호 관리',
+      pgpKeyDescription:
+        '실제 주문 주소는 구매자의 브라우저에서 암호화됩니다. 스토어 결제에서 스토어 복구 키를 생성하고 백업합니다.',
+      pgpKeyTitle: '🔒 PGP 주소 암호화',
       title: '비회원 결제',
       description: '익명의 구매자가 계정을 만들지 않고도 암호화폐로 결제할 수 있도록 허용합니다.',
       loadError: '설정을 로드하지 못했습니다.',
@@ -8426,6 +8656,12 @@ export const ko: PartialTranslationResource = {
     },
   },
   system: {
+    rpc: {
+      connected: '연결됨',
+      disconnected: '연결이 끊어짐',
+      noneConfigured: '구성된 결제 RPC가 없습니다. 계속하려면 설정 → 결제로 이동하세요.',
+      title: '결제 RPC 상태',
+    },
     network: {
       title: '네트워크 및 개인정보',
       connectivity: '연결 방식',
@@ -8792,6 +9028,8 @@ export const ko: PartialTranslationResource = {
       '클릭할 때마다 매장에서 실시간 스냅샷을 가져옵니다. CSV는 Excel, Numbers, Google Sheets에서 직접 열립니다. JSON은 마이그레이션 스크립트에 가장 적합합니다. 우리는 이러한 파일을 어디로도 이메일로 보내지 않습니다. 다운로드는 이 장치에 유지됩니다.',
   },
   guestCheckout: {
+    noPaymentMethodsAvailable:
+      '사용 가능한 결제 수단이 없습니다. 판매자가 아직 허용된 암호화폐를 구성하지 않았습니다.',
     cartEmpty: '장바구니가 비어 있습니다.',
     cartEmptyHint: '시작하려면 매장을 둘러보고 항목을 추가하세요.',
     reviewCart: '장바구니 검토({{count}} {{itemWord}})',
@@ -9013,10 +9251,31 @@ export const ko: PartialTranslationResource = {
     },
   },
   collectibles: {
+    experience: {
+      assurances: {
+        title: '양육권 보장',
+      },
+      ops: {
+        metricsAria: '보관 지표',
+      },
+      summary: {
+        catalogTotal: '전체 항목 개수',
+        custodyReady: '양육권 준비 완료',
+        myHoldings: '내 보유',
+      },
+      technicalDetails: '사양',
+      trust: {
+        title: '신뢰할 수 있는 이유',
+      },
+    },
     title: '수집용 카드',
     subtitle:
       '소스 또는 허브 보관과 함께 유통되는 디지털 타이틀 카드. 시장의 일반적인 실제 목록은 토큰화되지 않는 한 여기에 표시되지 않습니다.',
     catalog: {
+      heroEyebrow: '수집품',
+      storefrontSubtitle: '보관 기록이 있는 검증된 물리적 수집품',
+      storefrontTitle: '수집품 카탈로그',
+      unnamedCard: '이름 없는 카드',
       title: '호스팅된 카드 카탈로그',
       tabCatalog: '보관 카탈로그',
       tabMyCards: '내 카드',
@@ -9033,6 +9292,9 @@ export const ko: PartialTranslationResource = {
       subtitle:
         '여기에 디지털 제목이 있는 카드에는 양육권 증명이 표시됩니다. 온체인 타이틀이 없는 실제 카드는 일반 상품처럼 구매 및 배송됩니다.',
       display: {
+        gradedCollectible: '등급 {{grade}}',
+        serialCard: '시리얼 {{serial}}',
+        referenceCard: '참조 {{reference}}',
         m2Wilson001: {
           name: '1909-11 T206 호누스 바그너 (데모)',
         },
