@@ -58,11 +58,13 @@ describe('ReceivingAccountSelector', () => {
 
     render(<ReceivingAccountSelector />);
 
+    // The select is already in the document, disabled, while the accounts load, so wait for the
+    // accounts themselves rather than for the control.
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(screen.getByText(/ETH Account/)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/ETH Account/)).toBeInTheDocument();
     expect(screen.getByText(/BTC Account/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 });
