@@ -128,6 +128,13 @@ export const Footer: React.FC = () => {
     ],
     resources: [
       {
+        // In-app guides. Linked from the footer so crawlers can reach them from
+        // every page — the help articles are the only indexable long-form content
+        // served by the marketplace itself.
+        label: t('footer.guides', { defaultValue: 'Guides' }),
+        href: '/help',
+      },
+      {
         label: t('footer.gettingStarted'),
         href: PUBLIC_DOCS_URLS.gettingStarted,
         external: true,

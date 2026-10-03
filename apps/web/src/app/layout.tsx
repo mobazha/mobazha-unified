@@ -221,6 +221,20 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const hdrs = await headers();
   const storefrontPeerID = hdrs.get('x-storefront-peerid') || hdrs.get('x-store-peerid') || null;
+  // Language is carried by the URL prefix so crawlers, screen readers and link
+  // previews see the right language: `/zh/...` is Simplified Chinese, everything
+  // else is English. The client-side locale preference does not change the URL.
+  // Read the same header `lib/requestUrl` uses; importing it here would collide
+  // with the SEO branch's import edits.
+  const requestUrlHeader = hdrs.get('x-mobazha-request-url');
+  let htmlLang = 'en';
+  if (requestUrlHeader) {
+    try {
+      if (new URL(requestUrlHeader).pathname.startsWith('/zh')) htmlLang = 'zh-Hans';
+    } catch {
+      // Malformed request URL — keep the English default.
+    }
+  }
   const {
     subdomain: marketplaceSubdomain,
     domain: marketplaceDomain,
@@ -242,7 +256,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      lang="en"
+      lang={htmlLang}
       {...(storefrontPeerID ? { 'data-storefront': storefrontPeerID } : {})}
       suppressHydrationWarning
     >
@@ -261,6 +275,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `
               (function() {
                 try {
+                  // Pages under /zh/ state their language in the URL and in the
+                  // server-rendered <html lang>, so a saved locale must not win.
+                  if (location.pathname === '/zh' || location.pathname.indexOf('/zh/') === 0) return;
                   var saved = localStorage.getItem('mobazha-locale');
                   if (saved) {
                     document.documentElement.lang = saved;
