@@ -5514,8 +5514,8 @@ export const fr: PartialTranslationResource = {
       title: 'Fichiers numériques',
       description: "Téléchargez les fichiers que les acheteurs recevront après l'achat.",
       uploadFiles: 'Cliquez pour télécharger',
-      uploadHint: 'Glisser-déposer ou cliquer pour sélectionner (max. 500Mo chacun)',
-      fileTooLarge: 'dépasse la limite de 500Mo',
+      uploadHint: 'Glisser-déposer ou cliquer pour sélectionner',
+      mediaUploadHint: 'Glisser-déposer ou cliquer pour sélectionner (max. 50 Mo chacun)',
       saveFirst:
         "Enregistrez d'abord la liste, puis revenez pour joindre des fichiers, des liens ou des clés de licence.",
       saveFirstTitle: 'Enregistrer en tant que brouillon pour joindre des actifs numériques',
@@ -5530,7 +5530,12 @@ export const fr: PartialTranslationResource = {
       uploadFileDesc:
         'Le fichier est crypté sur le serveur et livré aux acheteurs via une URL de téléchargement signée.',
       selectFile: 'Sélectionner un fichier',
-      maxSizeHint: 'Max 512 Mio par fichier',
+      maxSizeHint: 'Max 1 Gio par fichier',
+      fileTooLarge: 'Le fichier dépasse la limite d’envoi de 1 Gio',
+      uploadTooLargeTitle: 'Envoi refusé : fichier trop volumineux',
+      uploadTooLargeDesc:
+        'Le serveur a refusé cet envoi car le fichier dépasse la taille maximale autorisée pour un envoi unique. Compressez le fichier, divisez-le en plusieurs archives ou hébergez-le ailleurs et livrez-le via un lien d’accès.',
+      mediaFileTooLarge: 'Le fichier dépasse la limite d’envoi direct de 50 Mo',
       encodingFile: 'Encodage du fichier…',
       uploading: 'Téléchargement…',
       upload: 'Télécharger',

@@ -182,7 +182,11 @@ export * as fulfillmentApi from './fulfillment';
 
 // 数字商品 API (Supply Chain Phase 1.0 — Core MVP)
 export * as digitalAssetsApi from './digitalAssets';
-export { MAX_DIGITAL_ASSET_UPLOAD_BYTES, uploadDigitalFileStream } from './digitalAssets';
+export {
+  MAX_DIGITAL_ASSET_UPLOAD_BYTES,
+  UploadHttpError,
+  uploadDigitalFileStream,
+} from './digitalAssets';
 export type { UploadDigitalFileStreamInput, UploadDigitalFileStreamOptions } from './digitalAssets';
 
 // Storefront Config API (PG-201)

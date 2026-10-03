@@ -5379,8 +5379,8 @@ export const ja: PartialTranslationResource = {
       title: 'デジタルファイル',
       description: '購入後に購入者が受け取るファイルをアップロードしてください。',
       uploadFiles: 'クリックしてアップロード',
-      uploadHint: 'ドラッグ＆ドロップまたはクリックして選択（最大500MB/ファイル）',
-      fileTooLarge: '500MBのファイルサイズ制限を超えています',
+      uploadHint: 'ドラッグ＆ドロップまたはクリックして選択',
+      mediaUploadHint: 'ドラッグ＆ドロップまたはクリックして選択（最大 50 MB/ファイル）',
       saveFirst:
         'まずリストを保存してから、戻ってファイル、リンク、またはライセンス キーを添付します。',
       saveFirstTitle: 'デジタルアセットを添付するには下書きとして保存します',
@@ -5395,7 +5395,12 @@ export const ja: PartialTranslationResource = {
       uploadFileDesc:
         'ファイルはサーバー上で暗号化され、署名されたダウンロード URL を介して購入者に配信されます。',
       selectFile: 'ファイルを選択',
-      maxSizeHint: 'ファイルあたり最大 512 MiB',
+      maxSizeHint: 'ファイルあたり最大 1 GiB',
+      fileTooLarge: 'ファイルが 1 GiB のアップロード上限を超えています',
+      uploadTooLargeTitle: 'アップロードが拒否されました：ファイルが大きすぎます',
+      uploadTooLargeDesc:
+        'ファイルが 1 回のアップロードで許可される最大サイズを超えているため、サーバーがアップロードを拒否しました。ファイルを圧縮するか、複数のアーカイブに分割するか、外部にホストしてアクセスリンクで配信してください。',
+      mediaFileTooLarge: 'ファイルが 50 MB の直接アップロード上限を超えています',
       encodingFile: 'ファイルをエンコード中…',
       uploading: 'アップロード中…',
       upload: 'アップロード',

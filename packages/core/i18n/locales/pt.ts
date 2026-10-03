@@ -5464,8 +5464,8 @@ export const pt: PartialTranslationResource = {
       title: 'Arquivos digitais',
       description: 'Envie arquivos que os compradores receberão após a compra.',
       uploadFiles: 'Clique para enviar arquivos',
-      uploadHint: 'Arraste e solte ou clique para selecionar (máx. 500MB cada)',
-      fileTooLarge: 'excede o limite de 500MB',
+      uploadHint: 'Arraste e solte ou clique para selecionar',
+      mediaUploadHint: 'Arraste e solte ou clique para selecionar (máx. 50 MB cada)',
       saveFirst:
         'Salve a listagem primeiro e depois volte para anexar arquivos, links ou chaves de licença.',
       saveFirstTitle: 'Salvar como rascunho para anexar ativos digitais',
@@ -5480,7 +5480,12 @@ export const pt: PartialTranslationResource = {
       uploadFileDesc:
         'O arquivo é criptografado no servidor e entregue aos compradores por meio de um URL de download assinado.',
       selectFile: 'Selecione o arquivo',
-      maxSizeHint: 'Máximo de 512 MiB por arquivo',
+      maxSizeHint: 'Máximo de 1 GiB por arquivo',
+      fileTooLarge: 'O arquivo excede o limite de upload de 1 GiB',
+      uploadTooLargeTitle: 'Upload recusado: arquivo muito grande',
+      uploadTooLargeDesc:
+        'O servidor recusou este upload porque o arquivo excede o tamanho máximo permitido para um único envio. Comprima o arquivo, divida-o em vários pacotes ou hospede-o externamente e entregue-o com um link de acesso.',
+      mediaFileTooLarge: 'O arquivo excede o limite de upload direto de 50 MB',
       encodingFile: 'Arquivo de codificação…',
       uploading: 'Fazendo upload…',
       upload: 'Carregar',

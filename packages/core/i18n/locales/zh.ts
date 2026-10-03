@@ -5199,7 +5199,8 @@ export const zh: PartialTranslationResource = {
       description: '提供购买后交付给买家的文件、访问链接或许可证密钥。',
       // 旧版 DigitalFileSection 兼容（MobileListingWizard）
       uploadFiles: '点击上传文件',
-      uploadHint: '拖拽或点击选择文件（单文件最大 500MB）',
+      uploadHint: '拖拽或点击选择文件',
+      mediaUploadHint: '拖拽或点击选择文件（单文件最大 50 MB）',
       // 新版 DigitalAssetsManagerSection (Supply Chain Phase 1.0)
       saveFirst: '请先保存商品，然后回到此页面添加文件、链接或许可证密钥。',
       saveFirstTitle: '请先保存为草稿，再附加数字资产',
@@ -5216,8 +5217,12 @@ export const zh: PartialTranslationResource = {
       uploadFileTitle: '上传数字文件',
       uploadFileDesc: '文件在服务器加密存储，通过签名下载 URL 交付给买家。',
       selectFile: '选择文件',
-      maxSizeHint: '单文件最大 512 MiB',
-      fileTooLarge: '文件超过文件大小上传限制',
+      maxSizeHint: '单文件最大 1 GiB',
+      fileTooLarge: '文件超过 1 GiB 单次上传上限',
+      uploadTooLargeTitle: '上传被拒绝：文件过大',
+      uploadTooLargeDesc:
+        '服务器拒绝了本次上传：文件超过单次上传允许的最大体积。可以压缩文件、拆分成多个压缩包，或改为外部托管并用「访问链接」交付。',
+      mediaFileTooLarge: '文件超过 50 MB 直传上限',
       encodingFile: '正在编码文件…',
       uploading: '正在上传…',
       upload: '上传',

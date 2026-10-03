@@ -5774,7 +5774,8 @@ export const en: TranslationResource = {
       description: 'Provide files, access links, or license keys delivered after purchase.',
       // Legacy keys used by DigitalFileSection in MobileListingWizard
       uploadFiles: 'Click to upload files',
-      uploadHint: 'Drag and drop or click to select files (max 500MB each)',
+      uploadHint: 'Drag and drop or click to select files',
+      mediaUploadHint: 'Drag and drop or click to select files (max 50 MB each)',
       saveFirst: 'Save the listing first, then come back to attach files, links, or license keys.',
       saveFirstTitle: 'Save as draft to attach digital assets',
       publishBlockedToast:
@@ -5791,8 +5792,12 @@ export const en: TranslationResource = {
       uploadFileDesc:
         'File is encrypted on the server and delivered to buyers via a signed download URL.',
       selectFile: 'Select file',
-      maxSizeHint: 'Max 512 MiB per file',
-      fileTooLarge: 'File exceeds 512 MiB upload limit',
+      maxSizeHint: 'Max 1 GiB per file',
+      fileTooLarge: 'File exceeds the 1 GiB upload limit',
+      uploadTooLargeTitle: 'Upload rejected: file too large',
+      uploadTooLargeDesc:
+        'The server rejected this upload because the file is larger than the maximum allowed for a single upload. Compress the file, split it into several archives, or host it externally and deliver it with an access link.',
+      mediaFileTooLarge: 'File exceeds the 50 MB direct-upload limit',
       encodingFile: 'Encoding file…',
       uploading: 'Uploading…',
       upload: 'Upload',

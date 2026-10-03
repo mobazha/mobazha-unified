@@ -191,11 +191,37 @@ export function deactivateLicense(storeID: string, req: LicenseDeactivateRequest
 // =====================================================================
 
 /**
- * Hard cap mirrored from the backend stream handler (`http.MaxBytesReader`
- * caps at 1 GiB to leave headroom for AEAD framing overhead on top of the
- * 512 MiB plaintext limit). Keep this conservative — the UI rejects upfront.
+ * Hard cap mirrored from the backend stream handler
+ * (`digitalAssetMaxStreamSize` in mobazha/internal/api/digital_upload_stream_handler.go
+ * is 1 GiB). The client rejects upfront so sellers learn about the ceiling
+ * before waiting through a doomed upload.
+ *
+ * NOTE: this is the *gateway* ceiling, not necessarily the ceiling of a given
+ * deployment. Any reverse proxy in front of the gateway (for example a CDN)
+ * can enforce a smaller request-body limit and will answer HTTP 413 before the
+ * request ever reaches the gateway — see `UploadHttpError` handling below.
  */
-export const MAX_DIGITAL_ASSET_UPLOAD_BYTES = 512 * 1024 * 1024;
+export const MAX_DIGITAL_ASSET_UPLOAD_BYTES = 1024 * 1024 * 1024;
+
+/**
+ * Error raised when the upload endpoint returns a non-2xx status.
+ *
+ * `status` lets callers branch on the failure instead of string-matching the
+ * message: 413 in particular can come from a reverse proxy/CDN that rejects
+ * the body before our gateway sees it, in which case the response body is an
+ * HTML error page rather than the API's JSON envelope.
+ */
+export class UploadHttpError extends Error {
+  readonly status: number;
+  readonly responseText: string;
+
+  constructor(message: string, status: number, responseText = '') {
+    super(message);
+    this.name = 'UploadHttpError';
+    this.status = status;
+    this.responseText = responseText;
+  }
+}
 
 /**
  * Maximum time to wait for the upload to complete, including network
@@ -303,7 +329,7 @@ export function uploadDigitalFileStream(
     xhr.onload = () => {
       cleanup();
       if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error(parseUploadError(xhr.responseText, xhr.status)));
+        reject(parseUploadError(xhr.responseText, xhr.status));
         return;
       }
       try {
@@ -363,16 +389,18 @@ function parseUploadResponse(text: string): DigitalAssetInfo {
   return data as DigitalAssetInfo;
 }
 
-function parseUploadError(text: string, status: number): string {
+function parseUploadError(text: string, status: number): UploadHttpError {
   if (text) {
     try {
-      const parsed = JSON.parse(text) as { error?: { message?: string } };
-      if (parsed?.error?.message) return parsed.error.message;
+      const parsed = JSON.parse(text) as { error?: { message?: string } | string };
+      const message =
+        typeof parsed?.error === 'string' ? parsed.error : parsed?.error?.message;
+      if (message) return new UploadHttpError(message, status, text);
     } catch {
-      /* fall through */
+      /* Not JSON — reverse proxies and CDNs answer with an HTML error page. */
     }
   }
-  return `Upload failed (HTTP ${status})`;
+  return new UploadHttpError(`Upload failed (HTTP ${status})`, status, text);
 }
 
 function toAbortError(signal?: AbortSignal): Error {

@@ -5544,8 +5544,8 @@ export const de: PartialTranslationResource = {
       title: 'Digitale Dateien',
       description: 'Laden Sie Dateien hoch, die Käufer nach dem Kauf erhalten.',
       uploadFiles: 'Klicken Sie zum Hochladen',
-      uploadHint: 'Drag & Drop oder klicken zur Auswahl (max. 500MB pro Datei)',
-      fileTooLarge: 'überschreitet das Dateigrößenlimit von 500MB',
+      uploadHint: 'Drag & Drop oder klicken zur Auswahl',
+      mediaUploadHint: 'Drag & Drop oder klicken zur Auswahl (max. 50 MB pro Datei)',
       saveFirst:
         'Speichern Sie zuerst die Auflistung und kehren Sie dann zurück, um Dateien, Links oder Lizenzschlüssel anzuhängen.',
       saveFirstTitle: 'Als Entwurf speichern, um digitale Assets anzuhängen',
@@ -5560,7 +5560,12 @@ export const de: PartialTranslationResource = {
       uploadFileDesc:
         'Die Datei wird auf dem Server verschlüsselt und über eine signierte Download-URL an Käufer geliefert.',
       selectFile: 'Datei auswählen',
-      maxSizeHint: 'Maximal 512 MiB pro Datei',
+      maxSizeHint: 'Maximal 1 GiB pro Datei',
+      fileTooLarge: 'Die Datei überschreitet das Upload-Limit von 1 GiB',
+      uploadTooLargeTitle: 'Upload abgelehnt: Datei zu groß',
+      uploadTooLargeDesc:
+        'Der Server hat diesen Upload abgelehnt, weil die Datei die für einen einzelnen Upload zulässige Maximalgröße überschreitet. Komprimiere die Datei, teile sie in mehrere Archive auf oder hoste sie extern und liefere sie per Zugriffslink aus.',
+      mediaFileTooLarge: 'Die Datei überschreitet das Direkt-Upload-Limit von 50 MB',
       encodingFile: 'Codierungsdatei…',
       uploading: 'Hochladen…',
       upload: 'Hochladen',

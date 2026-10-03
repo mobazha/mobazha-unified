@@ -5318,8 +5318,8 @@ export const ko: PartialTranslationResource = {
       title: '디지털 파일',
       description: '구매 후 구매자가 받을 파일을 업로드하세요.',
       uploadFiles: '클릭하여 파일 업로드',
-      uploadHint: '드래그 앤 드롭 또는 클릭하여 선택 (파일당 최대 500MB)',
-      fileTooLarge: '500MB 파일 크기 제한을 초과합니다',
+      uploadHint: '드래그 앤 드롭 또는 클릭하여 선택',
+      mediaUploadHint: '드래그 앤 드롭 또는 클릭하여 선택 (파일당 최대 50MB)',
       saveFirst: '먼저 목록을 저장한 다음 다시 돌아와서 파일, 링크 또는 라이센스 키를 첨부하세요.',
       saveFirstTitle: '초안으로 저장하여 디지털 자산 첨부',
       publishBlockedToast:
@@ -5332,7 +5332,12 @@ export const ko: PartialTranslationResource = {
       uploadFileDesc:
         '파일은 서버에서 암호화되어 서명된 다운로드 URL을 통해 구매자에게 전달됩니다.',
       selectFile: '파일 선택',
-      maxSizeHint: '파일당 최대 512MiB',
+      maxSizeHint: '파일당 최대 1GiB',
+      fileTooLarge: '파일이 1GiB 업로드 한도를 초과했습니다',
+      uploadTooLargeTitle: '업로드 거부됨: 파일이 너무 큽니다',
+      uploadTooLargeDesc:
+        '파일이 한 번에 업로드할 수 있는 최대 크기를 초과하여 서버가 업로드를 거부했습니다. 파일을 압축하거나 여러 압축 파일로 나누거나, 외부에 호스팅하고 액세스 링크로 제공하세요.',
+      mediaFileTooLarge: '파일이 50MB 직접 업로드 한도를 초과했습니다',
       encodingFile: '인코딩 파일…',
       uploading: '업로드 중…',
       upload: '업로드',

@@ -18,6 +18,7 @@ import {
   useI18n,
   digitalAssetsApi,
   MAX_DIGITAL_ASSET_UPLOAD_BYTES,
+  UploadHttpError,
   uploadDigitalFileStream,
 } from '@mobazha/core';
 import type { DigitalAssetInfo, DigitalAssetType } from '@mobazha/core';
@@ -501,7 +502,7 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
         toast({
           title: t('common.error', { defaultValue: 'Error' }),
           description: t('listing.digital.fileTooLarge', {
-            defaultValue: 'File exceeds 512 MiB upload limit',
+            defaultValue: 'File exceeds the 1 GiB upload limit',
           }),
           variant: 'destructive',
         });
@@ -585,6 +586,22 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
         toast({
           title: t('listing.digital.uploadCancelled', { defaultValue: 'Upload cancelled' }),
         });
+      } else if (err instanceof UploadHttpError && err.status === 413) {
+        // 413 usually comes from a reverse proxy / CDN in front of the
+        // gateway (which answers with an HTML error page, not our JSON
+        // envelope), so the size ceiling here is not the one the client
+        // checked against. Explain the rejection instead of echoing
+        // "Upload failed (HTTP 413)".
+        toast({
+          title: t('listing.digital.uploadTooLargeTitle', {
+            defaultValue: 'Upload rejected: file too large',
+          }),
+          description: t('listing.digital.uploadTooLargeDesc', {
+            defaultValue:
+              'The server rejected this upload because the file exceeds the maximum size allowed for a single upload. Compress the file, split it into several archives, or host it externally and deliver it with an access link instead.',
+          }),
+          variant: 'destructive',
+        });
       } else {
         toast({
           title: t('common.error', { defaultValue: 'Error' }),
@@ -653,7 +670,7 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {t('listing.digital.maxSizeHint', {
-                  defaultValue: 'Max 512 MiB per file',
+                  defaultValue: 'Max 1 GiB per file',
                 })}
               </p>
             </button>

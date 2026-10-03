@@ -17,8 +17,15 @@ interface DigitalFileSectionProps {
   className?: string;
 }
 
-/** Max single file size: 500MB */
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
+/**
+ * Max single file size for `POST /media/files`.
+ *
+ * The gateway handler (mobazha/internal/api/file_handlers.go) wraps the body
+ * in `http.MaxBytesReader(w, r.Body, 50<<20)`, so anything above 50 MiB is
+ * rejected with HTTP 413. The previous 500 MB constant let sellers pick files
+ * that the server was guaranteed to refuse.
+ */
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -26,6 +33,23 @@ function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+/**
+ * Turn a failed `POST /media/files` response into copy a seller can act on.
+ * 413 is the common case — the gateway caps the body at 50 MiB — and the
+ * server sends a bare error string, so it is worth naming the limit here.
+ */
+async function describeUploadFailure(
+  response: Response,
+  t: (key: string, params?: Record<string, string | number>) => string
+): Promise<string> {
+  if (response.status === 413) {
+    return t('listing.digital.mediaFileTooLarge', {
+      defaultValue: 'File exceeds the 50 MB direct-upload limit',
+    });
+  }
+  return t('listing.digital.uploadFailed', { defaultValue: 'Upload failed' });
 }
 
 export function DigitalFileSection({
@@ -47,9 +71,12 @@ export function DigitalFileSection({
 
       for (const file of Array.from(selectedFiles)) {
         if (file.size > MAX_FILE_SIZE) {
+          const limitMessage = t('listing.digital.mediaFileTooLarge', {
+            defaultValue: 'File exceeds the 50 MB direct-upload limit',
+          });
           toast({
             title: t('common.error'),
-            description: `${file.name} ${t('listing.digital.fileTooLarge')}`,
+            description: `${file.name} ${limitMessage}`,
             variant: 'destructive',
           });
           continue;
@@ -72,9 +99,24 @@ export function DigitalFileSection({
               file: result.hash || '',
               size: file.size,
             });
+          } else {
+            // Previously the failure branch was missing entirely and the file
+            // silently vanished from the list. Report what the server said.
+            toast({
+              title: t('common.error'),
+              description: `${file.name}: ${await describeUploadFailure(response, t)}`,
+              variant: 'destructive',
+            });
           }
         } catch (error) {
           console.error('File upload failed:', error);
+          toast({
+            title: t('common.error'),
+            description: `${file.name}: ${t('listing.digital.uploadFailed', {
+              defaultValue: 'Upload failed',
+            })}`,
+            variant: 'destructive',
+          });
         }
       }
 
@@ -138,7 +180,9 @@ export function DigitalFileSection({
       >
         <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm font-medium text-foreground">{t('listing.digital.uploadFiles')}</p>
-        <p className="text-xs text-muted-foreground mt-1">{t('listing.digital.uploadHint')}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {t('listing.digital.mediaUploadHint')}
+        </p>
       </div>
 
       <input
