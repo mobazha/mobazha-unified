@@ -483,19 +483,37 @@ export function AuthProvider({
     });
   }, [isInitialized, isTGMiniApp, telegramStartParam, searchParams, router]);
 
-  if (!isInitialized || isProcessingOAuth) {
-    const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : undefined);
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-          {message && <p className="text-muted-foreground">{message}</p>}
-        </div>
-      </div>
-    );
-  }
+  /**
+   * Session restore covers the page instead of replacing it.
+   *
+   * This used to `return` the spinner alone while `!isInitialized`, and because
+   * this provider wraps `MainContent` in the root layout, no page content ever
+   * reached the server-rendered HTML: crawlers, link unfurlers and no-JS visitors
+   * received a document whose only text was the <title> (35 characters on `/`,
+   * 25 on a product page), and structured data rendered inside `children` — for
+   * example the `Product` JSON-LD in `app/product/[slug]/layout.tsx` — was absent
+   * entirely. See mobazha/mobazha-unified#32.
+   *
+   * Rendering `children` and covering them keeps the previous user-visible
+   * behaviour (an opaque full-screen spinner while the session is restored) while
+   * letting the page render on the server.
+   */
+  const isRestoringSession = !isInitialized || isProcessingOAuth;
+  const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : undefined);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {isRestoringSession && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+            {message && <p className="text-muted-foreground">{message}</p>}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default AuthProvider;
