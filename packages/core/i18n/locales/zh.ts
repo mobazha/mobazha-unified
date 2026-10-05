@@ -81,6 +81,8 @@ export const zh: PartialTranslationResource = {
     success: '成功',
     cancel: '取消',
     confirm: '确认',
+   autoTranslated: '已自动翻译',
+   original: '原文',
     accept: '接受',
     decline: '拒绝',
     save: '保存',

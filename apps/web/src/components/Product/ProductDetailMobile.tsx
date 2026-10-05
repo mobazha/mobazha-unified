@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
+import { TranslatedText, htmlToPlainText } from '@/components/TranslatedText/TranslatedText';
 import {
   getImageUrl,
   decodeHtmlEntities,
@@ -331,7 +332,10 @@ export function ProductDetailMobile({
         <div>
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground leading-tight flex-1">
-              {decodeHtmlEntities(product.item.title)}
+              <TranslatedText
+                text={decodeHtmlEntities(product.item.title)}
+                sourceLang={product.metadata?.language}
+              />
             </h1>
             <ProductMoreButton product={product} />
           </div>
@@ -473,7 +477,12 @@ export function ProductDetailMobile({
                   href={`/marketplace?tag=${tag}`}
                   className="border border-border bg-background text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary px-2 py-0.5 text-xs touch-feedback"
                 >
-                  #{tag}
+                  #
+                  <TranslatedText
+                    text={tag}
+                    sourceLang={product.metadata?.language}
+                    showBadge={false}
+                  />
                 </Link>
               ))}
             </div>
@@ -574,11 +583,18 @@ export function ProductDetailMobile({
                 />
               </svg>
             </summary>
-            <div
-              className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground text-sm pb-3 [&_a]:text-primary [&_a]:underline"
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
-              }}
+            <TranslatedText
+              as="div"
+              text={htmlToPlainText(product.item.description)}
+              sourceLang={product.metadata?.language}
+              className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground text-sm pb-3 whitespace-pre-line [&_a]:text-primary [&_a]:underline"
+              renderOriginal={() => (
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
+                  }}
+                />
+              )}
             />
           </details>
 

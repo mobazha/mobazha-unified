@@ -85,6 +85,8 @@ export const en: TranslationResource = {
     success: 'Success',
     cancel: 'Cancel',
     confirm: 'Confirm',
+   autoTranslated: 'Auto-translated',
+   original: 'Original',
     accept: 'Accept',
     decline: 'Decline',
     save: 'Save',

@@ -185,3 +185,6 @@ export * from './useFeature';
 
 // Product import workbench (AI smart import)
 export * from './useProductImportWorkbench';
+
+// 商品内容自动翻译（标题/描述/标签跟随界面语言）
+export * from './useAutoTranslate';

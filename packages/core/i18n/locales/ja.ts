@@ -88,6 +88,8 @@ export const ja: PartialTranslationResource = {
     success: '成功',
     cancel: 'キャンセル',
     confirm: '確認',
+   autoTranslated: '自動翻訳',
+   original: '原文',
     accept: '承認',
     decline: '拒否',
     save: '保存',

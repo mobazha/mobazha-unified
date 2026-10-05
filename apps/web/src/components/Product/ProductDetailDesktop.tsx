@@ -26,6 +26,7 @@ import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { ShippingOptionsSection } from './ShippingOptionsSection';
 import { MoreFromStore } from './MoreFromStore';
 import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
+import { TranslatedText, htmlToPlainText } from '@/components/TranslatedText/TranslatedText';
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
@@ -410,7 +411,10 @@ export function ProductDetailDesktop({
                     isModal ? 'text-base lg:text-lg mb-1' : 'text-lg sm:text-xl lg:text-2xl mb-1.5'
                   )}
                 >
-                  {decodeHtmlEntities(product.item.title)}
+                  <TranslatedText
+                    text={decodeHtmlEntities(product.item.title)}
+                    sourceLang={product.metadata?.language}
+                  />
                 </h1>
                 {!isModal && (
                   <ShareButton
@@ -668,7 +672,12 @@ export function ProductDetailDesktop({
                           : 'px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm'
                       )}
                     >
-                      #{tag}
+                      #
+                      <TranslatedText
+                        text={tag}
+                        sourceLang={product.metadata?.language}
+                        showBadge={false}
+                      />
                     </Link>
                   ))}
                 </div>
@@ -1056,14 +1065,21 @@ export function ProductDetailDesktop({
               >
                 {t('product.description')}
               </h2>
-              <div
+              <TranslatedText
+                as="div"
+                text={htmlToPlainText(product.item.description)}
+                sourceLang={product.metadata?.language}
                 className={cn(
-                  'prose dark:prose-invert max-w-none text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80',
+                  'prose dark:prose-invert max-w-none text-muted-foreground whitespace-pre-line [&_a]:text-primary [&_a]:underline [&_a:hover]:text-primary/80',
                   isModal ? 'prose-sm text-sm' : 'prose-sm sm:prose text-sm sm:text-base'
                 )}
-                dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
-                }}
+                renderOriginal={() => (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
+                    }}
+                  />
+                )}
               />
             </Card>
 

@@ -89,6 +89,8 @@ export const fr: PartialTranslationResource = {
     success: 'Succès',
     cancel: 'Annuler',
     confirm: 'Confirmer',
+   autoTranslated: 'Traduit automatiquement',
+   original: 'Original',
     accept: 'Accepter',
     decline: 'Refuser',
     save: 'Enregistrer',

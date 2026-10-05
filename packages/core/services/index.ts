@@ -22,6 +22,9 @@ export * from './payment';
 // 货币服务
 export * from './currencyService';
 
+// 商品内容翻译（卖家填写的标题/描述/标签）
+export * from './translation/contentTranslation';
+
 // 认证仲裁员服务
 export * from './verifiedModerators';
 

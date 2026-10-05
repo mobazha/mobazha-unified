@@ -84,6 +84,8 @@ export const ko: PartialTranslationResource = {
     success: '성공',
     cancel: '취소',
     confirm: '확인',
+   autoTranslated: '자동 번역됨',
+   original: '원문',
     accept: '수락',
     decline: '거절',
     save: '저장',

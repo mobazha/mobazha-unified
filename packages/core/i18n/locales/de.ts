@@ -90,6 +90,8 @@ export const de: PartialTranslationResource = {
     success: 'Erfolg',
     cancel: 'Abbrechen',
     confirm: 'Bestätigen',
+   autoTranslated: 'Automatisch übersetzt',
+   original: 'Original',
     accept: 'Akzeptieren',
     decline: 'Ablehnen',
     save: 'Speichern',

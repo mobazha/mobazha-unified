@@ -86,6 +86,8 @@ export const ru: PartialTranslationResource = {
     success: 'Успех',
     cancel: 'Отмена',
     confirm: 'Подтвердить',
+   autoTranslated: 'Переведено автоматически',
+   original: 'Оригинал',
     accept: 'Принять',
     decline: 'Отклонить',
     save: 'Сохранить',
