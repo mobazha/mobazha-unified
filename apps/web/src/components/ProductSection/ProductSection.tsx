@@ -50,7 +50,8 @@ interface Product {
 export interface ProductSectionProps {
   title: string;
   subtitle?: string;
-  products: Product[];
+  /** 首页传入的是 DisplayProduct 形态（带扁平 productType），这里两种来源都兼容 */
+  products: Array<Product & { productType?: string }>;
   isLoading?: boolean;
   showViewAll?: boolean;
   viewAllHref?: string;
@@ -175,6 +176,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       freeShipping={product.freeShipping}
                       isDigital={product.isDigital}
                       contractType={product.contractType}
+                      productType={product.productType ?? product.item?.productType}
                       tokenStandard={product.tokenStandard}
                       rwaTradeMode={product.rwaTradeMode}
                       hasVerifiedModerator={hasVerifiedMod(product.moderators)}

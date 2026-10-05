@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrencyFormat, useI18n, identityNameProps } from '@mobazha/core';
+import { useCurrencyFormat, useI18n, identityNameProps, resolveProductKind } from '@mobazha/core';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -69,6 +69,10 @@ export interface ProductCardProps {
   isDigital?: boolean;
   /** 商品合约类型 */
   contractType?: ProductContractType;
+  /** 商品类型（productType），用于推导普通 / 二手 / 手作大分类 */
+  productType?: string;
+  /** 商品成色（NEW / USED_* / REFURBISHED）；列表数据可能没有，详情类页面会传 */
+  condition?: string | null;
   /** 代币标准 (ERC721/ERC1155/ERC3525) */
   tokenStandard?: TokenStandard;
   /** RWA 交易模式 (0=instant, 1=confirm_required) */
@@ -193,6 +197,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ? contractTypeConfig.DIGITAL_GOOD
       : null;
 
+  // 大分类（普通 / 二手 / 手作）：只有真的拿到类型或成色时才显示，
+  // 否则未传参的卡片会被误标成「全新」。
+  const hasKindInput = Boolean(productType) || Boolean(condition);
+  const productKind = hasKindInput ? resolveProductKind({ productType, condition }) : null;
+  const productKindLabel =
+    productKind === 'handmade'
+      ? t('product.kind.handmade', { defaultValue: 'Handmade' })
+      : productKind === 'used'
+        ? t('product.kind.used', { defaultValue: 'Used' })
+        : productKind === 'new'
+          ? t('product.kind.new', { defaultValue: 'New' })
+          : '';
+
   const formatOptions = { isMinimalUnit: priceInMinimalUnit, divisibility };
   const formattedAmount = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
   const formattedPrice =
@@ -245,6 +262,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       className={cn(
         'overflow-hidden group cursor-pointer transition-all duration-200',
         'hover:shadow-lg hover:-translate-y-0.5',
+        productKind === 'handmade' && 'border border-primary/40',
+        productKind === 'used' && 'border border-warning/40',
         'active:scale-[0.98] active:opacity-90',
         status === 'draft' && 'opacity-70',
         className
@@ -292,6 +311,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           >
             -{discountPercent}%
+          </span>
+        )}
+
+        {/* 商品大分类标签 - 右上角（有合约类型标签时下移一行，避免重叠）*/}
+        {productKind && (
+          <span
+            className={cn(
+              'absolute right-2 text-xs font-medium px-2 py-1 rounded z-10 border shadow-sm',
+              typeConfig?.label ? 'top-11' : 'top-2',
+              productKind === 'handmade'
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : productKind === 'used'
+                  ? 'bg-warning/15 text-foreground border-warning/40'
+                  : 'bg-muted text-foreground border-border'
+            )}
+          >
+            {productKindLabel}
           </span>
         )}
 

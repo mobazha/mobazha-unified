@@ -1426,6 +1426,7 @@ export default function StorePage() {
                                   product.freeShipping && product.freeShipping.length > 0
                                 }
                                 contractType={product.contractType as ProductContractType}
+                                productType={product.productType}
                                 tokenStandard={product.tokenStandard}
                                 rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                                 hasVerifiedModerator={hasVerifiedMod(product.moderators)}

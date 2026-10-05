@@ -60,6 +60,8 @@ interface DisplayProduct {
   isDigital?: boolean;
   priceFrom?: boolean;
   moderators?: string[];
+  /** 商品类型（用于推导普通 / 二手 / 手作标签） */
+  productType?: string;
 }
 
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
@@ -91,6 +93,7 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     freeShipping: !!item.freeShipping?.length,
     isDigital: item.contractType === 'SERVICE' || item.contractType === 'DIGITAL_GOOD',
     moderators: item.moderators,
+    productType: item.productType,
   };
 }
 

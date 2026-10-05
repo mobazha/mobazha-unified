@@ -39,6 +39,8 @@ export interface DisplayProduct {
   tokenStandard?: string;
   rwaTradeMode?: number;
   moderators?: string[];
+  /** 商品类型（用于推导普通 / 二手 / 手作标签） */
+  productType?: string;
 }
 
 export interface SearchUser {
@@ -186,6 +188,7 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     tokenStandard: item.tokenStandard,
     rwaTradeMode: item.rwaTradeMode,
     moderators: item.moderators,
+    productType: item.productType,
   };
 }
 

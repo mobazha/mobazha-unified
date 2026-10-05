@@ -142,6 +142,7 @@ export default function StoreCollectionPage() {
                     divisibility={priceFields.divisibility}
                     priceFrom={priceFields.priceFrom}
                     contractType={product.contractType as ProductContractType}
+                    productType={product.productType}
                     rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                     vendorPeerID={peerId}
                     rating={product.averageRating}

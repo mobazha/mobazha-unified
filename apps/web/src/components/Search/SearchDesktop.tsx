@@ -44,6 +44,7 @@ export function SearchDesktop() {
         rating={product.rating}
         reviewCount={product.reviewCount}
         contractType={product.contractType}
+        productType={product.productType}
         tokenStandard={product.tokenStandard}
         rwaTradeMode={product.rwaTradeMode}
         hasVerifiedModerator={search.hasVerifiedMod(product.moderators)}

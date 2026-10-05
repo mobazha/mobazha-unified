@@ -153,6 +153,7 @@ export default function CollectionDetailPage() {
                     divisibility={priceFields.divisibility}
                     priceFrom={priceFields.priceFrom}
                     contractType={product.contractType as ProductContractType}
+                    productType={product.productType}
                     rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                     vendorPeerID={peerId ?? undefined}
                     rating={product.averageRating}

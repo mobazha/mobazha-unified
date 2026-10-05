@@ -291,6 +291,7 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
               rating={product.rating}
               reviewCount={product.reviewCount}
               contractType={product.contractType}
+              productType={product.productType}
               tokenStandard={product.tokenStandard}
               rwaTradeMode={product.rwaTradeMode}
               hasVerifiedModerator={search.hasVerifiedMod(product.moderators)}

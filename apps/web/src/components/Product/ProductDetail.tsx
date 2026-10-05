@@ -42,6 +42,7 @@ import {
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
+import { resolveProductKind } from '@mobazha/core';
 import {
   isCollectibleDemoCardImageUrl,
   resolveCollectibleListingImageUrl,
@@ -607,6 +608,29 @@ export function ProductDetail({
   const tags = filterPublicProductDisplayTags(rawTags);
   const relatedListingsScopeTag = resolveRelatedListingsScopeTag(rawTags);
   const category = product.item.productType || '';
+  const productKind = resolveProductKind({
+    productType: product.item.productType,
+    condition: product.item.condition,
+  });
+  // 成色标签复用现有的 listing.conditions.* 文案键，避免同一字段在页面里出现两种写法
+  const conditionLabelKeys: Record<string, string> = {
+    NEW: 'listing.conditions.new',
+    USED_EXCELLENT: 'listing.conditions.usedExcellent',
+    USED_GOOD: 'listing.conditions.usedGood',
+    USED_POOR: 'listing.conditions.usedPoor',
+    REFURBISHED: 'listing.conditions.refurbished',
+  };
+  const conditionLabelKey = conditionLabelKeys[(product.item.condition || '').toUpperCase()];
+  const conditionLabel = conditionLabelKey
+    ? t(conditionLabelKey)
+    : (product.item.condition || '').replace(/_/g, ' ');
+  // 三类标签：普通商品 / 二手物品 / 手工艺品（与商品卡文案保持一致；二手在详情页保留更细的成色等级）
+  const productKindLabel =
+    productKind === 'handmade'
+      ? t('product.kind.handmade', { defaultValue: 'Handmade' })
+      : productKind === 'used'
+        ? conditionLabel
+        : t('product.kind.new', { defaultValue: 'New' });
 
   const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
   const isRwaToken =
@@ -977,18 +1001,20 @@ export function ProductDetail({
                   </span>
                 </div>
               )}
-              {/* Condition Badge */}
-              {product.item.condition && (
-                <div
-                  className={cn(
-                    'inline-flex items-center gap-1 rounded-md bg-muted text-foreground border border-border',
-                    isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-sm'
-                  )}
-                >
-                  <span className="font-medium">{t('product.condition')}:</span>
-                  <span>{product.item.condition.replace('_', ' ')}</span>
-                </div>
-              )}
+              {/* 商品大分类：普通商品 / 二手物品 / 手工艺品（成色细节并入同一枚标签）*/}
+              <div
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-md border',
+                  productKind === 'handmade'
+                    ? 'bg-primary/10 border-primary/40 text-primary'
+                    : productKind === 'used'
+                      ? 'bg-warning/15 border-warning/40 text-foreground'
+                      : 'bg-muted border-border text-foreground',
+                  isModal ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-sm'
+                )}
+              >
+                <span className="font-medium">{productKindLabel}</span>
+              </div>
               {/* Weight Badge */}
               {product.item.grams !== undefined && product.item.grams > 0 && (
                 <div
