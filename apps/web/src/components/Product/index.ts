@@ -1,5 +1,3 @@
-export { ProductDetail } from './ProductDetail';
-export type { ProductDetailProps } from './ProductDetail';
 
 export { ProductDetailDesktop } from './ProductDetailDesktop';
 export { ProductDetailMobile } from './ProductDetailMobile';

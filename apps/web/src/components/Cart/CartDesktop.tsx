@@ -6,7 +6,7 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { buildProductHref } from '@mobazha/core';
+import { buildProductHref, useTranslatedTexts } from '@mobazha/core';
 import { useCart } from '@/hooks/useCart';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
@@ -27,6 +27,15 @@ export function CartDesktop() {
     t,
     renderPairedPrice,
   } = useCart();
+
+  // The seller's titles, in the visitor's language. The stored lines below are
+  // untouched: a cart line is what becomes an order.
+  const cartTitles = items.map(item => item.listing.title);
+  const translatedTitles = useTranslatedTexts(cartTitles);
+  const titleFor = (title: string) => {
+    const at = cartTitles.indexOf(title);
+    return (at >= 0 ? translatedTitles[at] : undefined) ?? title;
+  };
 
   if (items.length === 0) {
     return (
@@ -155,7 +164,7 @@ export function CartDesktop() {
                             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden">
                               <ProductImageNative
                                 src={thumbUrl}
-                                alt={item.listing.title}
+                                alt={titleFor(item.listing.title)}
                                 iconSize="sm"
                               />
                             </div>
@@ -167,7 +176,7 @@ export function CartDesktop() {
                               className="min-w-0"
                             >
                               <h3 className="font-medium text-foreground text-sm line-clamp-2 hover:text-primary">
-                                {item.listing.title}
+                                {titleFor(item.listing.title)}
                               </h3>
                             </Link>
 

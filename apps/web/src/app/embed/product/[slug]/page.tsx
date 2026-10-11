@@ -8,6 +8,7 @@ import { buildEmbedProductHref } from '@mobazha/core/utils/productUrl';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 import { getSiteUrl } from '@/lib/siteUrl';
 
+import { getLocale } from '@mobazha/core';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
 
 const API_BASE = SSR_API_BASE;
@@ -49,6 +50,57 @@ async function fetchProduct(slug: string, peerID: string): Promise<ProductData |
     return raw?.listing ?? raw ?? null;
   } catch {
     return null;
+  }
+}
+
+/** The language the widget should speak: the visitor's, when there is one. */
+function embedLanguage(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    return getLocale().split('-')[0].toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Asks the node for the visitor's language before anything is drawn.
+ *
+ * The widget is a page a visitor lands on, so translating here rather than after
+ * the first paint means they never see it change language under them — and
+ * anything that reads the page rather than running it, a crawler or a link
+ * preview, sees the translated words too. A node with no engine, or one that
+ * cannot answer, hands the text back unchanged, which is what this falls back
+ * to: a title in the seller's language is better than no title.
+ */
+async function translateForEmbed(texts: string[], language: string): Promise<string[]> {
+  if (!language || texts.length === 0 || texts.every(item => !item)) return texts;
+
+  try {
+    const res = await fetch(`${API_BASE}/v1/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetLang: language,
+        items: texts.map((item, index) => ({ id: String(index), text: item })),
+      }),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return texts;
+
+    const payload = unwrapEnvelope<{
+      results?: Array<{ id?: string; text?: string; translated?: boolean }>;
+    }>(await res.json());
+
+    const out = [...texts];
+    for (const result of payload?.results ?? []) {
+      const at = Number(result?.id);
+      if (!Number.isInteger(at) || at < 0 || at >= out.length) continue;
+      if (result?.translated && result?.text) out[at] = result.text;
+    }
+    return out;
+  } catch {
+    return texts;
   }
 }
 
@@ -149,7 +201,9 @@ export default async function EmbedProductPage({
   const { item, vendorID } = product;
   const firstImage = item.images?.[0];
   const imageUrl = getImageUrl(firstImage?.medium || firstImage?.small || firstImage?.original);
-  const title = item.title || slug;
+  // The seller's words, in the visitor's language.
+  const [embedTitle] = await translateForEmbed([item.title ?? ''], embedLanguage());
+  const title = embedTitle || item.title || slug;
   const price = resolveEmbedDisplayPrice(item);
   const description = item.description ? stripHtml(item.description).slice(0, 100) : '';
   const vendorName = vendorID?.handle || '';

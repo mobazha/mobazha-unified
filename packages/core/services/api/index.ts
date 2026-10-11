@@ -370,3 +370,9 @@ export type {
   ChannelTypesResponse,
   DetectedChat,
 } from './notificationChannels';
+
+// Buy requests (wanted board).
+// Types live in ../../types/buyRequest and are re-exported from ./buyRequest;
+// the barrel only exposes the service namespace to avoid duplicate type exports.
+export * as buyRequestApi from './buyRequest';
+export * as translationApi from './translation';

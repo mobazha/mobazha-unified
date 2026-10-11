@@ -1,5 +1,8 @@
 echo "🔍 Pre-commit validation..."
 
+# i18n guard: block newly introduced mixed-language defects before they reach review.
+node scripts/check-i18n.mjs
+
 # 运行 lint-staged
 pnpm lint-staged
 

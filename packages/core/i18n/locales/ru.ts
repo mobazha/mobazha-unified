@@ -75,6 +75,10 @@ export const ru: PartialTranslationResource = {
     },
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: 'Машинный перевод',
+    machineTranslatedHint: 'Показано на вашем языке. Оригинал написал продавец.',
     connecting: 'Подключение...',
     loadingInterrupted: 'Загрузка прервана',
     or: 'или',
@@ -4758,6 +4762,9 @@ export const ru: PartialTranslationResource = {
       orderExpired: 'Заказ истёк',
       orderStaleWarning: 'Внимание к заказу',
       paymentCancelled: 'Платёж отменён',
+      buyRequestOfferReceived: "Новое предложение по вашему запросу",
+      buyRequestOfferAccepted: "Ваше предложение выбрано",
+      buyRequestOfferDeclined: "Предложение не выбрано",
       paymentExpired: 'Срок оплаты истёк',
       orderRated: 'Отзыв получен',
     },
@@ -4803,6 +4810,9 @@ export const ru: PartialTranslationResource = {
       orderStaleWarningWithId: 'Заказ №{{orderId}} может требовать внимания',
       orderStaleWarningNoId: 'Заказ может требовать внимания',
       defaultNotification: 'Уведомление',
+      buyRequestOfferReceived: "Продавец предложил {{amount}} {{currency}} за «{{title}}».",
+      buyRequestOfferAccepted: "Ваше предложение по «{{title}}» выбрано. Опубликуйте его как товар, чтобы можно было оформить заказ.",
+      buyRequestOfferDeclined: "По запросу «{{title}}» выбрано другое предложение.",
       orderRatedNoId: 'Покупатель оставил отзыв о вашем заказе',
       orderRatedWithId: 'Покупатель оставил отзыв о заказе №{{orderId}}.',
     },

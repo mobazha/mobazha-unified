@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Shield, Flag, EyeOff, Pencil, Copy, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrencyFormat, useI18n, identityNameProps } from '@mobazha/core';
+import { useCurrencyFormat, useI18n, useTranslatedTexts, identityNameProps } from '@mobazha/core';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -154,6 +154,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { formatLocalPrice } = useCurrencyFormat();
   const { t } = useI18n();
   const [isHovered, setIsHovered] = useState(false);
+
+  // The seller named this product in their own language; show it in the
+  // visitor's. The title is decoded first so the engine sees the words rather
+  // than their HTML entities.
+  const decodedTitle = useMemo(() => decodeHtmlEntities(title), [title]);
+  const [translatedTitle] = useTranslatedTexts([decodedTitle]);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const prefetchedRef = useRef(false);
@@ -451,7 +457,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <CardContent className={cn('space-y-1', compact ? 'p-2' : 'p-2.5 sm:p-3')}>
         {/* 标题 */}
         <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-tight">
-          {decodeHtmlEntities(title)}
+          {translatedTitle || decodedTitle}
         </h3>
 
         {/* 价格和评分 - 同一行 */}

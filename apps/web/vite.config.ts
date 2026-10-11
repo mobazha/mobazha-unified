@@ -342,17 +342,37 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
           next();
           return;
         }
-        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone' && !isSovereign) {
+        // An explicitly configured auth mode must win over both this payload and
+        // the committed public/runtime-config.js placeholder, which asserts
+        // 'hosted'. Without this, NEXT_PUBLIC_AUTH_MODE is a no-op under
+        // `vite dev`: 'hosted' and 'standalone' both expect a SaaS Casdoor JWT,
+        // so a locally run node — which has no reachable Casdoor to mint or
+        // validate one — can never be signed into, and every authenticated
+        // write fails. Basic auth against the node's own admin password is the
+        // only path that works locally.
+        const configuredAuthMode = env.NEXT_PUBLIC_AUTH_MODE;
+        const explicitAuthMode =
+          configuredAuthMode === 'hosted' ||
+          configuredAuthMode === 'basic' ||
+          configuredAuthMode === 'standalone'
+            ? configuredAuthMode
+            : '';
+        if (!explicitAuthMode && env.NEXT_PUBLIC_ENV_MODE !== 'standalone' && !isSovereign) {
           next();
           return;
         }
         const saasUrl = env.NEXT_PUBLIC_SAAS_URL || '';
         const sovereign = isSovereign;
+        // Fall back to the standalone storefront payload when only the env mode
+        // asked for it; an explicit mode keeps its own identity.
+        const authMode = explicitAuthMode || 'standalone';
+        const deploymentMode =
+          authMode === 'hosted' ? 'hosted' : sovereign ? 'sovereign' : 'standalone';
         const payload: Record<string, unknown> = {
           schemaVersion: 3,
-          authMode: 'standalone',
+          authMode,
           deployment: {
-            mode: sovereign ? 'sovereign' : 'standalone',
+            mode: deploymentMode,
             allowExternalResources: !sovereign,
           },
           experience: { kind: 'store' },

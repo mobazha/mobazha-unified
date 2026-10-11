@@ -83,12 +83,12 @@ export type NotificationFilter = 'all' | 'orders' | 'followers' | 'transactions'
 export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
   all: '',
   orders:
-    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.rated,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
+    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.rated,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled,buyrequest.offer_received,buyrequest.offer_decided',
   followers: 'social.follow,social.moderator_add,social.moderator_remove',
   transactions:
     'order.funded,order.payment_received,order.refunded,order.vendor_finalized,payment.locked,payment.expired,payment.cancelled',
   system:
-    'order.stale_warning,order.expired,order.declined,order.cancelled,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,social.moderator_add,social.moderator_remove',
+    'order.stale_warning,order.expired,order.declined,order.cancelled,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,social.moderator_add,social.moderator_remove,buyrequest.offer_received,buyrequest.offer_decided',
 };
 
 interface BackendNotificationsResponse {
@@ -188,6 +188,12 @@ export interface Notification {
     moderatorName?: string;
     moderatorAvatar?: string;
     marketplaceReview?: MarketplaceReviewNotificationMeta;
+    /** Wanted-board events name the request and the offer they are about. */
+    offerID?: string;
+    ownerPeerID?: string;
+    offerAccepted?: boolean;
+    offerUnitPrice?: string;
+    offerCurrency?: string;
   };
 }
 
@@ -285,6 +291,17 @@ const mockNotifications: Notification[] = [
   },
 ];
 
+/** Reads a boolean field off a raw event payload. */
+function readBooleanField(record: Record<string, unknown>, name: string): boolean | undefined {
+  const value = record[name];
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+/** The wanted board reports acceptance and refusal with one event type. */
+function isDeclinedOffer(notification: BackendNotificationRecord['notification']): boolean {
+  return readBooleanField(notification as Record<string, unknown>, 'accepted') === false;
+}
+
 function generateNotificationTitle(
   type: string,
   notification: BackendNotificationRecord['notification']
@@ -340,6 +357,19 @@ function generateNotificationTitle(
       return t('notifications.titles.paymentExpired', { defaultValue: 'Payment Expired' });
     case 'payment.cancelled':
       return t('notifications.titles.paymentCancelled', { defaultValue: 'Payment Cancelled' });
+    case 'buyrequest.offer_received':
+      return t('notifications.titles.buyRequestOfferReceived', {
+        defaultValue: 'New offer on your request',
+      });
+    case 'buyrequest.offer_decided':
+      // One event type covers both outcomes; only the reason differs.
+      return isDeclinedOffer(notification)
+        ? t('notifications.titles.buyRequestOfferDeclined', {
+            defaultValue: 'Offer not chosen',
+          })
+        : t('notifications.titles.buyRequestOfferAccepted', {
+            defaultValue: 'Your offer was accepted',
+          });
     default:
       return notification.title || type;
   }
@@ -458,6 +488,24 @@ function generateNotificationMessage(
       return orderId
         ? t('notifications.messages.orderCancelledWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderCancelledNoId');
+    case 'buyrequest.offer_received':
+      return t('notifications.messages.buyRequestOfferReceived', {
+        defaultValue: 'A seller offered {{amount}} {{currency}} on “{{title}}”.',
+        amount: readStringField(notification as Record<string, unknown>, 'unitPrice') ?? '',
+        currency: readStringField(notification as Record<string, unknown>, 'currency') ?? '',
+        title: productTitle ?? '',
+      });
+    case 'buyrequest.offer_decided':
+      return isDeclinedOffer(notification)
+        ? t('notifications.messages.buyRequestOfferDeclined', {
+            defaultValue: 'Another offer was chosen on “{{title}}”.',
+            title: productTitle ?? '',
+          })
+        : t('notifications.messages.buyRequestOfferAccepted', {
+            defaultValue:
+              'Your offer on “{{title}}” was accepted. Publish it as a product so the order can be placed.',
+            title: productTitle ?? '',
+          });
     default:
       return (
         (notification.vendorName ?? (notification as { vendorHandle?: string }).vendorHandle) ||
@@ -618,6 +666,12 @@ export async function getNotifications(
             moderatorName:
               notif.moderatorName ?? (notif as { moderatorHandle?: string }).moderatorHandle,
             moderatorAvatar: notif.moderatorAvatar,
+            offerID: readStringField(notifRecord, 'offerID', 'offerId') || undefined,
+            ownerPeerID: readStringField(notifRecord, 'ownerPeerID') || undefined,
+            offerAccepted:
+              typeof notifRecord.accepted === 'boolean' ? notifRecord.accepted : undefined,
+            offerUnitPrice: readStringField(notifRecord, 'unitPrice') || undefined,
+            offerCurrency: readStringField(notifRecord, 'currency') || undefined,
           },
         };
       }
@@ -866,6 +920,17 @@ export function getNotificationRoute(notification: Notification): string | null 
       return `/marketplace/${marketplaceSlug}/sell`;
     }
     return '/marketplaces';
+  }
+
+  // A wanted-board notification points at the request itself, and at the node
+  // that owns it: the board is node-local, so a link only works everywhere
+  // when it names the owner.
+  if (type.startsWith('buyrequest.')) {
+    if (!data?.slug) return null;
+    const wantedPath = `/wanted/${encodeURIComponent(data.slug)}`;
+    return data.ownerPeerID
+      ? `${wantedPath}?peer=${encodeURIComponent(data.ownerPeerID)}`
+      : wantedPath;
   }
 
   const orderOrCaseId = resolveOrderOrCaseID(data);

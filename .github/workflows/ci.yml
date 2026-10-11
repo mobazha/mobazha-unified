@@ -48,6 +48,9 @@ jobs:
       - name: Check documentation authority boundaries
         run: pnpm docs:authority:check
 
+      - name: Check i18n boundaries (mixed-language guard)
+        run: pnpm i18n:check
+
       - name: Run ESLint
         run: pnpm lint
 

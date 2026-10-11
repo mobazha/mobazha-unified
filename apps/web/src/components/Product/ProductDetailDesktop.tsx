@@ -17,6 +17,7 @@ import {
   stripHtmlTags,
   getTokenIdFromPaymentCoin,
   filterVisibleAcceptedCurrencies,
+  useTranslatedTexts,
 } from '@mobazha/core';
 import type { Product, ProductSku } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
@@ -123,6 +124,20 @@ export function ProductDetailDesktop({
     router,
     isOffline,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
+
+  // The seller wrote this wording; show it in the visitor's language. Anything
+  // stored — a wishlist entry, a cart line — keeps the original below.
+  const [translatedTitle] = useTranslatedTexts([product?.item?.title]);
+  const [translatedSummary] = useTranslatedTexts([product?.item?.shortDescription]);
+  const [translatedDescription] = useTranslatedTexts([product?.item?.description]);
+
+  // The notice is about what is on screen: it appears only when a wording was
+  // actually replaced, never when the seller already wrote in this language.
+  const showingTranslation = Boolean(
+    (translatedTitle && translatedTitle !== product?.item?.title) ||
+      (translatedSummary && translatedSummary !== product?.item?.shortDescription) ||
+      (translatedDescription && translatedDescription !== product?.item?.description)
+  );
 
   React.useEffect(() => {
     onPurchaseStateChange?.({
@@ -315,7 +330,7 @@ export function ProductDetailDesktop({
             )}
             <span>/</span>
             <span className="text-foreground truncate max-w-[200px]">
-              {decodeHtmlEntities(product.item.title)}
+              {translatedTitle ?? decodeHtmlEntities(product.item.title)}
             </span>
           </nav>
         )}
@@ -410,7 +425,7 @@ export function ProductDetailDesktop({
                     isModal ? 'text-base lg:text-lg mb-1' : 'text-lg sm:text-xl lg:text-2xl mb-1.5'
                   )}
                 >
-                  {decodeHtmlEntities(product.item.title)}
+                  {translatedTitle ?? decodeHtmlEntities(product.item.title)}
                 </h1>
                 {!isModal && (
                   <ShareButton
@@ -429,6 +444,14 @@ export function ProductDetailDesktop({
                   {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
                 </span>
               </HStack>
+              {showingTranslation && (
+                <p
+                  className="text-xs text-muted-foreground"
+                  title={t('common.machineTranslatedHint')}
+                >
+                  {t('common.machineTranslated')}
+                </p>
+              )}
               {product.item.shortDescription?.trim() && (
                 <p
                   className={cn(
@@ -436,7 +459,7 @@ export function ProductDetailDesktop({
                     isModal ? 'text-xs mt-1.5 line-clamp-2' : 'text-sm mt-2 line-clamp-3'
                   )}
                 >
-                  {stripHtmlTags(product.item.shortDescription)}
+                  {translatedSummary ?? stripHtmlTags(product.item.shortDescription)}
                 </p>
               )}
             </div>
@@ -1062,7 +1085,7 @@ export function ProductDetailDesktop({
                   isModal ? 'prose-sm text-sm' : 'prose-sm sm:prose text-sm sm:text-base'
                 )}
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
+                  __html: sanitizeHtml(translatedDescription ?? decodeHtmlEntities(product.item.description)),
                 }}
               />
             </Card>

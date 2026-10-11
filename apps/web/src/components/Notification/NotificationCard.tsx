@@ -14,6 +14,8 @@ import {
   Clock,
   User,
   ChevronRight,
+  Handshake,
+  Inbox,
 } from 'lucide-react';
 import {
   useI18n,
@@ -87,6 +89,10 @@ function getNotificationIcon(type: string): React.ReactNode {
       return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'order.stale_warning':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
+    case 'buyrequest.offer_received':
+      return <Inbox className={cn(iconClass, 'text-info')} />;
+    case 'buyrequest.offer_decided':
+      return <Handshake className={cn(iconClass, 'text-primary')} />;
     case 'order.shipped':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'order.completed':

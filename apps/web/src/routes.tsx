@@ -148,6 +148,14 @@ if (!__SOVEREIGN__) {
     { path: '/collections', element: lazyPage(() => import('./app/collections/page')) },
     { path: '/collections/:id', element: lazyPage(() => import('./app/collections/[id]/page')) },
 
+    // Wanted board（委托 — 公开浏览，发布需要登录）
+    { path: '/wanted', element: lazyPage(() => import('./app/wanted/page')) },
+    { path: '/wanted/new', element: lazyPage(() => import('./app/wanted/new/page')) },
+    {
+      path: '/wanted/:slug',
+      element: lazyPage(() => import('./app/wanted/[slug]/page')),
+    },
+
     // DG-1.12: digital-goods cost calculator (public marketing page)
     {
       path: '/tools/cost-calculator',

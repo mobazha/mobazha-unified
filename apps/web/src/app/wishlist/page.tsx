@@ -14,6 +14,7 @@ import {
   usePriceUpdates,
   getImageUrl,
   buildProductHref,
+  useTranslatedTexts,
 } from '@mobazha/core';
 import type { WishlistItem, PriceUpdate } from '@mobazha/core';
 import { Heart, Trash2, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
@@ -117,9 +118,10 @@ function WishlistRow({
 }) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
+  const [translatedTitle] = useTranslatedTexts([item.title]);
 
   const imageUrl = item.thumbnail ? getImageUrl(item.thumbnail) : null;
-  const displayTitle = item.title || item.slug;
+  const displayTitle = translatedTitle || item.title || item.slug;
   const savedPrice =
     item.price && item.currency ? formatPrice(Number(item.price), item.currency) : null;
 

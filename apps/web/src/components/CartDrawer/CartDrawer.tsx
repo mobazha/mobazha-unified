@@ -12,6 +12,7 @@ import {
   useCurrency,
   getImageUrl,
   buildProductHref,
+  useTranslatedTexts,
 } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { ShoppingBag } from 'lucide-react';
@@ -38,6 +39,15 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const updateQuantity = useCartStore(state => state.updateQuantity);
   const removeItem = useCartStore(state => state.removeItem);
   const clearCart = useCartStore(state => state.clearCart);
+
+  // The seller's titles, in the visitor's language. The stored lines below are
+  // untouched: a cart line is what becomes an order.
+  const cartTitles = items.map(item => item.listing.title);
+  const translatedTitles = useTranslatedTexts(cartTitles);
+  const titleFor = (title: string) => {
+    const at = cartTitles.indexOf(title);
+    return (at >= 0 ? translatedTitles[at] : undefined) ?? title;
+  };
 
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.listing.price.amount) * item.quantity,
@@ -128,7 +138,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   <CartItemRow
                     key={itemKey}
                     thumbnailUrl={thumbUrl}
-                    title={item.listing.title}
+                    title={titleFor(item.listing.title)}
                     href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
                     options={item.options}
                     vendorName={item.listing.vendorName}

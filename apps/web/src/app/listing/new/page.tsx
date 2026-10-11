@@ -50,6 +50,7 @@ import {
   buildProductHref,
   initialFormData,
   mustAssetIdFromTokenId,
+  useBuyRequestDetail,
   parseSourceDepositListingSearchParams,
   buildSourceDepositListingFormPrefill,
   getSourceDepositLockedTags,
@@ -177,6 +178,11 @@ function CreateListingContent() {
 
   // URL 参数
   const cloneSlug = searchParams.get('clone');
+  const wantedSlug = searchParams.get('wanted');
+  const wantedOfferId = searchParams.get('offer');
+  // Set when the offer was made on another node's request, so the request is
+  // read from the node that owns it.
+  const wantedOwner = searchParams.get('peer')?.trim() ?? '';
   const fromParam = searchParams.get('from');
   const fromOnboarding = fromParam === 'onboarding';
   const fromAdmin = fromParam === 'admin';
@@ -200,6 +206,28 @@ function CreateListingContent() {
 
   // 发布成功状态
   const [publishSuccessSlug, setPublishSuccessSlug] = useState<string | null>(null);
+
+  // An accepted offer on a buy request becomes a normal product, so the form
+  // arrives filled in from that offer instead of making the seller retype it.
+  const { request: wantedRequest, offers: wantedOffers } = useBuyRequestDetail(
+    wantedSlug,
+    wantedOwner
+  );
+  const wantedPrefill = useMemo<Partial<ListingFormData> | null>(() => {
+    if (!wantedRequest || !wantedOfferId) return null;
+    const offer = wantedOffers.find(candidate => candidate.id === wantedOfferId);
+    if (!offer) return null;
+    // The listing settles in the registry asset the offer quoted, chain and all.
+    const currency = mustAssetIdFromTokenId(offer.unitPrice.currency);
+    return {
+      title: wantedRequest.title,
+      description: wantedRequest.description ?? '',
+      price: offer.unitPrice.amount,
+      pricingCurrency: currency,
+      acceptedCurrencies: [currency],
+      skus: [{ ...initialFormData.skus[0], quantity: offer.quantity }],
+    };
+  }, [wantedRequest, wantedOffers, wantedOfferId]);
 
   // 加载克隆商品数据
   const loadCloneData = useCallback(
@@ -233,6 +261,7 @@ function CreateListingContent() {
   // 初始表单数据
   const initialData = useMemo(() => {
     if (cloneData) return cloneData;
+    if (wantedPrefill) return wantedPrefill;
     if (!sourceDepositPrefillInput) return undefined;
 
     const prefill = buildSourceDepositListingFormPrefill(sourceDepositPrefillInput);
@@ -246,7 +275,7 @@ function CreateListingContent() {
         },
       ],
     };
-  }, [cloneData, sourceDepositPrefillInput]);
+  }, [cloneData, wantedPrefill, sourceDepositPrefillInput]);
 
   // 使用 useListingForm hook
   const {

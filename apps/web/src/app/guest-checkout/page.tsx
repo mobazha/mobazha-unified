@@ -13,6 +13,7 @@ import {
   buildGuestOrderRequest,
   buildGuestShippingAddressPayload,
 } from '@mobazha/core';
+import { useTranslatedTexts } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import { buyerPortalTokenStorageKey } from '@mobazha/core/services/api/guestCheckout';
@@ -94,6 +95,13 @@ export default function GuestCheckoutPage() {
   const router = useRouter();
   const { items, removeItem, updateQuantity, updateShipping, getTotal, getItemCount, clearCart } =
     useGuestCartStore();
+
+  // The seller named these products; show them in the visitor's language.
+  const itemTitles = useTranslatedTexts(items.map(item => item.title));
+  const titleFor = (title: string) => {
+    const at = items.findIndex(item => item.title === title);
+    return (at >= 0 ? itemTitles[at] : undefined) ?? title;
+  };
   const [step, setStep] = useState<Step>('cart');
   const [addressData, setAddressData] = useState<Address>(EMPTY_ADDRESS);
   // PM-3a: holds the PGP-encrypted address ciphertext once encryption succeeds.
@@ -390,7 +398,7 @@ export default function GuestCheckoutPage() {
                         <CartItemRow
                           key={`${item.slug}-${(item.options ?? []).map(o => o.value).join(',')}`}
                           thumbnailUrl={thumbUrl}
-                          title={item.title}
+                          title={titleFor(item.title)}
                           href={buildProductHref(item.slug, item.vendorPeerID)}
                           options={item.options}
                           contractType={item.contractType}
@@ -526,7 +534,7 @@ export default function GuestCheckoutPage() {
                       <CardContent className="space-y-3 p-4">
                         <div>
                           <p className="text-sm font-medium">{t('order.shippingMethod')}</p>
-                          <p className="text-xs text-muted-foreground">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{titleFor(item.title)}</p>
                         </div>
                         {available.length ? (
                           <div className="space-y-2">

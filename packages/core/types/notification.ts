@@ -44,12 +44,22 @@ export type NotificationEventType =
   | OrderNotificationType
   | DisputeNotificationType
   | SocialNotificationType
-  | PaymentNotificationType;
+  | PaymentNotificationType
+  | WantedNotificationType;
+
+/** The wanted board reports an offer arriving, and a buyer deciding. */
+export type WantedNotificationType = 'buyrequest.offer_received' | 'buyrequest.offer_decided';
 
 /**
  * 通知类别
  */
-export type NotificationCategory = 'order' | 'dispute' | 'social' | 'payment' | 'unknown';
+export type NotificationCategory =
+  | 'order'
+  | 'dispute'
+  | 'social'
+  | 'payment'
+  | 'buyrequest'
+  | 'unknown';
 
 // ============ 声音提醒类型 ============
 
@@ -307,7 +317,8 @@ export function getNotificationCategory(type: NotificationEventType): Notificati
     category === 'order' ||
     category === 'dispute' ||
     category === 'social' ||
-    category === 'payment'
+    category === 'payment' ||
+    category === 'buyrequest'
   ) {
     return category;
   }
@@ -338,8 +349,14 @@ export function isPaymentNotification(
   return (PAYMENT_NOTIFICATION_TYPES as string[]).includes(notification.type);
 }
 
+export const WANTED_NOTIFICATION_TYPES: WantedNotificationType[] = [
+  'buyrequest.offer_received',
+  'buyrequest.offer_decided',
+];
+
 const ALL_NOTIFICATION_TYPES: readonly string[] = [
   ...ORDER_NOTIFICATION_TYPES,
+  ...WANTED_NOTIFICATION_TYPES,
   ...DISPUTE_NOTIFICATION_TYPES,
   ...SOCIAL_NOTIFICATION_TYPES,
   ...PAYMENT_NOTIFICATION_TYPES,

@@ -70,6 +70,10 @@ export const zh: PartialTranslationResource = {
     privateKeyHint: '输入你在地址保护中创建的恢复口令。它不会被发送到店铺。',
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: '机器翻译',
+    machineTranslatedHint: '按你选择的语言显示，原文由卖家撰写。',
     connecting: '连接中…',
     loadingInterrupted: '加载已中断',
     or: '或',
@@ -4514,6 +4518,9 @@ export const zh: PartialTranslationResource = {
       orderExpired: '订单已过期',
       orderStaleWarning: '订单提醒',
       paymentCancelled: '支付已取消',
+      buyRequestOfferReceived: '你的委托收到新报价',
+      buyRequestOfferAccepted: '你的报价被选中',
+      buyRequestOfferDeclined: '报价未被选中',
       paymentExpired: '支付已过期',
     },
     payment: {
@@ -4564,6 +4571,9 @@ export const zh: PartialTranslationResource = {
       orderStaleWarningWithId: '订单 #{{orderId}} 可能需要处理',
       orderStaleWarningNoId: '有订单可能需要处理',
       defaultNotification: '通知',
+      buyRequestOfferReceived: '有卖家对「{{title}}」报价 {{amount}} {{currency}}。',
+      buyRequestOfferAccepted: '买家选中了你对「{{title}}」的报价，把它发布成商品就能正常下单了。',
+      buyRequestOfferDeclined: '「{{title}}」的买家选择了其他报价。',
     },
     tts: {
       newMessage: '新消息',

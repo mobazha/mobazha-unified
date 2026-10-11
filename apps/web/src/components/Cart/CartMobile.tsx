@@ -11,7 +11,13 @@ import { usePrimaryCTA } from '@/lib/platform';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
-import { useI18n, useUserStore, buildProductHref, type TranslateFunction } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  useTranslatedTexts,
+  buildProductHref,
+  type TranslateFunction,
+} from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -32,6 +38,9 @@ function SwipeableCartItem({
   renderPrice: (amount: number, currency: string) => string;
 }) {
   const { t } = useI18n();
+  // The cart shows the seller's title in the visitor's language; the stored line
+  // is what becomes an order, so it keeps the original.
+  const [translatedTitle] = useTranslatedTexts([item.listing.title]);
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
@@ -85,14 +94,18 @@ function SwipeableCartItem({
             className="flex-shrink-0"
           >
             <div className="w-20 h-20 rounded-lg overflow-hidden">
-              <ProductImageNative src={thumbUrl} alt={item.listing.title} iconSize="sm" />
+              <ProductImageNative
+              src={thumbUrl}
+              alt={translatedTitle ?? item.listing.title}
+              iconSize="sm"
+            />
             </div>
           </Link>
 
           <div className="flex-1 min-w-0 flex flex-col">
             <Link href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}>
               <h3 className="font-medium text-foreground text-sm line-clamp-2">
-                {item.listing.title}
+                {translatedTitle ?? item.listing.title}
               </h3>
             </Link>
 

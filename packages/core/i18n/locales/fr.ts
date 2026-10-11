@@ -78,6 +78,10 @@ export const fr: PartialTranslationResource = {
     },
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: 'Traduit automatiquement',
+    machineTranslatedHint: 'Affiché dans votre langue. L\'original a été écrit par le vendeur.',
     connecting: 'Connexion en cours…',
     loadingInterrupted: 'Chargement interrompu',
     or: 'ou',
@@ -4838,6 +4842,9 @@ export const fr: PartialTranslationResource = {
       orderExpired: 'Commande expirée',
       orderStaleWarning: 'Alerte commande',
       paymentCancelled: 'Paiement annulé',
+      buyRequestOfferReceived: "Nouvelle offre sur votre demande",
+      buyRequestOfferAccepted: "Votre offre a été retenue",
+      buyRequestOfferDeclined: "Offre non retenue",
       paymentExpired: 'Paiement expiré',
       orderRated: 'Avis reçu',
     },
@@ -4884,6 +4891,9 @@ export const fr: PartialTranslationResource = {
       orderStaleWarningWithId: 'La commande n°{{orderId}} peut nécessiter votre attention',
       orderStaleWarningNoId: 'Une commande peut nécessiter votre attention',
       defaultNotification: 'Notification',
+      buyRequestOfferReceived: "Un vendeur a proposé {{amount}} {{currency}} pour «{{title}}».",
+      buyRequestOfferAccepted: "Votre offre pour «{{title}}» a été retenue. Publiez-la comme produit pour que la commande soit possible.",
+      buyRequestOfferDeclined: "Une autre offre a été retenue pour «{{title}}».",
       orderRatedNoId: "L'acheteur a laissé un avis sur votre commande",
       orderRatedWithId: "L'acheteur a laissé un avis sur la commande n°{{orderId}}",
     },

@@ -16,6 +16,7 @@ import {
   getTokenIdFromPaymentCoin,
   filterVisibleAcceptedCurrencies,
   useI18n,
+  useTranslatedTexts,
   useCartStore,
   useChatStore,
   selectUnreadCountByPeerID,
@@ -118,6 +119,20 @@ export function ProductDetailMobile({
     router,
     isOffline,
   } = useProductDetail({ slug, peerID, onProductLoaded });
+
+  // The seller wrote this wording; show it in the visitor's language. Anything
+  // stored — a wishlist entry, a cart line — keeps the original below.
+  const [translatedTitle] = useTranslatedTexts([product?.item?.title]);
+  const [translatedSummary] = useTranslatedTexts([product?.item?.shortDescription]);
+  const [translatedDescription] = useTranslatedTexts([product?.item?.description]);
+
+  // The notice is about what is on screen: it appears only when a wording was
+  // actually replaced, never when the seller already wrote in this language.
+  const showingTranslation = Boolean(
+    (translatedTitle && translatedTitle !== product?.item?.title) ||
+      (translatedSummary && translatedSummary !== product?.item?.shortDescription) ||
+      (translatedDescription && translatedDescription !== product?.item?.description)
+  );
 
   const cartItemCount = useCartStore(state => state.getItemCount());
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(vendorPeerID));
@@ -331,8 +346,16 @@ export function ProductDetailMobile({
         <div>
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground leading-tight flex-1">
-              {decodeHtmlEntities(product.item.title)}
+              {translatedTitle ?? decodeHtmlEntities(product.item.title)}
             </h1>
+            {showingTranslation && (
+              <p
+                className="text-xs text-muted-foreground"
+                title={t('common.machineTranslatedHint')}
+              >
+                {t('common.machineTranslated')}
+              </p>
+            )}
             <ProductMoreButton product={product} />
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -343,7 +366,7 @@ export function ProductDetailMobile({
           </div>
           {product.item.shortDescription?.trim() && (
             <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-snug">
-              {stripHtmlTags(product.item.shortDescription)}
+              {translatedSummary ?? stripHtmlTags(product.item.shortDescription)}
             </p>
           )}
         </div>
@@ -577,7 +600,7 @@ export function ProductDetailMobile({
             <div
               className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground text-sm pb-3 [&_a]:text-primary [&_a]:underline"
               dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(decodeHtmlEntities(product.item.description)),
+                __html: sanitizeHtml(translatedDescription ?? decodeHtmlEntities(product.item.description)),
               }}
             />
           </details>

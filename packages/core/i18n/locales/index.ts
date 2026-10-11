@@ -20,6 +20,15 @@ import { commercialFrOverlay } from './commercial/fr';
 import { commercialDeOverlay } from './commercial/de';
 import { commercialRuOverlay } from './commercial/ru';
 import { commercialPtOverlay } from './commercial/pt';
+import { wantedEnOverlay } from './wanted/en';
+import { wantedZhOverlay } from './wanted/zh';
+import { wantedJaOverlay } from './wanted/ja';
+import { wantedKoOverlay } from './wanted/ko';
+import { wantedEsOverlay } from './wanted/es';
+import { wantedFrOverlay } from './wanted/fr';
+import { wantedDeOverlay } from './wanted/de';
+import { wantedRuOverlay } from './wanted/ru';
+import { wantedPtOverlay } from './wanted/pt';
 import type { Locale, PartialTranslationResource, TranslationResource } from '../types';
 
 function mergeDeep<T extends object>(base: T, overlay: Partial<T>): T {
@@ -42,15 +51,15 @@ function mergeDeep<T extends object>(base: T, overlay: Partial<T>): T {
   return out as T;
 }
 
-export const en = mergeDeep(baseEn, commercialEnOverlay);
-export const zh = mergeDeep(baseZh, commercialZhOverlay);
-export const ja = mergeDeep(baseJa, commercialJaOverlay);
-export const ko = mergeDeep(baseKo, commercialKoOverlay);
-export const es = mergeDeep(baseEs, commercialEsOverlay);
-export const fr = mergeDeep(baseFr, commercialFrOverlay);
-export const de = mergeDeep(baseDe, commercialDeOverlay);
-export const ru = mergeDeep(baseRu, commercialRuOverlay);
-export const pt = mergeDeep(basePt, commercialPtOverlay);
+export const en = mergeDeep(mergeDeep(baseEn, commercialEnOverlay), wantedEnOverlay);
+export const zh = mergeDeep(mergeDeep(baseZh, commercialZhOverlay), wantedZhOverlay);
+export const ja = mergeDeep(mergeDeep(baseJa, commercialJaOverlay), wantedJaOverlay);
+export const ko = mergeDeep(mergeDeep(baseKo, commercialKoOverlay), wantedKoOverlay);
+export const es = mergeDeep(mergeDeep(baseEs, commercialEsOverlay), wantedEsOverlay);
+export const fr = mergeDeep(mergeDeep(baseFr, commercialFrOverlay), wantedFrOverlay);
+export const de = mergeDeep(mergeDeep(baseDe, commercialDeOverlay), wantedDeOverlay);
+export const ru = mergeDeep(mergeDeep(baseRu, commercialRuOverlay), wantedRuOverlay);
+export const pt = mergeDeep(mergeDeep(basePt, commercialPtOverlay), wantedPtOverlay);
 
 // 所有翻译资源
 export const translations: Record<Locale, TranslationResource | PartialTranslationResource> = {

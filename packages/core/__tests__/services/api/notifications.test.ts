@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getNotificationRoute } from '../../../services/api/notifications';
+import { getNotificationCategory, normalizeNotificationType } from '../../../types/notification';
 import type { Notification } from '../../../services/api/notifications';
 
 function makeNotification(type: string, data?: Notification['data']): Notification {
@@ -132,5 +133,36 @@ describe('getNotificationRoute', () => {
       })
     );
     expect(route).toBeNull();
+  });
+});
+
+describe('wanted board notifications', () => {
+  it('keeps the wanted types as themselves', () => {
+    expect(normalizeNotificationType('buyrequest.offer_received')).toBe(
+      'buyrequest.offer_received'
+    );
+    expect(normalizeNotificationType('buyrequest.offer_decided')).toBe('buyrequest.offer_decided');
+    expect(getNotificationCategory('buyrequest.offer_decided')).toBe('buyrequest');
+  });
+
+  it('routes a decided offer to the request, naming the node that owns it', () => {
+    const route = getNotificationRoute(
+      makeNotification('buyrequest.offer_decided', {
+        slug: 'a-wanted-request-1234',
+        ownerPeerID: '12D3KooWOwner',
+      })
+    );
+    expect(route).toBe('/wanted/a-wanted-request-1234?peer=12D3KooWOwner');
+  });
+
+  it('still links the request when the owner is unknown', () => {
+    const route = getNotificationRoute(
+      makeNotification('buyrequest.offer_decided', { slug: 'a-wanted-request-1234' })
+    );
+    expect(route).toBe('/wanted/a-wanted-request-1234');
+  });
+
+  it('has nothing to route to without a request', () => {
+    expect(getNotificationRoute(makeNotification('buyrequest.offer_received'))).toBeNull();
   });
 });

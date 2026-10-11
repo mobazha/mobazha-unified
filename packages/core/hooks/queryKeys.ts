@@ -6,6 +6,14 @@
  */
 
 export const queryKeys = {
+  buyRequests: {
+    all: ['buy-requests'] as const,
+    list: (filter?: string) => [...queryKeys.buyRequests.all, 'list', filter] as const,
+    detail: (slug: string) => [...queryKeys.buyRequests.all, 'detail', slug] as const,
+    mine: () => [...queryKeys.buyRequests.all, 'mine'] as const,
+    comments: (slug: string) => [...queryKeys.buyRequests.all, 'comments', slug] as const,
+  },
+
   products: {
     all: ['products'] as const,
     trending: () => [...queryKeys.products.all, 'trending'] as const,

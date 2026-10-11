@@ -79,6 +79,10 @@ export const de: PartialTranslationResource = {
     },
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: 'Maschinell übersetzt',
+    machineTranslatedHint: 'In deiner Sprache angezeigt. Das Original stammt vom Verkäufer.',
     connecting: 'Verbindung wird hergestellt...',
     loadingInterrupted: 'Ladevorgang unterbrochen',
     or: 'oder',
@@ -4865,6 +4869,9 @@ export const de: PartialTranslationResource = {
       orderExpired: 'Bestellung abgelaufen',
       orderStaleWarning: 'Bestellhinweis',
       paymentCancelled: 'Zahlung abgebrochen',
+      buyRequestOfferReceived: "Neues Angebot zu deinem Gesuch",
+      buyRequestOfferAccepted: "Dein Angebot wurde angenommen",
+      buyRequestOfferDeclined: "Angebot nicht gewählt",
       paymentExpired: 'Zahlung abgelaufen',
       orderRated: 'Bewertung erhalten',
     },
@@ -4911,6 +4918,9 @@ export const de: PartialTranslationResource = {
       orderStaleWarningWithId: 'Bestellung Nr. {{orderId}} erfordert möglicherweise Aufmerksamkeit',
       orderStaleWarningNoId: 'Eine Bestellung erfordert möglicherweise Aufmerksamkeit',
       defaultNotification: 'Benachrichtigung',
+      buyRequestOfferReceived: "Ein Verkäufer bietet {{amount}} {{currency}} für „{{title}}“.",
+      buyRequestOfferAccepted: "Dein Angebot für „{{title}}“ wurde angenommen. Veröffentliche es als Produkt, damit bestellt werden kann.",
+      buyRequestOfferDeclined: "Für „{{title}}“ wurde ein anderes Angebot gewählt.",
       orderRatedWithId:
         'Der Käufer hat eine Bewertung für die Bestellung Nr. {{orderId}} hinterlassen.',
       orderRatedNoId: 'Der Käufer hat eine Bewertung für Ihre Bestellung hinterlassen',

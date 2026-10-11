@@ -77,6 +77,10 @@ export const ja: PartialTranslationResource = {
     },
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: '機械翻訳',
+    machineTranslatedHint: 'あなたの言語で表示しています。原文は出品者が書いたものです。',
     connecting: '接続中…',
     loadingInterrupted: '読み込みが中断されました',
     or: 'または',
@@ -4713,6 +4717,9 @@ export const ja: PartialTranslationResource = {
       orderExpired: '注文の期限切れ',
       orderStaleWarning: '注文の注意',
       paymentCancelled: '支払いがキャンセルされました',
+      buyRequestOfferReceived: "リクエストに新しいオファー",
+      buyRequestOfferAccepted: "あなたのオファーが選ばれました",
+      buyRequestOfferDeclined: "オファーは選ばれませんでした",
       paymentExpired: '支払いの有効期限が切れました',
       orderRated: 'レビューを受け取りました',
     },
@@ -4758,6 +4765,9 @@ export const ja: PartialTranslationResource = {
       orderStaleWarningWithId: '注文 #{{orderId}} に対応が必要かもしれません',
       orderStaleWarningNoId: '注文に対応が必要かもしれません',
       defaultNotification: '通知',
+      buyRequestOfferReceived: "出品者が「{{title}}」に {{amount}} {{currency}} を提示しました。",
+      buyRequestOfferAccepted: "「{{title}}」へのオファーが選ばれました。商品として公開すると注文できます。",
+      buyRequestOfferDeclined: "「{{title}}」では別のオファーが選ばれました。",
       orderRatedWithId: '購入者が注文 #{{orderId}} についてレビューを残しました',
       orderRatedNoId: '購入者があなたの注文に対してレビューを残しました',
     },

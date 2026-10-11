@@ -6490,6 +6490,9 @@ export interface TranslationResource {
 
   // Digital asset shared labels (Supply Chain Phase 1.0)
   digital?: TranslationSection;
+
+  /** Buy request (wanted board) copy. */
+  wanted?: TranslationSection;
 }
 
 type DeepPartialValue<T> = T extends string

@@ -74,6 +74,10 @@ export const en: TranslationResource = {
       'Enter the recovery passphrase you created with address protection. It is never sent to the store.',
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: 'Machine translated',
+    machineTranslatedHint: 'Shown in your language. The seller wrote the original.',
     connecting: 'Connecting...',
     loadingInterrupted: 'Loading interrupted',
     or: 'or',
@@ -4957,6 +4961,9 @@ export const en: TranslationResource = {
       orderExpired: 'Order Expired',
       orderStaleWarning: 'Order Warning',
       paymentCancelled: 'Payment cancelled',
+      buyRequestOfferReceived: 'New offer on your request',
+      buyRequestOfferAccepted: 'Your offer was accepted',
+      buyRequestOfferDeclined: 'Offer not chosen',
       paymentExpired: 'Payment expired',
     },
     // Notification list messages (for API-fetched notifications)
@@ -5004,6 +5011,10 @@ export const en: TranslationResource = {
       orderStaleWarningWithId: 'Order #{{orderId}} may need attention',
       orderStaleWarningNoId: 'An order may need attention',
       defaultNotification: 'Notification',
+      buyRequestOfferReceived: 'A seller offered {{amount}} {{currency}} on “{{title}}”.',
+      buyRequestOfferAccepted:
+        'Your offer on “{{title}}” was accepted. Publish it as a product so the order can be placed.',
+      buyRequestOfferDeclined: 'Another offer was chosen on “{{title}}”.',
     },
     payment: {
       cancelled: 'Payment was cancelled',

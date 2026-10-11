@@ -9,7 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useCurrency, useRateFreshness, useI18n } from '@mobazha/core';
+import {
+  useCurrency,
+  useRateFreshness,
+  useI18n,
+  useTranslatedTexts,
+} from '@mobazha/core';
 import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
@@ -73,6 +78,15 @@ export function CheckoutMobile({ checkout }: Props) {
     handleRemoveDiscount,
     supplyQuote,
   } = checkout;
+
+  // The seller named these products; show them in the visitor's language. Only
+  // what is on screen changes here — the order is built from the listings, so
+  // nothing that is submitted carries a translated word.
+  const checkoutTitles = useTranslatedTexts(checkoutItems.map(item => item.title));
+  const titleFor = (title: string) => {
+    const at = checkoutItems.findIndex(item => item.title === title);
+    return (at >= 0 ? checkoutTitles[at] : undefined) ?? title;
+  };
 
   // MVP-1: platform-abstract primary CTA + haptic (replaces direct
   // useTGMainButton / useTGMiniApp().haptic). `cta.isNative` is the
@@ -233,11 +247,11 @@ export function CheckoutMobile({ checkout }: Props) {
                     <div key={item.id} className="border border-border rounded-lg p-3">
                       <HStack gap="sm" align="start">
                         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                          <ProductImageNative src={item.image} alt={item.title} iconSize="sm" />
+                          <ProductImageNative src={item.image} alt={titleFor(item.title)} iconSize="sm" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground line-clamp-2">
-                            {item.title}
+                            {titleFor(item.title)}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">{item.vendor.name}</p>
                           <p className="text-sm font-semibold text-primary mt-1">
@@ -487,7 +501,7 @@ export function CheckoutMobile({ checkout }: Props) {
                   <SupplyAvailabilityPanel
                     displayItems={checkoutItems.map(item => ({
                       listingSlug: item.listingSlug,
-                      title: item.title,
+                      title: titleFor(item.title),
                     }))}
                     quote={supplyQuote.quote}
                     loading={supplyQuote.loading}

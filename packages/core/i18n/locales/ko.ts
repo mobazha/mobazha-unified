@@ -73,6 +73,10 @@ export const ko: PartialTranslationResource = {
     },
   },
   common: {
+    // Shown wherever content appears in a language its author did not write it
+    // in, so a reader knows which words are the seller's.
+    machineTranslated: '기계 번역',
+    machineTranslatedHint: '사용자의 언어로 표시합니다. 원문은 판매자가 작성했습니다.',
     connecting: '연결 중...',
     loadingInterrupted: '로딩 중단됨',
     or: '또는',
@@ -4654,6 +4658,9 @@ export const ko: PartialTranslationResource = {
       orderExpired: '주문 만료',
       orderStaleWarning: '주문 알림',
       paymentCancelled: '결제가 취소되었습니다',
+      buyRequestOfferReceived: "요청에 새 제안이 도착했습니다",
+      buyRequestOfferAccepted: "회원님의 제안이 선택되었습니다",
+      buyRequestOfferDeclined: "제안이 선택되지 않았습니다",
       paymentExpired: '결제 기한이 만료되었습니다',
       orderRated: '리뷰가 접수됨',
     },
@@ -4699,6 +4706,9 @@ export const ko: PartialTranslationResource = {
       orderStaleWarningWithId: '주문 #{{orderId}}에 확인이 필요할 수 있습니다',
       orderStaleWarningNoId: '주문에 확인이 필요할 수 있습니다',
       defaultNotification: '알림',
+      buyRequestOfferReceived: "판매자가 “{{title}}”에 {{amount}} {{currency}}를 제안했습니다.",
+      buyRequestOfferAccepted: "“{{title}}”에 대한 제안이 선택되었습니다. 상품으로 공개하면 주문할 수 있습니다.",
+      buyRequestOfferDeclined: "“{{title}}”에서는 다른 제안이 선택되었습니다.",
       orderRatedNoId: '구매자가 주문에 대한 리뷰를 남겼습니다.',
       orderRatedWithId: '구매자가 주문 #{{orderId}}에 대한 리뷰를 남겼습니다.',
     },

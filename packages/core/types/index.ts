@@ -64,6 +64,29 @@ export type {
   AcceptedCurrency,
 } from './product';
 
+// Buy request (wanted board) types — the buy-side mirror of listings
+export { BUY_REQUEST_STATUS_OPEN, BUY_REQUEST_COMMENT_MAX_LENGTH } from './buyRequest';
+export type {
+  BuyRequest,
+  BuyRequestComment,
+  BuyRequestCommentThread,
+  BuyRequestStatus,
+  BuyRequestCondition,
+  BuyRequestAmount,
+  BuyRequestBudget,
+  BuyRequestParty,
+  BuyRequestOffer,
+  BuyRequestOfferStatus,
+  BuyRequestListFilter,
+  BuyRequestListResponse,
+  BuyRequestDetailResponse,
+  BuyRequestOrderDraft,
+  CreateBuyRequestRequest,
+  CreateBuyRequestCommentRequest,
+  CreateBuyRequestOfferRequest,
+  AcceptBuyRequestOfferResponse,
+} from './buyRequest';
+
 // Order types (API)
 export type {
   OrderState,

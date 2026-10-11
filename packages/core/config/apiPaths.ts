@@ -53,6 +53,16 @@ export const NODE_API = {
   LISTINGS_INDEX: '/listings/index',
   LISTINGS_INDEX_PEER: (peerID: string) => `/listings/index/${peerID}`,
   LISTINGS_SUPPLY_SUMMARY: '/listings/supply-summary',
+  // --- Buy requests (wanted board) ---
+  BUY_REQUESTS: '/buy-requests',
+  // On-demand translation of what sellers wrote, into the language the
+  // visitor is reading. Public: a visitor has no account.
+  TRANSLATE: '/translate',
+  BUY_REQUESTS_MINE: '/buy-requests/mine',
+  BUY_REQUEST: (slug: string) => `/buy-requests/${slug}`,
+  BUY_REQUEST_OFFERS: (slug: string) => `/buy-requests/${slug}/offers`,
+  BUY_REQUEST_ACCEPT: (slug: string) => `/buy-requests/${slug}/accept`,
+  BUY_REQUEST_COMMENTS: (slug: string) => `/buy-requests/${slug}/comments`,
 
   // --- Ratings ---
   RATINGS_INDEX: '/ratings/index',
@@ -716,6 +726,13 @@ export const HOSTING_API = {
 export const SEARCH_API = {
   ...SEARCH_API_PATHS,
   SEARCH_LISTINGS: '/search/v1/listings',
+  // Wanted board. The index holds what the owning nodes published, so a
+  // board can show requests from stores this node has never talked to.
+  // A request is addressed by the pair that identifies it: the node that owns
+  // it, and the identifier that node assigned.
+  SEARCH_BUY_REQUESTS: '/search/v1/buyer-requests',
+  SEARCH_BUY_REQUEST: (requestID: string, peerID: string) =>
+    `/search/v1/buyer-requests/${encodeURIComponent(peerID)}/${encodeURIComponent(requestID)}`,
   SEARCH_PROFILES: '/search/v1/profiles',
   LISTINGS_FRESH: (limit: number) => `/search/v1/listings/fresh?limit=${limit}`,
   LISTINGS_HOT: (limit: number) => `/search/v1/listings/hot?limit=${limit}`,
